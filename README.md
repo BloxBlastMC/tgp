@@ -19,7 +19,7 @@ issues, CI with strict resource limits, and an agent-friendly CLI.
 
 ## Building
 
-Requirements: Go 1.27+, Node 24+ with pnpm, and `git` 2.36+ on the server host.
+Requirements: Go 1.27+, Node 24+ with pnpm, and `git` 2.43+ on the server host (tested with 2.47).
 
 ```sh
 make            # build the web UI, then bin/tgp-server, bin/tgp, bin/tgp-runner
