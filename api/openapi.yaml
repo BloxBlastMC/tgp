@@ -1,0 +1,74 @@
+openapi: 3.0.3
+info:
+  title: tgp API
+  version: 1.0.0
+  description: |
+    REST API for tgp, a self-hosted git platform for a single team.
+    The web UI and the `tgp` CLI are both built on this API.
+
+    Errors always use the `Error` schema: `{"error": {"code": "...", "message": "..."}}`.
+servers:
+  - url: /api/v1
+tags:
+  - name: meta
+    description: Server information
+paths:
+  /meta:
+    get:
+      operationId: getMeta
+      tags: [meta]
+      summary: Server version and setup state
+      description: Public endpoint. Clients use it to detect a tgp server and whether first-start setup is pending.
+      security: []
+      responses:
+        "200":
+          description: Server metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meta"
+        default:
+          $ref: "#/components/responses/Error"
+components:
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Stable machine-readable error code, e.g. `not_found`, `forbidden`, `validation_failed`.
+              example: not_found
+            message:
+              type: string
+              description: Human readable message.
+            details:
+              type: object
+              additionalProperties: true
+              description: Optional structured details (e.g. per-field validation errors).
+    Meta:
+      type: object
+      required: [version, commit, setup_required, org_name]
+      properties:
+        version:
+          type: string
+          example: 1.0.0
+        commit:
+          type: string
+        setup_required:
+          type: boolean
+          description: True until the first admin and org have been configured.
+        org_name:
+          type: string
+          description: Org display name; empty before setup.

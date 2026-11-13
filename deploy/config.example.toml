@@ -1,0 +1,52 @@
+# Example tgp-server configuration. Pass with `tgp-server -c /etc/tgp/config.toml`
+# (or TGP_CONFIG). Every key can also be set with the environment variable
+# shown next to it; the environment wins over the file.
+
+# Root directory for data that has no more specific path below. (TGP_DATA_DIR)
+data_dir = "/var/lib/tgp"
+
+[server]
+listen = ":3000"                       # TGP_LISTEN
+# Public URL users reach tgp on. Used in clone URLs and webhooks.
+base_url = "https://git.example.com"   # TGP_BASE_URL
+# Honour X-Forwarded-* headers. Enable only behind a reverse proxy. (TGP_TRUST_PROXY)
+trust_proxy = true
+shutdown_timeout = "30s"
+
+[database]
+# "sqlite" for small installs, "postgres" to scale out to multiple server nodes.
+driver = "postgres"                                              # TGP_DB_DRIVER
+dsn = "postgres://tgp:CHANGE_ME@db:5432/tgp?sslmode=disable"     # TGP_DB_DSN
+max_open_conns = 25
+
+[repos]
+# Bare repositories live here. Use shared storage (e.g. NFS) when running
+# several server nodes. Defaults to <data_dir>/repos. (TGP_REPOS_ROOT)
+# root = "/var/lib/tgp/repos"
+git_binary = "git"                     # TGP_GIT_BINARY
+
+[storage]
+# Where CI logs, artifacts, caches and release assets go: "local" or "s3".
+type = "local"                         # TGP_STORAGE_TYPE
+
+[storage.local]
+# Defaults to <data_dir>/storage. (TGP_STORAGE_PATH)
+# path = "/var/lib/tgp/storage"
+
+[storage.s3]
+# endpoint = "https://s3.example.com"  # TGP_S3_ENDPOINT
+# region = "us-east-1"                 # TGP_S3_REGION
+# bucket = "tgp"                       # TGP_S3_BUCKET
+# prefix = ""                          # TGP_S3_PREFIX
+# access_key = ""                      # TGP_S3_ACCESS_KEY
+# secret_key = ""                      # TGP_S3_SECRET_KEY
+# use_path_style = true
+
+[security]
+# 32-byte key that encrypts CI secrets and 2FA seeds. Generated on first
+# start if missing. Back it up: without it those secrets can't be decrypted.
+# master_key_file = "/var/lib/tgp/master.key"   # TGP_MASTER_KEY_FILE
+
+[log]
+level = "info"    # debug | info | warn | error   (TGP_LOG_LEVEL)
+format = "text"   # text | json                   (TGP_LOG_FORMAT)

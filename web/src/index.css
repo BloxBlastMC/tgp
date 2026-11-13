@@ -1,0 +1,108 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens. Dark is the default; light applies when the user picks it
+ * or when the OS prefers light and nothing has been picked.
+ */
+:root {
+  --bg: #0b0c0f;
+  --bg-subtle: #111317;
+  --bg-elevated: #16181d;
+  --bg-hover: #1c1f25;
+  --border: #23262d;
+  --border-strong: #2f333b;
+  --fg: #e6e7ea;
+  --fg-muted: #9a9ea8;
+  --fg-faint: #6b7079;
+  --accent: #7c8cff;
+  --accent-fg: #0b0c0f;
+  --accent-subtle: rgb(124 140 255 / 0.14);
+  --success: #3fb97a;
+  --warning: #e0a83a;
+  --danger: #ef5b5b;
+  --info: #4ea8de;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --bg: #ffffff;
+    --bg-subtle: #f7f7f8;
+    --bg-elevated: #ffffff;
+    --bg-hover: #f0f0f2;
+    --border: #e6e6e9;
+    --border-strong: #d4d4d8;
+    --fg: #17181c;
+    --fg-muted: #5e626b;
+    --fg-faint: #8a8e97;
+    --accent: #4f5fe8;
+    --accent-fg: #ffffff;
+    --accent-subtle: rgb(79 95 232 / 0.1);
+    --success: #1f8f55;
+    --warning: #b07a12;
+    --danger: #d23b3b;
+    --info: #2178b5;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme='light'] {
+  --bg: #ffffff;
+  --bg-subtle: #f7f7f8;
+  --bg-elevated: #ffffff;
+  --bg-hover: #f0f0f2;
+  --border: #e6e6e9;
+  --border-strong: #d4d4d8;
+  --fg: #17181c;
+  --fg-muted: #5e626b;
+  --fg-faint: #8a8e97;
+  --accent: #4f5fe8;
+  --accent-fg: #ffffff;
+  --accent-subtle: rgb(79 95 232 / 0.1);
+  --success: #1f8f55;
+  --warning: #b07a12;
+  --danger: #d23b3b;
+  --info: #2178b5;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-hover: var(--bg-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
