@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { CircleDot, FolderGit2, GitPullRequest, LogOut, Moon, Play, Search, Settings, Shield, Sun } from 'lucide-react'
 import type { ComponentType } from 'react'
-import { metaQuery, sessionQuery } from '../api/queries'
+import { metaQuery, myPullsQuery, sessionQuery } from '../api/queries'
 import { useLogout } from '../lib/commands'
 
 type NavItem = { to: string; label: string; icon: ComponentType<{ size?: number }>; shortcut: string; adminOnly?: boolean }
@@ -20,6 +20,8 @@ export function Sidebar({ theme, toggleTheme, openPalette }: { theme: 'dark' | '
   const session = useQuery(sessionQuery)
   const logout = useLogout()
   const user = session.data?.user
+  const reviews = useQuery({ ...myPullsQuery('review_requested'), enabled: !!user, refetchInterval: 60_000 })
+  const badges: Record<string, number | undefined> = { '/pulls': reviews.data?.total }
   const orgName = meta.data?.org_name || 'tgp'
 
   return (
@@ -51,6 +53,11 @@ export function Sidebar({ theme, toggleTheme, openPalette }: { theme: 'dark' | '
             >
               <Icon size={15} />
               <span className="flex-1">{label}</span>
+              {!!badges[to] && (
+                <span className="rounded-full bg-accent-subtle px-1.5 text-[11px] font-medium text-accent" title={`${badges[to]} waiting for your review`} aria-label={`${badges[to]} waiting for your review`}>
+                  {badges[to]}
+                </span>
+              )}
               <kbd className="hidden font-mono text-[10px] text-fg-faint group-hover:inline">{shortcut}</kbd>
             </Link>
           ))}

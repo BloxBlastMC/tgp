@@ -35,6 +35,7 @@ tags:
   - name: admin
   - name: repos
   - name: code
+  - name: pulls
 paths:
   /meta:
     get:
@@ -750,6 +751,426 @@ paths:
               schema: { $ref: "#/components/schemas/UserRepoAccess" }
         default: { $ref: "#/components/responses/Error" }
 
+  /repos/{repo}/branches/delete:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    post:
+      operationId: deleteBranch
+      tags: [code]
+      summary: Delete a branch
+      description: |
+        Needs write access. The default branch, the base or head branch of an open
+        pull request, and protected branches that don't allow deletion can't be deleted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                sha: { type: string, description: Only delete if the branch still points at this commit. }
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/compare:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: base, in: query, required: true, schema: { type: string } }
+      - { name: head, in: query, required: true, schema: { type: string } }
+    get:
+      operationId: compareRefs
+      tags: [pulls]
+      summary: Compare two branches (what a pull request from head into base would contain)
+      responses:
+        "200":
+          description: Comparison
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Comparison" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/protections:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listProtections
+      tags: [pulls]
+      summary: List branch protection rules
+      responses:
+        "200":
+          description: Rules
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/BranchProtection" } }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createProtection
+      tags: [pulls]
+      summary: Add a branch protection rule (admins)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BranchProtectionInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BranchProtection" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/protections/{id}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+    patch:
+      operationId: updateProtection
+      tags: [pulls]
+      summary: Change a branch protection rule (admins)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BranchProtectionPatch" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BranchProtection" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteProtection
+      tags: [pulls]
+      summary: Remove a branch protection rule (admins)
+      responses:
+        "204": { description: Removed }
+        default: { $ref: "#/components/responses/Error" }
+
+  /pulls:
+    get:
+      operationId: listMyPulls
+      tags: [pulls]
+      summary: Pull requests across all repositories you can access
+      parameters:
+        - name: filter
+          in: query
+          description: "`review_requested`: waiting for your review. `authored`: opened by you. `all`: every pull request you can see."
+          schema: { type: string, enum: [review_requested, authored, all], default: review_requested }
+        - $ref: "#/components/parameters/PullStateParam"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Pull requests, most recently updated first
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PullPage" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/pulls:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listPulls
+      tags: [pulls]
+      summary: List pull requests, most recently updated first
+      parameters:
+        - $ref: "#/components/parameters/PullStateParam"
+        - { name: author, in: query, description: Username of the author., schema: { type: string } }
+        - { name: base, in: query, description: Only pull requests into this branch., schema: { type: string } }
+        - { name: head, in: query, description: Only pull requests from this branch., schema: { type: string } }
+        - { name: q, in: query, description: Case-insensitive substring of the title., schema: { type: string } }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Pull requests
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PullPage" }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createPull
+      tags: [pulls]
+      summary: Open a pull request (write access)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePullRequest" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PullRequest" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/pulls/{number}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/PullNumber"
+    get:
+      operationId: getPull
+      tags: [pulls]
+      summary: Get a pull request with its mergeability, reviews summary and merge blockers
+      responses:
+        "200":
+          description: Pull request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PullRequest" }
+        default: { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: updatePull
+      tags: [pulls]
+      summary: Edit, close, reopen or change the draft state of a pull request
+      description: The author or anyone with write access. Changing reviewers needs triage access.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdatePullRequest" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PullRequest" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/pulls/{number}/commits:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/PullNumber"
+    get:
+      operationId: listPullCommits
+      tags: [pulls]
+      summary: Commits in a pull request, oldest first (at most 250)
+      responses:
+        "200":
+          description: Commits
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Commit" } }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/pulls/{number}/files:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/PullNumber"
+    get:
+      operationId: getPullDiff
+      tags: [pulls]
+      summary: The pull request's changes (merge base to head)
+      responses:
+        "200":
+          description: Diff
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Diff" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/pulls/{number}/timeline:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/PullNumber"
+    get:
+      operationId: getPullTimeline
+      tags: [pulls]
+      summary: Conversation timeline, oldest first
+      description: |
+        Conversation comments, reviews (with the inline comments submitted with
+        them), standalone inline comments and events. Replies to inline comments
+        aren't separate items; get them from `listPullComments`.
+      responses:
+        "200":
+          description: Timeline
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/TimelineItem" } }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/pulls/{number}/comments:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/PullNumber"
+    get:
+      operationId: listPullComments
+      tags: [pulls]
+      summary: All comments (conversation and inline, including replies), oldest first
+      responses:
+        "200":
+          description: Comments
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Comment" } }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createPullComment
+      tags: [pulls]
+      summary: Comment on a pull request (triage access)
+      description: |
+        Without `path`, a conversation comment. With `path` and `line`, an inline
+        comment on a line of the diff (`side: new` for the head version, `old`
+        for the base version). With `reply_to`, a reply in an inline thread.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateComment" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Comment" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/comments/{id}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+    patch:
+      operationId: updateComment
+      tags: [pulls]
+      summary: Edit a comment (its author) or resolve an inline thread (triage access)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body: { type: string }
+                resolved: { type: boolean, description: Resolve or unresolve the thread this comment starts. }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Comment" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteComment
+      tags: [pulls]
+      summary: Delete a comment (its author or an admin)
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/pulls/{number}/reviews:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/PullNumber"
+    get:
+      operationId: listReviews
+      tags: [pulls]
+      summary: Reviews, oldest first
+      responses:
+        "200":
+          description: Reviews
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Review" } }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createReview
+      tags: [pulls]
+      summary: Submit a review (triage access)
+      description: |
+        Testers and maintainers can approve or request changes; the author can
+        only comment. Inline comments are submitted together with the review.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateReview" }
+      responses:
+        "201":
+          description: Submitted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Review" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/pulls/{number}/reviews/{id}/dismiss:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/PullNumber"
+      - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+    post:
+      operationId: dismissReview
+      tags: [pulls]
+      summary: Dismiss an approval or change request (write access)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message: { type: string }
+      responses:
+        "200":
+          description: Dismissed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Review" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/pulls/{number}/merge:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/PullNumber"
+    post:
+      operationId: mergePull
+      tags: [pulls]
+      summary: Merge a pull request (write access)
+      description: |
+        Fails with `conflict` (and `details.blockers`) when the pull request
+        can't be merged; `getPull` lists the blockers in advance.
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MergePullRequest" }
+      responses:
+        "200":
+          description: Merged
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PullRequest" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/pulls/{number}/update-branch:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/PullNumber"
+    post:
+      operationId: updatePullBranch
+      tags: [pulls]
+      summary: Merge the base branch into the head branch (write access)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sha: { type: string, description: Only update if the head is still at this commit. }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PullRequest" }
+        default: { $ref: "#/components/responses/Error" }
+
 components:
   parameters:
     RepoName:
@@ -774,6 +1195,23 @@ components:
       required: true
       description: Path of a file inside the repository.
       schema: { type: string }
+    PullNumber:
+      name: number
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    PullStateParam:
+      name: state
+      in: query
+      schema: { type: string, enum: [open, closed, merged, all], default: open }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PerPage:
+      name: per_page
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
   securitySchemes:
     sessionCookie:
       type: apiKey
@@ -1153,6 +1591,7 @@ components:
         author: { type: string }
         date: { type: string, format: date-time }
         is_default: { type: boolean }
+        protected: { type: boolean, description: A branch protection rule applies (branches only). }
 
     TreeEntry:
       type: object
@@ -1294,3 +1733,324 @@ components:
         commit: { type: string }
         path: { type: string }
         ranges: { type: array, items: { $ref: "#/components/schemas/BlameRange" } }
+
+    PullState:
+      type: string
+      enum: [open, closed, merged]
+
+    MergeMethod:
+      type: string
+      enum: [merge, squash, rebase]
+      description: |
+        `merge`: a merge commit. `squash`: one commit with all the changes.
+        `rebase`: each commit replayed onto the base (fast-forward when possible).
+
+    ReviewDecision:
+      type: string
+      enum: [approved, changes_requested, review_required, none]
+      description: |
+        `approved`: enough approvals (or at least one when no rule requires any).
+        `changes_requested`: someone's latest review requests changes.
+        `review_required`: a protection rule needs more approvals. `none`: no reviews yet.
+
+    PullSummary:
+      type: object
+      required: [number, repo, title, state, draft, author, head_branch, base_branch, comments, review_decision, requested_reviewers, created_at, updated_at]
+      properties:
+        number: { type: integer, format: int64 }
+        repo: { type: string, description: Repository name. }
+        title: { type: string }
+        state: { $ref: "#/components/schemas/PullState" }
+        draft: { type: boolean }
+        author: { $ref: "#/components/schemas/UserSummary" }
+        head_branch: { type: string }
+        base_branch: { type: string }
+        comments: { type: integer }
+        review_decision: { $ref: "#/components/schemas/ReviewDecision" }
+        requested_reviewers: { type: array, items: { $ref: "#/components/schemas/UserSummary" } }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        closed_at: { type: string, format: date-time, nullable: true }
+        merged_at: { type: string, format: date-time, nullable: true }
+
+    PullPage:
+      type: object
+      required: [pulls, total]
+      properties:
+        pulls: { type: array, items: { $ref: "#/components/schemas/PullSummary" } }
+        total: { type: integer, description: Total matching, across all pages. }
+
+    PullBranch:
+      type: object
+      required: [branch, sha, exists]
+      properties:
+        branch: { type: string }
+        sha: { type: string, description: Current tip (for a merged pull request, the commit it was merged at). }
+        exists: { type: boolean, description: The branch still exists. }
+
+    MergeBlocker:
+      type: object
+      required: [code, message, bypassable]
+      properties:
+        code:
+          type: string
+          enum: [closed, merged, draft, head_missing, base_missing, conflict, permission, approvals, changes_requested, behind]
+        message: { type: string }
+        bypassable:
+          type: boolean
+          description: An admin may merge anyway with `bypass_protection` (the rule allows admins to bypass it).
+
+    ReviewerState:
+      type: object
+      required: [user, state, stale]
+      properties:
+        user: { $ref: "#/components/schemas/UserSummary" }
+        state: { type: string, enum: [approved, changes_requested, commented, dismissed, requested] }
+        commit_sha: { type: string }
+        stale: { type: boolean, description: Reviewed an older head commit. }
+
+    PullRequest:
+      type: object
+      required: [number, repo, title, body, body_html, state, draft, author, head, base, merge_base, commits, additions, deletions, changed_files, comments, mergeable, conflict_files, review_decision, reviewers, requested_reviewers, blockers, can_merge, viewer_permission, created_at, updated_at]
+      properties:
+        number: { type: integer, format: int64 }
+        repo: { type: string }
+        title: { type: string }
+        body: { type: string }
+        body_html: { type: string, description: Rendered, sanitised HTML of the body. }
+        state: { $ref: "#/components/schemas/PullState" }
+        draft: { type: boolean }
+        author: { $ref: "#/components/schemas/UserSummary" }
+        head: { $ref: "#/components/schemas/PullBranch" }
+        base: { $ref: "#/components/schemas/PullBranch" }
+        merge_base: { type: string, description: Common ancestor of base and head. }
+        commits: { type: integer }
+        additions: { type: integer }
+        deletions: { type: integer }
+        changed_files: { type: integer }
+        comments: { type: integer }
+        mergeable:
+          type: string
+          enum: [clean, conflict, unknown]
+          description: Whether head merges into base without conflicts. `unknown` for closed pull requests or a missing head.
+        conflict_files: { type: array, items: { type: string } }
+        behind_by: { type: integer, description: Base commits not in head. }
+        review_decision: { $ref: "#/components/schemas/ReviewDecision" }
+        reviewers:
+          type: array
+          description: Each reviewer's latest review state, plus requested reviewers who haven't reviewed.
+          items: { $ref: "#/components/schemas/ReviewerState" }
+        requested_reviewers: { type: array, items: { $ref: "#/components/schemas/UserSummary" } }
+        protection:
+          allOf: [{ $ref: "#/components/schemas/BranchProtection" }]
+          nullable: true
+          description: The protection rule applying to the base branch, if any.
+        blockers:
+          type: array
+          description: Why you can't merge right now; empty when you can.
+          items: { $ref: "#/components/schemas/MergeBlocker" }
+        can_merge: { type: boolean, description: You can merge now (blockers is empty). }
+        viewer_permission: { $ref: "#/components/schemas/Permission" }
+        merged_by:
+          allOf: [{ $ref: "#/components/schemas/UserSummary" }]
+          nullable: true
+        merge_commit: { type: string, nullable: true }
+        merge_method: { type: string, nullable: true, description: "merge, squash, rebase, or manual (the head was pushed to the base outside tgp)." }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        closed_at: { type: string, format: date-time, nullable: true }
+        merged_at: { type: string, format: date-time, nullable: true }
+
+    CreatePullRequest:
+      type: object
+      required: [title, head]
+      properties:
+        title: { type: string }
+        body: { type: string }
+        head: { type: string, description: Branch with the changes. }
+        base: { type: string, description: Branch to merge into; defaults to the default branch. }
+        draft: { type: boolean, default: false }
+        reviewers: { type: array, items: { type: string }, description: Usernames to request reviews from. }
+
+    UpdatePullRequest:
+      type: object
+      properties:
+        title: { type: string }
+        body: { type: string }
+        base: { type: string, description: Change the base branch. }
+        state: { type: string, enum: [open, closed], description: Close or reopen. }
+        draft: { type: boolean, description: false marks the pull request ready for review. }
+        reviewers: { type: array, items: { type: string }, description: Replaces the requested reviewers. }
+
+    MergePullRequest:
+      type: object
+      properties:
+        method: { $ref: "#/components/schemas/MergeMethod" }
+        title: { type: string, description: Subject of the merge or squash commit. }
+        message: { type: string, description: Body of the merge or squash commit. }
+        sha: { type: string, description: Only merge if the head is still at this commit. }
+        delete_branch: { type: boolean, default: false, description: Delete the head branch after merging. }
+        bypass_protection:
+          type: boolean
+          default: false
+          description: Admins only, when the rule allows it; merge despite missing approvals, change requests or an out-of-date branch.
+
+    Comment:
+      type: object
+      required: [id, author, body, body_html, created_at, updated_at, edited]
+      properties:
+        id: { type: integer, format: int64 }
+        author: { $ref: "#/components/schemas/UserSummary" }
+        body: { type: string }
+        body_html: { type: string }
+        review_id: { type: integer, format: int64, nullable: true }
+        reply_to: { type: integer, format: int64, nullable: true, description: The thread's first comment, for replies. }
+        path: { type: string, description: File, for inline comments. }
+        line: { type: integer, description: Line number on `side`, for inline comments. }
+        side: { type: string, enum: [new, old] }
+        commit_sha: { type: string, description: Head commit the inline comment was made on. }
+        diff_hunk: { type: string, description: Diff lines leading up to the commented line, for context. }
+        outdated: { type: boolean, description: The file changed since the comment was made, so the line may have moved. }
+        resolved: { type: boolean }
+        resolved_by:
+          allOf: [{ $ref: "#/components/schemas/UserSummary" }]
+          nullable: true
+        edited: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    CreateComment:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string }
+        path: { type: string }
+        line: { type: integer, minimum: 1 }
+        side: { type: string, enum: [new, old], default: new }
+        reply_to: { type: integer, format: int64 }
+
+    InlineCommentInput:
+      type: object
+      required: [path, line, body]
+      properties:
+        path: { type: string }
+        line: { type: integer, minimum: 1 }
+        side: { type: string, enum: [new, old], default: new }
+        body: { type: string }
+
+    Review:
+      type: object
+      required: [id, author, state, body, body_html, commit_sha, stale, dismissed, comments, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        author: { $ref: "#/components/schemas/UserSummary" }
+        state: { type: string, enum: [approved, changes_requested, commented] }
+        body: { type: string }
+        body_html: { type: string }
+        commit_sha: { type: string }
+        stale: { type: boolean, description: Made on an older head commit. }
+        dismissed: { type: boolean }
+        dismissed_by:
+          allOf: [{ $ref: "#/components/schemas/UserSummary" }]
+          nullable: true
+        dismiss_message: { type: string }
+        comments: { type: array, items: { $ref: "#/components/schemas/Comment" }, description: Inline comments submitted with the review. }
+        created_at: { type: string, format: date-time }
+
+    CreateReview:
+      type: object
+      required: [state]
+      properties:
+        state: { type: string, enum: [approve, request_changes, comment] }
+        body: { type: string, description: Required when requesting changes or commenting without inline comments. }
+        commit_sha: { type: string, description: Head commit you reviewed; rejected if the head has moved since. }
+        comments: { type: array, items: { $ref: "#/components/schemas/InlineCommentInput" } }
+
+    PullEvent:
+      type: object
+      required: [id, type, data, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        type:
+          type: string
+          enum: [closed, reopened, merged, pushed, base_changed, title_changed, ready_for_review, converted_to_draft, review_requested, review_request_removed, review_dismissed, head_deleted, head_restored, branch_deleted, branch_updated]
+        actor:
+          allOf: [{ $ref: "#/components/schemas/UserSummary" }]
+          nullable: true
+        data:
+          type: object
+          additionalProperties: true
+          description: |
+            Type-specific: `pushed` {before, after, commits, forced}; `base_changed`
+            and `title_changed` {from, to}; `merged` {commit, method}; `review_requested`
+            and `review_request_removed` {reviewer}; `review_dismissed` {reviewer, message};
+            `branch_deleted` {branch}; `branch_updated` {commit}.
+        created_at: { type: string, format: date-time }
+
+    TimelineItem:
+      type: object
+      required: [kind, created_at]
+      properties:
+        kind: { type: string, enum: [comment, review, inline_comment, event] }
+        created_at: { type: string, format: date-time }
+        comment: { $ref: "#/components/schemas/Comment" }
+        review: { $ref: "#/components/schemas/Review" }
+        event: { $ref: "#/components/schemas/PullEvent" }
+
+    Comparison:
+      type: object
+      required: [base, head, base_sha, head_sha, merge_base, ahead_by, behind_by, commits, diff, mergeable, conflict_files]
+      properties:
+        base: { type: string }
+        head: { type: string }
+        base_sha: { type: string }
+        head_sha: { type: string }
+        merge_base: { type: string }
+        ahead_by: { type: integer }
+        behind_by: { type: integer }
+        commits: { type: array, items: { $ref: "#/components/schemas/Commit" }, description: Oldest first, at most 250. }
+        diff: { $ref: "#/components/schemas/Diff" }
+        mergeable: { type: string, enum: [clean, conflict] }
+        conflict_files: { type: array, items: { type: string } }
+        existing_pull: { type: integer, format: int64, nullable: true, description: An open pull request from head into base. }
+
+    BranchProtection:
+      type: object
+      required: [id, pattern, require_pull_request, required_approvals, dismiss_stale_approvals, require_up_to_date, block_force_push, allow_deletion, admins_bypass, created_at, updated_at]
+      properties:
+        id: { type: integer, format: int64 }
+        pattern: { type: string, description: "Branch name or glob, e.g. `main` or `release/*`." }
+        require_pull_request: { type: boolean, description: No direct pushes; changes land through pull requests. }
+        required_approvals: { type: integer, description: Approvals needed to merge (from anyone but the author). }
+        dismiss_stale_approvals: { type: boolean, description: Approvals of an older head commit don't count. }
+        require_up_to_date: { type: boolean, description: The head must contain the latest base commit before merging. }
+        block_force_push: { type: boolean }
+        allow_deletion: { type: boolean }
+        admins_bypass: { type: boolean, description: Admins may push directly and merge despite unmet requirements. }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    BranchProtectionInput:
+      type: object
+      required: [pattern]
+      properties:
+        pattern: { type: string }
+        require_pull_request: { type: boolean, default: true }
+        required_approvals: { type: integer, minimum: 0, maximum: 10, default: 1 }
+        dismiss_stale_approvals: { type: boolean, default: true }
+        require_up_to_date: { type: boolean, default: false }
+        block_force_push: { type: boolean, default: true }
+        allow_deletion: { type: boolean, default: false }
+        admins_bypass: { type: boolean, default: false }
+
+    BranchProtectionPatch:
+      type: object
+      properties:
+        pattern: { type: string }
+        require_pull_request: { type: boolean }
+        required_approvals: { type: integer, minimum: 0, maximum: 10 }
+        dismiss_stale_approvals: { type: boolean }
+        require_up_to_date: { type: boolean }
+        block_force_push: { type: boolean }
+        allow_deletion: { type: boolean }
+        admins_bypass: { type: boolean }

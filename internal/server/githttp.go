@@ -226,8 +226,8 @@ func writeJSON(w http.ResponseWriter, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
-// preReceive decides whether a push is accepted. Branch protection rules
-// (milestone 5) plug in here.
+// preReceive decides whether a push is accepted: write access, archived
+// state, reserved refs and branch protection rules.
 func (s *Server) preReceive(ctx context.Context, repo *model.Repo, user *model.User, updates []githook.Update) (githook.Response, error) {
 	deny := func(format string, args ...any) (githook.Response, error) {
 		return githook.Response{Allowed: false, Messages: []string{"tgp: " + fmt.Sprintf(format, args...)}}, nil
@@ -245,12 +245,19 @@ func (s *Server) preReceive(ctx context.Context, repo *model.Repo, user *model.U
 	if repo.Archived {
 		return deny("%s is archived", repo.Name)
 	}
+	rules, err := s.protectionRules(ctx, s.db, repo.ID)
+	if err != nil {
+		return githook.Response{}, err
+	}
 	for _, u := range updates {
 		switch {
 		case strings.HasPrefix(u.Ref, "refs/heads/"):
 			branch := strings.TrimPrefix(u.Ref, "refs/heads/")
 			if u.IsDelete() && branch == repo.DefaultBranch {
 				return deny("can't delete the default branch %q; change the default branch first", branch)
+			}
+			if msg := checkProtectedPush(matchRule(rules, branch), branch, user.IsAdmin(), u.IsCreate(), u.IsDelete(), u.Forced); msg != "" {
+				return deny("%s", msg)
 			}
 		case strings.HasPrefix(u.Ref, "refs/tags/"):
 		default:
@@ -261,7 +268,7 @@ func (s *Server) preReceive(ctx context.Context, repo *model.Repo, user *model.U
 }
 
 // postReceive records the push. CI triggers and webhooks plug in here.
-func (s *Server) postReceive(ctx context.Context, repo *model.Repo, _ *model.User, updates []githook.Update) (githook.Response, error) {
+func (s *Server) postReceive(ctx context.Context, repo *model.Repo, user *model.User, updates []githook.Update) (githook.Response, error) {
 	now := time.Now().UTC()
 	repo.PushedAt = &now
 	cols := []string{"pushed_at"}
@@ -285,5 +292,8 @@ func (s *Server) postReceive(ctx context.Context, repo *model.Repo, _ *model.Use
 	if _, err := s.db.NewUpdate().Model(repo).Column(cols...).WherePK().Exec(ctx); err != nil {
 		return githook.Response{Allowed: true}, err
 	}
-	return githook.Response{Allowed: true}, nil
+	if err := s.syncPulls(ctx, repo, user, updates); err != nil {
+		return githook.Response{Allowed: true}, err
+	}
+	return githook.Response{Allowed: true, Messages: s.pushHints(ctx, repo, updates)}, nil
 }

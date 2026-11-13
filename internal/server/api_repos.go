@@ -315,6 +315,14 @@ func (a *api) ListBranches(ctx context.Context, req apigen.ListBranchesRequestOb
 		return nil, err
 	}
 	out := toAPIRefs(refs, repo.DefaultBranch)
+	rules, err := a.s.protectionRules(ctx, a.s.db, repo.ID)
+	if err != nil {
+		return nil, err
+	}
+	for i := range out {
+		p := matchRule(rules, out[i].Name) != nil
+		out[i].Protected = &p
+	}
 	// Default branch first.
 	sort.SliceStable(out, func(i, j int) bool { return deref(out[i].IsDefault) && !deref(out[j].IsDefault) })
 	return apigen.ListBranches200JSONResponse(out), nil

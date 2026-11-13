@@ -70,14 +70,40 @@ written anywhere.
 | `tgp repo clone NAME [DIR] [-- git flags]` | Clone over HTTPS |
 | `tgp repo edit [NAME] [-d text] [--default-branch b] [--rename n] [--archive\|--unarchive]` | Change settings |
 | `tgp repo delete NAME [--yes]` | Delete permanently (admins) |
+| `tgp pr list [-s open\|closed\|merged\|all] [-A user] [-B base] [-H head] [-q text]` | Pull requests in a repository |
+| `tgp pr status` | Waiting for your review, and your own, across repositories |
+| `tgp pr view [PR] [--comments]` | A pull request; `--json` includes reviews, every comment and merge blockers |
+| `tgp pr create [--fill] [-t title] [-b body\|-F file] [-B base] [-H head] [-r reviewers] [-d]` | Open a pull request |
+| `tgp pr checkout PR` | Check out its branch |
+| `tgp pr diff [PR] [--name-only]` | Its changes |
+| `tgp pr comment [PR] -b text [--file path:line [--side old]] [--reply-to id]` | Comment, inline comment or reply |
+| `tgp pr comments [PR] [--unresolved]` | All comments, inline ones with path, line and diff hunk |
+| `tgp pr review [PR] --approve\|--request-changes\|--comment [-b text] [--inline path:line=text]` | Review |
+| `tgp pr merge [PR] [--merge\|--squash\|--rebase] [-d] [--sha s] [--admin] [--sync]` | Merge |
+| `tgp pr close\|reopen\|ready [--undo]\|update-branch\|edit [PR]` | Change state, base, title or reviewers |
+| `tgp protection list\|set PATTERN [flags]\|delete PATTERN` | Branch protection rules (changing them: admins) |
 | `tgp admin user list\|view\|create\|edit\|reset-password\|reset-2fa\|access` | Users (admins) |
 | `tgp admin audit [--actor u] [--action prefix] [-L n] [--before id]` | Audit log (admins) |
 | `tgp api [METHOD] PATH [-f k=v] [-F k=v] [--input file] [-H 'K: v'] [-i]` | Raw API request |
 | `tgp schema [COMMAND...]` | JSON Schema of a command's output |
 | `tgp version` | Version info |
 
+`PR` is a number (`12` or `#12`), a pull request URL, or a head branch name;
+left out, it's the pull request for the current git branch.
+
 Run `tgp <command> --help` for flags and examples. Later milestones add
-`pr`, `issue`, `run`, `release` and more.
+`issue`, `run`, `release` and more.
+
+### A typical agent loop
+
+```sh
+git push -u origin my-change
+tgp pr create --fill --reviewer tom --json=number
+tgp pr view --json --jq '{can_merge, blockers: [.blockers[].message]}'
+tgp pr comments --unresolved --json --jq '.[] | "\(.id) \(.path):\(.line) \(.body)"'
+tgp pr comment --reply-to 381 -b "Fixed in 3f2a9c1"
+tgp pr merge --squash --delete-branch --sha "$(git rev-parse HEAD)"
+```
 
 ## JSON output
 

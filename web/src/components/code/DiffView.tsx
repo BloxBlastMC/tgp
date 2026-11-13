@@ -1,10 +1,23 @@
-import { ChevronDown, ChevronRight, Columns2, Rows2 } from 'lucide-react'
-import { Fragment, useMemo, useState } from 'react'
+import { ChevronDown, ChevronRight, Columns2, Plus, Rows2 } from 'lucide-react'
+import { createContext, Fragment, useContext, useMemo, useState, type ReactNode } from 'react'
 import type { Diff, DiffFile, Schemas } from '../../api/client'
+import { commentAnchor } from '../../lib/pulls'
 import { Badge, cx } from '../ui'
 
 type Line = Schemas['DiffLine']
 type Mode = 'unified' | 'split'
+type Side = 'old' | 'new'
+
+/**
+ * Optional hooks for showing content under diff lines (pull request
+ * comment threads) and a gutter button to start a comment on a line.
+ */
+export type DiffAnnotations = {
+  render: (path: string, side: Side, line: number) => ReactNode
+  onComment?: (path: string, side: Side, line: number) => void
+}
+
+const AnnotationsContext = createContext<DiffAnnotations | undefined>(undefined)
 
 function loadMode(): Mode {
   try {
@@ -25,7 +38,7 @@ export function DiffStat({ additions, deletions }: { additions: number; deletion
 }
 
 /** A whole diff: summary bar, file list and one card per file. */
-export function DiffView({ diff }: { diff: Diff }) {
+export function DiffView({ diff, annotations }: { diff: Diff; annotations?: DiffAnnotations }) {
   const [mode, setModeState] = useState<Mode>(loadMode)
   const setMode = (m: Mode) => {
     setModeState(m)
@@ -36,6 +49,7 @@ export function DiffView({ diff }: { diff: Diff }) {
     }
   }
   return (
+    <AnnotationsContext.Provider value={annotations}>
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="text-fg-muted">
@@ -64,6 +78,58 @@ export function DiffView({ diff }: { diff: Diff }) {
         <FileDiff key={`${f.old_path}->${f.new_path}-${i}`} file={f} mode={mode} />
       ))}
     </div>
+    </AnnotationsContext.Provider>
+  )
+}
+
+function pathFor(file: DiffFile, side: Side) {
+  return side === 'old' ? file.old_path : file.new_path
+}
+
+function CommentButton({ file, line }: { file: DiffFile; line: Line | null }) {
+  const ann = useContext(AnnotationsContext)
+  const a = line && commentAnchor(line)
+  if (!ann?.onComment || !a) return null
+  return (
+    <button
+      type="button"
+      onClick={() => ann.onComment!(pathFor(file, a.side), a.side, a.line)}
+      className="absolute top-0.5 -left-0.5 hidden size-4 items-center justify-center rounded bg-accent text-accent-fg group-hover:flex focus:flex"
+      aria-label={`Comment on ${pathFor(file, a.side)} line ${a.line}`}
+      title="Comment on this line"
+    >
+      <Plus size={11} />
+    </button>
+  )
+}
+
+/** Annotation row content for the given lines (nothing if empty). */
+function useExtras(file: DiffFile, lines: (Line | null)[]): ReactNode {
+  const ann = useContext(AnnotationsContext)
+  if (!ann) return null
+  const parts: ReactNode[] = []
+  const seen = new Set<string>()
+  for (const l of lines) {
+    const a = l && commentAnchor(l)
+    if (!a) continue
+    const k = `${a.side}:${a.line}`
+    if (seen.has(k)) continue
+    seen.add(k)
+    const node = ann.render(pathFor(file, a.side), a.side, a.line)
+    if (node) parts.push(<Fragment key={k}>{node}</Fragment>)
+  }
+  return parts.length ? parts : null
+}
+
+function ExtrasRow({ file, lines, cols }: { file: DiffFile; lines: (Line | null)[]; cols: number }) {
+  const extras = useExtras(file, lines)
+  if (!extras) return null
+  return (
+    <tr>
+      <td colSpan={cols} className="border-y border-border bg-bg-subtle px-3 py-2 font-sans text-[13px] leading-normal whitespace-normal">
+        <div className="flex max-w-3xl flex-col gap-2">{extras}</div>
+      </td>
+    </tr>
   )
 }
 
@@ -125,8 +191,12 @@ function Unified({ file }: { file: DiffFile }) {
           <Fragment key={hi}>
             <HunkHeader header={h.header} cols={3} />
             {h.lines.map((l, li) => (
-              <tr key={li} className={rowTone[l.type]}>
-                <td className="w-1 px-2 text-right text-fg-faint select-none">{l.old_line ?? ''}</td>
+              <Fragment key={li}>
+              <tr className={cx('group', rowTone[l.type])}>
+                <td className="relative w-1 px-2 text-right text-fg-faint select-none">
+                  <CommentButton file={file} line={l} />
+                  {l.old_line ?? ''}
+                </td>
                 <td className="w-1 px-2 text-right text-fg-faint select-none">{l.new_line ?? ''}</td>
                 <td className="pr-4 whitespace-pre">
                   <span className="select-none text-fg-faint">{sign[l.type]}</span>
@@ -134,6 +204,8 @@ function Unified({ file }: { file: DiffFile }) {
                   {l.no_newline && <span className="ml-2 text-[11px] text-fg-faint select-none">⏎ no newline at end of file</span>}
                 </td>
               </tr>
+              <ExtrasRow file={file} lines={[l]} cols={3} />
+              </Fragment>
             ))}
           </Fragment>
         ))}
@@ -167,8 +239,11 @@ function Split({ file }: { file: DiffFile }) {
   const cell = (l: Line | null, side: 'old' | 'new') => {
     if (!l) return [<td key="n" className="w-1 bg-bg-subtle" />, <td key="c" className="w-1/2 bg-bg-subtle" />]
     const tone = l.type === 'context' ? '' : side === 'old' ? 'bg-danger/10' : 'bg-success/10'
+    // Context lines are commented on the new side only.
+    const commentable = side === 'new' || l.type === 'del'
     return [
-      <td key="n" className={cx('w-1 px-2 text-right text-fg-faint select-none', tone)}>
+      <td key="n" className={cx('relative w-1 px-2 text-right text-fg-faint select-none', tone)}>
+        {commentable && <CommentButton file={file} line={l} />}
         {side === 'old' ? l.old_line : l.new_line}
       </td>,
       <td key="c" className={cx('w-1/2 pr-3 whitespace-pre', tone)}>
@@ -189,10 +264,13 @@ function Split({ file }: { file: DiffFile }) {
           <Fragment key={hi}>
             <HunkHeader header={h.header} cols={4} />
             {h.rows.map(([a, b], ri) => (
-              <tr key={ri}>
-                {cell(a, 'old')}
-                {cell(b, 'new')}
-              </tr>
+              <Fragment key={ri}>
+                <tr className="group">
+                  {cell(a, 'old')}
+                  {cell(b, 'new')}
+                </tr>
+                <ExtrasRow file={file} lines={[a?.type === 'del' ? a : null, b]} cols={4} />
+              </Fragment>
             ))}
           </Fragment>
         ))}

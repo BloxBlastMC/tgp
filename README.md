@@ -6,7 +6,8 @@ A self-hosted git platform for a single team: repositories, pull requests,
 issues, CI with strict resource limits, and an agent-friendly CLI.
 
 > **Status:** early development: setup, users, authentication, repositories,
-> git over HTTPS, code browsing and the `tgp` CLI work; pull requests come next.
+> git over HTTPS, code browsing, the `tgp` CLI, pull requests with reviews and
+> branch protection work; issues come next.
 > See [docs/roadmap.md](docs/roadmap.md).
 
 ## Components

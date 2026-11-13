@@ -8,6 +8,7 @@ import {
   type InputHTMLAttributes,
   type ReactNode,
   type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
 } from 'react'
 
 export function cx(...c: (string | false | null | undefined)[]) {
@@ -54,6 +55,18 @@ export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputEleme
       {...rest}
       className={cx(
         'h-8 w-full rounded border border-border-strong bg-bg px-2.5 text-[13px] text-fg placeholder:text-fg-faint focus:border-accent focus:outline-none',
+        className,
+      )}
+    />
+  )
+}
+
+export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      {...rest}
+      className={cx(
+        'min-h-20 w-full rounded border border-border-strong bg-bg px-2.5 py-1.5 text-[13px] text-fg placeholder:text-fg-faint focus:border-accent focus:outline-none',
         className,
       )}
     />

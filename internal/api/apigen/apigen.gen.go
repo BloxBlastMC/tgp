@@ -41,6 +41,81 @@ func (e BlobEncoding) Valid() bool {
 	}
 }
 
+// Defines values for CommentSide.
+const (
+	CommentSideNew CommentSide = "new"
+	CommentSideOld CommentSide = "old"
+)
+
+// Valid indicates whether the value is a known member of the CommentSide enum.
+func (e CommentSide) Valid() bool {
+	switch e {
+	case CommentSideNew:
+		return true
+	case CommentSideOld:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ComparisonMergeable.
+const (
+	ComparisonMergeableClean    ComparisonMergeable = "clean"
+	ComparisonMergeableConflict ComparisonMergeable = "conflict"
+)
+
+// Valid indicates whether the value is a known member of the ComparisonMergeable enum.
+func (e ComparisonMergeable) Valid() bool {
+	switch e {
+	case ComparisonMergeableClean:
+		return true
+	case ComparisonMergeableConflict:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CreateCommentSide.
+const (
+	CreateCommentSideNew CreateCommentSide = "new"
+	CreateCommentSideOld CreateCommentSide = "old"
+)
+
+// Valid indicates whether the value is a known member of the CreateCommentSide enum.
+func (e CreateCommentSide) Valid() bool {
+	switch e {
+	case CreateCommentSideNew:
+		return true
+	case CreateCommentSideOld:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CreateReviewState.
+const (
+	CreateReviewStateApprove        CreateReviewState = "approve"
+	CreateReviewStateComment        CreateReviewState = "comment"
+	CreateReviewStateRequestChanges CreateReviewState = "request_changes"
+)
+
+// Valid indicates whether the value is a known member of the CreateReviewState enum.
+func (e CreateReviewState) Valid() bool {
+	switch e {
+	case CreateReviewStateApprove:
+		return true
+	case CreateReviewStateComment:
+		return true
+	case CreateReviewStateRequestChanges:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DiffFileStatus.
 const (
 	Added    DiffFileStatus = "added"
@@ -89,6 +164,87 @@ func (e DiffLineType) Valid() bool {
 	}
 }
 
+// Defines values for InlineCommentInputSide.
+const (
+	InlineCommentInputSideNew InlineCommentInputSide = "new"
+	InlineCommentInputSideOld InlineCommentInputSide = "old"
+)
+
+// Valid indicates whether the value is a known member of the InlineCommentInputSide enum.
+func (e InlineCommentInputSide) Valid() bool {
+	switch e {
+	case InlineCommentInputSideNew:
+		return true
+	case InlineCommentInputSideOld:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MergeBlockerCode.
+const (
+	MergeBlockerCodeApprovals        MergeBlockerCode = "approvals"
+	MergeBlockerCodeBaseMissing      MergeBlockerCode = "base_missing"
+	MergeBlockerCodeBehind           MergeBlockerCode = "behind"
+	MergeBlockerCodeChangesRequested MergeBlockerCode = "changes_requested"
+	MergeBlockerCodeClosed           MergeBlockerCode = "closed"
+	MergeBlockerCodeConflict         MergeBlockerCode = "conflict"
+	MergeBlockerCodeDraft            MergeBlockerCode = "draft"
+	MergeBlockerCodeHeadMissing      MergeBlockerCode = "head_missing"
+	MergeBlockerCodeMerged           MergeBlockerCode = "merged"
+	MergeBlockerCodePermission       MergeBlockerCode = "permission"
+)
+
+// Valid indicates whether the value is a known member of the MergeBlockerCode enum.
+func (e MergeBlockerCode) Valid() bool {
+	switch e {
+	case MergeBlockerCodeApprovals:
+		return true
+	case MergeBlockerCodeBaseMissing:
+		return true
+	case MergeBlockerCodeBehind:
+		return true
+	case MergeBlockerCodeChangesRequested:
+		return true
+	case MergeBlockerCodeClosed:
+		return true
+	case MergeBlockerCodeConflict:
+		return true
+	case MergeBlockerCodeDraft:
+		return true
+	case MergeBlockerCodeHeadMissing:
+		return true
+	case MergeBlockerCodeMerged:
+		return true
+	case MergeBlockerCodePermission:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MergeMethod.
+const (
+	Merge  MergeMethod = "merge"
+	Rebase MergeMethod = "rebase"
+	Squash MergeMethod = "squash"
+)
+
+// Valid indicates whether the value is a known member of the MergeMethod enum.
+func (e MergeMethod) Valid() bool {
+	switch e {
+	case Merge:
+		return true
+	case Rebase:
+		return true
+	case Squash:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for Permission.
 const (
 	PermissionAdmin  Permission = "admin"
@@ -116,6 +272,105 @@ func (e Permission) Valid() bool {
 	}
 }
 
+// Defines values for PullEventType.
+const (
+	PullEventTypeBaseChanged          PullEventType = "base_changed"
+	PullEventTypeBranchDeleted        PullEventType = "branch_deleted"
+	PullEventTypeBranchUpdated        PullEventType = "branch_updated"
+	PullEventTypeClosed               PullEventType = "closed"
+	PullEventTypeConvertedToDraft     PullEventType = "converted_to_draft"
+	PullEventTypeHeadDeleted          PullEventType = "head_deleted"
+	PullEventTypeHeadRestored         PullEventType = "head_restored"
+	PullEventTypeMerged               PullEventType = "merged"
+	PullEventTypePushed               PullEventType = "pushed"
+	PullEventTypeReadyForReview       PullEventType = "ready_for_review"
+	PullEventTypeReopened             PullEventType = "reopened"
+	PullEventTypeReviewDismissed      PullEventType = "review_dismissed"
+	PullEventTypeReviewRequestRemoved PullEventType = "review_request_removed"
+	PullEventTypeReviewRequested      PullEventType = "review_requested"
+	PullEventTypeTitleChanged         PullEventType = "title_changed"
+)
+
+// Valid indicates whether the value is a known member of the PullEventType enum.
+func (e PullEventType) Valid() bool {
+	switch e {
+	case PullEventTypeBaseChanged:
+		return true
+	case PullEventTypeBranchDeleted:
+		return true
+	case PullEventTypeBranchUpdated:
+		return true
+	case PullEventTypeClosed:
+		return true
+	case PullEventTypeConvertedToDraft:
+		return true
+	case PullEventTypeHeadDeleted:
+		return true
+	case PullEventTypeHeadRestored:
+		return true
+	case PullEventTypeMerged:
+		return true
+	case PullEventTypePushed:
+		return true
+	case PullEventTypeReadyForReview:
+		return true
+	case PullEventTypeReopened:
+		return true
+	case PullEventTypeReviewDismissed:
+		return true
+	case PullEventTypeReviewRequestRemoved:
+		return true
+	case PullEventTypeReviewRequested:
+		return true
+	case PullEventTypeTitleChanged:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PullRequestMergeable.
+const (
+	PullRequestMergeableClean    PullRequestMergeable = "clean"
+	PullRequestMergeableConflict PullRequestMergeable = "conflict"
+	PullRequestMergeableUnknown  PullRequestMergeable = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the PullRequestMergeable enum.
+func (e PullRequestMergeable) Valid() bool {
+	switch e {
+	case PullRequestMergeableClean:
+		return true
+	case PullRequestMergeableConflict:
+		return true
+	case PullRequestMergeableUnknown:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PullState.
+const (
+	PullStateClosed PullState = "closed"
+	PullStateMerged PullState = "merged"
+	PullStateOpen   PullState = "open"
+)
+
+// Valid indicates whether the value is a known member of the PullState enum.
+func (e PullState) Valid() bool {
+	switch e {
+	case PullStateClosed:
+		return true
+	case PullStateMerged:
+		return true
+	case PullStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RepoAccessSource.
 const (
 	RepoAccessSourceAdmin    RepoAccessSource = "admin"
@@ -131,6 +386,78 @@ func (e RepoAccessSource) Valid() bool {
 	case RepoAccessSourceAllRepos:
 		return true
 	case RepoAccessSourceGrant:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ReviewState.
+const (
+	ReviewStateApproved         ReviewState = "approved"
+	ReviewStateChangesRequested ReviewState = "changes_requested"
+	ReviewStateCommented        ReviewState = "commented"
+)
+
+// Valid indicates whether the value is a known member of the ReviewState enum.
+func (e ReviewState) Valid() bool {
+	switch e {
+	case ReviewStateApproved:
+		return true
+	case ReviewStateChangesRequested:
+		return true
+	case ReviewStateCommented:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ReviewDecision.
+const (
+	ReviewDecisionApproved         ReviewDecision = "approved"
+	ReviewDecisionChangesRequested ReviewDecision = "changes_requested"
+	ReviewDecisionNone             ReviewDecision = "none"
+	ReviewDecisionReviewRequired   ReviewDecision = "review_required"
+)
+
+// Valid indicates whether the value is a known member of the ReviewDecision enum.
+func (e ReviewDecision) Valid() bool {
+	switch e {
+	case ReviewDecisionApproved:
+		return true
+	case ReviewDecisionChangesRequested:
+		return true
+	case ReviewDecisionNone:
+		return true
+	case ReviewDecisionReviewRequired:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ReviewerStateState.
+const (
+	ReviewerStateStateApproved         ReviewerStateState = "approved"
+	ReviewerStateStateChangesRequested ReviewerStateState = "changes_requested"
+	ReviewerStateStateCommented        ReviewerStateState = "commented"
+	ReviewerStateStateDismissed        ReviewerStateState = "dismissed"
+	ReviewerStateStateRequested        ReviewerStateState = "requested"
+)
+
+// Valid indicates whether the value is a known member of the ReviewerStateState enum.
+func (e ReviewerStateState) Valid() bool {
+	switch e {
+	case ReviewerStateStateApproved:
+		return true
+	case ReviewerStateStateChangesRequested:
+		return true
+	case ReviewerStateStateCommented:
+		return true
+	case ReviewerStateStateDismissed:
+		return true
+	case ReviewerStateStateRequested:
 		return true
 	default:
 		return false
@@ -176,6 +503,30 @@ func (e SessionAuthMethod) Valid() bool {
 	}
 }
 
+// Defines values for TimelineItemKind.
+const (
+	TimelineItemKindComment       TimelineItemKind = "comment"
+	TimelineItemKindEvent         TimelineItemKind = "event"
+	TimelineItemKindInlineComment TimelineItemKind = "inline_comment"
+	TimelineItemKindReview        TimelineItemKind = "review"
+)
+
+// Valid indicates whether the value is a known member of the TimelineItemKind enum.
+func (e TimelineItemKind) Valid() bool {
+	switch e {
+	case TimelineItemKindComment:
+		return true
+	case TimelineItemKindEvent:
+		return true
+	case TimelineItemKindInlineComment:
+		return true
+	case TimelineItemKindReview:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TokenScope.
 const (
 	TokenScopeAdmin TokenScope = "admin"
@@ -215,6 +566,117 @@ func (e TreeEntryType) Valid() bool {
 	case Submodule:
 		return true
 	case Symlink:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UpdatePullRequestState.
+const (
+	UpdatePullRequestStateClosed UpdatePullRequestState = "closed"
+	UpdatePullRequestStateOpen   UpdatePullRequestState = "open"
+)
+
+// Valid indicates whether the value is a known member of the UpdatePullRequestState enum.
+func (e UpdatePullRequestState) Valid() bool {
+	switch e {
+	case UpdatePullRequestStateClosed:
+		return true
+	case UpdatePullRequestStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PullStateParam.
+const (
+	PullStateParamAll    PullStateParam = "all"
+	PullStateParamClosed PullStateParam = "closed"
+	PullStateParamMerged PullStateParam = "merged"
+	PullStateParamOpen   PullStateParam = "open"
+)
+
+// Valid indicates whether the value is a known member of the PullStateParam enum.
+func (e PullStateParam) Valid() bool {
+	switch e {
+	case PullStateParamAll:
+		return true
+	case PullStateParamClosed:
+		return true
+	case PullStateParamMerged:
+		return true
+	case PullStateParamOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListMyPullsParamsFilter.
+const (
+	ListMyPullsParamsFilterAll             ListMyPullsParamsFilter = "all"
+	ListMyPullsParamsFilterAuthored        ListMyPullsParamsFilter = "authored"
+	ListMyPullsParamsFilterReviewRequested ListMyPullsParamsFilter = "review_requested"
+)
+
+// Valid indicates whether the value is a known member of the ListMyPullsParamsFilter enum.
+func (e ListMyPullsParamsFilter) Valid() bool {
+	switch e {
+	case ListMyPullsParamsFilterAll:
+		return true
+	case ListMyPullsParamsFilterAuthored:
+		return true
+	case ListMyPullsParamsFilterReviewRequested:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListMyPullsParamsState.
+const (
+	ListMyPullsParamsStateAll    ListMyPullsParamsState = "all"
+	ListMyPullsParamsStateClosed ListMyPullsParamsState = "closed"
+	ListMyPullsParamsStateMerged ListMyPullsParamsState = "merged"
+	ListMyPullsParamsStateOpen   ListMyPullsParamsState = "open"
+)
+
+// Valid indicates whether the value is a known member of the ListMyPullsParamsState enum.
+func (e ListMyPullsParamsState) Valid() bool {
+	switch e {
+	case ListMyPullsParamsStateAll:
+		return true
+	case ListMyPullsParamsStateClosed:
+		return true
+	case ListMyPullsParamsStateMerged:
+		return true
+	case ListMyPullsParamsStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListPullsParamsState.
+const (
+	ListPullsParamsStateAll    ListPullsParamsState = "all"
+	ListPullsParamsStateClosed ListPullsParamsState = "closed"
+	ListPullsParamsStateMerged ListPullsParamsState = "merged"
+	ListPullsParamsStateOpen   ListPullsParamsState = "open"
+)
+
+// Valid indicates whether the value is a known member of the ListPullsParamsState enum.
+func (e ListPullsParamsState) Valid() bool {
+	switch e {
+	case ListPullsParamsStateAll:
+		return true
+	case ListPullsParamsStateClosed:
+		return true
+	case ListPullsParamsStateMerged:
+		return true
+	case ListPullsParamsStateOpen:
 		return true
 	default:
 		return false
@@ -296,6 +758,56 @@ type Blob struct {
 // BlobEncoding defines model for Blob.Encoding.
 type BlobEncoding string
 
+// BranchProtection defines model for BranchProtection.
+type BranchProtection struct {
+	// AdminsBypass Admins may push directly and merge despite unmet requirements.
+	AdminsBypass   bool      `json:"admins_bypass"`
+	AllowDeletion  bool      `json:"allow_deletion"`
+	BlockForcePush bool      `json:"block_force_push"`
+	CreatedAt      time.Time `json:"created_at"`
+
+	// DismissStaleApprovals Approvals of an older head commit don't count.
+	DismissStaleApprovals bool  `json:"dismiss_stale_approvals"`
+	Id                    int64 `json:"id"`
+
+	// Pattern Branch name or glob, e.g. `main` or `release/*`.
+	Pattern string `json:"pattern"`
+
+	// RequirePullRequest No direct pushes; changes land through pull requests.
+	RequirePullRequest bool `json:"require_pull_request"`
+
+	// RequireUpToDate The head must contain the latest base commit before merging.
+	RequireUpToDate bool `json:"require_up_to_date"`
+
+	// RequiredApprovals Approvals needed to merge (from anyone but the author).
+	RequiredApprovals int       `json:"required_approvals"`
+	UpdatedAt         time.Time `json:"updated_at"`
+}
+
+// BranchProtectionInput defines model for BranchProtectionInput.
+type BranchProtectionInput struct {
+	AdminsBypass          *bool  `json:"admins_bypass,omitempty"`
+	AllowDeletion         *bool  `json:"allow_deletion,omitempty"`
+	BlockForcePush        *bool  `json:"block_force_push,omitempty"`
+	DismissStaleApprovals *bool  `json:"dismiss_stale_approvals,omitempty"`
+	Pattern               string `json:"pattern"`
+	RequirePullRequest    *bool  `json:"require_pull_request,omitempty"`
+	RequireUpToDate       *bool  `json:"require_up_to_date,omitempty"`
+	RequiredApprovals     *int   `json:"required_approvals,omitempty"`
+}
+
+// BranchProtectionPatch defines model for BranchProtectionPatch.
+type BranchProtectionPatch struct {
+	AdminsBypass          *bool   `json:"admins_bypass,omitempty"`
+	AllowDeletion         *bool   `json:"allow_deletion,omitempty"`
+	BlockForcePush        *bool   `json:"block_force_push,omitempty"`
+	DismissStaleApprovals *bool   `json:"dismiss_stale_approvals,omitempty"`
+	Pattern               *string `json:"pattern,omitempty"`
+	RequirePullRequest    *bool   `json:"require_pull_request,omitempty"`
+	RequireUpToDate       *bool   `json:"require_up_to_date,omitempty"`
+	RequiredApprovals     *int    `json:"required_approvals,omitempty"`
+}
+
 // ChangePasswordRequest defines model for ChangePasswordRequest.
 type ChangePasswordRequest struct {
 	CurrentPassword string `json:"current_password"`
@@ -303,6 +815,42 @@ type ChangePasswordRequest struct {
 	// NewPassword At least 10 characters.
 	NewPassword string `json:"new_password"`
 }
+
+// Comment defines model for Comment.
+type Comment struct {
+	Author   UserSummary `json:"author"`
+	Body     string      `json:"body"`
+	BodyHtml string      `json:"body_html"`
+
+	// CommitSha Head commit the inline comment was made on.
+	CommitSha *string   `json:"commit_sha,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+
+	// DiffHunk Diff lines leading up to the commented line
+	DiffHunk *string `json:"diff_hunk,omitempty"`
+	Edited   bool    `json:"edited"`
+	Id       int64   `json:"id"`
+
+	// Line Line number on `side`
+	Line *int `json:"line,omitempty"`
+
+	// Outdated The file changed since the comment was made
+	Outdated *bool `json:"outdated,omitempty"`
+
+	// Path File
+	Path *string `json:"path,omitempty"`
+
+	// ReplyTo The thread's first comment
+	ReplyTo    *int64       `json:"reply_to,omitempty"`
+	Resolved   *bool        `json:"resolved,omitempty"`
+	ResolvedBy *UserSummary `json:"resolved_by,omitempty"`
+	ReviewId   *int64       `json:"review_id,omitempty"`
+	Side       *CommentSide `json:"side,omitempty"`
+	UpdatedAt  time.Time    `json:"updated_at"`
+}
+
+// CommentSide defines model for Comment.Side.
+type CommentSide string
 
 // Commit defines model for Commit.
 type Commit struct {
@@ -326,6 +874,56 @@ type CommitPage struct {
 	HasMore bool     `json:"has_more"`
 }
 
+// Comparison defines model for Comparison.
+type Comparison struct {
+	AheadBy  int    `json:"ahead_by"`
+	Base     string `json:"base"`
+	BaseSha  string `json:"base_sha"`
+	BehindBy int    `json:"behind_by"`
+
+	// Commits Oldest first
+	Commits       []Commit `json:"commits"`
+	ConflictFiles []string `json:"conflict_files"`
+	Diff          Diff     `json:"diff"`
+
+	// ExistingPull An open pull request from head into base.
+	ExistingPull *int64              `json:"existing_pull,omitempty"`
+	Head         string              `json:"head"`
+	HeadSha      string              `json:"head_sha"`
+	MergeBase    string              `json:"merge_base"`
+	Mergeable    ComparisonMergeable `json:"mergeable"`
+}
+
+// ComparisonMergeable defines model for Comparison.Mergeable.
+type ComparisonMergeable string
+
+// CreateComment defines model for CreateComment.
+type CreateComment struct {
+	Body    string             `json:"body"`
+	Line    *int               `json:"line,omitempty"`
+	Path    *string            `json:"path,omitempty"`
+	ReplyTo *int64             `json:"reply_to,omitempty"`
+	Side    *CreateCommentSide `json:"side,omitempty"`
+}
+
+// CreateCommentSide defines model for CreateComment.Side.
+type CreateCommentSide string
+
+// CreatePullRequest defines model for CreatePullRequest.
+type CreatePullRequest struct {
+	// Base Branch to merge into; defaults to the default branch.
+	Base  *string `json:"base,omitempty"`
+	Body  *string `json:"body,omitempty"`
+	Draft *bool   `json:"draft,omitempty"`
+
+	// Head Branch with the changes.
+	Head string `json:"head"`
+
+	// Reviewers Usernames to request reviews from.
+	Reviewers *[]string `json:"reviewers,omitempty"`
+	Title     string    `json:"title"`
+}
+
 // CreateRepoRequest defines model for CreateRepoRequest.
 type CreateRepoRequest struct {
 	// AutoInit Create an initial commit with a README.
@@ -334,6 +932,20 @@ type CreateRepoRequest struct {
 	Description   *string `json:"description,omitempty"`
 	Name          string  `json:"name"`
 }
+
+// CreateReview defines model for CreateReview.
+type CreateReview struct {
+	// Body Required when requesting changes or commenting without inline comments.
+	Body     *string               `json:"body,omitempty"`
+	Comments *[]InlineCommentInput `json:"comments,omitempty"`
+
+	// CommitSha Head commit you reviewed; rejected if the head has moved since.
+	CommitSha *string           `json:"commit_sha,omitempty"`
+	State     CreateReviewState `json:"state"`
+}
+
+// CreateReviewState defines model for CreateReview.State.
+type CreateReviewState string
 
 // CreateTokenRequest defines model for CreateTokenRequest.
 type CreateTokenRequest struct {
@@ -439,6 +1051,17 @@ type Error struct {
 	} `json:"error"`
 }
 
+// InlineCommentInput defines model for InlineCommentInput.
+type InlineCommentInput struct {
+	Body string                  `json:"body"`
+	Line int                     `json:"line"`
+	Path string                  `json:"path"`
+	Side *InlineCommentInputSide `json:"side,omitempty"`
+}
+
+// InlineCommentInputSide defines model for InlineCommentInput.Side.
+type InlineCommentInputSide string
+
 // LoginRequest defines model for LoginRequest.
 type LoginRequest struct {
 	Password     string  `json:"password"`
@@ -447,6 +1070,43 @@ type LoginRequest struct {
 
 	// Username Username or email.
 	Username string `json:"username"`
+}
+
+// MergeBlocker defines model for MergeBlocker.
+type MergeBlocker struct {
+	// Bypassable An admin may merge anyway with `bypass_protection` (the rule allows admins to bypass it).
+	Bypassable bool             `json:"bypassable"`
+	Code       MergeBlockerCode `json:"code"`
+	Message    string           `json:"message"`
+}
+
+// MergeBlockerCode defines model for MergeBlocker.Code.
+type MergeBlockerCode string
+
+// MergeMethod `merge`: a merge commit. `squash`: one commit with all the changes.
+// `rebase`: each commit replayed onto the base (fast-forward when possible).
+type MergeMethod string
+
+// MergePullRequest defines model for MergePullRequest.
+type MergePullRequest struct {
+	// BypassProtection Admins only, when the rule allows it; merge despite missing approvals, change requests or an out-of-date branch.
+	BypassProtection *bool `json:"bypass_protection,omitempty"`
+
+	// DeleteBranch Delete the head branch after merging.
+	DeleteBranch *bool `json:"delete_branch,omitempty"`
+
+	// Message Body of the merge or squash commit.
+	Message *string `json:"message,omitempty"`
+
+	// Method `merge`: a merge commit. `squash`: one commit with all the changes.
+	// `rebase`: each commit replayed onto the base (fast-forward when possible).
+	Method *MergeMethod `json:"method,omitempty"`
+
+	// Sha Only merge if the head is still at this commit.
+	Sha *string `json:"sha,omitempty"`
+
+	// Title Subject of the merge or squash commit.
+	Title *string `json:"title,omitempty"`
 }
 
 // Meta defines model for Meta.
@@ -482,6 +1142,135 @@ type PasswordConfirm struct {
 // `write` (maintainers): plus push and merge. `admin`: plus rename, archive, delete, access.
 type Permission string
 
+// PullBranch defines model for PullBranch.
+type PullBranch struct {
+	Branch string `json:"branch"`
+
+	// Exists The branch still exists.
+	Exists bool `json:"exists"`
+
+	// Sha Current tip (for a merged pull request
+	Sha string `json:"sha"`
+}
+
+// PullEvent defines model for PullEvent.
+type PullEvent struct {
+	Actor     *UserSummary `json:"actor,omitempty"`
+	CreatedAt time.Time    `json:"created_at"`
+
+	// Data Type-specific: `pushed` {before, after, commits, forced}; `base_changed`
+	// and `title_changed` {from, to}; `merged` {commit, method}; `review_requested`
+	// and `review_request_removed` {reviewer}; `review_dismissed` {reviewer, message};
+	// `branch_deleted` {branch}; `branch_updated` {commit}.
+	Data map[string]interface{} `json:"data"`
+	Id   int64                  `json:"id"`
+	Type PullEventType          `json:"type"`
+}
+
+// PullEventType defines model for PullEvent.Type.
+type PullEventType string
+
+// PullPage defines model for PullPage.
+type PullPage struct {
+	Pulls []PullSummary `json:"pulls"`
+
+	// Total Total matching
+	Total int `json:"total"`
+}
+
+// PullRequest defines model for PullRequest.
+type PullRequest struct {
+	Additions int         `json:"additions"`
+	Author    UserSummary `json:"author"`
+	Base      PullBranch  `json:"base"`
+
+	// BehindBy Base commits not in head.
+	BehindBy *int `json:"behind_by,omitempty"`
+
+	// Blockers Why you can't merge right now; empty when you can.
+	Blockers []MergeBlocker `json:"blockers"`
+	Body     string         `json:"body"`
+
+	// BodyHtml Rendered
+	BodyHtml string `json:"body_html"`
+
+	// CanMerge You can merge now (blockers is empty).
+	CanMerge      bool       `json:"can_merge"`
+	ChangedFiles  int        `json:"changed_files"`
+	ClosedAt      *time.Time `json:"closed_at,omitempty"`
+	Comments      int        `json:"comments"`
+	Commits       int        `json:"commits"`
+	ConflictFiles []string   `json:"conflict_files"`
+	CreatedAt     time.Time  `json:"created_at"`
+	Deletions     int        `json:"deletions"`
+	Draft         bool       `json:"draft"`
+	Head          PullBranch `json:"head"`
+
+	// MergeBase Common ancestor of base and head.
+	MergeBase   string  `json:"merge_base"`
+	MergeCommit *string `json:"merge_commit,omitempty"`
+
+	// MergeMethod merge, squash, rebase, or manual (the head was pushed to the base outside tgp).
+	MergeMethod *string `json:"merge_method,omitempty"`
+
+	// Mergeable Whether head merges into base without conflicts. `unknown` for closed pull requests or a missing head.
+	Mergeable PullRequestMergeable `json:"mergeable"`
+	MergedAt  *time.Time           `json:"merged_at,omitempty"`
+	MergedBy  *UserSummary         `json:"merged_by,omitempty"`
+	Number    int64                `json:"number"`
+
+	// Protection The protection rule applying to the base branch, if any.
+	Protection         *BranchProtection `json:"protection,omitempty"`
+	Repo               string            `json:"repo"`
+	RequestedReviewers []UserSummary     `json:"requested_reviewers"`
+
+	// ReviewDecision `approved`: enough approvals (or at least one when no rule requires any).
+	// `changes_requested`: someone's latest review requests changes.
+	// `review_required`: a protection rule needs more approvals. `none`: no reviews yet.
+	ReviewDecision ReviewDecision `json:"review_decision"`
+
+	// Reviewers Each reviewer's latest review state, plus requested reviewers who haven't reviewed.
+	Reviewers []ReviewerState `json:"reviewers"`
+	State     PullState       `json:"state"`
+	Title     string          `json:"title"`
+	UpdatedAt time.Time       `json:"updated_at"`
+
+	// ViewerPermission `read`: clone and browse. `triage` (testers): plus issues, comments, reviews, CI re-runs.
+	// `write` (maintainers): plus push and merge. `admin`: plus rename, archive, delete, access.
+	ViewerPermission Permission `json:"viewer_permission"`
+}
+
+// PullRequestMergeable Whether head merges into base without conflicts. `unknown` for closed pull requests or a missing head.
+type PullRequestMergeable string
+
+// PullState defines model for PullState.
+type PullState string
+
+// PullSummary defines model for PullSummary.
+type PullSummary struct {
+	Author     UserSummary `json:"author"`
+	BaseBranch string      `json:"base_branch"`
+	ClosedAt   *time.Time  `json:"closed_at,omitempty"`
+	Comments   int         `json:"comments"`
+	CreatedAt  time.Time   `json:"created_at"`
+	Draft      bool        `json:"draft"`
+	HeadBranch string      `json:"head_branch"`
+	MergedAt   *time.Time  `json:"merged_at,omitempty"`
+	Number     int64       `json:"number"`
+
+	// Repo Repository name.
+	Repo               string        `json:"repo"`
+	RequestedReviewers []UserSummary `json:"requested_reviewers"`
+
+	// ReviewDecision `approved`: enough approvals (or at least one when no rule requires any).
+	// `changes_requested`: someone's latest review requests changes.
+	// `review_required`: a protection rule needs more approvals. `none`: no reviews yet.
+	ReviewDecision ReviewDecision `json:"review_decision"`
+	State          PullState      `json:"state"`
+	Title          string         `json:"title"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+}
+
 // Readme defines model for Readme.
 type Readme struct {
 	// Html Sanitised HTML.
@@ -504,6 +1293,9 @@ type Ref struct {
 	Date      time.Time `json:"date"`
 	IsDefault *bool     `json:"is_default,omitempty"`
 	Name      string    `json:"name"`
+
+	// Protected A branch protection rule applies (branches only).
+	Protected *bool `json:"protected,omitempty"`
 
 	// Subject First line of the commit message.
 	Subject string `json:"subject"`
@@ -545,6 +1337,47 @@ type RepoAccess struct {
 
 // RepoAccessSource Why the user has access.
 type RepoAccessSource string
+
+// Review defines model for Review.
+type Review struct {
+	Author   UserSummary `json:"author"`
+	Body     string      `json:"body"`
+	BodyHtml string      `json:"body_html"`
+
+	// Comments Inline comments submitted with the review.
+	Comments       []Comment    `json:"comments"`
+	CommitSha      string       `json:"commit_sha"`
+	CreatedAt      time.Time    `json:"created_at"`
+	DismissMessage *string      `json:"dismiss_message,omitempty"`
+	Dismissed      bool         `json:"dismissed"`
+	DismissedBy    *UserSummary `json:"dismissed_by,omitempty"`
+	Id             int64        `json:"id"`
+
+	// Stale Made on an older head commit.
+	Stale bool        `json:"stale"`
+	State ReviewState `json:"state"`
+}
+
+// ReviewState defines model for Review.State.
+type ReviewState string
+
+// ReviewDecision `approved`: enough approvals (or at least one when no rule requires any).
+// `changes_requested`: someone's latest review requests changes.
+// `review_required`: a protection rule needs more approvals. `none`: no reviews yet.
+type ReviewDecision string
+
+// ReviewerState defines model for ReviewerState.
+type ReviewerState struct {
+	CommitSha *string `json:"commit_sha,omitempty"`
+
+	// Stale Reviewed an older head commit.
+	Stale bool               `json:"stale"`
+	State ReviewerStateState `json:"state"`
+	User  UserSummary        `json:"user"`
+}
+
+// ReviewerStateState defines model for ReviewerState.State.
+type ReviewerStateState string
 
 // Role `admin`: everything, including the admin panel and creating repositories.
 // `maintainer`: read/write on granted repositories.
@@ -598,6 +1431,18 @@ type Signature struct {
 	Name  string    `json:"name"`
 }
 
+// TimelineItem defines model for TimelineItem.
+type TimelineItem struct {
+	Comment   *Comment         `json:"comment,omitempty"`
+	CreatedAt time.Time        `json:"created_at"`
+	Event     *PullEvent       `json:"event,omitempty"`
+	Kind      TimelineItemKind `json:"kind"`
+	Review    *Review          `json:"review,omitempty"`
+}
+
+// TimelineItemKind defines model for TimelineItem.Kind.
+type TimelineItemKind string
+
 // TokenScope defines model for TokenScope.
 type TokenScope string
 
@@ -637,6 +1482,26 @@ type UpdateOrgRequest struct {
 	Description *string `json:"description,omitempty"`
 	Name        *string `json:"name,omitempty"`
 }
+
+// UpdatePullRequest defines model for UpdatePullRequest.
+type UpdatePullRequest struct {
+	// Base Change the base branch.
+	Base *string `json:"base,omitempty"`
+	Body *string `json:"body,omitempty"`
+
+	// Draft false marks the pull request ready for review.
+	Draft *bool `json:"draft,omitempty"`
+
+	// Reviewers Replaces the requested reviewers.
+	Reviewers *[]string `json:"reviewers,omitempty"`
+
+	// State Close or reopen.
+	State *UpdatePullRequestState `json:"state,omitempty"`
+	Title *string                 `json:"title,omitempty"`
+}
+
+// UpdatePullRequestState Close or reopen.
+type UpdatePullRequestState string
 
 // UpdateRepoRequest defines model for UpdateRepoRequest.
 type UpdateRepoRequest struct {
@@ -715,8 +1580,20 @@ type UserWithTempPassword struct {
 	User                  User      `json:"user"`
 }
 
+// Page defines model for Page.
+type Page = int
+
 // PathParam defines model for PathParam.
 type PathParam = string
+
+// PerPage defines model for PerPage.
+type PerPage = int
+
+// PullNumber defines model for PullNumber.
+type PullNumber = int64
+
+// PullStateParam defines model for PullStateParam.
+type PullStateParam string
 
 // RefParam defines model for RefParam.
 type RefParam = string
@@ -764,6 +1641,21 @@ type RenderMarkdownJSONBody struct {
 	Text string  `json:"text"`
 }
 
+// ListMyPullsParams defines parameters for ListMyPulls.
+type ListMyPullsParams struct {
+	// Filter `review_requested`: waiting for your review. `authored`: opened by you. `all`: every pull request you can see.
+	Filter  *ListMyPullsParamsFilter `form:"filter,omitempty" json:"filter,omitempty"`
+	State   *ListMyPullsParamsState  `form:"state,omitempty" json:"state,omitempty"`
+	Page    *Page                    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPage                 `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListMyPullsParamsFilter defines parameters for ListMyPulls.
+type ListMyPullsParamsFilter string
+
+// ListMyPullsParamsState defines parameters for ListMyPulls.
+type ListMyPullsParamsState string
+
 // ListReposParams defines parameters for ListRepos.
 type ListReposParams struct {
 	// Q Case-insensitive substring filter on the name.
@@ -788,6 +1680,22 @@ type GetBlobParams struct {
 	Path RequiredPathParam `form:"path" json:"path"`
 }
 
+// DeleteBranchJSONBody defines parameters for DeleteBranch.
+type DeleteBranchJSONBody struct {
+	Name string `json:"name"`
+
+	// Sha Only delete if the branch still points at this commit.
+	Sha *string `json:"sha,omitempty"`
+}
+
+// UpdateCommentJSONBody defines parameters for UpdateComment.
+type UpdateCommentJSONBody struct {
+	Body *string `json:"body,omitempty"`
+
+	// Resolved Resolve or unresolve the thread this comment starts.
+	Resolved *bool `json:"resolved,omitempty"`
+}
+
 // ListCommitsParams defines parameters for ListCommits.
 type ListCommitsParams struct {
 	// Ref Branch, tag or commit. Defaults to the default branch.
@@ -797,6 +1705,45 @@ type ListCommitsParams struct {
 	Path    *PathParam `form:"path,omitempty" json:"path,omitempty"`
 	Page    *int       `form:"page,omitempty" json:"page,omitempty"`
 	PerPage *int       `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// CompareRefsParams defines parameters for CompareRefs.
+type CompareRefsParams struct {
+	Base string `form:"base" json:"base"`
+	Head string `form:"head" json:"head"`
+}
+
+// ListPullsParams defines parameters for ListPulls.
+type ListPullsParams struct {
+	State *ListPullsParamsState `form:"state,omitempty" json:"state,omitempty"`
+
+	// Author Username of the author.
+	Author *string `form:"author,omitempty" json:"author,omitempty"`
+
+	// Base Only pull requests into this branch.
+	Base *string `form:"base,omitempty" json:"base,omitempty"`
+
+	// Head Only pull requests from this branch.
+	Head *string `form:"head,omitempty" json:"head,omitempty"`
+
+	// Q Case-insensitive substring of the title.
+	Q       *string  `form:"q,omitempty" json:"q,omitempty"`
+	Page    *Page    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListPullsParamsState defines parameters for ListPulls.
+type ListPullsParamsState string
+
+// DismissReviewJSONBody defines parameters for DismissReview.
+type DismissReviewJSONBody struct {
+	Message string `json:"message"`
+}
+
+// UpdatePullBranchJSONBody defines parameters for UpdatePullBranch.
+type UpdatePullBranchJSONBody struct {
+	// Sha Only update if the head is still at this commit.
+	Sha *string `json:"sha,omitempty"`
 }
 
 // GetRawParams defines parameters for GetRaw.
@@ -864,6 +1811,39 @@ type CreateRepoJSONRequestBody = CreateRepoRequest
 
 // UpdateRepoJSONRequestBody defines body for UpdateRepo for application/json ContentType.
 type UpdateRepoJSONRequestBody = UpdateRepoRequest
+
+// DeleteBranchJSONRequestBody defines body for DeleteBranch for application/json ContentType.
+type DeleteBranchJSONRequestBody DeleteBranchJSONBody
+
+// UpdateCommentJSONRequestBody defines body for UpdateComment for application/json ContentType.
+type UpdateCommentJSONRequestBody UpdateCommentJSONBody
+
+// CreateProtectionJSONRequestBody defines body for CreateProtection for application/json ContentType.
+type CreateProtectionJSONRequestBody = BranchProtectionInput
+
+// UpdateProtectionJSONRequestBody defines body for UpdateProtection for application/json ContentType.
+type UpdateProtectionJSONRequestBody = BranchProtectionPatch
+
+// CreatePullJSONRequestBody defines body for CreatePull for application/json ContentType.
+type CreatePullJSONRequestBody = CreatePullRequest
+
+// UpdatePullJSONRequestBody defines body for UpdatePull for application/json ContentType.
+type UpdatePullJSONRequestBody = UpdatePullRequest
+
+// CreatePullCommentJSONRequestBody defines body for CreatePullComment for application/json ContentType.
+type CreatePullCommentJSONRequestBody = CreateComment
+
+// MergePullJSONRequestBody defines body for MergePull for application/json ContentType.
+type MergePullJSONRequestBody = MergePullRequest
+
+// CreateReviewJSONRequestBody defines body for CreateReview for application/json ContentType.
+type CreateReviewJSONRequestBody = CreateReview
+
+// DismissReviewJSONRequestBody defines body for DismissReview for application/json ContentType.
+type DismissReviewJSONRequestBody DismissReviewJSONBody
+
+// UpdatePullBranchJSONRequestBody defines body for UpdatePullBranch for application/json ContentType.
+type UpdatePullBranchJSONRequestBody UpdatePullBranchJSONBody
 
 // CompleteSetupJSONRequestBody defines body for CompleteSetup for application/json ContentType.
 type CompleteSetupJSONRequestBody = SetupRequest
@@ -1206,6 +2186,11 @@ type ClientInterface interface {
 	// Corresponds with GET /org/logo (the `GetOrgLogo` operationId).
 	GetOrgLogo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListMyPulls Pull requests across all repositories you can access
+	//
+	// Corresponds with GET /pulls (the `ListMyPulls` operationId).
+	ListMyPulls(ctx context.Context, params *ListMyPullsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListRepos List repositories you can access
 	//
 	// Corresponds with GET /repos (the `ListRepos` operationId).
@@ -1275,6 +2260,45 @@ type ClientInterface interface {
 	// Corresponds with GET /repos/{repo}/branches (the `ListBranches` operationId).
 	ListBranches(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteBranchWithBody Delete a branch
+	//
+	// Needs write access. The default branch, the base or head branch of an open
+	// pull request, and protected branches that don't allow deletion can't be deleted.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/branches/delete (the `DeleteBranch` operationId).
+	DeleteBranchWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteBranch Delete a branch
+	//
+	// Needs write access. The default branch, the base or head branch of an open
+	// pull request, and protected branches that don't allow deletion can't be deleted.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/branches/delete (the `DeleteBranch` operationId).
+	DeleteBranch(ctx context.Context, repo RepoName, body DeleteBranchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteComment Delete a comment (its author or an admin)
+	//
+	// Corresponds with DELETE /repos/{repo}/comments/{id} (the `DeleteComment` operationId).
+	DeleteComment(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateCommentWithBody Edit a comment (its author) or resolve an inline thread (triage access)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/comments/{id} (the `UpdateComment` operationId).
+	UpdateCommentWithBody(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateComment Edit a comment (its author) or resolve an inline thread (triage access)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/comments/{id} (the `UpdateComment` operationId).
+	UpdateComment(ctx context.Context, repo RepoName, id int64, body UpdateCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListCommits Commit history, newest first
 	//
 	// Corresponds with GET /repos/{repo}/commits (the `ListCommits` operationId).
@@ -1284,6 +2308,210 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /repos/{repo}/commits/{sha} (the `GetCommit` operationId).
 	GetCommit(ctx context.Context, repo RepoName, sha string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CompareRefs Compare two branches (what a pull request from head into base would contain)
+	//
+	// Corresponds with GET /repos/{repo}/compare (the `CompareRefs` operationId).
+	CompareRefs(ctx context.Context, repo RepoName, params *CompareRefsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListProtections List branch protection rules
+	//
+	// Corresponds with GET /repos/{repo}/protections (the `ListProtections` operationId).
+	ListProtections(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateProtectionWithBody Add a branch protection rule (admins)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/protections (the `CreateProtection` operationId).
+	CreateProtectionWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateProtection Add a branch protection rule (admins)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/protections (the `CreateProtection` operationId).
+	CreateProtection(ctx context.Context, repo RepoName, body CreateProtectionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteProtection Remove a branch protection rule (admins)
+	//
+	// Corresponds with DELETE /repos/{repo}/protections/{id} (the `DeleteProtection` operationId).
+	DeleteProtection(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateProtectionWithBody Change a branch protection rule (admins)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/protections/{id} (the `UpdateProtection` operationId).
+	UpdateProtectionWithBody(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateProtection Change a branch protection rule (admins)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/protections/{id} (the `UpdateProtection` operationId).
+	UpdateProtection(ctx context.Context, repo RepoName, id int64, body UpdateProtectionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListPulls List pull requests, most recently updated first
+	//
+	// Corresponds with GET /repos/{repo}/pulls (the `ListPulls` operationId).
+	ListPulls(ctx context.Context, repo RepoName, params *ListPullsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreatePullWithBody Open a pull request (write access)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls (the `CreatePull` operationId).
+	CreatePullWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreatePull Open a pull request (write access)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls (the `CreatePull` operationId).
+	CreatePull(ctx context.Context, repo RepoName, body CreatePullJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPull Get a pull request with its mergeability, reviews summary and merge blockers
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number} (the `GetPull` operationId).
+	GetPull(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdatePullWithBody Edit, close, reopen or change the draft state of a pull request
+	//
+	// The author or anyone with write access. Changing reviewers needs triage access.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/pulls/{number} (the `UpdatePull` operationId).
+	UpdatePullWithBody(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdatePull Edit, close, reopen or change the draft state of a pull request
+	//
+	// The author or anyone with write access. Changing reviewers needs triage access.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/pulls/{number} (the `UpdatePull` operationId).
+	UpdatePull(ctx context.Context, repo RepoName, number PullNumber, body UpdatePullJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListPullComments All comments (conversation and inline, including replies), oldest first
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number}/comments (the `ListPullComments` operationId).
+	ListPullComments(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreatePullCommentWithBody Comment on a pull request (triage access)
+	//
+	// Without `path`, a conversation comment. With `path` and `line`, an inline
+	// comment on a line of the diff (`side: new` for the head version, `old`
+	// for the base version). With `reply_to`, a reply in an inline thread.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/comments (the `CreatePullComment` operationId).
+	CreatePullCommentWithBody(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreatePullComment Comment on a pull request (triage access)
+	//
+	// Without `path`, a conversation comment. With `path` and `line`, an inline
+	// comment on a line of the diff (`side: new` for the head version, `old`
+	// for the base version). With `reply_to`, a reply in an inline thread.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/comments (the `CreatePullComment` operationId).
+	CreatePullComment(ctx context.Context, repo RepoName, number PullNumber, body CreatePullCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListPullCommits Commits in a pull request, oldest first (at most 250)
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number}/commits (the `ListPullCommits` operationId).
+	ListPullCommits(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPullDiff The pull request's changes (merge base to head)
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number}/files (the `GetPullDiff` operationId).
+	GetPullDiff(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// MergePullWithBody Merge a pull request (write access)
+	//
+	// Fails with `conflict` (and `details.blockers`) when the pull request
+	// can't be merged; `getPull` lists the blockers in advance.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/merge (the `MergePull` operationId).
+	MergePullWithBody(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// MergePull Merge a pull request (write access)
+	//
+	// Fails with `conflict` (and `details.blockers`) when the pull request
+	// can't be merged; `getPull` lists the blockers in advance.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/merge (the `MergePull` operationId).
+	MergePull(ctx context.Context, repo RepoName, number PullNumber, body MergePullJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListReviews Reviews, oldest first
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number}/reviews (the `ListReviews` operationId).
+	ListReviews(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateReviewWithBody Submit a review (triage access)
+	//
+	// Testers and maintainers can approve or request changes; the author can
+	// only comment. Inline comments are submitted together with the review.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/reviews (the `CreateReview` operationId).
+	CreateReviewWithBody(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateReview Submit a review (triage access)
+	//
+	// Testers and maintainers can approve or request changes; the author can
+	// only comment. Inline comments are submitted together with the review.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/reviews (the `CreateReview` operationId).
+	CreateReview(ctx context.Context, repo RepoName, number PullNumber, body CreateReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DismissReviewWithBody Dismiss an approval or change request (write access)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/reviews/{id}/dismiss (the `DismissReview` operationId).
+	DismissReviewWithBody(ctx context.Context, repo RepoName, number PullNumber, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DismissReview Dismiss an approval or change request (write access)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/reviews/{id}/dismiss (the `DismissReview` operationId).
+	DismissReview(ctx context.Context, repo RepoName, number PullNumber, id int64, body DismissReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPullTimeline Conversation timeline, oldest first
+	//
+	// Conversation comments, reviews (with the inline comments submitted with
+	// them), standalone inline comments and events. Replies to inline comments
+	// aren't separate items; get them from `listPullComments`.
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number}/timeline (the `GetPullTimeline` operationId).
+	GetPullTimeline(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdatePullBranchWithBody Merge the base branch into the head branch (write access)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/update-branch (the `UpdatePullBranch` operationId).
+	UpdatePullBranchWithBody(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdatePullBranch Merge the base branch into the head branch (write access)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/update-branch (the `UpdatePullBranch` operationId).
+	UpdatePullBranch(ctx context.Context, repo RepoName, number PullNumber, body UpdatePullBranchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetRaw Download a file's raw bytes
 	//
@@ -1981,6 +3209,21 @@ func (c *Client) GetOrgLogo(ctx context.Context, reqEditors ...RequestEditorFn) 
 	return c.Client.Do(req)
 }
 
+// ListMyPulls Pull requests across all repositories you can access
+//
+// Corresponds with GET /pulls (the `ListMyPulls` operationId).
+func (c *Client) ListMyPulls(ctx context.Context, params *ListMyPullsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListMyPullsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListRepos List repositories you can access
 //
 // Corresponds with GET /repos (the `ListRepos` operationId).
@@ -2160,6 +3403,95 @@ func (c *Client) ListBranches(ctx context.Context, repo RepoName, reqEditors ...
 	return c.Client.Do(req)
 }
 
+// DeleteBranchWithBody Delete a branch
+//
+// Needs write access. The default branch, the base or head branch of an open
+// pull request, and protected branches that don't allow deletion can't be deleted.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/branches/delete (the `DeleteBranch` operationId).
+func (c *Client) DeleteBranchWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteBranchRequestWithBody(c.Server, repo, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteBranch Delete a branch
+//
+// Needs write access. The default branch, the base or head branch of an open
+// pull request, and protected branches that don't allow deletion can't be deleted.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/branches/delete (the `DeleteBranch` operationId).
+func (c *Client) DeleteBranch(ctx context.Context, repo RepoName, body DeleteBranchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteBranchRequest(c.Server, repo, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteComment Delete a comment (its author or an admin)
+//
+// Corresponds with DELETE /repos/{repo}/comments/{id} (the `DeleteComment` operationId).
+func (c *Client) DeleteComment(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteCommentRequest(c.Server, repo, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateCommentWithBody Edit a comment (its author) or resolve an inline thread (triage access)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /repos/{repo}/comments/{id} (the `UpdateComment` operationId).
+func (c *Client) UpdateCommentWithBody(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateCommentRequestWithBody(c.Server, repo, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateComment Edit a comment (its author) or resolve an inline thread (triage access)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /repos/{repo}/comments/{id} (the `UpdateComment` operationId).
+func (c *Client) UpdateComment(ctx context.Context, repo RepoName, id int64, body UpdateCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateCommentRequest(c.Server, repo, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListCommits Commit history, newest first
 //
 // Corresponds with GET /repos/{repo}/commits (the `ListCommits` operationId).
@@ -2180,6 +3512,490 @@ func (c *Client) ListCommits(ctx context.Context, repo RepoName, params *ListCom
 // Corresponds with GET /repos/{repo}/commits/{sha} (the `GetCommit` operationId).
 func (c *Client) GetCommit(ctx context.Context, repo RepoName, sha string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetCommitRequest(c.Server, repo, sha)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CompareRefs Compare two branches (what a pull request from head into base would contain)
+//
+// Corresponds with GET /repos/{repo}/compare (the `CompareRefs` operationId).
+func (c *Client) CompareRefs(ctx context.Context, repo RepoName, params *CompareRefsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCompareRefsRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListProtections List branch protection rules
+//
+// Corresponds with GET /repos/{repo}/protections (the `ListProtections` operationId).
+func (c *Client) ListProtections(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListProtectionsRequest(c.Server, repo)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateProtectionWithBody Add a branch protection rule (admins)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/protections (the `CreateProtection` operationId).
+func (c *Client) CreateProtectionWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateProtectionRequestWithBody(c.Server, repo, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateProtection Add a branch protection rule (admins)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/protections (the `CreateProtection` operationId).
+func (c *Client) CreateProtection(ctx context.Context, repo RepoName, body CreateProtectionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateProtectionRequest(c.Server, repo, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteProtection Remove a branch protection rule (admins)
+//
+// Corresponds with DELETE /repos/{repo}/protections/{id} (the `DeleteProtection` operationId).
+func (c *Client) DeleteProtection(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteProtectionRequest(c.Server, repo, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateProtectionWithBody Change a branch protection rule (admins)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /repos/{repo}/protections/{id} (the `UpdateProtection` operationId).
+func (c *Client) UpdateProtectionWithBody(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProtectionRequestWithBody(c.Server, repo, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateProtection Change a branch protection rule (admins)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /repos/{repo}/protections/{id} (the `UpdateProtection` operationId).
+func (c *Client) UpdateProtection(ctx context.Context, repo RepoName, id int64, body UpdateProtectionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProtectionRequest(c.Server, repo, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListPulls List pull requests, most recently updated first
+//
+// Corresponds with GET /repos/{repo}/pulls (the `ListPulls` operationId).
+func (c *Client) ListPulls(ctx context.Context, repo RepoName, params *ListPullsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListPullsRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreatePullWithBody Open a pull request (write access)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/pulls (the `CreatePull` operationId).
+func (c *Client) CreatePullWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePullRequestWithBody(c.Server, repo, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreatePull Open a pull request (write access)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/pulls (the `CreatePull` operationId).
+func (c *Client) CreatePull(ctx context.Context, repo RepoName, body CreatePullJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePullRequest(c.Server, repo, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPull Get a pull request with its mergeability, reviews summary and merge blockers
+//
+// Corresponds with GET /repos/{repo}/pulls/{number} (the `GetPull` operationId).
+func (c *Client) GetPull(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPullRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdatePullWithBody Edit, close, reopen or change the draft state of a pull request
+//
+// The author or anyone with write access. Changing reviewers needs triage access.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /repos/{repo}/pulls/{number} (the `UpdatePull` operationId).
+func (c *Client) UpdatePullWithBody(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdatePullRequestWithBody(c.Server, repo, number, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdatePull Edit, close, reopen or change the draft state of a pull request
+//
+// The author or anyone with write access. Changing reviewers needs triage access.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /repos/{repo}/pulls/{number} (the `UpdatePull` operationId).
+func (c *Client) UpdatePull(ctx context.Context, repo RepoName, number PullNumber, body UpdatePullJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdatePullRequest(c.Server, repo, number, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListPullComments All comments (conversation and inline, including replies), oldest first
+//
+// Corresponds with GET /repos/{repo}/pulls/{number}/comments (the `ListPullComments` operationId).
+func (c *Client) ListPullComments(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListPullCommentsRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreatePullCommentWithBody Comment on a pull request (triage access)
+//
+// Without `path`, a conversation comment. With `path` and `line`, an inline
+// comment on a line of the diff (`side: new` for the head version, `old`
+// for the base version). With `reply_to`, a reply in an inline thread.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/comments (the `CreatePullComment` operationId).
+func (c *Client) CreatePullCommentWithBody(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePullCommentRequestWithBody(c.Server, repo, number, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreatePullComment Comment on a pull request (triage access)
+//
+// Without `path`, a conversation comment. With `path` and `line`, an inline
+// comment on a line of the diff (`side: new` for the head version, `old`
+// for the base version). With `reply_to`, a reply in an inline thread.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/comments (the `CreatePullComment` operationId).
+func (c *Client) CreatePullComment(ctx context.Context, repo RepoName, number PullNumber, body CreatePullCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreatePullCommentRequest(c.Server, repo, number, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListPullCommits Commits in a pull request, oldest first (at most 250)
+//
+// Corresponds with GET /repos/{repo}/pulls/{number}/commits (the `ListPullCommits` operationId).
+func (c *Client) ListPullCommits(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListPullCommitsRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPullDiff The pull request's changes (merge base to head)
+//
+// Corresponds with GET /repos/{repo}/pulls/{number}/files (the `GetPullDiff` operationId).
+func (c *Client) GetPullDiff(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPullDiffRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// MergePullWithBody Merge a pull request (write access)
+//
+// Fails with `conflict` (and `details.blockers`) when the pull request
+// can't be merged; `getPull` lists the blockers in advance.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/merge (the `MergePull` operationId).
+func (c *Client) MergePullWithBody(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewMergePullRequestWithBody(c.Server, repo, number, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// MergePull Merge a pull request (write access)
+//
+// Fails with `conflict` (and `details.blockers`) when the pull request
+// can't be merged; `getPull` lists the blockers in advance.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/merge (the `MergePull` operationId).
+func (c *Client) MergePull(ctx context.Context, repo RepoName, number PullNumber, body MergePullJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewMergePullRequest(c.Server, repo, number, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListReviews Reviews, oldest first
+//
+// Corresponds with GET /repos/{repo}/pulls/{number}/reviews (the `ListReviews` operationId).
+func (c *Client) ListReviews(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListReviewsRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateReviewWithBody Submit a review (triage access)
+//
+// Testers and maintainers can approve or request changes; the author can
+// only comment. Inline comments are submitted together with the review.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/reviews (the `CreateReview` operationId).
+func (c *Client) CreateReviewWithBody(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateReviewRequestWithBody(c.Server, repo, number, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateReview Submit a review (triage access)
+//
+// Testers and maintainers can approve or request changes; the author can
+// only comment. Inline comments are submitted together with the review.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/reviews (the `CreateReview` operationId).
+func (c *Client) CreateReview(ctx context.Context, repo RepoName, number PullNumber, body CreateReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateReviewRequest(c.Server, repo, number, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DismissReviewWithBody Dismiss an approval or change request (write access)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/reviews/{id}/dismiss (the `DismissReview` operationId).
+func (c *Client) DismissReviewWithBody(ctx context.Context, repo RepoName, number PullNumber, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDismissReviewRequestWithBody(c.Server, repo, number, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DismissReview Dismiss an approval or change request (write access)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/reviews/{id}/dismiss (the `DismissReview` operationId).
+func (c *Client) DismissReview(ctx context.Context, repo RepoName, number PullNumber, id int64, body DismissReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDismissReviewRequest(c.Server, repo, number, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPullTimeline Conversation timeline, oldest first
+//
+// Conversation comments, reviews (with the inline comments submitted with
+// them), standalone inline comments and events. Replies to inline comments
+// aren't separate items; get them from `listPullComments`.
+//
+// Corresponds with GET /repos/{repo}/pulls/{number}/timeline (the `GetPullTimeline` operationId).
+func (c *Client) GetPullTimeline(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPullTimelineRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdatePullBranchWithBody Merge the base branch into the head branch (write access)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/update-branch (the `UpdatePullBranch` operationId).
+func (c *Client) UpdatePullBranchWithBody(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdatePullBranchRequestWithBody(c.Server, repo, number, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdatePullBranch Merge the base branch into the head branch (write access)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/update-branch (the `UpdatePullBranch` operationId).
+func (c *Client) UpdatePullBranch(ctx context.Context, repo RepoName, number PullNumber, body UpdatePullBranchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdatePullBranchRequest(c.Server, repo, number, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3297,6 +5113,96 @@ func NewGetOrgLogoRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewListMyPullsRequest constructs an http.Request for the ListMyPulls method
+func NewListMyPullsRequest(server string, params *ListMyPullsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/pulls")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Filter != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "filter", *params.Filter, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.State != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "state", *params.State, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListReposRequest constructs an http.Request for the ListRepos method
 func NewListReposRequest(server string, params *ListReposParams) (*http.Request, error) {
 	var err error
@@ -3712,6 +5618,148 @@ func NewListBranchesRequest(server string, repo RepoName) (*http.Request, error)
 	return req, nil
 }
 
+// NewDeleteBranchRequest calls the generic DeleteBranch builder with application/json body
+func NewDeleteBranchRequest(server string, repo RepoName, body DeleteBranchJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteBranchRequestWithBody(server, repo, "application/json", bodyReader)
+}
+
+// NewDeleteBranchRequestWithBody constructs an http.Request for the DeleteBranch method, with any body, and a specified content type
+func NewDeleteBranchRequestWithBody(server string, repo RepoName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/branches/delete", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteCommentRequest constructs an http.Request for the DeleteComment method
+func NewDeleteCommentRequest(server string, repo RepoName, id int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/comments/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateCommentRequest calls the generic UpdateComment builder with application/json body
+func NewUpdateCommentRequest(server string, repo RepoName, id int64, body UpdateCommentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateCommentRequestWithBody(server, repo, id, "application/json", bodyReader)
+}
+
+// NewUpdateCommentRequestWithBody constructs an http.Request for the UpdateComment method, with any body, and a specified content type
+func NewUpdateCommentRequestWithBody(server string, repo RepoName, id int64, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/comments/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListCommitsRequest constructs an http.Request for the ListCommits method
 func NewListCommitsRequest(server string, repo RepoName, params *ListCommitsParams) (*http.Request, error) {
 	var err error
@@ -3846,6 +5894,1004 @@ func NewGetCommitRequest(server string, repo RepoName, sha string) (*http.Reques
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewCompareRefsRequest constructs an http.Request for the CompareRefs method
+func NewCompareRefsRequest(server string, repo RepoName, params *CompareRefsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/compare", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "base", params.Base, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "head", params.Head, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListProtectionsRequest constructs an http.Request for the ListProtections method
+func NewListProtectionsRequest(server string, repo RepoName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/protections", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateProtectionRequest calls the generic CreateProtection builder with application/json body
+func NewCreateProtectionRequest(server string, repo RepoName, body CreateProtectionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateProtectionRequestWithBody(server, repo, "application/json", bodyReader)
+}
+
+// NewCreateProtectionRequestWithBody constructs an http.Request for the CreateProtection method, with any body, and a specified content type
+func NewCreateProtectionRequestWithBody(server string, repo RepoName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/protections", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteProtectionRequest constructs an http.Request for the DeleteProtection method
+func NewDeleteProtectionRequest(server string, repo RepoName, id int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/protections/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateProtectionRequest calls the generic UpdateProtection builder with application/json body
+func NewUpdateProtectionRequest(server string, repo RepoName, id int64, body UpdateProtectionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateProtectionRequestWithBody(server, repo, id, "application/json", bodyReader)
+}
+
+// NewUpdateProtectionRequestWithBody constructs an http.Request for the UpdateProtection method, with any body, and a specified content type
+func NewUpdateProtectionRequestWithBody(server string, repo RepoName, id int64, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/protections/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListPullsRequest constructs an http.Request for the ListPulls method
+func NewListPullsRequest(server string, repo RepoName, params *ListPullsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.State != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "state", *params.State, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Author != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "author", *params.Author, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Base != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "base", *params.Base, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Head != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "head", *params.Head, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "q", *params.Q, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreatePullRequest calls the generic CreatePull builder with application/json body
+func NewCreatePullRequest(server string, repo RepoName, body CreatePullJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreatePullRequestWithBody(server, repo, "application/json", bodyReader)
+}
+
+// NewCreatePullRequestWithBody constructs an http.Request for the CreatePull method, with any body, and a specified content type
+func NewCreatePullRequestWithBody(server string, repo RepoName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetPullRequest constructs an http.Request for the GetPull method
+func NewGetPullRequest(server string, repo RepoName, number PullNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdatePullRequest calls the generic UpdatePull builder with application/json body
+func NewUpdatePullRequest(server string, repo RepoName, number PullNumber, body UpdatePullJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdatePullRequestWithBody(server, repo, number, "application/json", bodyReader)
+}
+
+// NewUpdatePullRequestWithBody constructs an http.Request for the UpdatePull method, with any body, and a specified content type
+func NewUpdatePullRequestWithBody(server string, repo RepoName, number PullNumber, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListPullCommentsRequest constructs an http.Request for the ListPullComments method
+func NewListPullCommentsRequest(server string, repo RepoName, number PullNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s/comments", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreatePullCommentRequest calls the generic CreatePullComment builder with application/json body
+func NewCreatePullCommentRequest(server string, repo RepoName, number PullNumber, body CreatePullCommentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreatePullCommentRequestWithBody(server, repo, number, "application/json", bodyReader)
+}
+
+// NewCreatePullCommentRequestWithBody constructs an http.Request for the CreatePullComment method, with any body, and a specified content type
+func NewCreatePullCommentRequestWithBody(server string, repo RepoName, number PullNumber, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s/comments", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListPullCommitsRequest constructs an http.Request for the ListPullCommits method
+func NewListPullCommitsRequest(server string, repo RepoName, number PullNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s/commits", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetPullDiffRequest constructs an http.Request for the GetPullDiff method
+func NewGetPullDiffRequest(server string, repo RepoName, number PullNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s/files", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewMergePullRequest calls the generic MergePull builder with application/json body
+func NewMergePullRequest(server string, repo RepoName, number PullNumber, body MergePullJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewMergePullRequestWithBody(server, repo, number, "application/json", bodyReader)
+}
+
+// NewMergePullRequestWithBody constructs an http.Request for the MergePull method, with any body, and a specified content type
+func NewMergePullRequestWithBody(server string, repo RepoName, number PullNumber, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s/merge", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListReviewsRequest constructs an http.Request for the ListReviews method
+func NewListReviewsRequest(server string, repo RepoName, number PullNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s/reviews", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateReviewRequest calls the generic CreateReview builder with application/json body
+func NewCreateReviewRequest(server string, repo RepoName, number PullNumber, body CreateReviewJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateReviewRequestWithBody(server, repo, number, "application/json", bodyReader)
+}
+
+// NewCreateReviewRequestWithBody constructs an http.Request for the CreateReview method, with any body, and a specified content type
+func NewCreateReviewRequestWithBody(server string, repo RepoName, number PullNumber, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s/reviews", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDismissReviewRequest calls the generic DismissReview builder with application/json body
+func NewDismissReviewRequest(server string, repo RepoName, number PullNumber, id int64, body DismissReviewJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDismissReviewRequestWithBody(server, repo, number, id, "application/json", bodyReader)
+}
+
+// NewDismissReviewRequestWithBody constructs an http.Request for the DismissReview method, with any body, and a specified content type
+func NewDismissReviewRequestWithBody(server string, repo RepoName, number PullNumber, id int64, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s/reviews/%s/dismiss", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetPullTimelineRequest constructs an http.Request for the GetPullTimeline method
+func NewGetPullTimelineRequest(server string, repo RepoName, number PullNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s/timeline", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdatePullBranchRequest calls the generic UpdatePullBranch builder with application/json body
+func NewUpdatePullBranchRequest(server string, repo RepoName, number PullNumber, body UpdatePullBranchJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdatePullBranchRequestWithBody(server, repo, number, "application/json", bodyReader)
+}
+
+// NewUpdatePullBranchRequestWithBody constructs an http.Request for the UpdatePullBranch method, with any body, and a specified content type
+func NewUpdatePullBranchRequestWithBody(server string, repo RepoName, number PullNumber, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/pulls/%s/update-branch", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -4504,6 +7550,13 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /org/logo (the `GetOrgLogo` operationId).
 	GetOrgLogoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetOrgLogoResponse, error)
 
+	// ListMyPullsWithResponse Pull requests across all repositories you can access
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /pulls (the `ListMyPulls` operationId).
+	ListMyPullsWithResponse(ctx context.Context, params *ListMyPullsParams, reqEditors ...RequestEditorFn) (*ListMyPullsResponse, error)
+
 	// ListReposWithResponse List repositories you can access
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -4587,6 +7640,47 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /repos/{repo}/branches (the `ListBranches` operationId).
 	ListBranchesWithResponse(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*ListBranchesResponse, error)
 
+	// DeleteBranchWithBodyWithResponse Delete a branch
+	//
+	// Needs write access. The default branch, the base or head branch of an open
+	// pull request, and protected branches that don't allow deletion can't be deleted.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/branches/delete (the `DeleteBranch` operationId).
+	DeleteBranchWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteBranchResponse, error)
+
+	// DeleteBranchWithResponse Delete a branch
+	//
+	// Needs write access. The default branch, the base or head branch of an open
+	// pull request, and protected branches that don't allow deletion can't be deleted.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/branches/delete (the `DeleteBranch` operationId).
+	DeleteBranchWithResponse(ctx context.Context, repo RepoName, body DeleteBranchJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteBranchResponse, error)
+
+	// DeleteCommentWithResponse Delete a comment (its author or an admin)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /repos/{repo}/comments/{id} (the `DeleteComment` operationId).
+	DeleteCommentWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*DeleteCommentResponse, error)
+
+	// UpdateCommentWithBodyWithResponse Edit a comment (its author) or resolve an inline thread (triage access)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/comments/{id} (the `UpdateComment` operationId).
+	UpdateCommentWithBodyWithResponse(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateCommentResponse, error)
+
+	// UpdateCommentWithResponse Edit a comment (its author) or resolve an inline thread (triage access)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/comments/{id} (the `UpdateComment` operationId).
+	UpdateCommentWithResponse(ctx context.Context, repo RepoName, id int64, body UpdateCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateCommentResponse, error)
+
 	// ListCommitsWithResponse Commit history, newest first
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -4600,6 +7694,230 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /repos/{repo}/commits/{sha} (the `GetCommit` operationId).
 	GetCommitWithResponse(ctx context.Context, repo RepoName, sha string, reqEditors ...RequestEditorFn) (*GetCommitResponse, error)
+
+	// CompareRefsWithResponse Compare two branches (what a pull request from head into base would contain)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/compare (the `CompareRefs` operationId).
+	CompareRefsWithResponse(ctx context.Context, repo RepoName, params *CompareRefsParams, reqEditors ...RequestEditorFn) (*CompareRefsResponse, error)
+
+	// ListProtectionsWithResponse List branch protection rules
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/protections (the `ListProtections` operationId).
+	ListProtectionsWithResponse(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*ListProtectionsResponse, error)
+
+	// CreateProtectionWithBodyWithResponse Add a branch protection rule (admins)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/protections (the `CreateProtection` operationId).
+	CreateProtectionWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateProtectionResponse, error)
+
+	// CreateProtectionWithResponse Add a branch protection rule (admins)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/protections (the `CreateProtection` operationId).
+	CreateProtectionWithResponse(ctx context.Context, repo RepoName, body CreateProtectionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateProtectionResponse, error)
+
+	// DeleteProtectionWithResponse Remove a branch protection rule (admins)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /repos/{repo}/protections/{id} (the `DeleteProtection` operationId).
+	DeleteProtectionWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*DeleteProtectionResponse, error)
+
+	// UpdateProtectionWithBodyWithResponse Change a branch protection rule (admins)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/protections/{id} (the `UpdateProtection` operationId).
+	UpdateProtectionWithBodyWithResponse(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProtectionResponse, error)
+
+	// UpdateProtectionWithResponse Change a branch protection rule (admins)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/protections/{id} (the `UpdateProtection` operationId).
+	UpdateProtectionWithResponse(ctx context.Context, repo RepoName, id int64, body UpdateProtectionJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProtectionResponse, error)
+
+	// ListPullsWithResponse List pull requests, most recently updated first
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/pulls (the `ListPulls` operationId).
+	ListPullsWithResponse(ctx context.Context, repo RepoName, params *ListPullsParams, reqEditors ...RequestEditorFn) (*ListPullsResponse, error)
+
+	// CreatePullWithBodyWithResponse Open a pull request (write access)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls (the `CreatePull` operationId).
+	CreatePullWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePullResponse, error)
+
+	// CreatePullWithResponse Open a pull request (write access)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls (the `CreatePull` operationId).
+	CreatePullWithResponse(ctx context.Context, repo RepoName, body CreatePullJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePullResponse, error)
+
+	// GetPullWithResponse Get a pull request with its mergeability, reviews summary and merge blockers
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number} (the `GetPull` operationId).
+	GetPullWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*GetPullResponse, error)
+
+	// UpdatePullWithBodyWithResponse Edit, close, reopen or change the draft state of a pull request
+	//
+	// The author or anyone with write access. Changing reviewers needs triage access.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/pulls/{number} (the `UpdatePull` operationId).
+	UpdatePullWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdatePullResponse, error)
+
+	// UpdatePullWithResponse Edit, close, reopen or change the draft state of a pull request
+	//
+	// The author or anyone with write access. Changing reviewers needs triage access.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/pulls/{number} (the `UpdatePull` operationId).
+	UpdatePullWithResponse(ctx context.Context, repo RepoName, number PullNumber, body UpdatePullJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdatePullResponse, error)
+
+	// ListPullCommentsWithResponse All comments (conversation and inline, including replies), oldest first
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number}/comments (the `ListPullComments` operationId).
+	ListPullCommentsWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*ListPullCommentsResponse, error)
+
+	// CreatePullCommentWithBodyWithResponse Comment on a pull request (triage access)
+	//
+	// Without `path`, a conversation comment. With `path` and `line`, an inline
+	// comment on a line of the diff (`side: new` for the head version, `old`
+	// for the base version). With `reply_to`, a reply in an inline thread.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/comments (the `CreatePullComment` operationId).
+	CreatePullCommentWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePullCommentResponse, error)
+
+	// CreatePullCommentWithResponse Comment on a pull request (triage access)
+	//
+	// Without `path`, a conversation comment. With `path` and `line`, an inline
+	// comment on a line of the diff (`side: new` for the head version, `old`
+	// for the base version). With `reply_to`, a reply in an inline thread.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/comments (the `CreatePullComment` operationId).
+	CreatePullCommentWithResponse(ctx context.Context, repo RepoName, number PullNumber, body CreatePullCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePullCommentResponse, error)
+
+	// ListPullCommitsWithResponse Commits in a pull request, oldest first (at most 250)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number}/commits (the `ListPullCommits` operationId).
+	ListPullCommitsWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*ListPullCommitsResponse, error)
+
+	// GetPullDiffWithResponse The pull request's changes (merge base to head)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number}/files (the `GetPullDiff` operationId).
+	GetPullDiffWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*GetPullDiffResponse, error)
+
+	// MergePullWithBodyWithResponse Merge a pull request (write access)
+	//
+	// Fails with `conflict` (and `details.blockers`) when the pull request
+	// can't be merged; `getPull` lists the blockers in advance.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/merge (the `MergePull` operationId).
+	MergePullWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*MergePullResponse, error)
+
+	// MergePullWithResponse Merge a pull request (write access)
+	//
+	// Fails with `conflict` (and `details.blockers`) when the pull request
+	// can't be merged; `getPull` lists the blockers in advance.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/merge (the `MergePull` operationId).
+	MergePullWithResponse(ctx context.Context, repo RepoName, number PullNumber, body MergePullJSONRequestBody, reqEditors ...RequestEditorFn) (*MergePullResponse, error)
+
+	// ListReviewsWithResponse Reviews, oldest first
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number}/reviews (the `ListReviews` operationId).
+	ListReviewsWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*ListReviewsResponse, error)
+
+	// CreateReviewWithBodyWithResponse Submit a review (triage access)
+	//
+	// Testers and maintainers can approve or request changes; the author can
+	// only comment. Inline comments are submitted together with the review.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/reviews (the `CreateReview` operationId).
+	CreateReviewWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateReviewResponse, error)
+
+	// CreateReviewWithResponse Submit a review (triage access)
+	//
+	// Testers and maintainers can approve or request changes; the author can
+	// only comment. Inline comments are submitted together with the review.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/reviews (the `CreateReview` operationId).
+	CreateReviewWithResponse(ctx context.Context, repo RepoName, number PullNumber, body CreateReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateReviewResponse, error)
+
+	// DismissReviewWithBodyWithResponse Dismiss an approval or change request (write access)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/reviews/{id}/dismiss (the `DismissReview` operationId).
+	DismissReviewWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DismissReviewResponse, error)
+
+	// DismissReviewWithResponse Dismiss an approval or change request (write access)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/reviews/{id}/dismiss (the `DismissReview` operationId).
+	DismissReviewWithResponse(ctx context.Context, repo RepoName, number PullNumber, id int64, body DismissReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*DismissReviewResponse, error)
+
+	// GetPullTimelineWithResponse Conversation timeline, oldest first
+	//
+	// Conversation comments, reviews (with the inline comments submitted with
+	// them), standalone inline comments and events. Replies to inline comments
+	// aren't separate items; get them from `listPullComments`.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/pulls/{number}/timeline (the `GetPullTimeline` operationId).
+	GetPullTimelineWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*GetPullTimelineResponse, error)
+
+	// UpdatePullBranchWithBodyWithResponse Merge the base branch into the head branch (write access)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/update-branch (the `UpdatePullBranch` operationId).
+	UpdatePullBranchWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdatePullBranchResponse, error)
+
+	// UpdatePullBranchWithResponse Merge the base branch into the head branch (write access)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/pulls/{number}/update-branch (the `UpdatePullBranch` operationId).
+	UpdatePullBranchWithResponse(ctx context.Context, repo RepoName, number PullNumber, body UpdatePullBranchJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdatePullBranchResponse, error)
 
 	// GetRawWithResponse Download a file's raw bytes
 	//
@@ -5928,6 +9246,54 @@ func (r GetOrgLogoResponse) ContentType() string {
 	return ""
 }
 
+type ListMyPullsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PullPage
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListMyPullsResponse) GetJSON200() *PullPage {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListMyPullsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListMyPullsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListMyPullsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListMyPullsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListMyPullsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListReposResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6353,6 +9719,136 @@ func (r ListBranchesResponse) ContentType() string {
 	return ""
 }
 
+type DeleteBranchResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteBranchResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteBranchResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteBranchResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteBranchResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteBranchResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteCommentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteCommentResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteCommentResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteCommentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteCommentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteCommentResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateCommentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Comment
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateCommentResponse) GetJSON200() *Comment {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdateCommentResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateCommentResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateCommentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateCommentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateCommentResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListCommitsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6443,6 +9939,911 @@ func (r GetCommitResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetCommitResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CompareRefsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Comparison
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r CompareRefsResponse) GetJSON200() *Comparison {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CompareRefsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CompareRefsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CompareRefsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CompareRefsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CompareRefsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListProtectionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]BranchProtection
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListProtectionsResponse) GetJSON200() *[]BranchProtection {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListProtectionsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListProtectionsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListProtectionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListProtectionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListProtectionsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateProtectionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *BranchProtection
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateProtectionResponse) GetJSON201() *BranchProtection {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CreateProtectionResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateProtectionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateProtectionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateProtectionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateProtectionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteProtectionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteProtectionResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteProtectionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteProtectionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteProtectionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteProtectionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateProtectionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *BranchProtection
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateProtectionResponse) GetJSON200() *BranchProtection {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdateProtectionResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateProtectionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateProtectionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateProtectionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateProtectionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListPullsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PullPage
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListPullsResponse) GetJSON200() *PullPage {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListPullsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListPullsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPullsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPullsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListPullsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreatePullResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *PullRequest
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreatePullResponse) GetJSON201() *PullRequest {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CreatePullResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CreatePullResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreatePullResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreatePullResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreatePullResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetPullResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PullRequest
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPullResponse) GetJSON200() *PullRequest {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetPullResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPullResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPullResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPullResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPullResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdatePullResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PullRequest
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdatePullResponse) GetJSON200() *PullRequest {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdatePullResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdatePullResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdatePullResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdatePullResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdatePullResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListPullCommentsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]Comment
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListPullCommentsResponse) GetJSON200() *[]Comment {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListPullCommentsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListPullCommentsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPullCommentsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPullCommentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListPullCommentsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreatePullCommentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *Comment
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreatePullCommentResponse) GetJSON201() *Comment {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CreatePullCommentResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CreatePullCommentResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreatePullCommentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreatePullCommentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreatePullCommentResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListPullCommitsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]Commit
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListPullCommitsResponse) GetJSON200() *[]Commit {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListPullCommitsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListPullCommitsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPullCommitsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPullCommitsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListPullCommitsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetPullDiffResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Diff
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPullDiffResponse) GetJSON200() *Diff {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetPullDiffResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPullDiffResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPullDiffResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPullDiffResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPullDiffResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type MergePullResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PullRequest
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r MergePullResponse) GetJSON200() *PullRequest {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r MergePullResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r MergePullResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r MergePullResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r MergePullResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r MergePullResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListReviewsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]Review
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListReviewsResponse) GetJSON200() *[]Review {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListReviewsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListReviewsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListReviewsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListReviewsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListReviewsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateReviewResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *Review
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateReviewResponse) GetJSON201() *Review {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CreateReviewResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateReviewResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateReviewResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateReviewResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateReviewResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DismissReviewResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Review
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r DismissReviewResponse) GetJSON200() *Review {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DismissReviewResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DismissReviewResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DismissReviewResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DismissReviewResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DismissReviewResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetPullTimelineResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]TimelineItem
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPullTimelineResponse) GetJSON200() *[]TimelineItem {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetPullTimelineResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPullTimelineResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPullTimelineResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPullTimelineResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPullTimelineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdatePullBranchResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PullRequest
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdatePullBranchResponse) GetJSON200() *PullRequest {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdatePullBranchResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdatePullBranchResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdatePullBranchResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdatePullBranchResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdatePullBranchResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -7252,6 +11653,19 @@ func (c *ClientWithResponses) GetOrgLogoWithResponse(ctx context.Context, reqEdi
 	return ParseGetOrgLogoResponse(rsp)
 }
 
+// ListMyPullsWithResponse Pull requests across all repositories you can access
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /pulls (the `ListMyPulls` operationId).
+func (c *ClientWithResponses) ListMyPullsWithResponse(ctx context.Context, params *ListMyPullsParams, reqEditors ...RequestEditorFn) (*ListMyPullsResponse, error) {
+	rsp, err := c.ListMyPulls(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListMyPullsResponse(rsp)
+}
+
 // ListReposWithResponse List repositories you can access
 //
 // Returns a wrapper object for the known response body format(s).
@@ -7401,6 +11815,77 @@ func (c *ClientWithResponses) ListBranchesWithResponse(ctx context.Context, repo
 	return ParseListBranchesResponse(rsp)
 }
 
+// DeleteBranchWithBodyWithResponse Delete a branch
+//
+// Needs write access. The default branch, the base or head branch of an open
+// pull request, and protected branches that don't allow deletion can't be deleted.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/branches/delete (the `DeleteBranch` operationId).
+func (c *ClientWithResponses) DeleteBranchWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteBranchResponse, error) {
+	rsp, err := c.DeleteBranchWithBody(ctx, repo, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteBranchResponse(rsp)
+}
+
+// DeleteBranchWithResponse Delete a branch
+//
+// Needs write access. The default branch, the base or head branch of an open
+// pull request, and protected branches that don't allow deletion can't be deleted.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/branches/delete (the `DeleteBranch` operationId).
+func (c *ClientWithResponses) DeleteBranchWithResponse(ctx context.Context, repo RepoName, body DeleteBranchJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteBranchResponse, error) {
+	rsp, err := c.DeleteBranch(ctx, repo, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteBranchResponse(rsp)
+}
+
+// DeleteCommentWithResponse Delete a comment (its author or an admin)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /repos/{repo}/comments/{id} (the `DeleteComment` operationId).
+func (c *ClientWithResponses) DeleteCommentWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*DeleteCommentResponse, error) {
+	rsp, err := c.DeleteComment(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteCommentResponse(rsp)
+}
+
+// UpdateCommentWithBodyWithResponse Edit a comment (its author) or resolve an inline thread (triage access)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/comments/{id} (the `UpdateComment` operationId).
+func (c *ClientWithResponses) UpdateCommentWithBodyWithResponse(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateCommentResponse, error) {
+	rsp, err := c.UpdateCommentWithBody(ctx, repo, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateCommentResponse(rsp)
+}
+
+// UpdateCommentWithResponse Edit a comment (its author) or resolve an inline thread (triage access)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/comments/{id} (the `UpdateComment` operationId).
+func (c *ClientWithResponses) UpdateCommentWithResponse(ctx context.Context, repo RepoName, id int64, body UpdateCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateCommentResponse, error) {
+	rsp, err := c.UpdateComment(ctx, repo, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateCommentResponse(rsp)
+}
+
 // ListCommitsWithResponse Commit history, newest first
 //
 // Returns a wrapper object for the known response body format(s).
@@ -7425,6 +11910,398 @@ func (c *ClientWithResponses) GetCommitWithResponse(ctx context.Context, repo Re
 		return nil, err
 	}
 	return ParseGetCommitResponse(rsp)
+}
+
+// CompareRefsWithResponse Compare two branches (what a pull request from head into base would contain)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/compare (the `CompareRefs` operationId).
+func (c *ClientWithResponses) CompareRefsWithResponse(ctx context.Context, repo RepoName, params *CompareRefsParams, reqEditors ...RequestEditorFn) (*CompareRefsResponse, error) {
+	rsp, err := c.CompareRefs(ctx, repo, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCompareRefsResponse(rsp)
+}
+
+// ListProtectionsWithResponse List branch protection rules
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/protections (the `ListProtections` operationId).
+func (c *ClientWithResponses) ListProtectionsWithResponse(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*ListProtectionsResponse, error) {
+	rsp, err := c.ListProtections(ctx, repo, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListProtectionsResponse(rsp)
+}
+
+// CreateProtectionWithBodyWithResponse Add a branch protection rule (admins)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/protections (the `CreateProtection` operationId).
+func (c *ClientWithResponses) CreateProtectionWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateProtectionResponse, error) {
+	rsp, err := c.CreateProtectionWithBody(ctx, repo, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateProtectionResponse(rsp)
+}
+
+// CreateProtectionWithResponse Add a branch protection rule (admins)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/protections (the `CreateProtection` operationId).
+func (c *ClientWithResponses) CreateProtectionWithResponse(ctx context.Context, repo RepoName, body CreateProtectionJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateProtectionResponse, error) {
+	rsp, err := c.CreateProtection(ctx, repo, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateProtectionResponse(rsp)
+}
+
+// DeleteProtectionWithResponse Remove a branch protection rule (admins)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /repos/{repo}/protections/{id} (the `DeleteProtection` operationId).
+func (c *ClientWithResponses) DeleteProtectionWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*DeleteProtectionResponse, error) {
+	rsp, err := c.DeleteProtection(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteProtectionResponse(rsp)
+}
+
+// UpdateProtectionWithBodyWithResponse Change a branch protection rule (admins)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/protections/{id} (the `UpdateProtection` operationId).
+func (c *ClientWithResponses) UpdateProtectionWithBodyWithResponse(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProtectionResponse, error) {
+	rsp, err := c.UpdateProtectionWithBody(ctx, repo, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProtectionResponse(rsp)
+}
+
+// UpdateProtectionWithResponse Change a branch protection rule (admins)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/protections/{id} (the `UpdateProtection` operationId).
+func (c *ClientWithResponses) UpdateProtectionWithResponse(ctx context.Context, repo RepoName, id int64, body UpdateProtectionJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProtectionResponse, error) {
+	rsp, err := c.UpdateProtection(ctx, repo, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProtectionResponse(rsp)
+}
+
+// ListPullsWithResponse List pull requests, most recently updated first
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/pulls (the `ListPulls` operationId).
+func (c *ClientWithResponses) ListPullsWithResponse(ctx context.Context, repo RepoName, params *ListPullsParams, reqEditors ...RequestEditorFn) (*ListPullsResponse, error) {
+	rsp, err := c.ListPulls(ctx, repo, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListPullsResponse(rsp)
+}
+
+// CreatePullWithBodyWithResponse Open a pull request (write access)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls (the `CreatePull` operationId).
+func (c *ClientWithResponses) CreatePullWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePullResponse, error) {
+	rsp, err := c.CreatePullWithBody(ctx, repo, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePullResponse(rsp)
+}
+
+// CreatePullWithResponse Open a pull request (write access)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls (the `CreatePull` operationId).
+func (c *ClientWithResponses) CreatePullWithResponse(ctx context.Context, repo RepoName, body CreatePullJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePullResponse, error) {
+	rsp, err := c.CreatePull(ctx, repo, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePullResponse(rsp)
+}
+
+// GetPullWithResponse Get a pull request with its mergeability, reviews summary and merge blockers
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/pulls/{number} (the `GetPull` operationId).
+func (c *ClientWithResponses) GetPullWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*GetPullResponse, error) {
+	rsp, err := c.GetPull(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPullResponse(rsp)
+}
+
+// UpdatePullWithBodyWithResponse Edit, close, reopen or change the draft state of a pull request
+//
+// The author or anyone with write access. Changing reviewers needs triage access.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/pulls/{number} (the `UpdatePull` operationId).
+func (c *ClientWithResponses) UpdatePullWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdatePullResponse, error) {
+	rsp, err := c.UpdatePullWithBody(ctx, repo, number, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdatePullResponse(rsp)
+}
+
+// UpdatePullWithResponse Edit, close, reopen or change the draft state of a pull request
+//
+// The author or anyone with write access. Changing reviewers needs triage access.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/pulls/{number} (the `UpdatePull` operationId).
+func (c *ClientWithResponses) UpdatePullWithResponse(ctx context.Context, repo RepoName, number PullNumber, body UpdatePullJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdatePullResponse, error) {
+	rsp, err := c.UpdatePull(ctx, repo, number, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdatePullResponse(rsp)
+}
+
+// ListPullCommentsWithResponse All comments (conversation and inline, including replies), oldest first
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/pulls/{number}/comments (the `ListPullComments` operationId).
+func (c *ClientWithResponses) ListPullCommentsWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*ListPullCommentsResponse, error) {
+	rsp, err := c.ListPullComments(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListPullCommentsResponse(rsp)
+}
+
+// CreatePullCommentWithBodyWithResponse Comment on a pull request (triage access)
+//
+// Without `path`, a conversation comment. With `path` and `line`, an inline
+// comment on a line of the diff (`side: new` for the head version, `old`
+// for the base version). With `reply_to`, a reply in an inline thread.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/comments (the `CreatePullComment` operationId).
+func (c *ClientWithResponses) CreatePullCommentWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreatePullCommentResponse, error) {
+	rsp, err := c.CreatePullCommentWithBody(ctx, repo, number, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePullCommentResponse(rsp)
+}
+
+// CreatePullCommentWithResponse Comment on a pull request (triage access)
+//
+// Without `path`, a conversation comment. With `path` and `line`, an inline
+// comment on a line of the diff (`side: new` for the head version, `old`
+// for the base version). With `reply_to`, a reply in an inline thread.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/comments (the `CreatePullComment` operationId).
+func (c *ClientWithResponses) CreatePullCommentWithResponse(ctx context.Context, repo RepoName, number PullNumber, body CreatePullCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreatePullCommentResponse, error) {
+	rsp, err := c.CreatePullComment(ctx, repo, number, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreatePullCommentResponse(rsp)
+}
+
+// ListPullCommitsWithResponse Commits in a pull request, oldest first (at most 250)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/pulls/{number}/commits (the `ListPullCommits` operationId).
+func (c *ClientWithResponses) ListPullCommitsWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*ListPullCommitsResponse, error) {
+	rsp, err := c.ListPullCommits(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListPullCommitsResponse(rsp)
+}
+
+// GetPullDiffWithResponse The pull request's changes (merge base to head)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/pulls/{number}/files (the `GetPullDiff` operationId).
+func (c *ClientWithResponses) GetPullDiffWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*GetPullDiffResponse, error) {
+	rsp, err := c.GetPullDiff(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPullDiffResponse(rsp)
+}
+
+// MergePullWithBodyWithResponse Merge a pull request (write access)
+//
+// Fails with `conflict` (and `details.blockers`) when the pull request
+// can't be merged; `getPull` lists the blockers in advance.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/merge (the `MergePull` operationId).
+func (c *ClientWithResponses) MergePullWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*MergePullResponse, error) {
+	rsp, err := c.MergePullWithBody(ctx, repo, number, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseMergePullResponse(rsp)
+}
+
+// MergePullWithResponse Merge a pull request (write access)
+//
+// Fails with `conflict` (and `details.blockers`) when the pull request
+// can't be merged; `getPull` lists the blockers in advance.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/merge (the `MergePull` operationId).
+func (c *ClientWithResponses) MergePullWithResponse(ctx context.Context, repo RepoName, number PullNumber, body MergePullJSONRequestBody, reqEditors ...RequestEditorFn) (*MergePullResponse, error) {
+	rsp, err := c.MergePull(ctx, repo, number, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseMergePullResponse(rsp)
+}
+
+// ListReviewsWithResponse Reviews, oldest first
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/pulls/{number}/reviews (the `ListReviews` operationId).
+func (c *ClientWithResponses) ListReviewsWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*ListReviewsResponse, error) {
+	rsp, err := c.ListReviews(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListReviewsResponse(rsp)
+}
+
+// CreateReviewWithBodyWithResponse Submit a review (triage access)
+//
+// Testers and maintainers can approve or request changes; the author can
+// only comment. Inline comments are submitted together with the review.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/reviews (the `CreateReview` operationId).
+func (c *ClientWithResponses) CreateReviewWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateReviewResponse, error) {
+	rsp, err := c.CreateReviewWithBody(ctx, repo, number, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateReviewResponse(rsp)
+}
+
+// CreateReviewWithResponse Submit a review (triage access)
+//
+// Testers and maintainers can approve or request changes; the author can
+// only comment. Inline comments are submitted together with the review.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/reviews (the `CreateReview` operationId).
+func (c *ClientWithResponses) CreateReviewWithResponse(ctx context.Context, repo RepoName, number PullNumber, body CreateReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateReviewResponse, error) {
+	rsp, err := c.CreateReview(ctx, repo, number, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateReviewResponse(rsp)
+}
+
+// DismissReviewWithBodyWithResponse Dismiss an approval or change request (write access)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/reviews/{id}/dismiss (the `DismissReview` operationId).
+func (c *ClientWithResponses) DismissReviewWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DismissReviewResponse, error) {
+	rsp, err := c.DismissReviewWithBody(ctx, repo, number, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDismissReviewResponse(rsp)
+}
+
+// DismissReviewWithResponse Dismiss an approval or change request (write access)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/reviews/{id}/dismiss (the `DismissReview` operationId).
+func (c *ClientWithResponses) DismissReviewWithResponse(ctx context.Context, repo RepoName, number PullNumber, id int64, body DismissReviewJSONRequestBody, reqEditors ...RequestEditorFn) (*DismissReviewResponse, error) {
+	rsp, err := c.DismissReview(ctx, repo, number, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDismissReviewResponse(rsp)
+}
+
+// GetPullTimelineWithResponse Conversation timeline, oldest first
+//
+// Conversation comments, reviews (with the inline comments submitted with
+// them), standalone inline comments and events. Replies to inline comments
+// aren't separate items; get them from `listPullComments`.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/pulls/{number}/timeline (the `GetPullTimeline` operationId).
+func (c *ClientWithResponses) GetPullTimelineWithResponse(ctx context.Context, repo RepoName, number PullNumber, reqEditors ...RequestEditorFn) (*GetPullTimelineResponse, error) {
+	rsp, err := c.GetPullTimeline(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPullTimelineResponse(rsp)
+}
+
+// UpdatePullBranchWithBodyWithResponse Merge the base branch into the head branch (write access)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/update-branch (the `UpdatePullBranch` operationId).
+func (c *ClientWithResponses) UpdatePullBranchWithBodyWithResponse(ctx context.Context, repo RepoName, number PullNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdatePullBranchResponse, error) {
+	rsp, err := c.UpdatePullBranchWithBody(ctx, repo, number, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdatePullBranchResponse(rsp)
+}
+
+// UpdatePullBranchWithResponse Merge the base branch into the head branch (write access)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/pulls/{number}/update-branch (the `UpdatePullBranch` operationId).
+func (c *ClientWithResponses) UpdatePullBranchWithResponse(ctx context.Context, repo RepoName, number PullNumber, body UpdatePullBranchJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdatePullBranchResponse, error) {
+	rsp, err := c.UpdatePullBranch(ctx, repo, number, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdatePullBranchResponse(rsp)
 }
 
 // GetRawWithResponse Download a file's raw bytes
@@ -8400,6 +13277,39 @@ func ParseGetOrgLogoResponse(rsp *http.Response) (*GetOrgLogoResponse, error) {
 	return response, nil
 }
 
+// ParseListMyPullsResponse parses an HTTP response from a ListMyPullsWithResponse call
+func ParseListMyPullsResponse(rsp *http.Response) (*ListMyPullsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListMyPullsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PullPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListReposResponse parses an HTTP response from a ListReposWithResponse call
 func ParseListReposResponse(rsp *http.Response) (*ListReposResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -8693,6 +13603,97 @@ func ParseListBranchesResponse(rsp *http.Response) (*ListBranchesResponse, error
 	return response, nil
 }
 
+// ParseDeleteBranchResponse parses an HTTP response from a DeleteBranchWithResponse call
+func ParseDeleteBranchResponse(rsp *http.Response) (*DeleteBranchResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteBranchResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteCommentResponse parses an HTTP response from a DeleteCommentWithResponse call
+func ParseDeleteCommentResponse(rsp *http.Response) (*DeleteCommentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteCommentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateCommentResponse parses an HTTP response from a UpdateCommentWithResponse call
+func ParseUpdateCommentResponse(rsp *http.Response) (*UpdateCommentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateCommentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Comment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListCommitsResponse parses an HTTP response from a ListCommitsWithResponse call
 func ParseListCommitsResponse(rsp *http.Response) (*ListCommitsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -8742,6 +13743,629 @@ func ParseGetCommitResponse(rsp *http.Response) (*GetCommitResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest CommitDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCompareRefsResponse parses an HTTP response from a CompareRefsWithResponse call
+func ParseCompareRefsResponse(rsp *http.Response) (*CompareRefsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CompareRefsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Comparison
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListProtectionsResponse parses an HTTP response from a ListProtectionsWithResponse call
+func ParseListProtectionsResponse(rsp *http.Response) (*ListProtectionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListProtectionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []BranchProtection
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateProtectionResponse parses an HTTP response from a CreateProtectionWithResponse call
+func ParseCreateProtectionResponse(rsp *http.Response) (*CreateProtectionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateProtectionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest BranchProtection
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteProtectionResponse parses an HTTP response from a DeleteProtectionWithResponse call
+func ParseDeleteProtectionResponse(rsp *http.Response) (*DeleteProtectionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteProtectionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateProtectionResponse parses an HTTP response from a UpdateProtectionWithResponse call
+func ParseUpdateProtectionResponse(rsp *http.Response) (*UpdateProtectionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateProtectionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BranchProtection
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListPullsResponse parses an HTTP response from a ListPullsWithResponse call
+func ParseListPullsResponse(rsp *http.Response) (*ListPullsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPullsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PullPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreatePullResponse parses an HTTP response from a CreatePullWithResponse call
+func ParseCreatePullResponse(rsp *http.Response) (*CreatePullResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreatePullResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest PullRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPullResponse parses an HTTP response from a GetPullWithResponse call
+func ParseGetPullResponse(rsp *http.Response) (*GetPullResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPullResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PullRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdatePullResponse parses an HTTP response from a UpdatePullWithResponse call
+func ParseUpdatePullResponse(rsp *http.Response) (*UpdatePullResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdatePullResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PullRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListPullCommentsResponse parses an HTTP response from a ListPullCommentsWithResponse call
+func ParseListPullCommentsResponse(rsp *http.Response) (*ListPullCommentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPullCommentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Comment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreatePullCommentResponse parses an HTTP response from a CreatePullCommentWithResponse call
+func ParseCreatePullCommentResponse(rsp *http.Response) (*CreatePullCommentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreatePullCommentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Comment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListPullCommitsResponse parses an HTTP response from a ListPullCommitsWithResponse call
+func ParseListPullCommitsResponse(rsp *http.Response) (*ListPullCommitsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPullCommitsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Commit
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPullDiffResponse parses an HTTP response from a GetPullDiffWithResponse call
+func ParseGetPullDiffResponse(rsp *http.Response) (*GetPullDiffResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPullDiffResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Diff
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseMergePullResponse parses an HTTP response from a MergePullWithResponse call
+func ParseMergePullResponse(rsp *http.Response) (*MergePullResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &MergePullResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PullRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListReviewsResponse parses an HTTP response from a ListReviewsWithResponse call
+func ParseListReviewsResponse(rsp *http.Response) (*ListReviewsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListReviewsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Review
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateReviewResponse parses an HTTP response from a CreateReviewWithResponse call
+func ParseCreateReviewResponse(rsp *http.Response) (*CreateReviewResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateReviewResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Review
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDismissReviewResponse parses an HTTP response from a DismissReviewWithResponse call
+func ParseDismissReviewResponse(rsp *http.Response) (*DismissReviewResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DismissReviewResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Review
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPullTimelineResponse parses an HTTP response from a GetPullTimelineWithResponse call
+func ParseGetPullTimelineResponse(rsp *http.Response) (*GetPullTimelineResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPullTimelineResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []TimelineItem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdatePullBranchResponse parses an HTTP response from a UpdatePullBranchWithResponse call
+func ParseUpdatePullBranchResponse(rsp *http.Response) (*UpdatePullBranchResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdatePullBranchResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PullRequest
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -9033,6 +14657,9 @@ type ServerInterface interface {
 	// GetOrgLogo Org logo image
 	// (GET /org/logo)
 	GetOrgLogo(w http.ResponseWriter, r *http.Request)
+	// ListMyPulls Pull requests across all repositories you can access
+	// (GET /pulls)
+	ListMyPulls(w http.ResponseWriter, r *http.Request, params ListMyPullsParams)
 	// ListRepos List repositories you can access
 	// (GET /repos)
 	ListRepos(w http.ResponseWriter, r *http.Request, params ListReposParams)
@@ -9060,12 +14687,78 @@ type ServerInterface interface {
 	// ListBranches List branches, most recently updated first
 	// (GET /repos/{repo}/branches)
 	ListBranches(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// DeleteBranch Delete a branch
+	// (POST /repos/{repo}/branches/delete)
+	DeleteBranch(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// DeleteComment Delete a comment (its author or an admin)
+	// (DELETE /repos/{repo}/comments/{id})
+	DeleteComment(w http.ResponseWriter, r *http.Request, repo RepoName, id int64)
+	// UpdateComment Edit a comment (its author) or resolve an inline thread (triage access)
+	// (PATCH /repos/{repo}/comments/{id})
+	UpdateComment(w http.ResponseWriter, r *http.Request, repo RepoName, id int64)
 	// ListCommits Commit history, newest first
 	// (GET /repos/{repo}/commits)
 	ListCommits(w http.ResponseWriter, r *http.Request, repo RepoName, params ListCommitsParams)
 	// GetCommit A commit with its diff
 	// (GET /repos/{repo}/commits/{sha})
 	GetCommit(w http.ResponseWriter, r *http.Request, repo RepoName, sha string)
+	// CompareRefs Compare two branches (what a pull request from head into base would contain)
+	// (GET /repos/{repo}/compare)
+	CompareRefs(w http.ResponseWriter, r *http.Request, repo RepoName, params CompareRefsParams)
+	// ListProtections List branch protection rules
+	// (GET /repos/{repo}/protections)
+	ListProtections(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// CreateProtection Add a branch protection rule (admins)
+	// (POST /repos/{repo}/protections)
+	CreateProtection(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// DeleteProtection Remove a branch protection rule (admins)
+	// (DELETE /repos/{repo}/protections/{id})
+	DeleteProtection(w http.ResponseWriter, r *http.Request, repo RepoName, id int64)
+	// UpdateProtection Change a branch protection rule (admins)
+	// (PATCH /repos/{repo}/protections/{id})
+	UpdateProtection(w http.ResponseWriter, r *http.Request, repo RepoName, id int64)
+	// ListPulls List pull requests, most recently updated first
+	// (GET /repos/{repo}/pulls)
+	ListPulls(w http.ResponseWriter, r *http.Request, repo RepoName, params ListPullsParams)
+	// CreatePull Open a pull request (write access)
+	// (POST /repos/{repo}/pulls)
+	CreatePull(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// GetPull Get a pull request with its mergeability, reviews summary and merge blockers
+	// (GET /repos/{repo}/pulls/{number})
+	GetPull(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber)
+	// UpdatePull Edit, close, reopen or change the draft state of a pull request
+	// (PATCH /repos/{repo}/pulls/{number})
+	UpdatePull(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber)
+	// ListPullComments All comments (conversation and inline, including replies), oldest first
+	// (GET /repos/{repo}/pulls/{number}/comments)
+	ListPullComments(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber)
+	// CreatePullComment Comment on a pull request (triage access)
+	// (POST /repos/{repo}/pulls/{number}/comments)
+	CreatePullComment(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber)
+	// ListPullCommits Commits in a pull request, oldest first (at most 250)
+	// (GET /repos/{repo}/pulls/{number}/commits)
+	ListPullCommits(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber)
+	// GetPullDiff The pull request's changes (merge base to head)
+	// (GET /repos/{repo}/pulls/{number}/files)
+	GetPullDiff(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber)
+	// MergePull Merge a pull request (write access)
+	// (POST /repos/{repo}/pulls/{number}/merge)
+	MergePull(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber)
+	// ListReviews Reviews, oldest first
+	// (GET /repos/{repo}/pulls/{number}/reviews)
+	ListReviews(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber)
+	// CreateReview Submit a review (triage access)
+	// (POST /repos/{repo}/pulls/{number}/reviews)
+	CreateReview(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber)
+	// DismissReview Dismiss an approval or change request (write access)
+	// (POST /repos/{repo}/pulls/{number}/reviews/{id}/dismiss)
+	DismissReview(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber, id int64)
+	// GetPullTimeline Conversation timeline, oldest first
+	// (GET /repos/{repo}/pulls/{number}/timeline)
+	GetPullTimeline(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber)
+	// UpdatePullBranch Merge the base branch into the head branch (write access)
+	// (POST /repos/{repo}/pulls/{number}/update-branch)
+	UpdatePullBranch(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber)
 	// GetRaw Download a file's raw bytes
 	// (GET /repos/{repo}/raw)
 	GetRaw(w http.ResponseWriter, r *http.Request, repo RepoName, params GetRawParams)
@@ -9252,6 +14945,12 @@ func (_ Unimplemented) GetOrgLogo(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListMyPulls Pull requests across all repositories you can access
+// (GET /pulls)
+func (_ Unimplemented) ListMyPulls(w http.ResponseWriter, r *http.Request, params ListMyPullsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ListRepos List repositories you can access
 // (GET /repos)
 func (_ Unimplemented) ListRepos(w http.ResponseWriter, r *http.Request, params ListReposParams) {
@@ -9306,6 +15005,24 @@ func (_ Unimplemented) ListBranches(w http.ResponseWriter, r *http.Request, repo
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// DeleteBranch Delete a branch
+// (POST /repos/{repo}/branches/delete)
+func (_ Unimplemented) DeleteBranch(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteComment Delete a comment (its author or an admin)
+// (DELETE /repos/{repo}/comments/{id})
+func (_ Unimplemented) DeleteComment(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateComment Edit a comment (its author) or resolve an inline thread (triage access)
+// (PATCH /repos/{repo}/comments/{id})
+func (_ Unimplemented) UpdateComment(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ListCommits Commit history, newest first
 // (GET /repos/{repo}/commits)
 func (_ Unimplemented) ListCommits(w http.ResponseWriter, r *http.Request, repo RepoName, params ListCommitsParams) {
@@ -9315,6 +15032,120 @@ func (_ Unimplemented) ListCommits(w http.ResponseWriter, r *http.Request, repo 
 // GetCommit A commit with its diff
 // (GET /repos/{repo}/commits/{sha})
 func (_ Unimplemented) GetCommit(w http.ResponseWriter, r *http.Request, repo RepoName, sha string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CompareRefs Compare two branches (what a pull request from head into base would contain)
+// (GET /repos/{repo}/compare)
+func (_ Unimplemented) CompareRefs(w http.ResponseWriter, r *http.Request, repo RepoName, params CompareRefsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListProtections List branch protection rules
+// (GET /repos/{repo}/protections)
+func (_ Unimplemented) ListProtections(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateProtection Add a branch protection rule (admins)
+// (POST /repos/{repo}/protections)
+func (_ Unimplemented) CreateProtection(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteProtection Remove a branch protection rule (admins)
+// (DELETE /repos/{repo}/protections/{id})
+func (_ Unimplemented) DeleteProtection(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateProtection Change a branch protection rule (admins)
+// (PATCH /repos/{repo}/protections/{id})
+func (_ Unimplemented) UpdateProtection(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListPulls List pull requests, most recently updated first
+// (GET /repos/{repo}/pulls)
+func (_ Unimplemented) ListPulls(w http.ResponseWriter, r *http.Request, repo RepoName, params ListPullsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreatePull Open a pull request (write access)
+// (POST /repos/{repo}/pulls)
+func (_ Unimplemented) CreatePull(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPull Get a pull request with its mergeability, reviews summary and merge blockers
+// (GET /repos/{repo}/pulls/{number})
+func (_ Unimplemented) GetPull(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdatePull Edit, close, reopen or change the draft state of a pull request
+// (PATCH /repos/{repo}/pulls/{number})
+func (_ Unimplemented) UpdatePull(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListPullComments All comments (conversation and inline, including replies), oldest first
+// (GET /repos/{repo}/pulls/{number}/comments)
+func (_ Unimplemented) ListPullComments(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreatePullComment Comment on a pull request (triage access)
+// (POST /repos/{repo}/pulls/{number}/comments)
+func (_ Unimplemented) CreatePullComment(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListPullCommits Commits in a pull request, oldest first (at most 250)
+// (GET /repos/{repo}/pulls/{number}/commits)
+func (_ Unimplemented) ListPullCommits(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPullDiff The pull request's changes (merge base to head)
+// (GET /repos/{repo}/pulls/{number}/files)
+func (_ Unimplemented) GetPullDiff(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// MergePull Merge a pull request (write access)
+// (POST /repos/{repo}/pulls/{number}/merge)
+func (_ Unimplemented) MergePull(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListReviews Reviews, oldest first
+// (GET /repos/{repo}/pulls/{number}/reviews)
+func (_ Unimplemented) ListReviews(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateReview Submit a review (triage access)
+// (POST /repos/{repo}/pulls/{number}/reviews)
+func (_ Unimplemented) CreateReview(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DismissReview Dismiss an approval or change request (write access)
+// (POST /repos/{repo}/pulls/{number}/reviews/{id}/dismiss)
+func (_ Unimplemented) DismissReview(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPullTimeline Conversation timeline, oldest first
+// (GET /repos/{repo}/pulls/{number}/timeline)
+func (_ Unimplemented) GetPullTimeline(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdatePullBranch Merge the base branch into the head branch (write access)
+// (POST /repos/{repo}/pulls/{number}/update-branch)
+func (_ Unimplemented) UpdatePullBranch(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -9883,6 +15714,78 @@ func (siw *ServerInterfaceWrapper) GetOrgLogo(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// ListMyPulls operation middleware
+func (siw *ServerInterfaceWrapper) ListMyPulls(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListMyPullsParams
+
+	// ------------- Optional query parameter "filter" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "filter", r.URL.Query(), &params.Filter, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "filter"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "filter", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", r.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "per_page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "per_page", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMyPulls(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListRepos operation middleware
 func (siw *ServerInterfaceWrapper) ListRepos(w http.ResponseWriter, r *http.Request) {
 
@@ -10170,6 +16073,102 @@ func (siw *ServerInterfaceWrapper) ListBranches(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
+// DeleteBranch operation middleware
+func (siw *ServerInterfaceWrapper) DeleteBranch(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteBranch(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteComment operation middleware
+func (siw *ServerInterfaceWrapper) DeleteComment(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteComment(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateComment operation middleware
+func (siw *ServerInterfaceWrapper) UpdateComment(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateComment(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListCommits operation middleware
 func (siw *ServerInterfaceWrapper) ListCommits(w http.ResponseWriter, r *http.Request) {
 
@@ -10277,6 +16276,758 @@ func (siw *ServerInterfaceWrapper) GetCommit(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetCommit(w, r, repo, sha)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CompareRefs operation middleware
+func (siw *ServerInterfaceWrapper) CompareRefs(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CompareRefsParams
+
+	// ------------- Required query parameter "base" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "base", r.URL.Query(), &params.Base, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "base"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "base", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "head" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "head", r.URL.Query(), &params.Head, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "head"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "head", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CompareRefs(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListProtections operation middleware
+func (siw *ServerInterfaceWrapper) ListProtections(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListProtections(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateProtection operation middleware
+func (siw *ServerInterfaceWrapper) CreateProtection(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateProtection(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteProtection operation middleware
+func (siw *ServerInterfaceWrapper) DeleteProtection(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteProtection(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateProtection operation middleware
+func (siw *ServerInterfaceWrapper) UpdateProtection(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateProtection(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListPulls operation middleware
+func (siw *ServerInterfaceWrapper) ListPulls(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListPullsParams
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "author" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "author", r.URL.Query(), &params.Author, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "author"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "author", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "base" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "base", r.URL.Query(), &params.Base, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "base"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "base", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "head" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "head", r.URL.Query(), &params.Head, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "head"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "head", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", r.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "per_page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "per_page", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListPulls(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreatePull operation middleware
+func (siw *ServerInterfaceWrapper) CreatePull(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreatePull(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPull operation middleware
+func (siw *ServerInterfaceWrapper) GetPull(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPull(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdatePull operation middleware
+func (siw *ServerInterfaceWrapper) UpdatePull(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdatePull(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListPullComments operation middleware
+func (siw *ServerInterfaceWrapper) ListPullComments(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListPullComments(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreatePullComment operation middleware
+func (siw *ServerInterfaceWrapper) CreatePullComment(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreatePullComment(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListPullCommits operation middleware
+func (siw *ServerInterfaceWrapper) ListPullCommits(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListPullCommits(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPullDiff operation middleware
+func (siw *ServerInterfaceWrapper) GetPullDiff(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPullDiff(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// MergePull operation middleware
+func (siw *ServerInterfaceWrapper) MergePull(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.MergePull(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListReviews operation middleware
+func (siw *ServerInterfaceWrapper) ListReviews(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListReviews(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateReview operation middleware
+func (siw *ServerInterfaceWrapper) CreateReview(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateReview(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DismissReview operation middleware
+func (siw *ServerInterfaceWrapper) DismissReview(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DismissReview(w, r, repo, number, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPullTimeline operation middleware
+func (siw *ServerInterfaceWrapper) GetPullTimeline(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPullTimeline(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdatePullBranch operation middleware
+func (siw *ServerInterfaceWrapper) UpdatePullBranch(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number PullNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdatePullBranch(w, r, repo, number)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -10749,6 +17500,75 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/admin/users/{username}/repos", wrapper.AdminSetUserRepos)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/branches/delete", wrapper.DeleteBranch)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/compare", wrapper.CompareRefs)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/protections", wrapper.ListProtections)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/protections", wrapper.CreateProtection)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/repos/{repo}/protections/{id}", wrapper.DeleteProtection)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/repos/{repo}/protections/{id}", wrapper.UpdateProtection)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/pulls", wrapper.ListMyPulls)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/pulls", wrapper.ListPulls)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/pulls", wrapper.CreatePull)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/pulls/{number}", wrapper.GetPull)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/repos/{repo}/pulls/{number}", wrapper.UpdatePull)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/pulls/{number}/commits", wrapper.ListPullCommits)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/pulls/{number}/files", wrapper.GetPullDiff)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/pulls/{number}/timeline", wrapper.GetPullTimeline)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/pulls/{number}/comments", wrapper.ListPullComments)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/pulls/{number}/comments", wrapper.CreatePullComment)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/repos/{repo}/comments/{id}", wrapper.DeleteComment)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/repos/{repo}/comments/{id}", wrapper.UpdateComment)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/pulls/{number}/reviews", wrapper.ListReviews)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/pulls/{number}/reviews", wrapper.CreateReview)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/pulls/{number}/reviews/{id}/dismiss", wrapper.DismissReview)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/pulls/{number}/merge", wrapper.MergePull)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/pulls/{number}/update-branch", wrapper.UpdatePullBranch)
 	})
 
 	return r
@@ -11787,6 +18607,45 @@ func (response GetOrgLogodefaultJSONResponse) VisitGetOrgLogoResponse(w http.Res
 	return err
 }
 
+type ListMyPullsRequestObject struct {
+	Params ListMyPullsParams
+}
+
+type ListMyPullsResponseObject interface {
+	VisitListMyPullsResponse(w http.ResponseWriter) error
+}
+
+type ListMyPulls200JSONResponse PullPage
+
+func (response ListMyPulls200JSONResponse) VisitListMyPullsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMyPullsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListMyPullsdefaultJSONResponse) VisitListMyPullsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListReposRequestObject struct {
 	Params ListReposParams
 }
@@ -12135,6 +18994,115 @@ func (response ListBranchesdefaultJSONResponse) VisitListBranchesResponse(w http
 	return err
 }
 
+type DeleteBranchRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Body *DeleteBranchJSONRequestBody
+}
+
+type DeleteBranchResponseObject interface {
+	VisitDeleteBranchResponse(w http.ResponseWriter) error
+}
+
+type DeleteBranch204Response struct {
+}
+
+func (response DeleteBranch204Response) VisitDeleteBranchResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteBranchdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteBranchdefaultJSONResponse) VisitDeleteBranchResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteCommentRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   int64    `json:"id"`
+}
+
+type DeleteCommentResponseObject interface {
+	VisitDeleteCommentResponse(w http.ResponseWriter) error
+}
+
+type DeleteComment204Response struct {
+}
+
+func (response DeleteComment204Response) VisitDeleteCommentResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteCommentdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteCommentdefaultJSONResponse) VisitDeleteCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateCommentRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   int64    `json:"id"`
+	Body *UpdateCommentJSONRequestBody
+}
+
+type UpdateCommentResponseObject interface {
+	VisitUpdateCommentResponse(w http.ResponseWriter) error
+}
+
+type UpdateComment200JSONResponse Comment
+
+func (response UpdateComment200JSONResponse) VisitUpdateCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateCommentdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdateCommentdefaultJSONResponse) VisitUpdateCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListCommitsRequestObject struct {
 	Repo   RepoName `json:"repo"`
 	Params ListCommitsParams
@@ -12204,6 +19172,767 @@ type GetCommitdefaultJSONResponse struct {
 }
 
 func (response GetCommitdefaultJSONResponse) VisitGetCommitResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CompareRefsRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Params CompareRefsParams
+}
+
+type CompareRefsResponseObject interface {
+	VisitCompareRefsResponse(w http.ResponseWriter) error
+}
+
+type CompareRefs200JSONResponse Comparison
+
+func (response CompareRefs200JSONResponse) VisitCompareRefsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CompareRefsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CompareRefsdefaultJSONResponse) VisitCompareRefsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListProtectionsRequestObject struct {
+	Repo RepoName `json:"repo"`
+}
+
+type ListProtectionsResponseObject interface {
+	VisitListProtectionsResponse(w http.ResponseWriter) error
+}
+
+type ListProtections200JSONResponse []BranchProtection
+
+func (response ListProtections200JSONResponse) VisitListProtectionsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListProtectionsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListProtectionsdefaultJSONResponse) VisitListProtectionsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateProtectionRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Body *CreateProtectionJSONRequestBody
+}
+
+type CreateProtectionResponseObject interface {
+	VisitCreateProtectionResponse(w http.ResponseWriter) error
+}
+
+type CreateProtection201JSONResponse BranchProtection
+
+func (response CreateProtection201JSONResponse) VisitCreateProtectionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateProtectiondefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreateProtectiondefaultJSONResponse) VisitCreateProtectionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteProtectionRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   int64    `json:"id"`
+}
+
+type DeleteProtectionResponseObject interface {
+	VisitDeleteProtectionResponse(w http.ResponseWriter) error
+}
+
+type DeleteProtection204Response struct {
+}
+
+func (response DeleteProtection204Response) VisitDeleteProtectionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteProtectiondefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteProtectiondefaultJSONResponse) VisitDeleteProtectionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateProtectionRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   int64    `json:"id"`
+	Body *UpdateProtectionJSONRequestBody
+}
+
+type UpdateProtectionResponseObject interface {
+	VisitUpdateProtectionResponse(w http.ResponseWriter) error
+}
+
+type UpdateProtection200JSONResponse BranchProtection
+
+func (response UpdateProtection200JSONResponse) VisitUpdateProtectionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateProtectiondefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdateProtectiondefaultJSONResponse) VisitUpdateProtectionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPullsRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Params ListPullsParams
+}
+
+type ListPullsResponseObject interface {
+	VisitListPullsResponse(w http.ResponseWriter) error
+}
+
+type ListPulls200JSONResponse PullPage
+
+func (response ListPulls200JSONResponse) VisitListPullsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPullsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListPullsdefaultJSONResponse) VisitListPullsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreatePullRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Body *CreatePullJSONRequestBody
+}
+
+type CreatePullResponseObject interface {
+	VisitCreatePullResponse(w http.ResponseWriter) error
+}
+
+type CreatePull201JSONResponse PullRequest
+
+func (response CreatePull201JSONResponse) VisitCreatePullResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreatePulldefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreatePulldefaultJSONResponse) VisitCreatePullResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPullRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+}
+
+type GetPullResponseObject interface {
+	VisitGetPullResponse(w http.ResponseWriter) error
+}
+
+type GetPull200JSONResponse PullRequest
+
+func (response GetPull200JSONResponse) VisitGetPullResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPulldefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetPulldefaultJSONResponse) VisitGetPullResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdatePullRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+	Body   *UpdatePullJSONRequestBody
+}
+
+type UpdatePullResponseObject interface {
+	VisitUpdatePullResponse(w http.ResponseWriter) error
+}
+
+type UpdatePull200JSONResponse PullRequest
+
+func (response UpdatePull200JSONResponse) VisitUpdatePullResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdatePulldefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdatePulldefaultJSONResponse) VisitUpdatePullResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPullCommentsRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+}
+
+type ListPullCommentsResponseObject interface {
+	VisitListPullCommentsResponse(w http.ResponseWriter) error
+}
+
+type ListPullComments200JSONResponse []Comment
+
+func (response ListPullComments200JSONResponse) VisitListPullCommentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPullCommentsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListPullCommentsdefaultJSONResponse) VisitListPullCommentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreatePullCommentRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+	Body   *CreatePullCommentJSONRequestBody
+}
+
+type CreatePullCommentResponseObject interface {
+	VisitCreatePullCommentResponse(w http.ResponseWriter) error
+}
+
+type CreatePullComment201JSONResponse Comment
+
+func (response CreatePullComment201JSONResponse) VisitCreatePullCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreatePullCommentdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreatePullCommentdefaultJSONResponse) VisitCreatePullCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPullCommitsRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+}
+
+type ListPullCommitsResponseObject interface {
+	VisitListPullCommitsResponse(w http.ResponseWriter) error
+}
+
+type ListPullCommits200JSONResponse []Commit
+
+func (response ListPullCommits200JSONResponse) VisitListPullCommitsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPullCommitsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListPullCommitsdefaultJSONResponse) VisitListPullCommitsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPullDiffRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+}
+
+type GetPullDiffResponseObject interface {
+	VisitGetPullDiffResponse(w http.ResponseWriter) error
+}
+
+type GetPullDiff200JSONResponse Diff
+
+func (response GetPullDiff200JSONResponse) VisitGetPullDiffResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPullDiffdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetPullDiffdefaultJSONResponse) VisitGetPullDiffResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MergePullRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+	Body   *MergePullJSONRequestBody
+}
+
+type MergePullResponseObject interface {
+	VisitMergePullResponse(w http.ResponseWriter) error
+}
+
+type MergePull200JSONResponse PullRequest
+
+func (response MergePull200JSONResponse) VisitMergePullResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MergePulldefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response MergePulldefaultJSONResponse) VisitMergePullResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListReviewsRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+}
+
+type ListReviewsResponseObject interface {
+	VisitListReviewsResponse(w http.ResponseWriter) error
+}
+
+type ListReviews200JSONResponse []Review
+
+func (response ListReviews200JSONResponse) VisitListReviewsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListReviewsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListReviewsdefaultJSONResponse) VisitListReviewsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateReviewRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+	Body   *CreateReviewJSONRequestBody
+}
+
+type CreateReviewResponseObject interface {
+	VisitCreateReviewResponse(w http.ResponseWriter) error
+}
+
+type CreateReview201JSONResponse Review
+
+func (response CreateReview201JSONResponse) VisitCreateReviewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateReviewdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreateReviewdefaultJSONResponse) VisitCreateReviewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DismissReviewRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+	Id     int64      `json:"id"`
+	Body   *DismissReviewJSONRequestBody
+}
+
+type DismissReviewResponseObject interface {
+	VisitDismissReviewResponse(w http.ResponseWriter) error
+}
+
+type DismissReview200JSONResponse Review
+
+func (response DismissReview200JSONResponse) VisitDismissReviewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DismissReviewdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DismissReviewdefaultJSONResponse) VisitDismissReviewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPullTimelineRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+}
+
+type GetPullTimelineResponseObject interface {
+	VisitGetPullTimelineResponse(w http.ResponseWriter) error
+}
+
+type GetPullTimeline200JSONResponse []TimelineItem
+
+func (response GetPullTimeline200JSONResponse) VisitGetPullTimelineResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPullTimelinedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetPullTimelinedefaultJSONResponse) VisitGetPullTimelineResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdatePullBranchRequestObject struct {
+	Repo   RepoName   `json:"repo"`
+	Number PullNumber `json:"number"`
+	Body   *UpdatePullBranchJSONRequestBody
+}
+
+type UpdatePullBranchResponseObject interface {
+	VisitUpdatePullBranchResponse(w http.ResponseWriter) error
+}
+
+type UpdatePullBranch200JSONResponse PullRequest
+
+func (response UpdatePullBranch200JSONResponse) VisitUpdatePullBranchResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdatePullBranchdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdatePullBranchdefaultJSONResponse) VisitUpdatePullBranchResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -12540,6 +20269,9 @@ type StrictServerInterface interface {
 	// GetOrgLogo Org logo image
 	// (GET /org/logo)
 	GetOrgLogo(ctx context.Context, request GetOrgLogoRequestObject) (GetOrgLogoResponseObject, error)
+	// ListMyPulls Pull requests across all repositories you can access
+	// (GET /pulls)
+	ListMyPulls(ctx context.Context, request ListMyPullsRequestObject) (ListMyPullsResponseObject, error)
 	// ListRepos List repositories you can access
 	// (GET /repos)
 	ListRepos(ctx context.Context, request ListReposRequestObject) (ListReposResponseObject, error)
@@ -12567,12 +20299,78 @@ type StrictServerInterface interface {
 	// ListBranches List branches, most recently updated first
 	// (GET /repos/{repo}/branches)
 	ListBranches(ctx context.Context, request ListBranchesRequestObject) (ListBranchesResponseObject, error)
+	// DeleteBranch Delete a branch
+	// (POST /repos/{repo}/branches/delete)
+	DeleteBranch(ctx context.Context, request DeleteBranchRequestObject) (DeleteBranchResponseObject, error)
+	// DeleteComment Delete a comment (its author or an admin)
+	// (DELETE /repos/{repo}/comments/{id})
+	DeleteComment(ctx context.Context, request DeleteCommentRequestObject) (DeleteCommentResponseObject, error)
+	// UpdateComment Edit a comment (its author) or resolve an inline thread (triage access)
+	// (PATCH /repos/{repo}/comments/{id})
+	UpdateComment(ctx context.Context, request UpdateCommentRequestObject) (UpdateCommentResponseObject, error)
 	// ListCommits Commit history, newest first
 	// (GET /repos/{repo}/commits)
 	ListCommits(ctx context.Context, request ListCommitsRequestObject) (ListCommitsResponseObject, error)
 	// GetCommit A commit with its diff
 	// (GET /repos/{repo}/commits/{sha})
 	GetCommit(ctx context.Context, request GetCommitRequestObject) (GetCommitResponseObject, error)
+	// CompareRefs Compare two branches (what a pull request from head into base would contain)
+	// (GET /repos/{repo}/compare)
+	CompareRefs(ctx context.Context, request CompareRefsRequestObject) (CompareRefsResponseObject, error)
+	// ListProtections List branch protection rules
+	// (GET /repos/{repo}/protections)
+	ListProtections(ctx context.Context, request ListProtectionsRequestObject) (ListProtectionsResponseObject, error)
+	// CreateProtection Add a branch protection rule (admins)
+	// (POST /repos/{repo}/protections)
+	CreateProtection(ctx context.Context, request CreateProtectionRequestObject) (CreateProtectionResponseObject, error)
+	// DeleteProtection Remove a branch protection rule (admins)
+	// (DELETE /repos/{repo}/protections/{id})
+	DeleteProtection(ctx context.Context, request DeleteProtectionRequestObject) (DeleteProtectionResponseObject, error)
+	// UpdateProtection Change a branch protection rule (admins)
+	// (PATCH /repos/{repo}/protections/{id})
+	UpdateProtection(ctx context.Context, request UpdateProtectionRequestObject) (UpdateProtectionResponseObject, error)
+	// ListPulls List pull requests, most recently updated first
+	// (GET /repos/{repo}/pulls)
+	ListPulls(ctx context.Context, request ListPullsRequestObject) (ListPullsResponseObject, error)
+	// CreatePull Open a pull request (write access)
+	// (POST /repos/{repo}/pulls)
+	CreatePull(ctx context.Context, request CreatePullRequestObject) (CreatePullResponseObject, error)
+	// GetPull Get a pull request with its mergeability, reviews summary and merge blockers
+	// (GET /repos/{repo}/pulls/{number})
+	GetPull(ctx context.Context, request GetPullRequestObject) (GetPullResponseObject, error)
+	// UpdatePull Edit, close, reopen or change the draft state of a pull request
+	// (PATCH /repos/{repo}/pulls/{number})
+	UpdatePull(ctx context.Context, request UpdatePullRequestObject) (UpdatePullResponseObject, error)
+	// ListPullComments All comments (conversation and inline, including replies), oldest first
+	// (GET /repos/{repo}/pulls/{number}/comments)
+	ListPullComments(ctx context.Context, request ListPullCommentsRequestObject) (ListPullCommentsResponseObject, error)
+	// CreatePullComment Comment on a pull request (triage access)
+	// (POST /repos/{repo}/pulls/{number}/comments)
+	CreatePullComment(ctx context.Context, request CreatePullCommentRequestObject) (CreatePullCommentResponseObject, error)
+	// ListPullCommits Commits in a pull request, oldest first (at most 250)
+	// (GET /repos/{repo}/pulls/{number}/commits)
+	ListPullCommits(ctx context.Context, request ListPullCommitsRequestObject) (ListPullCommitsResponseObject, error)
+	// GetPullDiff The pull request's changes (merge base to head)
+	// (GET /repos/{repo}/pulls/{number}/files)
+	GetPullDiff(ctx context.Context, request GetPullDiffRequestObject) (GetPullDiffResponseObject, error)
+	// MergePull Merge a pull request (write access)
+	// (POST /repos/{repo}/pulls/{number}/merge)
+	MergePull(ctx context.Context, request MergePullRequestObject) (MergePullResponseObject, error)
+	// ListReviews Reviews, oldest first
+	// (GET /repos/{repo}/pulls/{number}/reviews)
+	ListReviews(ctx context.Context, request ListReviewsRequestObject) (ListReviewsResponseObject, error)
+	// CreateReview Submit a review (triage access)
+	// (POST /repos/{repo}/pulls/{number}/reviews)
+	CreateReview(ctx context.Context, request CreateReviewRequestObject) (CreateReviewResponseObject, error)
+	// DismissReview Dismiss an approval or change request (write access)
+	// (POST /repos/{repo}/pulls/{number}/reviews/{id}/dismiss)
+	DismissReview(ctx context.Context, request DismissReviewRequestObject) (DismissReviewResponseObject, error)
+	// GetPullTimeline Conversation timeline, oldest first
+	// (GET /repos/{repo}/pulls/{number}/timeline)
+	GetPullTimeline(ctx context.Context, request GetPullTimelineRequestObject) (GetPullTimelineResponseObject, error)
+	// UpdatePullBranch Merge the base branch into the head branch (write access)
+	// (POST /repos/{repo}/pulls/{number}/update-branch)
+	UpdatePullBranch(ctx context.Context, request UpdatePullBranchRequestObject) (UpdatePullBranchResponseObject, error)
 	// GetRaw Download a file's raw bytes
 	// (GET /repos/{repo}/raw)
 	GetRaw(ctx context.Context, request GetRawRequestObject) (GetRawResponseObject, error)
@@ -13375,6 +21173,32 @@ func (sh *strictHandler) GetOrgLogo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ListMyPulls operation middleware
+func (sh *strictHandler) ListMyPulls(w http.ResponseWriter, r *http.Request, params ListMyPullsParams) {
+	var request ListMyPullsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListMyPulls(ctx, request.(ListMyPullsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListMyPulls")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListMyPullsResponseObject); ok {
+		if err := validResponse.VisitListMyPullsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListRepos operation middleware
 func (sh *strictHandler) ListRepos(w http.ResponseWriter, r *http.Request, params ListReposParams) {
 	var request ListReposRequestObject
@@ -13623,6 +21447,100 @@ func (sh *strictHandler) ListBranches(w http.ResponseWriter, r *http.Request, re
 	}
 }
 
+// DeleteBranch operation middleware
+func (sh *strictHandler) DeleteBranch(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	var request DeleteBranchRequestObject
+
+	request.Repo = repo
+
+	var body DeleteBranchJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteBranch(ctx, request.(DeleteBranchRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteBranch")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteBranchResponseObject); ok {
+		if err := validResponse.VisitDeleteBranchResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteComment operation middleware
+func (sh *strictHandler) DeleteComment(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	var request DeleteCommentRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteComment(ctx, request.(DeleteCommentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteComment")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteCommentResponseObject); ok {
+		if err := validResponse.VisitDeleteCommentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateComment operation middleware
+func (sh *strictHandler) UpdateComment(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	var request UpdateCommentRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	var body UpdateCommentJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateComment(ctx, request.(UpdateCommentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateComment")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateCommentResponseObject); ok {
+		if err := validResponse.VisitUpdateCommentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListCommits operation middleware
 func (sh *strictHandler) ListCommits(w http.ResponseWriter, r *http.Request, repo RepoName, params ListCommitsParams) {
 	var request ListCommitsRequestObject
@@ -13670,6 +21588,586 @@ func (sh *strictHandler) GetCommit(w http.ResponseWriter, r *http.Request, repo 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetCommitResponseObject); ok {
 		if err := validResponse.VisitGetCommitResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CompareRefs operation middleware
+func (sh *strictHandler) CompareRefs(w http.ResponseWriter, r *http.Request, repo RepoName, params CompareRefsParams) {
+	var request CompareRefsRequestObject
+
+	request.Repo = repo
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CompareRefs(ctx, request.(CompareRefsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CompareRefs")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CompareRefsResponseObject); ok {
+		if err := validResponse.VisitCompareRefsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListProtections operation middleware
+func (sh *strictHandler) ListProtections(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	var request ListProtectionsRequestObject
+
+	request.Repo = repo
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListProtections(ctx, request.(ListProtectionsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListProtections")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListProtectionsResponseObject); ok {
+		if err := validResponse.VisitListProtectionsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateProtection operation middleware
+func (sh *strictHandler) CreateProtection(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	var request CreateProtectionRequestObject
+
+	request.Repo = repo
+
+	var body CreateProtectionJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateProtection(ctx, request.(CreateProtectionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateProtection")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateProtectionResponseObject); ok {
+		if err := validResponse.VisitCreateProtectionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteProtection operation middleware
+func (sh *strictHandler) DeleteProtection(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	var request DeleteProtectionRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteProtection(ctx, request.(DeleteProtectionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteProtection")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteProtectionResponseObject); ok {
+		if err := validResponse.VisitDeleteProtectionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateProtection operation middleware
+func (sh *strictHandler) UpdateProtection(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	var request UpdateProtectionRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	var body UpdateProtectionJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateProtection(ctx, request.(UpdateProtectionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateProtection")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateProtectionResponseObject); ok {
+		if err := validResponse.VisitUpdateProtectionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListPulls operation middleware
+func (sh *strictHandler) ListPulls(w http.ResponseWriter, r *http.Request, repo RepoName, params ListPullsParams) {
+	var request ListPullsRequestObject
+
+	request.Repo = repo
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListPulls(ctx, request.(ListPullsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListPulls")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListPullsResponseObject); ok {
+		if err := validResponse.VisitListPullsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreatePull operation middleware
+func (sh *strictHandler) CreatePull(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	var request CreatePullRequestObject
+
+	request.Repo = repo
+
+	var body CreatePullJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreatePull(ctx, request.(CreatePullRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreatePull")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreatePullResponseObject); ok {
+		if err := validResponse.VisitCreatePullResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPull operation middleware
+func (sh *strictHandler) GetPull(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	var request GetPullRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPull(ctx, request.(GetPullRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPull")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetPullResponseObject); ok {
+		if err := validResponse.VisitGetPullResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdatePull operation middleware
+func (sh *strictHandler) UpdatePull(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	var request UpdatePullRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	var body UpdatePullJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdatePull(ctx, request.(UpdatePullRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdatePull")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdatePullResponseObject); ok {
+		if err := validResponse.VisitUpdatePullResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListPullComments operation middleware
+func (sh *strictHandler) ListPullComments(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	var request ListPullCommentsRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListPullComments(ctx, request.(ListPullCommentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListPullComments")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListPullCommentsResponseObject); ok {
+		if err := validResponse.VisitListPullCommentsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreatePullComment operation middleware
+func (sh *strictHandler) CreatePullComment(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	var request CreatePullCommentRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	var body CreatePullCommentJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreatePullComment(ctx, request.(CreatePullCommentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreatePullComment")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreatePullCommentResponseObject); ok {
+		if err := validResponse.VisitCreatePullCommentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListPullCommits operation middleware
+func (sh *strictHandler) ListPullCommits(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	var request ListPullCommitsRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListPullCommits(ctx, request.(ListPullCommitsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListPullCommits")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListPullCommitsResponseObject); ok {
+		if err := validResponse.VisitListPullCommitsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPullDiff operation middleware
+func (sh *strictHandler) GetPullDiff(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	var request GetPullDiffRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPullDiff(ctx, request.(GetPullDiffRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPullDiff")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetPullDiffResponseObject); ok {
+		if err := validResponse.VisitGetPullDiffResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MergePull operation middleware
+func (sh *strictHandler) MergePull(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	var request MergePullRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	var body MergePullJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		if !errors.Is(err, io.EOF) {
+			sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+			return
+		}
+	} else {
+		request.Body = &body
+	}
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.MergePull(ctx, request.(MergePullRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MergePull")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(MergePullResponseObject); ok {
+		if err := validResponse.VisitMergePullResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListReviews operation middleware
+func (sh *strictHandler) ListReviews(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	var request ListReviewsRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListReviews(ctx, request.(ListReviewsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListReviews")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListReviewsResponseObject); ok {
+		if err := validResponse.VisitListReviewsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateReview operation middleware
+func (sh *strictHandler) CreateReview(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	var request CreateReviewRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	var body CreateReviewJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateReview(ctx, request.(CreateReviewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateReview")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateReviewResponseObject); ok {
+		if err := validResponse.VisitCreateReviewResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DismissReview operation middleware
+func (sh *strictHandler) DismissReview(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber, id int64) {
+	var request DismissReviewRequestObject
+
+	request.Repo = repo
+	request.Number = number
+	request.Id = id
+
+	var body DismissReviewJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DismissReview(ctx, request.(DismissReviewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DismissReview")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DismissReviewResponseObject); ok {
+		if err := validResponse.VisitDismissReviewResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPullTimeline operation middleware
+func (sh *strictHandler) GetPullTimeline(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	var request GetPullTimelineRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPullTimeline(ctx, request.(GetPullTimelineRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPullTimeline")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetPullTimelineResponseObject); ok {
+		if err := validResponse.VisitGetPullTimelineResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdatePullBranch operation middleware
+func (sh *strictHandler) UpdatePullBranch(w http.ResponseWriter, r *http.Request, repo RepoName, number PullNumber) {
+	var request UpdatePullBranchRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	var body UpdatePullBranchJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		if !errors.Is(err, io.EOF) {
+			sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+			return
+		}
+	} else {
+		request.Body = &body
+	}
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdatePullBranch(ctx, request.(UpdatePullBranchRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdatePullBranch")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdatePullBranchResponseObject); ok {
+		if err := validResponse.VisitUpdatePullBranchResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -13844,120 +22342,193 @@ func (sh *strictHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
+	"A+nv2t/Oxr//dP//BgA=",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

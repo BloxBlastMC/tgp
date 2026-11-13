@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import { api } from '../api/client'
 import type { Session } from '../api/client'
@@ -31,6 +31,9 @@ export function useCommands(session: Session | null | undefined, toggleTheme: ()
   const logout = useLogout()
   const isAdmin = session?.user.role === 'admin'
   const repos = useQuery({ ...reposQuery, enabled: !!session })
+  // The repository currently shown, for repository-scoped commands.
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const current = (repos.data ?? []).find((r) => pathname.split('/')[1]?.toLowerCase() === r.name.toLowerCase())
   return useMemo(() => {
     const go = (to: string) => () => void navigate({ to })
     const cmds: Command[] = [
@@ -49,9 +52,15 @@ export function useCommands(session: Session | null | undefined, toggleTheme: ()
         { id: 'admin-audit', label: 'Admin: Audit log', group: 'Navigate', run: go('/admin/audit') },
       )
     }
+    if (current) {
+      const repo = current.name
+      cmds.unshift({ id: 'repo-pulls', label: `${repo}: Pull requests`, group: 'Repository', run: () => void navigate({ to: '/$repo/pulls', params: { repo } }) })
+      if (current.permission === 'write' || current.permission === 'admin')
+        cmds.unshift({ id: 'repo-new-pull', label: `${repo}: New pull request`, group: 'Repository', run: () => void navigate({ to: '/$repo/compare/$', params: { repo, _splat: '' } }) })
+    }
     for (const r of repos.data ?? []) {
       cmds.push({ id: `repo:${r.name}`, label: r.name, group: 'Repository', run: () => void navigate({ to: '/$repo', params: { repo: r.name } }) })
     }
     return cmds
-  }, [navigate, logout, isAdmin, toggleTheme, repos.data])
+  }, [navigate, logout, isAdmin, toggleTheme, repos.data, current])
 }
