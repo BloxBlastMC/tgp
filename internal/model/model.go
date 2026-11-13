@@ -130,3 +130,27 @@ type OrgLogo struct {
 	Data        []byte    `bun:"data"`
 	UpdatedAt   time.Time `bun:"updated_at"`
 }
+
+type Repo struct {
+	bun.BaseModel `bun:"table:repos,alias:r"`
+
+	ID            int64      `bun:"id,pk,autoincrement"`
+	Name          string     `bun:"name"`
+	LowerName     string     `bun:"lower_name"`
+	Description   string     `bun:"description"`
+	DefaultBranch string     `bun:"default_branch"`
+	Archived      bool       `bun:"archived"`
+	CreatedByID   *int64     `bun:"created_by_id"`
+	CreatedAt     time.Time  `bun:"created_at"`
+	UpdatedAt     time.Time  `bun:"updated_at"`
+	PushedAt      *time.Time `bun:"pushed_at"`
+}
+
+type RepoGrant struct {
+	bun.BaseModel `bun:"table:repo_grants"`
+
+	ID        int64     `bun:"id,pk,autoincrement"`
+	RepoID    int64     `bun:"repo_id"`
+	UserID    int64     `bun:"user_id"`
+	CreatedAt time.Time `bun:"created_at"`
+}

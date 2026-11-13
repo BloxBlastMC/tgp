@@ -33,6 +33,8 @@ tags:
   - name: users
   - name: org
   - name: admin
+  - name: repos
+  - name: code
 paths:
   /meta:
     get:
@@ -447,7 +449,331 @@ paths:
               schema: { $ref: "#/components/schemas/AuditPage" }
         default: { $ref: "#/components/responses/Error" }
 
+  /repos:
+    get:
+      operationId: listRepos
+      tags: [repos]
+      summary: List repositories you can access
+      parameters:
+        - { name: q, in: query, description: Case-insensitive substring filter on the name., schema: { type: string } }
+      responses:
+        "200":
+          description: Repositories, most recently pushed first
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Repo" } }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createRepo
+      tags: [repos]
+      summary: Create a repository (admins)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateRepoRequest" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Repo" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: getRepo
+      tags: [repos]
+      summary: Get a repository
+      responses:
+        "200":
+          description: Repository
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Repo" }
+        default: { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: updateRepo
+      tags: [repos]
+      summary: Update a repository
+      description: Maintainers can change the description and default branch. Renaming and archiving need an admin.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateRepoRequest" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Repo" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteRepo
+      tags: [repos]
+      summary: Permanently delete a repository (admins)
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/access:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listRepoAccess
+      tags: [repos]
+      summary: Who can access this repository, and how
+      responses:
+        "200":
+          description: Users with access
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/RepoAccess" } }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/branches:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listBranches
+      tags: [code]
+      summary: List branches, most recently updated first
+      responses:
+        "200":
+          description: Branches
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Ref" } }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/tags:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listTags
+      tags: [code]
+      summary: List tags, newest first
+      responses:
+        "200":
+          description: Tags
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Ref" } }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/tree:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/RefParam"
+      - $ref: "#/components/parameters/PathParam"
+    get:
+      operationId: getTree
+      tags: [code]
+      summary: List a directory
+      responses:
+        "200":
+          description: Directory listing
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Tree" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/blob:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/RefParam"
+      - $ref: "#/components/parameters/RequiredPathParam"
+    get:
+      operationId: getBlob
+      tags: [code]
+      summary: Get a file's content
+      description: Text files up to 1 MiB are returned as UTF-8; binary files as base64 (up to 1 MiB). Use `raw` for full content.
+      responses:
+        "200":
+          description: File
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Blob" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/raw:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/RefParam"
+      - $ref: "#/components/parameters/RequiredPathParam"
+    get:
+      operationId: getRaw
+      tags: [code]
+      summary: Download a file's raw bytes
+      responses:
+        "200":
+          description: File content
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/readme:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/RefParam"
+      - $ref: "#/components/parameters/PathParam"
+    get:
+      operationId: getReadme
+      tags: [code]
+      summary: The README of a directory, rendered to HTML
+      responses:
+        "200":
+          description: README
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Readme" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/commits:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/RefParam"
+      - $ref: "#/components/parameters/PathParam"
+      - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+      - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
+    get:
+      operationId: listCommits
+      tags: [code]
+      summary: Commit history, newest first
+      responses:
+        "200":
+          description: Commits
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommitPage" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/commits/{sha}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: sha, in: path, required: true, description: Commit id or any ref., schema: { type: string } }
+    get:
+      operationId: getCommit
+      tags: [code]
+      summary: A commit with its diff
+      responses:
+        "200":
+          description: Commit
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommitDetail" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/blame:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/RefParam"
+      - $ref: "#/components/parameters/RequiredPathParam"
+    get:
+      operationId: getBlame
+      tags: [code]
+      summary: Line-by-line authorship of a file
+      responses:
+        "200":
+          description: Blame
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Blame" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /markdown:
+    post:
+      operationId: renderMarkdown
+      tags: [code]
+      summary: Render markdown to sanitised HTML
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string }
+                repo: { type: string, description: Resolve relative links in this repository. }
+                ref: { type: string }
+      responses:
+        "200":
+          description: Rendered HTML
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [html]
+                properties:
+                  html: { type: string }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/users/{username}/repos:
+    parameters:
+      - { name: username, in: path, required: true, schema: { type: string } }
+    get:
+      operationId: adminGetUserRepos
+      tags: [admin]
+      summary: A user's repository access
+      responses:
+        "200":
+          description: Access
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserRepoAccess" }
+        default: { $ref: "#/components/responses/Error" }
+    put:
+      operationId: adminSetUserRepos
+      tags: [admin]
+      summary: Set a user's repository access
+      description: Sets `all_repos` and replaces the list of explicitly granted repositories.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [all_repos, repos]
+              properties:
+                all_repos: { type: boolean }
+                repos: { type: array, items: { type: string }, description: Repository names. Kept even when all_repos is true, so switching back restores them. }
+      responses:
+        "200":
+          description: Updated access
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserRepoAccess" }
+        default: { $ref: "#/components/responses/Error" }
+
 components:
+  parameters:
+    RepoName:
+      name: repo
+      in: path
+      required: true
+      description: Repository name (case-insensitive).
+      schema: { type: string }
+    RefParam:
+      name: ref
+      in: query
+      description: Branch, tag or commit. Defaults to the default branch.
+      schema: { type: string }
+    PathParam:
+      name: path
+      in: query
+      description: Path inside the repository; empty for the root.
+      schema: { type: string }
+    RequiredPathParam:
+      name: path
+      in: query
+      required: true
+      description: Path of a file inside the repository.
+      schema: { type: string }
   securitySchemes:
     sessionCookie:
       type: apiKey
@@ -758,3 +1084,213 @@ components:
           format: int64
           nullable: true
           description: Pass as `before` to get the next page; absent on the last page.
+
+    Permission:
+      type: string
+      enum: [none, read, triage, write, admin]
+      description: |
+        `read`: clone and browse. `triage` (testers): plus issues, comments, reviews, CI re-runs.
+        `write` (maintainers): plus push and merge. `admin`: plus rename, archive, delete, access.
+
+    Repo:
+      type: object
+      required: [id, name, description, default_branch, empty, archived, clone_url, permission, created_at, updated_at]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        description: { type: string }
+        default_branch: { type: string }
+        empty: { type: boolean, description: True until the first push. }
+        archived: { type: boolean, description: Archived repositories are read-only. }
+        clone_url: { type: string, example: "https://git.example.com/game.git" }
+        permission: { $ref: "#/components/schemas/Permission" }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        pushed_at: { type: string, format: date-time, nullable: true }
+
+    CreateRepoRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        default_branch: { type: string, default: main }
+        auto_init: { type: boolean, default: false, description: Create an initial commit with a README. }
+
+    UpdateRepoRequest:
+      type: object
+      properties:
+        name: { type: string, description: Rename (admins). The old clone URL stops working. }
+        description: { type: string }
+        default_branch: { type: string, description: Must be an existing branch. }
+        archived: { type: boolean, description: Archive or unarchive (admins). }
+
+    RepoAccess:
+      type: object
+      required: [user, permission, source]
+      properties:
+        user: { $ref: "#/components/schemas/UserSummary" }
+        permission: { $ref: "#/components/schemas/Permission" }
+        source:
+          type: string
+          enum: [admin, all_repos, grant]
+          description: Why the user has access.
+
+    UserRepoAccess:
+      type: object
+      required: [all_repos, repos]
+      properties:
+        all_repos: { type: boolean }
+        repos: { type: array, items: { type: string }, description: Explicitly granted repository names. }
+
+    Ref:
+      type: object
+      required: [name, commit, subject, author, date]
+      properties:
+        name: { type: string }
+        commit: { type: string, description: Commit id the ref points to (tags are peeled). }
+        subject: { type: string, description: First line of the commit message. }
+        author: { type: string }
+        date: { type: string, format: date-time }
+        is_default: { type: boolean }
+
+    TreeEntry:
+      type: object
+      required: [name, path, type, mode, sha, size]
+      properties:
+        name: { type: string }
+        path: { type: string }
+        type: { type: string, enum: [file, dir, symlink, submodule] }
+        mode: { type: string }
+        sha: { type: string }
+        size: { type: integer, format: int64 }
+
+    Tree:
+      type: object
+      required: [ref, commit, path, entries]
+      properties:
+        ref: { type: string }
+        commit: { type: string }
+        path: { type: string }
+        entries: { type: array, items: { $ref: "#/components/schemas/TreeEntry" } }
+
+    Blob:
+      type: object
+      required: [ref, commit, path, sha, size, binary, truncated, encoding, content]
+      properties:
+        ref: { type: string }
+        commit: { type: string }
+        path: { type: string }
+        sha: { type: string }
+        size: { type: integer, format: int64 }
+        binary: { type: boolean }
+        truncated: { type: boolean, description: Content was cut at 1 MiB. }
+        encoding: { type: string, enum: [utf-8, base64] }
+        content: { type: string }
+
+    Readme:
+      type: object
+      required: [path, html]
+      properties:
+        path: { type: string }
+        html: { type: string, description: Sanitised HTML. }
+
+    Signature:
+      type: object
+      required: [name, email, date]
+      properties:
+        name: { type: string }
+        email: { type: string }
+        date: { type: string, format: date-time }
+
+    Commit:
+      type: object
+      required: [sha, parents, author, committer, subject, body]
+      properties:
+        sha: { type: string }
+        parents: { type: array, items: { type: string } }
+        author: { $ref: "#/components/schemas/Signature" }
+        committer: { $ref: "#/components/schemas/Signature" }
+        subject: { type: string }
+        body: { type: string }
+
+    CommitPage:
+      type: object
+      required: [commits, has_more]
+      properties:
+        commits: { type: array, items: { $ref: "#/components/schemas/Commit" } }
+        has_more: { type: boolean }
+
+    DiffLine:
+      type: object
+      required: [type, content]
+      properties:
+        type: { type: string, enum: [context, add, del] }
+        content: { type: string }
+        old_line: { type: integer, description: Line number in the old file (absent for added lines). }
+        new_line: { type: integer, description: Line number in the new file (absent for deleted lines). }
+        no_newline: { type: boolean }
+
+    DiffHunk:
+      type: object
+      required: [header, old_start, old_lines, new_start, new_lines, lines]
+      properties:
+        header: { type: string }
+        old_start: { type: integer }
+        old_lines: { type: integer }
+        new_start: { type: integer }
+        new_lines: { type: integer }
+        section: { type: string }
+        lines: { type: array, items: { $ref: "#/components/schemas/DiffLine" } }
+
+    DiffFile:
+      type: object
+      required: [old_path, new_path, status, binary, additions, deletions, hunks, truncated]
+      properties:
+        old_path: { type: string }
+        new_path: { type: string }
+        status: { type: string, enum: [added, deleted, modified, renamed, copied] }
+        old_mode: { type: string }
+        new_mode: { type: string }
+        binary: { type: boolean }
+        additions: { type: integer }
+        deletions: { type: integer }
+        hunks: { type: array, items: { $ref: "#/components/schemas/DiffHunk" } }
+        truncated: { type: boolean, description: Some hunks were omitted because the diff is too large. }
+
+    Diff:
+      type: object
+      required: [files, additions, deletions, truncated]
+      properties:
+        files: { type: array, items: { $ref: "#/components/schemas/DiffFile" } }
+        additions: { type: integer }
+        deletions: { type: integer }
+        truncated: { type: boolean }
+
+    CommitDetail:
+      type: object
+      required: [commit, diff]
+      properties:
+        commit: { $ref: "#/components/schemas/Commit" }
+        diff: { $ref: "#/components/schemas/Diff" }
+
+    BlameRange:
+      type: object
+      required: [commit, author, email, date, summary, start_line, lines]
+      properties:
+        commit: { type: string }
+        author: { type: string }
+        email: { type: string }
+        date: { type: string, format: date-time }
+        summary: { type: string }
+        start_line: { type: integer }
+        lines: { type: array, items: { type: string } }
+
+    Blame:
+      type: object
+      required: [ref, commit, path, ranges]
+      properties:
+        ref: { type: string }
+        commit: { type: string }
+        path: { type: string }
+        ranges: { type: array, items: { $ref: "#/components/schemas/BlameRange" } }

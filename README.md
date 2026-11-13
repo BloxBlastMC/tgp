@@ -5,8 +5,9 @@
 A self-hosted git platform for a single team: repositories, pull requests,
 issues, CI with strict resource limits, and an agent-friendly CLI.
 
-> **Status:** early development: setup, users and authentication work;
-> repositories come next. See [docs/roadmap.md](docs/roadmap.md).
+> **Status:** early development: setup, users, authentication, repositories,
+> git over HTTPS and code browsing work; the CLI comes next.
+> See [docs/roadmap.md](docs/roadmap.md).
 
 ## Components
 
@@ -18,7 +19,7 @@ issues, CI with strict resource limits, and an agent-friendly CLI.
 
 ## Building
 
-Requirements: Go 1.27+, Node 24+ with pnpm, and `git` on the server host.
+Requirements: Go 1.27+, Node 24+ with pnpm, and `git` 2.36+ on the server host.
 
 ```sh
 make            # build the web UI, then bin/tgp-server, bin/tgp, bin/tgp-runner
@@ -44,6 +45,10 @@ and optionally add your team. Each new person gets a temporary password
 (valid 72 hours) and picks their own password at first login, with optional
 two-factor authentication. See [docs/authentication.md](docs/authentication.md).
 
+Admins create repositories; clone and push over HTTPS with your username
+and a personal access token as the password. See
+[docs/repositories.md](docs/repositories.md).
+
 The server also creates `master.key` in the data dir. It encrypts 2FA seeds
 (and later CI secrets): back it up with the database.
 
@@ -65,9 +70,14 @@ internal/
   apierr        structured API errors ({"error":{"code","message"}})
   audit         security audit log
   auth          password hashing, tokens, TOTP, login rate limiting
+  authz         per-repository permission levels
   config        TOML + env configuration
   db            bun (SQLite/Postgres) + embedded migrations
+  git           git CLI wrapper: storage, reads, diffs, blame, smart HTTP
+  githook       server-side pre/post-receive hooks
+  markdown      GitHub-flavoured markdown rendering + sanitising
   model         database models
+  repos         repository records and on-disk storage
   secretbox     AES-GCM encryption of secrets under the master key
   server        HTTP server, routing, authn/authz policy, API handlers
   users         user creation and management shared by setup and admin

@@ -97,3 +97,14 @@ func TestMissingFile(t *testing.T) {
 		t.Fatal("expected error for missing file")
 	}
 }
+
+// The shipped example must always load (unknown keys are rejected).
+func TestExampleConfigLoads(t *testing.T) {
+	cfg, err := Load("../../deploy/config.example.toml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Database.Driver != "postgres" || cfg.Repos.MaxPushBytes != 2<<30 {
+		t.Fatalf("example config = %+v", cfg)
+	}
+}

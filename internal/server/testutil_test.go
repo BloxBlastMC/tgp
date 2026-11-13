@@ -10,14 +10,26 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"testing"
 	"testing/fstest"
 
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/config"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/db"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/git"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/githook"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/secretbox"
 )
+
+// TestMain lets git hooks installed by tests exec this test binary:
+// `<test binary> hook pre-receive` runs the real hook code.
+func TestMain(m *testing.M) {
+	if len(os.Args) == 3 && os.Args[1] == "hook" {
+		os.Exit(githook.Run(os.Args[2], os.Stdin, os.Stderr))
+	}
+	os.Exit(m.Run())
+}
 
 type testEnv struct {
 	t     *testing.T
@@ -50,13 +62,27 @@ func newEnv(t *testing.T) *testEnv {
 		"index.html":        {Data: []byte("<html>app</html>")},
 		"assets/app-123.js": {Data: []byte("console.log(1)")},
 	})
-	srv := New(Options{Config: cfg, DB: d, Logger: log, Web: web, Box: box})
+	cfg.Repos.Root = filepath.Join(cfg.DataDir, "repos")
+	g, err := git.New("git", filepath.Join(cfg.DataDir, "git-home"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	hooks := filepath.Join(cfg.DataDir, "hooks")
+	if err := githook.WriteScripts(hooks, exe); err != nil {
+		t.Fatal(err)
+	}
+	srv := New(Options{Config: cfg, DB: d, Logger: log, Web: web, Box: box, Git: g, HooksDir: hooks})
 	tok, err := srv.EnsureSetupToken(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ts := httptest.NewServer(srv.Handler())
 	t.Cleanup(ts.Close)
+	srv.SetInternalURL(ts.URL)
 	return &testEnv{t: t, srv: srv, ts: ts, db: d, token: tok}
 }
 

@@ -9,12 +9,15 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/spf13/cobra"
 
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/config"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/db"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/git"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/githook"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/secretbox"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/server"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/version"
@@ -58,6 +61,15 @@ func newRootCmd() *cobra.Command {
 			RunE:  func(cmd *cobra.Command, _ []string) error { return runServe(cmd.Context(), o) },
 		},
 		newMigrateCmd(o),
+		&cobra.Command{
+			Use:    "hook <pre-receive|post-receive>",
+			Short:  "Run a git hook (invoked by git during pushes)",
+			Hidden: true,
+			Args:   cobra.ExactArgs(1),
+			Run: func(cmd *cobra.Command, args []string) {
+				os.Exit(githook.Run(args[0], os.Stdin, os.Stderr))
+			},
+		},
 		&cobra.Command{
 			Use:   "version",
 			Short: "Print version information",
@@ -180,12 +192,27 @@ func runServe(parent context.Context, o *rootOpts) error {
 		return err
 	}
 
+	g, err := git.New(cfg.Repos.GitBinary, filepath.Join(cfg.DataDir, "git-home"))
+	if err != nil {
+		return err
+	}
+	exe, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("find own executable for git hooks: %w", err)
+	}
+	hooksDir := filepath.Join(cfg.DataDir, "hooks")
+	if err := githook.WriteScripts(hooksDir, exe); err != nil {
+		return fmt.Errorf("install git hooks: %w", err)
+	}
+
 	srv := server.New(server.Options{
-		Config: cfg,
-		DB:     d,
-		Logger: log,
-		Web:    server.SPAHandler(web.Dist()),
-		Box:    box,
+		Config:   cfg,
+		DB:       d,
+		Logger:   log,
+		Web:      server.SPAHandler(web.Dist()),
+		Box:      box,
+		Git:      g,
+		HooksDir: hooksDir,
 	})
 	tok, err := srv.EnsureSetupToken(ctx)
 	if err != nil {

@@ -1,13 +1,14 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import { api } from '../api/client'
 import type { Session } from '../api/client'
+import { reposQuery } from '../api/queries'
 
 export type Command = {
   id: string
   label: string
-  group: 'Navigate' | 'Account' | 'Appearance'
+  group: 'Navigate' | 'Repository' | 'Account' | 'Appearance'
   /** Two-key "g x" style shortcut shown in the palette. */
   shortcut?: string
   run: () => void
@@ -29,6 +30,7 @@ export function useCommands(session: Session | null | undefined, toggleTheme: ()
   const navigate = useNavigate()
   const logout = useLogout()
   const isAdmin = session?.user.role === 'admin'
+  const repos = useQuery({ ...reposQuery, enabled: !!session })
   return useMemo(() => {
     const go = (to: string) => () => void navigate({ to })
     const cmds: Command[] = [
@@ -47,6 +49,9 @@ export function useCommands(session: Session | null | undefined, toggleTheme: ()
         { id: 'admin-audit', label: 'Admin: Audit log', group: 'Navigate', run: go('/admin/audit') },
       )
     }
+    for (const r of repos.data ?? []) {
+      cmds.push({ id: `repo:${r.name}`, label: r.name, group: 'Repository', run: () => void navigate({ to: '/$repo', params: { repo: r.name } }) })
+    }
     return cmds
-  }, [navigate, logout, isAdmin, toggleTheme])
+  }, [navigate, logout, isAdmin, toggleTheme, repos.data])
 }
