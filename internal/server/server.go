@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"runtime"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -110,6 +111,7 @@ func (s *Server) Handler() http.Handler {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(securityHeaders)
+		r.Get("/v1/openapi.json", serveSpec)
 		r.Mount("/v1", s.apiV1())
 		r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 			apierr.Write(w, apierr.NotFound("no API route for %s %s", r.Method, r.URL.Path))
@@ -224,4 +226,25 @@ func loopbackURL(addr string) string {
 		host = "127.0.0.1"
 	}
 	return "http://" + net.JoinHostPort(host, port)
+}
+
+// serveSpec serves the OpenAPI document (public, so clients and agents can
+// discover the API before logging in).
+var specJSON = sync.OnceValues(func() ([]byte, error) {
+	doc, err := apigen.GetSwagger()
+	if err != nil {
+		return nil, err
+	}
+	return doc.MarshalJSON()
+})
+
+func serveSpec(w http.ResponseWriter, _ *http.Request) {
+	b, err := specJSON()
+	if err != nil {
+		apierr.Write(w, apierr.From(err))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=300")
+	_, _ = w.Write(b)
 }
