@@ -7,18 +7,23 @@
     "build": "tsc -b && vite build && node -e \"require('fs').writeFileSync('dist/.gitkeep','')\"",
     "generate": "openapi-typescript ../api/openapi.yaml -o src/api/schema.gen.ts",
     "typecheck": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@tanstack/react-query": "5.107.1",
     "@tanstack/react-router": "1.170.46",
     "lucide-react": "1.72.0",
     "openapi-fetch": "0.17.0",
+    "qrcode": "1.5.4",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
     "@tailwindcss/vite": "4.3.5",
+    "@types/node": "^24.19.2",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.3.0",

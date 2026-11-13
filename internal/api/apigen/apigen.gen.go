@@ -9,21 +9,164 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
+	"github.com/oapi-codegen/runtime"
 )
+
+// Defines values for Role.
+const (
+	RoleAdmin      Role = "admin"
+	RoleMaintainer Role = "maintainer"
+	RoleTester     Role = "tester"
+)
+
+// Valid indicates whether the value is a known member of the Role enum.
+func (e Role) Valid() bool {
+	switch e {
+	case RoleAdmin:
+		return true
+	case RoleMaintainer:
+		return true
+	case RoleTester:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SessionAuthMethod.
+const (
+	SessionAuthMethodSession SessionAuthMethod = "session"
+	SessionAuthMethodToken   SessionAuthMethod = "token"
+)
+
+// Valid indicates whether the value is a known member of the SessionAuthMethod enum.
+func (e SessionAuthMethod) Valid() bool {
+	switch e {
+	case SessionAuthMethodSession:
+		return true
+	case SessionAuthMethodToken:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TokenScope.
+const (
+	TokenScopeAdmin TokenScope = "admin"
+	TokenScopeRead  TokenScope = "read"
+	TokenScopeWrite TokenScope = "write"
+)
+
+// Valid indicates whether the value is a known member of the TokenScope enum.
+func (e TokenScope) Valid() bool {
+	switch e {
+	case TokenScopeAdmin:
+		return true
+	case TokenScopeRead:
+		return true
+	case TokenScopeWrite:
+		return true
+	default:
+		return false
+	}
+}
+
+// AccessToken defines model for AccessToken.
+type AccessToken struct {
+	CreatedAt  time.Time  `json:"created_at"`
+	ExpiresAt  *time.Time `json:"expires_at,omitempty"`
+	Id         int64      `json:"id"`
+	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
+	Name       string     `json:"name"`
+
+	// Prefix First characters of the token, to recognise it.
+	Prefix string       `json:"prefix"`
+	Scopes []TokenScope `json:"scopes"`
+}
+
+// AuditEntry defines model for AuditEntry.
+type AuditEntry struct {
+	// Action Example: user.create
+	Action string `json:"action"`
+
+	// Actor Username of whoever did it; empty for anonymous actions such as failed logins.
+	Actor     string                 `json:"actor"`
+	CreatedAt time.Time              `json:"created_at"`
+	Details   map[string]interface{} `json:"details"`
+	Id        int64                  `json:"id"`
+	Ip        string                 `json:"ip"`
+	Target    string                 `json:"target"`
+
+	// TargetType Example: user
+	TargetType string `json:"target_type"`
+}
+
+// AuditPage defines model for AuditPage.
+type AuditPage struct {
+	Entries []AuditEntry `json:"entries"`
+
+	// NextBefore Pass as `before` to get the next page; absent on the last page.
+	NextBefore *int64 `json:"next_before,omitempty"`
+}
+
+// ChangePasswordRequest defines model for ChangePasswordRequest.
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password"`
+
+	// NewPassword At least 10 characters.
+	NewPassword string `json:"new_password"`
+}
+
+// CreateTokenRequest defines model for CreateTokenRequest.
+type CreateTokenRequest struct {
+	// ExpiresInDays Omit for a token that never expires.
+	ExpiresInDays *int `json:"expires_in_days,omitempty"`
+
+	// Name Example: laptop CLI
+	Name   string       `json:"name"`
+	Scopes []TokenScope `json:"scopes"`
+}
+
+// CreateUserRequest defines model for CreateUserRequest.
+type CreateUserRequest struct {
+	// AllRepos Give access to every repository (ignored for admins, who always have it).
+	AllRepos    *bool   `json:"all_repos,omitempty"`
+	DisplayName *string `json:"display_name,omitempty"`
+	Email       *string `json:"email,omitempty"`
+
+	// Role `admin`: everything, including the admin panel and creating repositories.
+	// `maintainer`: read/write on granted repositories.
+	// `tester`: read, issues, comments, reviews and CI re-runs on granted repositories.
+	Role Role `json:"role"`
+
+	// Username Lowercase letters, digits, `-`, `_` and `.`; 1-39 characters, starting with a letter or digit.
+	Username string `json:"username"`
+}
+
+// CreatedToken defines model for CreatedToken.
+type CreatedToken struct {
+	AccessToken AccessToken `json:"access_token"`
+
+	// Token The secret. Shown only once.
+	Token string `json:"token"`
+}
 
 // Error defines model for Error.
 type Error struct {
 	Error struct {
-		// Code Stable machine-readable error code, e.g. `not_found`, `forbidden`, `validation_failed`.
+		// Code Stable machine-readable error code.
 		//
 		// Example: not_found
 		Code string `json:"code"`
@@ -36,9 +179,20 @@ type Error struct {
 	} `json:"error"`
 }
 
+// LoginRequest defines model for LoginRequest.
+type LoginRequest struct {
+	Password     string  `json:"password"`
+	RecoveryCode *string `json:"recovery_code,omitempty"`
+	TotpCode     *string `json:"totp_code,omitempty"`
+
+	// Username Username or email.
+	Username string `json:"username"`
+}
+
 // Meta defines model for Meta.
 type Meta struct {
-	Commit string `json:"commit"`
+	Commit  string `json:"commit"`
+	HasLogo bool   `json:"has_logo"`
 
 	// OrgName Org display name; empty before setup.
 	OrgName string `json:"org_name"`
@@ -49,6 +203,196 @@ type Meta struct {
 	// Version Example: 1.0.0
 	Version string `json:"version"`
 }
+
+// Org defines model for Org.
+type Org struct {
+	// BaseUrl Public URL of this server, used in clone URLs and webhooks.
+	BaseUrl     string `json:"base_url"`
+	Description string `json:"description"`
+	HasLogo     bool   `json:"has_logo"`
+	Name        string `json:"name"`
+}
+
+// PasswordConfirm defines model for PasswordConfirm.
+type PasswordConfirm struct {
+	Password string `json:"password"`
+}
+
+// RecoveryCodes defines model for RecoveryCodes.
+type RecoveryCodes struct {
+	// Codes Single-use codes for logging in without the authenticator. Shown only once.
+	Codes []string `json:"codes"`
+}
+
+// Role `admin`: everything, including the admin panel and creating repositories.
+// `maintainer`: read/write on granted repositories.
+// `tester`: read, issues, comments, reviews and CI re-runs on granted repositories.
+type Role string
+
+// Session defines model for Session.
+type Session struct {
+	AuthMethod         SessionAuthMethod `json:"auth_method"`
+	MustChangePassword bool              `json:"must_change_password"`
+
+	// TokenScopes Present when authenticated with a token.
+	TokenScopes *[]string `json:"token_scopes,omitempty"`
+	User        User      `json:"user"`
+}
+
+// SessionAuthMethod defines model for Session.AuthMethod.
+type SessionAuthMethod string
+
+// SetupRequest defines model for SetupRequest.
+type SetupRequest struct {
+	Admin struct {
+		DisplayName *string `json:"display_name,omitempty"`
+		Email       *string `json:"email,omitempty"`
+		Password    string  `json:"password"`
+		Username    string  `json:"username"`
+	} `json:"admin"`
+	Org struct {
+		BaseUrl     *string `json:"base_url,omitempty"`
+		Description *string `json:"description,omitempty"`
+		Name        string  `json:"name"`
+	} `json:"org"`
+
+	// SetupToken One-time token printed in the tgp-server log on first start.
+	SetupToken string `json:"setup_token"`
+
+	// Users Optional extra users; each gets a temporary password.
+	Users *[]CreateUserRequest `json:"users,omitempty"`
+}
+
+// SetupResponse defines model for SetupResponse.
+type SetupResponse struct {
+	Admin User                   `json:"admin"`
+	Users []UserWithTempPassword `json:"users"`
+}
+
+// TokenScope defines model for TokenScope.
+type TokenScope string
+
+// TotpSetup defines model for TotpSetup.
+type TotpSetup struct {
+	// OtpauthUrl `otpauth://` URL to render as a QR code.
+	OtpauthUrl string `json:"otpauth_url"`
+
+	// Secret Base32 secret for manual entry.
+	Secret string `json:"secret"`
+}
+
+// UpdateOrgRequest defines model for UpdateOrgRequest.
+type UpdateOrgRequest struct {
+	BaseUrl     *string `json:"base_url,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Name        *string `json:"name,omitempty"`
+}
+
+// UpdateUserRequest defines model for UpdateUserRequest.
+type UpdateUserRequest struct {
+	AllRepos *bool `json:"all_repos,omitempty"`
+
+	// Disabled Disabled users can't log in and their sessions and tokens stop working.
+	Disabled    *bool   `json:"disabled,omitempty"`
+	DisplayName *string `json:"display_name,omitempty"`
+	Email       *string `json:"email,omitempty"`
+
+	// Role `admin`: everything, including the admin panel and creating repositories.
+	// `maintainer`: read/write on granted repositories.
+	// `tester`: read, issues, comments, reviews and CI re-runs on granted repositories.
+	Role *Role `json:"role,omitempty"`
+}
+
+// User defines model for User.
+type User struct {
+	// AllRepos Access to every repository. When false, access is limited to explicitly granted repositories. Always true for admins.
+	AllRepos           bool       `json:"all_repos"`
+	CreatedAt          time.Time  `json:"created_at"`
+	Disabled           bool       `json:"disabled"`
+	DisplayName        string     `json:"display_name"`
+	Email              string     `json:"email"`
+	Id                 int64      `json:"id"`
+	LastLoginAt        *time.Time `json:"last_login_at,omitempty"`
+	MustChangePassword bool       `json:"must_change_password"`
+
+	// Role `admin`: everything, including the admin panel and creating repositories.
+	// `maintainer`: read/write on granted repositories.
+	// `tester`: read, issues, comments, reviews and CI re-runs on granted repositories.
+	Role                  Role       `json:"role"`
+	TempPasswordExpiresAt *time.Time `json:"temp_password_expires_at,omitempty"`
+	TotpEnabled           bool       `json:"totp_enabled"`
+	Username              string     `json:"username"`
+}
+
+// UserSummary defines model for UserSummary.
+type UserSummary struct {
+	DisplayName string `json:"display_name"`
+	Id          int64  `json:"id"`
+
+	// Role `admin`: everything, including the admin panel and creating repositories.
+	// `maintainer`: read/write on granted repositories.
+	// `tester`: read, issues, comments, reviews and CI re-runs on granted repositories.
+	Role     Role   `json:"role"`
+	Username string `json:"username"`
+}
+
+// UserWithTempPassword defines model for UserWithTempPassword.
+type UserWithTempPassword struct {
+	// TempPassword Shown only once. The user must change it at first login.
+	TempPassword          string    `json:"temp_password"`
+	TempPasswordExpiresAt time.Time `json:"temp_password_expires_at"`
+	User                  User      `json:"user"`
+}
+
+// EnableTotpJSONBody defines parameters for EnableTotp.
+type EnableTotpJSONBody struct {
+	// Code Example: 123456
+	Code string `json:"code"`
+}
+
+// ListAuditLogParams defines parameters for ListAuditLog.
+type ListAuditLogParams struct {
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Before Return entries with id lower than this (cursor from `next_before`).
+	Before *int64 `form:"before,omitempty" json:"before,omitempty"`
+
+	// Actor Filter by actor username.
+	Actor *string `form:"actor,omitempty" json:"actor,omitempty"`
+
+	// Action Filter by action prefix, e.g. `user.` or `auth.login`.
+	Action *string `form:"action,omitempty" json:"action,omitempty"`
+}
+
+// ChangePasswordJSONRequestBody defines body for ChangePassword for application/json ContentType.
+type ChangePasswordJSONRequestBody = ChangePasswordRequest
+
+// RegenerateRecoveryCodesJSONRequestBody defines body for RegenerateRecoveryCodes for application/json ContentType.
+type RegenerateRecoveryCodesJSONRequestBody = PasswordConfirm
+
+// CreateTokenJSONRequestBody defines body for CreateToken for application/json ContentType.
+type CreateTokenJSONRequestBody = CreateTokenRequest
+
+// DisableTotpJSONRequestBody defines body for DisableTotp for application/json ContentType.
+type DisableTotpJSONRequestBody = PasswordConfirm
+
+// EnableTotpJSONRequestBody defines body for EnableTotp for application/json ContentType.
+type EnableTotpJSONRequestBody EnableTotpJSONBody
+
+// UpdateOrgJSONRequestBody defines body for UpdateOrg for application/json ContentType.
+type UpdateOrgJSONRequestBody = UpdateOrgRequest
+
+// AdminCreateUserJSONRequestBody defines body for AdminCreateUser for application/json ContentType.
+type AdminCreateUserJSONRequestBody = CreateUserRequest
+
+// AdminUpdateUserJSONRequestBody defines body for AdminUpdateUser for application/json ContentType.
+type AdminUpdateUserJSONRequestBody = UpdateUserRequest
+
+// LoginJSONRequestBody defines body for Login for application/json ContentType.
+type LoginJSONRequestBody = LoginRequest
+
+// CompleteSetupJSONRequestBody defines body for CompleteSetup for application/json ContentType.
+type CompleteSetupJSONRequestBody = SetupRequest
 
 // RequestEditorFn is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -124,17 +468,778 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 
+	// ChangePasswordWithBody Change your password
+	//
+	// For a user with a temporary password, `current_password` is the temporary password. Signs out your other sessions.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /account/password (the `ChangePassword` operationId).
+	ChangePasswordWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ChangePassword Change your password
+	//
+	// For a user with a temporary password, `current_password` is the temporary password. Signs out your other sessions.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /account/password (the `ChangePassword` operationId).
+	ChangePassword(ctx context.Context, body ChangePasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RegenerateRecoveryCodesWithBody Replace your 2FA recovery codes
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /account/recovery-codes (the `RegenerateRecoveryCodes` operationId).
+	RegenerateRecoveryCodesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RegenerateRecoveryCodes Replace your 2FA recovery codes
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /account/recovery-codes (the `RegenerateRecoveryCodes` operationId).
+	RegenerateRecoveryCodes(ctx context.Context, body RegenerateRecoveryCodesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListTokens List your personal access tokens
+	//
+	// Corresponds with GET /account/tokens (the `ListTokens` operationId).
+	ListTokens(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateTokenWithBody Create a personal access token
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /account/tokens (the `CreateToken` operationId).
+	CreateTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateToken Create a personal access token
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /account/tokens (the `CreateToken` operationId).
+	CreateToken(ctx context.Context, body CreateTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteToken Revoke a personal access token
+	//
+	// Corresponds with DELETE /account/tokens/{id} (the `DeleteToken` operationId).
+	DeleteToken(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// StartTotpSetup Begin 2FA setup
+	//
+	// Generates a new TOTP secret. It isn't active until confirmed with `enableTotp`.
+	//
+	// Corresponds with POST /account/totp (the `StartTotpSetup` operationId).
+	StartTotpSetup(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DisableTotpWithBody Turn off 2FA
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /account/totp/disable (the `DisableTotp` operationId).
+	DisableTotpWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DisableTotp Turn off 2FA
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /account/totp/disable (the `DisableTotp` operationId).
+	DisableTotp(ctx context.Context, body DisableTotpJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// EnableTotpWithBody Confirm 2FA setup with a code
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /account/totp/enable (the `EnableTotp` operationId).
+	EnableTotpWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// EnableTotp Confirm 2FA setup with a code
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /account/totp/enable (the `EnableTotp` operationId).
+	EnableTotp(ctx context.Context, body EnableTotpJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAuditLog Security audit log, newest first
+	//
+	// Corresponds with GET /admin/audit-log (the `ListAuditLog` operationId).
+	ListAuditLog(ctx context.Context, params *ListAuditLogParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateOrgWithBody Update org settings
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /admin/org (the `UpdateOrg` operationId).
+	UpdateOrgWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateOrg Update org settings
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /admin/org (the `UpdateOrg` operationId).
+	UpdateOrg(ctx context.Context, body UpdateOrgJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteOrgLogo Remove the org logo
+	//
+	// Corresponds with DELETE /admin/org/logo (the `DeleteOrgLogo` operationId).
+	DeleteOrgLogo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UploadOrgLogoWithBody Upload the org logo
+	//
+	// Raw PNG, JPEG, GIF or WebP bytes, at most 512 KiB.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /admin/org/logo (the `UploadOrgLogo` operationId).
+	UploadOrgLogoWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AdminListUsers List all users with admin details
+	//
+	// Corresponds with GET /admin/users (the `AdminListUsers` operationId).
+	AdminListUsers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AdminCreateUserWithBody Create a user with a temporary password
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /admin/users (the `AdminCreateUser` operationId).
+	AdminCreateUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AdminCreateUser Create a user with a temporary password
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /admin/users (the `AdminCreateUser` operationId).
+	AdminCreateUser(ctx context.Context, body AdminCreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AdminGetUser Get a user
+	//
+	// Corresponds with GET /admin/users/{username} (the `AdminGetUser` operationId).
+	AdminGetUser(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AdminUpdateUserWithBody Update a user's profile, role, repo access or disabled state
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /admin/users/{username} (the `AdminUpdateUser` operationId).
+	AdminUpdateUserWithBody(ctx context.Context, username string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AdminUpdateUser Update a user's profile, role, repo access or disabled state
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /admin/users/{username} (the `AdminUpdateUser` operationId).
+	AdminUpdateUser(ctx context.Context, username string, body AdminUpdateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AdminResetPassword Issue a new temporary password
+	//
+	// Signs the user out everywhere. They must set a new password at next login.
+	//
+	// Corresponds with POST /admin/users/{username}/reset-password (the `AdminResetPassword` operationId).
+	AdminResetPassword(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AdminResetTotp Turn off a user's 2FA (e.g. lost device)
+	//
+	// Corresponds with POST /admin/users/{username}/reset-totp (the `AdminResetTotp` operationId).
+	AdminResetTotp(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LoginWithBody Log in with username and password
+	//
+	// Sets the session cookie. If the user has 2FA enabled and neither
+	// `totp_code` nor `recovery_code` is given, fails with `totp_required`;
+	// resend with a code. If the response has `must_change_password: true`,
+	// only `getSession`, `logout` and `changePassword` work until the password
+	// is changed.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /auth/login (the `Login` operationId).
+	LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// Login Log in with username and password
+	//
+	// Sets the session cookie. If the user has 2FA enabled and neither
+	// `totp_code` nor `recovery_code` is given, fails with `totp_required`;
+	// resend with a code. If the response has `must_change_password: true`,
+	// only `getSession`, `logout` and `changePassword` work until the password
+	// is changed.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /auth/login (the `Login` operationId).
+	Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// Logout End the current session
+	//
+	// Corresponds with POST /auth/logout (the `Logout` operationId).
+	Logout(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSession The current user and how they authenticated
+	//
+	// Corresponds with GET /auth/session (the `GetSession` operationId).
+	GetSession(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetMeta Server version and setup state
 	//
-	// Public endpoint. Clients use it to detect a tgp server and whether first-start setup is pending.
+	// Public. Clients use it to detect a tgp server and whether first-start setup is pending.
 	//
 	// Corresponds with GET /meta (the `GetMeta` operationId).
 	GetMeta(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetOrg Org settings
+	//
+	// Corresponds with GET /org (the `GetOrg` operationId).
+	GetOrg(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetOrgLogo Org logo image
+	//
+	// Corresponds with GET /org/logo (the `GetOrgLogo` operationId).
+	GetOrgLogo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CompleteSetupWithBody Complete first-start setup
+	//
+	// Creates the first admin, configures the org and optionally creates more
+	// users, all in one transaction. Requires the one-time setup token printed
+	// in the server log. Only works while setup is pending. On success the
+	// caller is logged in as the new admin.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /setup (the `CompleteSetup` operationId).
+	CompleteSetupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CompleteSetup Complete first-start setup
+	//
+	// Creates the first admin, configures the org and optionally creates more
+	// users, all in one transaction. Requires the one-time setup token printed
+	// in the server log. Only works while setup is pending. On success the
+	// caller is logged in as the new admin.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /setup (the `CompleteSetup` operationId).
+	CompleteSetup(ctx context.Context, body CompleteSetupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListUsers List team members
+	//
+	// Basic info about every active user, e.g. for picking reviewers.
+	//
+	// Corresponds with GET /users (the `ListUsers` operationId).
+	ListUsers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+// ChangePasswordWithBody Change your password
+//
+// For a user with a temporary password, `current_password` is the temporary password. Signs out your other sessions.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /account/password (the `ChangePassword` operationId).
+func (c *Client) ChangePasswordWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangePasswordRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ChangePassword Change your password
+//
+// For a user with a temporary password, `current_password` is the temporary password. Signs out your other sessions.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /account/password (the `ChangePassword` operationId).
+func (c *Client) ChangePassword(ctx context.Context, body ChangePasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangePasswordRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RegenerateRecoveryCodesWithBody Replace your 2FA recovery codes
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /account/recovery-codes (the `RegenerateRecoveryCodes` operationId).
+func (c *Client) RegenerateRecoveryCodesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRegenerateRecoveryCodesRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RegenerateRecoveryCodes Replace your 2FA recovery codes
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /account/recovery-codes (the `RegenerateRecoveryCodes` operationId).
+func (c *Client) RegenerateRecoveryCodes(ctx context.Context, body RegenerateRecoveryCodesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRegenerateRecoveryCodesRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListTokens List your personal access tokens
+//
+// Corresponds with GET /account/tokens (the `ListTokens` operationId).
+func (c *Client) ListTokens(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListTokensRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateTokenWithBody Create a personal access token
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /account/tokens (the `CreateToken` operationId).
+func (c *Client) CreateTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateTokenRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateToken Create a personal access token
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /account/tokens (the `CreateToken` operationId).
+func (c *Client) CreateToken(ctx context.Context, body CreateTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateTokenRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteToken Revoke a personal access token
+//
+// Corresponds with DELETE /account/tokens/{id} (the `DeleteToken` operationId).
+func (c *Client) DeleteToken(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteTokenRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// StartTotpSetup Begin 2FA setup
+//
+// Generates a new TOTP secret. It isn't active until confirmed with `enableTotp`.
+//
+// Corresponds with POST /account/totp (the `StartTotpSetup` operationId).
+func (c *Client) StartTotpSetup(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartTotpSetupRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DisableTotpWithBody Turn off 2FA
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /account/totp/disable (the `DisableTotp` operationId).
+func (c *Client) DisableTotpWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDisableTotpRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DisableTotp Turn off 2FA
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /account/totp/disable (the `DisableTotp` operationId).
+func (c *Client) DisableTotp(ctx context.Context, body DisableTotpJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDisableTotpRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// EnableTotpWithBody Confirm 2FA setup with a code
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /account/totp/enable (the `EnableTotp` operationId).
+func (c *Client) EnableTotpWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewEnableTotpRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// EnableTotp Confirm 2FA setup with a code
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /account/totp/enable (the `EnableTotp` operationId).
+func (c *Client) EnableTotp(ctx context.Context, body EnableTotpJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewEnableTotpRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListAuditLog Security audit log, newest first
+//
+// Corresponds with GET /admin/audit-log (the `ListAuditLog` operationId).
+func (c *Client) ListAuditLog(ctx context.Context, params *ListAuditLogParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAuditLogRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateOrgWithBody Update org settings
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /admin/org (the `UpdateOrg` operationId).
+func (c *Client) UpdateOrgWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateOrgRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateOrg Update org settings
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /admin/org (the `UpdateOrg` operationId).
+func (c *Client) UpdateOrg(ctx context.Context, body UpdateOrgJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateOrgRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteOrgLogo Remove the org logo
+//
+// Corresponds with DELETE /admin/org/logo (the `DeleteOrgLogo` operationId).
+func (c *Client) DeleteOrgLogo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteOrgLogoRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UploadOrgLogoWithBody Upload the org logo
+//
+// Raw PNG, JPEG, GIF or WebP bytes, at most 512 KiB.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /admin/org/logo (the `UploadOrgLogo` operationId).
+func (c *Client) UploadOrgLogoWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUploadOrgLogoRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AdminListUsers List all users with admin details
+//
+// Corresponds with GET /admin/users (the `AdminListUsers` operationId).
+func (c *Client) AdminListUsers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAdminListUsersRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AdminCreateUserWithBody Create a user with a temporary password
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /admin/users (the `AdminCreateUser` operationId).
+func (c *Client) AdminCreateUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAdminCreateUserRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AdminCreateUser Create a user with a temporary password
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /admin/users (the `AdminCreateUser` operationId).
+func (c *Client) AdminCreateUser(ctx context.Context, body AdminCreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAdminCreateUserRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AdminGetUser Get a user
+//
+// Corresponds with GET /admin/users/{username} (the `AdminGetUser` operationId).
+func (c *Client) AdminGetUser(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAdminGetUserRequest(c.Server, username)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AdminUpdateUserWithBody Update a user's profile, role, repo access or disabled state
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /admin/users/{username} (the `AdminUpdateUser` operationId).
+func (c *Client) AdminUpdateUserWithBody(ctx context.Context, username string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAdminUpdateUserRequestWithBody(c.Server, username, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AdminUpdateUser Update a user's profile, role, repo access or disabled state
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /admin/users/{username} (the `AdminUpdateUser` operationId).
+func (c *Client) AdminUpdateUser(ctx context.Context, username string, body AdminUpdateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAdminUpdateUserRequest(c.Server, username, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AdminResetPassword Issue a new temporary password
+//
+// Signs the user out everywhere. They must set a new password at next login.
+//
+// Corresponds with POST /admin/users/{username}/reset-password (the `AdminResetPassword` operationId).
+func (c *Client) AdminResetPassword(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAdminResetPasswordRequest(c.Server, username)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AdminResetTotp Turn off a user's 2FA (e.g. lost device)
+//
+// Corresponds with POST /admin/users/{username}/reset-totp (the `AdminResetTotp` operationId).
+func (c *Client) AdminResetTotp(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAdminResetTotpRequest(c.Server, username)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// LoginWithBody Log in with username and password
+//
+// Sets the session cookie. If the user has 2FA enabled and neither
+// `totp_code` nor `recovery_code` is given, fails with `totp_required`;
+// resend with a code. If the response has `must_change_password: true`,
+// only `getSession`, `logout` and `changePassword` work until the password
+// is changed.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /auth/login (the `Login` operationId).
+func (c *Client) LoginWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoginRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// Login Log in with username and password
+//
+// Sets the session cookie. If the user has 2FA enabled and neither
+// `totp_code` nor `recovery_code` is given, fails with `totp_required`;
+// resend with a code. If the response has `must_change_password: true`,
+// only `getSession`, `logout` and `changePassword` work until the password
+// is changed.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /auth/login (the `Login` operationId).
+func (c *Client) Login(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoginRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// Logout End the current session
+//
+// Corresponds with POST /auth/logout (the `Logout` operationId).
+func (c *Client) Logout(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLogoutRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetSession The current user and how they authenticated
+//
+// Corresponds with GET /auth/session (the `GetSession` operationId).
+func (c *Client) GetSession(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSessionRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 // GetMeta Server version and setup state
 //
-// Public endpoint. Clients use it to detect a tgp server and whether first-start setup is pending.
+// Public. Clients use it to detect a tgp server and whether first-start setup is pending.
 //
 // Corresponds with GET /meta (the `GetMeta` operationId).
 func (c *Client) GetMeta(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -149,6 +1254,881 @@ func (c *Client) GetMeta(ctx context.Context, reqEditors ...RequestEditorFn) (*h
 	return c.Client.Do(req)
 }
 
+// GetOrg Org settings
+//
+// Corresponds with GET /org (the `GetOrg` operationId).
+func (c *Client) GetOrg(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetOrgRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetOrgLogo Org logo image
+//
+// Corresponds with GET /org/logo (the `GetOrgLogo` operationId).
+func (c *Client) GetOrgLogo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetOrgLogoRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CompleteSetupWithBody Complete first-start setup
+//
+// Creates the first admin, configures the org and optionally creates more
+// users, all in one transaction. Requires the one-time setup token printed
+// in the server log. Only works while setup is pending. On success the
+// caller is logged in as the new admin.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /setup (the `CompleteSetup` operationId).
+func (c *Client) CompleteSetupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCompleteSetupRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CompleteSetup Complete first-start setup
+//
+// Creates the first admin, configures the org and optionally creates more
+// users, all in one transaction. Requires the one-time setup token printed
+// in the server log. Only works while setup is pending. On success the
+// caller is logged in as the new admin.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /setup (the `CompleteSetup` operationId).
+func (c *Client) CompleteSetup(ctx context.Context, body CompleteSetupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCompleteSetupRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListUsers List team members
+//
+// Basic info about every active user, e.g. for picking reviewers.
+//
+// Corresponds with GET /users (the `ListUsers` operationId).
+func (c *Client) ListUsers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListUsersRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewChangePasswordRequest calls the generic ChangePassword builder with application/json body
+func NewChangePasswordRequest(server string, body ChangePasswordJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewChangePasswordRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewChangePasswordRequestWithBody constructs an http.Request for the ChangePassword method, with any body, and a specified content type
+func NewChangePasswordRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/account/password")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRegenerateRecoveryCodesRequest calls the generic RegenerateRecoveryCodes builder with application/json body
+func NewRegenerateRecoveryCodesRequest(server string, body RegenerateRecoveryCodesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRegenerateRecoveryCodesRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewRegenerateRecoveryCodesRequestWithBody constructs an http.Request for the RegenerateRecoveryCodes method, with any body, and a specified content type
+func NewRegenerateRecoveryCodesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/account/recovery-codes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListTokensRequest constructs an http.Request for the ListTokens method
+func NewListTokensRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/account/tokens")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateTokenRequest calls the generic CreateToken builder with application/json body
+func NewCreateTokenRequest(server string, body CreateTokenJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateTokenRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateTokenRequestWithBody constructs an http.Request for the CreateToken method, with any body, and a specified content type
+func NewCreateTokenRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/account/tokens")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteTokenRequest constructs an http.Request for the DeleteToken method
+func NewDeleteTokenRequest(server string, id int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/account/tokens/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewStartTotpSetupRequest constructs an http.Request for the StartTotpSetup method
+func NewStartTotpSetupRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/account/totp")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDisableTotpRequest calls the generic DisableTotp builder with application/json body
+func NewDisableTotpRequest(server string, body DisableTotpJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDisableTotpRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewDisableTotpRequestWithBody constructs an http.Request for the DisableTotp method, with any body, and a specified content type
+func NewDisableTotpRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/account/totp/disable")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewEnableTotpRequest calls the generic EnableTotp builder with application/json body
+func NewEnableTotpRequest(server string, body EnableTotpJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewEnableTotpRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewEnableTotpRequestWithBody constructs an http.Request for the EnableTotp method, with any body, and a specified content type
+func NewEnableTotpRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/account/totp/enable")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAuditLogRequest constructs an http.Request for the ListAuditLog method
+func NewListAuditLogRequest(server string, params *ListAuditLogParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/audit-log")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Before != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "before", *params.Before, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int64"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Actor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "actor", *params.Actor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Action != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "action", *params.Action, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateOrgRequest calls the generic UpdateOrg builder with application/json body
+func NewUpdateOrgRequest(server string, body UpdateOrgJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateOrgRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewUpdateOrgRequestWithBody constructs an http.Request for the UpdateOrg method, with any body, and a specified content type
+func NewUpdateOrgRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/org")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteOrgLogoRequest constructs an http.Request for the DeleteOrgLogo method
+func NewDeleteOrgLogoRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/org/logo")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUploadOrgLogoRequestWithBody constructs an http.Request for the UploadOrgLogo method, with any body, and a specified content type
+func NewUploadOrgLogoRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/org/logo")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAdminListUsersRequest constructs an http.Request for the AdminListUsers method
+func NewAdminListUsersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/users")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAdminCreateUserRequest calls the generic AdminCreateUser builder with application/json body
+func NewAdminCreateUserRequest(server string, body AdminCreateUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAdminCreateUserRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewAdminCreateUserRequestWithBody constructs an http.Request for the AdminCreateUser method, with any body, and a specified content type
+func NewAdminCreateUserRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/users")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAdminGetUserRequest constructs an http.Request for the AdminGetUser method
+func NewAdminGetUserRequest(server string, username string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "username", username, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/users/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAdminUpdateUserRequest calls the generic AdminUpdateUser builder with application/json body
+func NewAdminUpdateUserRequest(server string, username string, body AdminUpdateUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAdminUpdateUserRequestWithBody(server, username, "application/json", bodyReader)
+}
+
+// NewAdminUpdateUserRequestWithBody constructs an http.Request for the AdminUpdateUser method, with any body, and a specified content type
+func NewAdminUpdateUserRequestWithBody(server string, username string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "username", username, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/users/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAdminResetPasswordRequest constructs an http.Request for the AdminResetPassword method
+func NewAdminResetPasswordRequest(server string, username string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "username", username, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/users/%s/reset-password", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAdminResetTotpRequest constructs an http.Request for the AdminResetTotp method
+func NewAdminResetTotpRequest(server string, username string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "username", username, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/users/%s/reset-totp", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewLoginRequest calls the generic Login builder with application/json body
+func NewLoginRequest(server string, body LoginJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewLoginRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewLoginRequestWithBody constructs an http.Request for the Login method, with any body, and a specified content type
+func NewLoginRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/auth/login")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewLogoutRequest constructs an http.Request for the Logout method
+func NewLogoutRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/auth/logout")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSessionRequest constructs an http.Request for the GetSession method
+func NewGetSessionRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/auth/session")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetMetaRequest constructs an http.Request for the GetMeta method
 func NewGetMetaRequest(server string) (*http.Request, error) {
 	var err error
@@ -159,6 +2139,127 @@ func NewGetMetaRequest(server string) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/meta")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetOrgRequest constructs an http.Request for the GetOrg method
+func NewGetOrgRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/org")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetOrgLogoRequest constructs an http.Request for the GetOrgLogo method
+func NewGetOrgLogoRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/org/logo")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCompleteSetupRequest calls the generic CompleteSetup builder with application/json body
+func NewCompleteSetupRequest(server string, body CompleteSetupJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCompleteSetupRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCompleteSetupRequestWithBody constructs an http.Request for the CompleteSetup method, with any body, and a specified content type
+func NewCompleteSetupRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/setup")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListUsersRequest constructs an http.Request for the ListUsers method
+func NewListUsersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/users")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -220,14 +2321,1273 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 
+	// ChangePasswordWithBodyWithResponse Change your password
+	//
+	// For a user with a temporary password, `current_password` is the temporary password. Signs out your other sessions.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /account/password (the `ChangePassword` operationId).
+	ChangePasswordWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangePasswordResponse, error)
+
+	// ChangePasswordWithResponse Change your password
+	//
+	// For a user with a temporary password, `current_password` is the temporary password. Signs out your other sessions.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /account/password (the `ChangePassword` operationId).
+	ChangePasswordWithResponse(ctx context.Context, body ChangePasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangePasswordResponse, error)
+
+	// RegenerateRecoveryCodesWithBodyWithResponse Replace your 2FA recovery codes
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /account/recovery-codes (the `RegenerateRecoveryCodes` operationId).
+	RegenerateRecoveryCodesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RegenerateRecoveryCodesResponse, error)
+
+	// RegenerateRecoveryCodesWithResponse Replace your 2FA recovery codes
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /account/recovery-codes (the `RegenerateRecoveryCodes` operationId).
+	RegenerateRecoveryCodesWithResponse(ctx context.Context, body RegenerateRecoveryCodesJSONRequestBody, reqEditors ...RequestEditorFn) (*RegenerateRecoveryCodesResponse, error)
+
+	// ListTokensWithResponse List your personal access tokens
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /account/tokens (the `ListTokens` operationId).
+	ListTokensWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListTokensResponse, error)
+
+	// CreateTokenWithBodyWithResponse Create a personal access token
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /account/tokens (the `CreateToken` operationId).
+	CreateTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateTokenResponse, error)
+
+	// CreateTokenWithResponse Create a personal access token
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /account/tokens (the `CreateToken` operationId).
+	CreateTokenWithResponse(ctx context.Context, body CreateTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateTokenResponse, error)
+
+	// DeleteTokenWithResponse Revoke a personal access token
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /account/tokens/{id} (the `DeleteToken` operationId).
+	DeleteTokenWithResponse(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*DeleteTokenResponse, error)
+
+	// StartTotpSetupWithResponse Begin 2FA setup
+	//
+	// Generates a new TOTP secret. It isn't active until confirmed with `enableTotp`.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /account/totp (the `StartTotpSetup` operationId).
+	StartTotpSetupWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*StartTotpSetupResponse, error)
+
+	// DisableTotpWithBodyWithResponse Turn off 2FA
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /account/totp/disable (the `DisableTotp` operationId).
+	DisableTotpWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DisableTotpResponse, error)
+
+	// DisableTotpWithResponse Turn off 2FA
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /account/totp/disable (the `DisableTotp` operationId).
+	DisableTotpWithResponse(ctx context.Context, body DisableTotpJSONRequestBody, reqEditors ...RequestEditorFn) (*DisableTotpResponse, error)
+
+	// EnableTotpWithBodyWithResponse Confirm 2FA setup with a code
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /account/totp/enable (the `EnableTotp` operationId).
+	EnableTotpWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*EnableTotpResponse, error)
+
+	// EnableTotpWithResponse Confirm 2FA setup with a code
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /account/totp/enable (the `EnableTotp` operationId).
+	EnableTotpWithResponse(ctx context.Context, body EnableTotpJSONRequestBody, reqEditors ...RequestEditorFn) (*EnableTotpResponse, error)
+
+	// ListAuditLogWithResponse Security audit log, newest first
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /admin/audit-log (the `ListAuditLog` operationId).
+	ListAuditLogWithResponse(ctx context.Context, params *ListAuditLogParams, reqEditors ...RequestEditorFn) (*ListAuditLogResponse, error)
+
+	// UpdateOrgWithBodyWithResponse Update org settings
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /admin/org (the `UpdateOrg` operationId).
+	UpdateOrgWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateOrgResponse, error)
+
+	// UpdateOrgWithResponse Update org settings
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /admin/org (the `UpdateOrg` operationId).
+	UpdateOrgWithResponse(ctx context.Context, body UpdateOrgJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateOrgResponse, error)
+
+	// DeleteOrgLogoWithResponse Remove the org logo
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /admin/org/logo (the `DeleteOrgLogo` operationId).
+	DeleteOrgLogoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DeleteOrgLogoResponse, error)
+
+	// UploadOrgLogoWithBodyWithResponse Upload the org logo
+	//
+	// Raw PNG, JPEG, GIF or WebP bytes, at most 512 KiB.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /admin/org/logo (the `UploadOrgLogo` operationId).
+	UploadOrgLogoWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadOrgLogoResponse, error)
+
+	// AdminListUsersWithResponse List all users with admin details
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /admin/users (the `AdminListUsers` operationId).
+	AdminListUsersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AdminListUsersResponse, error)
+
+	// AdminCreateUserWithBodyWithResponse Create a user with a temporary password
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /admin/users (the `AdminCreateUser` operationId).
+	AdminCreateUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AdminCreateUserResponse, error)
+
+	// AdminCreateUserWithResponse Create a user with a temporary password
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /admin/users (the `AdminCreateUser` operationId).
+	AdminCreateUserWithResponse(ctx context.Context, body AdminCreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*AdminCreateUserResponse, error)
+
+	// AdminGetUserWithResponse Get a user
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /admin/users/{username} (the `AdminGetUser` operationId).
+	AdminGetUserWithResponse(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*AdminGetUserResponse, error)
+
+	// AdminUpdateUserWithBodyWithResponse Update a user's profile, role, repo access or disabled state
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /admin/users/{username} (the `AdminUpdateUser` operationId).
+	AdminUpdateUserWithBodyWithResponse(ctx context.Context, username string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AdminUpdateUserResponse, error)
+
+	// AdminUpdateUserWithResponse Update a user's profile, role, repo access or disabled state
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /admin/users/{username} (the `AdminUpdateUser` operationId).
+	AdminUpdateUserWithResponse(ctx context.Context, username string, body AdminUpdateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*AdminUpdateUserResponse, error)
+
+	// AdminResetPasswordWithResponse Issue a new temporary password
+	//
+	// Signs the user out everywhere. They must set a new password at next login.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /admin/users/{username}/reset-password (the `AdminResetPassword` operationId).
+	AdminResetPasswordWithResponse(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*AdminResetPasswordResponse, error)
+
+	// AdminResetTotpWithResponse Turn off a user's 2FA (e.g. lost device)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /admin/users/{username}/reset-totp (the `AdminResetTotp` operationId).
+	AdminResetTotpWithResponse(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*AdminResetTotpResponse, error)
+
+	// LoginWithBodyWithResponse Log in with username and password
+	//
+	// Sets the session cookie. If the user has 2FA enabled and neither
+	// `totp_code` nor `recovery_code` is given, fails with `totp_required`;
+	// resend with a code. If the response has `must_change_password: true`,
+	// only `getSession`, `logout` and `changePassword` work until the password
+	// is changed.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /auth/login (the `Login` operationId).
+	LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error)
+
+	// LoginWithResponse Log in with username and password
+	//
+	// Sets the session cookie. If the user has 2FA enabled and neither
+	// `totp_code` nor `recovery_code` is given, fails with `totp_required`;
+	// resend with a code. If the response has `must_change_password: true`,
+	// only `getSession`, `logout` and `changePassword` work until the password
+	// is changed.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /auth/login (the `Login` operationId).
+	LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error)
+
+	// LogoutWithResponse End the current session
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /auth/logout (the `Logout` operationId).
+	LogoutWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*LogoutResponse, error)
+
+	// GetSessionWithResponse The current user and how they authenticated
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /auth/session (the `GetSession` operationId).
+	GetSessionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSessionResponse, error)
+
 	// GetMetaWithResponse Server version and setup state
 	//
-	// Public endpoint. Clients use it to detect a tgp server and whether first-start setup is pending.
+	// Public. Clients use it to detect a tgp server and whether first-start setup is pending.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with GET /meta (the `GetMeta` operationId).
 	GetMetaWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetMetaResponse, error)
+
+	// GetOrgWithResponse Org settings
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /org (the `GetOrg` operationId).
+	GetOrgWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetOrgResponse, error)
+
+	// GetOrgLogoWithResponse Org logo image
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /org/logo (the `GetOrgLogo` operationId).
+	GetOrgLogoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetOrgLogoResponse, error)
+
+	// CompleteSetupWithBodyWithResponse Complete first-start setup
+	//
+	// Creates the first admin, configures the org and optionally creates more
+	// users, all in one transaction. Requires the one-time setup token printed
+	// in the server log. Only works while setup is pending. On success the
+	// caller is logged in as the new admin.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /setup (the `CompleteSetup` operationId).
+	CompleteSetupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CompleteSetupResponse, error)
+
+	// CompleteSetupWithResponse Complete first-start setup
+	//
+	// Creates the first admin, configures the org and optionally creates more
+	// users, all in one transaction. Requires the one-time setup token printed
+	// in the server log. Only works while setup is pending. On success the
+	// caller is logged in as the new admin.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /setup (the `CompleteSetup` operationId).
+	CompleteSetupWithResponse(ctx context.Context, body CompleteSetupJSONRequestBody, reqEditors ...RequestEditorFn) (*CompleteSetupResponse, error)
+
+	// ListUsersWithResponse List team members
+	//
+	// Basic info about every active user, e.g. for picking reviewers.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /users (the `ListUsers` operationId).
+	ListUsersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListUsersResponse, error)
+}
+
+type ChangePasswordResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *User
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ChangePasswordResponse) GetJSON200() *User {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ChangePasswordResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ChangePasswordResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ChangePasswordResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ChangePasswordResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ChangePasswordResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type RegenerateRecoveryCodesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RecoveryCodes
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r RegenerateRecoveryCodesResponse) GetJSON200() *RecoveryCodes {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r RegenerateRecoveryCodesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r RegenerateRecoveryCodesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r RegenerateRecoveryCodesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RegenerateRecoveryCodesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RegenerateRecoveryCodesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListTokensResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]AccessToken
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListTokensResponse) GetJSON200() *[]AccessToken {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListTokensResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListTokensResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListTokensResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListTokensResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListTokensResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateTokenResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *CreatedToken
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateTokenResponse) GetJSON201() *CreatedToken {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CreateTokenResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateTokenResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateTokenResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateTokenResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateTokenResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteTokenResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteTokenResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteTokenResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteTokenResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteTokenResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteTokenResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type StartTotpSetupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TotpSetup
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r StartTotpSetupResponse) GetJSON200() *TotpSetup {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r StartTotpSetupResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r StartTotpSetupResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r StartTotpSetupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StartTotpSetupResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r StartTotpSetupResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DisableTotpResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DisableTotpResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DisableTotpResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DisableTotpResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DisableTotpResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DisableTotpResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type EnableTotpResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RecoveryCodes
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r EnableTotpResponse) GetJSON200() *RecoveryCodes {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r EnableTotpResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r EnableTotpResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r EnableTotpResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r EnableTotpResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r EnableTotpResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListAuditLogResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AuditPage
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAuditLogResponse) GetJSON200() *AuditPage {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListAuditLogResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAuditLogResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAuditLogResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAuditLogResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAuditLogResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateOrgResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Org
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateOrgResponse) GetJSON200() *Org {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdateOrgResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateOrgResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateOrgResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateOrgResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateOrgResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteOrgLogoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteOrgLogoResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteOrgLogoResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteOrgLogoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteOrgLogoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteOrgLogoResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UploadOrgLogoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Org
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UploadOrgLogoResponse) GetJSON200() *Org {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UploadOrgLogoResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UploadOrgLogoResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UploadOrgLogoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UploadOrgLogoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UploadOrgLogoResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AdminListUsersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]User
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AdminListUsersResponse) GetJSON200() *[]User {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r AdminListUsersResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r AdminListUsersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AdminListUsersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AdminListUsersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AdminListUsersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AdminCreateUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *UserWithTempPassword
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r AdminCreateUserResponse) GetJSON201() *UserWithTempPassword {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r AdminCreateUserResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r AdminCreateUserResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AdminCreateUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AdminCreateUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AdminCreateUserResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AdminGetUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *User
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AdminGetUserResponse) GetJSON200() *User {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r AdminGetUserResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r AdminGetUserResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AdminGetUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AdminGetUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AdminGetUserResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AdminUpdateUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *User
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AdminUpdateUserResponse) GetJSON200() *User {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r AdminUpdateUserResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r AdminUpdateUserResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AdminUpdateUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AdminUpdateUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AdminUpdateUserResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AdminResetPasswordResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *UserWithTempPassword
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AdminResetPasswordResponse) GetJSON200() *UserWithTempPassword {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r AdminResetPasswordResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r AdminResetPasswordResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AdminResetPasswordResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AdminResetPasswordResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AdminResetPasswordResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AdminResetTotpResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *User
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AdminResetTotpResponse) GetJSON200() *User {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r AdminResetTotpResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r AdminResetTotpResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AdminResetTotpResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AdminResetTotpResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AdminResetTotpResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type LoginResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Session
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r LoginResponse) GetJSON200() *Session {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r LoginResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r LoginResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r LoginResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LoginResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r LoginResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type LogoutResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r LogoutResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r LogoutResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r LogoutResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LogoutResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r LogoutResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetSessionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Session
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetSessionResponse) GetJSON200() *Session {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetSessionResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetSessionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSessionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSessionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetSessionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
 }
 
 type GetMetaResponse struct {
@@ -278,9 +3638,606 @@ func (r GetMetaResponse) ContentType() string {
 	return ""
 }
 
+type GetOrgResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Org
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetOrgResponse) GetJSON200() *Org {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetOrgResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetOrgResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetOrgResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetOrgResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetOrgResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetOrgLogoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetOrgLogoResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetOrgLogoResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetOrgLogoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetOrgLogoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetOrgLogoResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CompleteSetupResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SetupResponse
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r CompleteSetupResponse) GetJSON200() *SetupResponse {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CompleteSetupResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CompleteSetupResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CompleteSetupResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CompleteSetupResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CompleteSetupResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListUsersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]UserSummary
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListUsersResponse) GetJSON200() *[]UserSummary {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListUsersResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListUsersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListUsersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListUsersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListUsersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// ChangePasswordWithBodyWithResponse Change your password
+//
+// For a user with a temporary password, `current_password` is the temporary password. Signs out your other sessions.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /account/password (the `ChangePassword` operationId).
+func (c *ClientWithResponses) ChangePasswordWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangePasswordResponse, error) {
+	rsp, err := c.ChangePasswordWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangePasswordResponse(rsp)
+}
+
+// ChangePasswordWithResponse Change your password
+//
+// For a user with a temporary password, `current_password` is the temporary password. Signs out your other sessions.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /account/password (the `ChangePassword` operationId).
+func (c *ClientWithResponses) ChangePasswordWithResponse(ctx context.Context, body ChangePasswordJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangePasswordResponse, error) {
+	rsp, err := c.ChangePassword(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangePasswordResponse(rsp)
+}
+
+// RegenerateRecoveryCodesWithBodyWithResponse Replace your 2FA recovery codes
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /account/recovery-codes (the `RegenerateRecoveryCodes` operationId).
+func (c *ClientWithResponses) RegenerateRecoveryCodesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RegenerateRecoveryCodesResponse, error) {
+	rsp, err := c.RegenerateRecoveryCodesWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRegenerateRecoveryCodesResponse(rsp)
+}
+
+// RegenerateRecoveryCodesWithResponse Replace your 2FA recovery codes
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /account/recovery-codes (the `RegenerateRecoveryCodes` operationId).
+func (c *ClientWithResponses) RegenerateRecoveryCodesWithResponse(ctx context.Context, body RegenerateRecoveryCodesJSONRequestBody, reqEditors ...RequestEditorFn) (*RegenerateRecoveryCodesResponse, error) {
+	rsp, err := c.RegenerateRecoveryCodes(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRegenerateRecoveryCodesResponse(rsp)
+}
+
+// ListTokensWithResponse List your personal access tokens
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /account/tokens (the `ListTokens` operationId).
+func (c *ClientWithResponses) ListTokensWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListTokensResponse, error) {
+	rsp, err := c.ListTokens(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListTokensResponse(rsp)
+}
+
+// CreateTokenWithBodyWithResponse Create a personal access token
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /account/tokens (the `CreateToken` operationId).
+func (c *ClientWithResponses) CreateTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateTokenResponse, error) {
+	rsp, err := c.CreateTokenWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateTokenResponse(rsp)
+}
+
+// CreateTokenWithResponse Create a personal access token
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /account/tokens (the `CreateToken` operationId).
+func (c *ClientWithResponses) CreateTokenWithResponse(ctx context.Context, body CreateTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateTokenResponse, error) {
+	rsp, err := c.CreateToken(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateTokenResponse(rsp)
+}
+
+// DeleteTokenWithResponse Revoke a personal access token
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /account/tokens/{id} (the `DeleteToken` operationId).
+func (c *ClientWithResponses) DeleteTokenWithResponse(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*DeleteTokenResponse, error) {
+	rsp, err := c.DeleteToken(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteTokenResponse(rsp)
+}
+
+// StartTotpSetupWithResponse Begin 2FA setup
+//
+// Generates a new TOTP secret. It isn't active until confirmed with `enableTotp`.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /account/totp (the `StartTotpSetup` operationId).
+func (c *ClientWithResponses) StartTotpSetupWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*StartTotpSetupResponse, error) {
+	rsp, err := c.StartTotpSetup(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStartTotpSetupResponse(rsp)
+}
+
+// DisableTotpWithBodyWithResponse Turn off 2FA
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /account/totp/disable (the `DisableTotp` operationId).
+func (c *ClientWithResponses) DisableTotpWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DisableTotpResponse, error) {
+	rsp, err := c.DisableTotpWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDisableTotpResponse(rsp)
+}
+
+// DisableTotpWithResponse Turn off 2FA
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /account/totp/disable (the `DisableTotp` operationId).
+func (c *ClientWithResponses) DisableTotpWithResponse(ctx context.Context, body DisableTotpJSONRequestBody, reqEditors ...RequestEditorFn) (*DisableTotpResponse, error) {
+	rsp, err := c.DisableTotp(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDisableTotpResponse(rsp)
+}
+
+// EnableTotpWithBodyWithResponse Confirm 2FA setup with a code
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /account/totp/enable (the `EnableTotp` operationId).
+func (c *ClientWithResponses) EnableTotpWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*EnableTotpResponse, error) {
+	rsp, err := c.EnableTotpWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseEnableTotpResponse(rsp)
+}
+
+// EnableTotpWithResponse Confirm 2FA setup with a code
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /account/totp/enable (the `EnableTotp` operationId).
+func (c *ClientWithResponses) EnableTotpWithResponse(ctx context.Context, body EnableTotpJSONRequestBody, reqEditors ...RequestEditorFn) (*EnableTotpResponse, error) {
+	rsp, err := c.EnableTotp(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseEnableTotpResponse(rsp)
+}
+
+// ListAuditLogWithResponse Security audit log, newest first
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /admin/audit-log (the `ListAuditLog` operationId).
+func (c *ClientWithResponses) ListAuditLogWithResponse(ctx context.Context, params *ListAuditLogParams, reqEditors ...RequestEditorFn) (*ListAuditLogResponse, error) {
+	rsp, err := c.ListAuditLog(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAuditLogResponse(rsp)
+}
+
+// UpdateOrgWithBodyWithResponse Update org settings
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /admin/org (the `UpdateOrg` operationId).
+func (c *ClientWithResponses) UpdateOrgWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateOrgResponse, error) {
+	rsp, err := c.UpdateOrgWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateOrgResponse(rsp)
+}
+
+// UpdateOrgWithResponse Update org settings
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /admin/org (the `UpdateOrg` operationId).
+func (c *ClientWithResponses) UpdateOrgWithResponse(ctx context.Context, body UpdateOrgJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateOrgResponse, error) {
+	rsp, err := c.UpdateOrg(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateOrgResponse(rsp)
+}
+
+// DeleteOrgLogoWithResponse Remove the org logo
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /admin/org/logo (the `DeleteOrgLogo` operationId).
+func (c *ClientWithResponses) DeleteOrgLogoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DeleteOrgLogoResponse, error) {
+	rsp, err := c.DeleteOrgLogo(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteOrgLogoResponse(rsp)
+}
+
+// UploadOrgLogoWithBodyWithResponse Upload the org logo
+//
+// Raw PNG, JPEG, GIF or WebP bytes, at most 512 KiB.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /admin/org/logo (the `UploadOrgLogo` operationId).
+func (c *ClientWithResponses) UploadOrgLogoWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadOrgLogoResponse, error) {
+	rsp, err := c.UploadOrgLogoWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUploadOrgLogoResponse(rsp)
+}
+
+// AdminListUsersWithResponse List all users with admin details
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /admin/users (the `AdminListUsers` operationId).
+func (c *ClientWithResponses) AdminListUsersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AdminListUsersResponse, error) {
+	rsp, err := c.AdminListUsers(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAdminListUsersResponse(rsp)
+}
+
+// AdminCreateUserWithBodyWithResponse Create a user with a temporary password
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /admin/users (the `AdminCreateUser` operationId).
+func (c *ClientWithResponses) AdminCreateUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AdminCreateUserResponse, error) {
+	rsp, err := c.AdminCreateUserWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAdminCreateUserResponse(rsp)
+}
+
+// AdminCreateUserWithResponse Create a user with a temporary password
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /admin/users (the `AdminCreateUser` operationId).
+func (c *ClientWithResponses) AdminCreateUserWithResponse(ctx context.Context, body AdminCreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*AdminCreateUserResponse, error) {
+	rsp, err := c.AdminCreateUser(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAdminCreateUserResponse(rsp)
+}
+
+// AdminGetUserWithResponse Get a user
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /admin/users/{username} (the `AdminGetUser` operationId).
+func (c *ClientWithResponses) AdminGetUserWithResponse(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*AdminGetUserResponse, error) {
+	rsp, err := c.AdminGetUser(ctx, username, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAdminGetUserResponse(rsp)
+}
+
+// AdminUpdateUserWithBodyWithResponse Update a user's profile, role, repo access or disabled state
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /admin/users/{username} (the `AdminUpdateUser` operationId).
+func (c *ClientWithResponses) AdminUpdateUserWithBodyWithResponse(ctx context.Context, username string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AdminUpdateUserResponse, error) {
+	rsp, err := c.AdminUpdateUserWithBody(ctx, username, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAdminUpdateUserResponse(rsp)
+}
+
+// AdminUpdateUserWithResponse Update a user's profile, role, repo access or disabled state
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /admin/users/{username} (the `AdminUpdateUser` operationId).
+func (c *ClientWithResponses) AdminUpdateUserWithResponse(ctx context.Context, username string, body AdminUpdateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*AdminUpdateUserResponse, error) {
+	rsp, err := c.AdminUpdateUser(ctx, username, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAdminUpdateUserResponse(rsp)
+}
+
+// AdminResetPasswordWithResponse Issue a new temporary password
+//
+// Signs the user out everywhere. They must set a new password at next login.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /admin/users/{username}/reset-password (the `AdminResetPassword` operationId).
+func (c *ClientWithResponses) AdminResetPasswordWithResponse(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*AdminResetPasswordResponse, error) {
+	rsp, err := c.AdminResetPassword(ctx, username, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAdminResetPasswordResponse(rsp)
+}
+
+// AdminResetTotpWithResponse Turn off a user's 2FA (e.g. lost device)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /admin/users/{username}/reset-totp (the `AdminResetTotp` operationId).
+func (c *ClientWithResponses) AdminResetTotpWithResponse(ctx context.Context, username string, reqEditors ...RequestEditorFn) (*AdminResetTotpResponse, error) {
+	rsp, err := c.AdminResetTotp(ctx, username, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAdminResetTotpResponse(rsp)
+}
+
+// LoginWithBodyWithResponse Log in with username and password
+//
+// Sets the session cookie. If the user has 2FA enabled and neither
+// `totp_code` nor `recovery_code` is given, fails with `totp_required`;
+// resend with a code. If the response has `must_change_password: true`,
+// only `getSession`, `logout` and `changePassword` work until the password
+// is changed.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /auth/login (the `Login` operationId).
+func (c *ClientWithResponses) LoginWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
+	rsp, err := c.LoginWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoginResponse(rsp)
+}
+
+// LoginWithResponse Log in with username and password
+//
+// Sets the session cookie. If the user has 2FA enabled and neither
+// `totp_code` nor `recovery_code` is given, fails with `totp_required`;
+// resend with a code. If the response has `must_change_password: true`,
+// only `getSession`, `logout` and `changePassword` work until the password
+// is changed.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /auth/login (the `Login` operationId).
+func (c *ClientWithResponses) LoginWithResponse(ctx context.Context, body LoginJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginResponse, error) {
+	rsp, err := c.Login(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoginResponse(rsp)
+}
+
+// LogoutWithResponse End the current session
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /auth/logout (the `Logout` operationId).
+func (c *ClientWithResponses) LogoutWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*LogoutResponse, error) {
+	rsp, err := c.Logout(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLogoutResponse(rsp)
+}
+
+// GetSessionWithResponse The current user and how they authenticated
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /auth/session (the `GetSession` operationId).
+func (c *ClientWithResponses) GetSessionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSessionResponse, error) {
+	rsp, err := c.GetSession(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSessionResponse(rsp)
+}
+
 // GetMetaWithResponse Server version and setup state
 //
-// Public endpoint. Clients use it to detect a tgp server and whether first-start setup is pending.
+// Public. Clients use it to detect a tgp server and whether first-start setup is pending.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -291,6 +4248,760 @@ func (c *ClientWithResponses) GetMetaWithResponse(ctx context.Context, reqEditor
 		return nil, err
 	}
 	return ParseGetMetaResponse(rsp)
+}
+
+// GetOrgWithResponse Org settings
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /org (the `GetOrg` operationId).
+func (c *ClientWithResponses) GetOrgWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetOrgResponse, error) {
+	rsp, err := c.GetOrg(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetOrgResponse(rsp)
+}
+
+// GetOrgLogoWithResponse Org logo image
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /org/logo (the `GetOrgLogo` operationId).
+func (c *ClientWithResponses) GetOrgLogoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetOrgLogoResponse, error) {
+	rsp, err := c.GetOrgLogo(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetOrgLogoResponse(rsp)
+}
+
+// CompleteSetupWithBodyWithResponse Complete first-start setup
+//
+// Creates the first admin, configures the org and optionally creates more
+// users, all in one transaction. Requires the one-time setup token printed
+// in the server log. Only works while setup is pending. On success the
+// caller is logged in as the new admin.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /setup (the `CompleteSetup` operationId).
+func (c *ClientWithResponses) CompleteSetupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CompleteSetupResponse, error) {
+	rsp, err := c.CompleteSetupWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCompleteSetupResponse(rsp)
+}
+
+// CompleteSetupWithResponse Complete first-start setup
+//
+// Creates the first admin, configures the org and optionally creates more
+// users, all in one transaction. Requires the one-time setup token printed
+// in the server log. Only works while setup is pending. On success the
+// caller is logged in as the new admin.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /setup (the `CompleteSetup` operationId).
+func (c *ClientWithResponses) CompleteSetupWithResponse(ctx context.Context, body CompleteSetupJSONRequestBody, reqEditors ...RequestEditorFn) (*CompleteSetupResponse, error) {
+	rsp, err := c.CompleteSetup(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCompleteSetupResponse(rsp)
+}
+
+// ListUsersWithResponse List team members
+//
+// Basic info about every active user, e.g. for picking reviewers.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /users (the `ListUsers` operationId).
+func (c *ClientWithResponses) ListUsersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListUsersResponse, error) {
+	rsp, err := c.ListUsers(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListUsersResponse(rsp)
+}
+
+// ParseChangePasswordResponse parses an HTTP response from a ChangePasswordWithResponse call
+func ParseChangePasswordResponse(rsp *http.Response) (*ChangePasswordResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ChangePasswordResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRegenerateRecoveryCodesResponse parses an HTTP response from a RegenerateRecoveryCodesWithResponse call
+func ParseRegenerateRecoveryCodesResponse(rsp *http.Response) (*RegenerateRecoveryCodesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RegenerateRecoveryCodesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RecoveryCodes
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListTokensResponse parses an HTTP response from a ListTokensWithResponse call
+func ParseListTokensResponse(rsp *http.Response) (*ListTokensResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListTokensResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []AccessToken
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateTokenResponse parses an HTTP response from a CreateTokenWithResponse call
+func ParseCreateTokenResponse(rsp *http.Response) (*CreateTokenResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateTokenResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest CreatedToken
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteTokenResponse parses an HTTP response from a DeleteTokenWithResponse call
+func ParseDeleteTokenResponse(rsp *http.Response) (*DeleteTokenResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteTokenResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStartTotpSetupResponse parses an HTTP response from a StartTotpSetupWithResponse call
+func ParseStartTotpSetupResponse(rsp *http.Response) (*StartTotpSetupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StartTotpSetupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TotpSetup
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDisableTotpResponse parses an HTTP response from a DisableTotpWithResponse call
+func ParseDisableTotpResponse(rsp *http.Response) (*DisableTotpResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DisableTotpResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseEnableTotpResponse parses an HTTP response from a EnableTotpWithResponse call
+func ParseEnableTotpResponse(rsp *http.Response) (*EnableTotpResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &EnableTotpResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RecoveryCodes
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAuditLogResponse parses an HTTP response from a ListAuditLogWithResponse call
+func ParseListAuditLogResponse(rsp *http.Response) (*ListAuditLogResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAuditLogResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuditPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateOrgResponse parses an HTTP response from a UpdateOrgWithResponse call
+func ParseUpdateOrgResponse(rsp *http.Response) (*UpdateOrgResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateOrgResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Org
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteOrgLogoResponse parses an HTTP response from a DeleteOrgLogoWithResponse call
+func ParseDeleteOrgLogoResponse(rsp *http.Response) (*DeleteOrgLogoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteOrgLogoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUploadOrgLogoResponse parses an HTTP response from a UploadOrgLogoWithResponse call
+func ParseUploadOrgLogoResponse(rsp *http.Response) (*UploadOrgLogoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UploadOrgLogoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Org
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAdminListUsersResponse parses an HTTP response from a AdminListUsersWithResponse call
+func ParseAdminListUsersResponse(rsp *http.Response) (*AdminListUsersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AdminListUsersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAdminCreateUserResponse parses an HTTP response from a AdminCreateUserWithResponse call
+func ParseAdminCreateUserResponse(rsp *http.Response) (*AdminCreateUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AdminCreateUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest UserWithTempPassword
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAdminGetUserResponse parses an HTTP response from a AdminGetUserWithResponse call
+func ParseAdminGetUserResponse(rsp *http.Response) (*AdminGetUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AdminGetUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAdminUpdateUserResponse parses an HTTP response from a AdminUpdateUserWithResponse call
+func ParseAdminUpdateUserResponse(rsp *http.Response) (*AdminUpdateUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AdminUpdateUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAdminResetPasswordResponse parses an HTTP response from a AdminResetPasswordWithResponse call
+func ParseAdminResetPasswordResponse(rsp *http.Response) (*AdminResetPasswordResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AdminResetPasswordResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserWithTempPassword
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAdminResetTotpResponse parses an HTTP response from a AdminResetTotpWithResponse call
+func ParseAdminResetTotpResponse(rsp *http.Response) (*AdminResetTotpResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AdminResetTotpResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseLoginResponse parses an HTTP response from a LoginWithResponse call
+func ParseLoginResponse(rsp *http.Response) (*LoginResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LoginResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Session
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseLogoutResponse parses an HTTP response from a LogoutWithResponse call
+func ParseLogoutResponse(rsp *http.Response) (*LogoutResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LogoutResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSessionResponse parses an HTTP response from a GetSessionWithResponse call
+func ParseGetSessionResponse(rsp *http.Response) (*GetSessionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSessionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Session
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseGetMetaResponse parses an HTTP response from a GetMetaWithResponse call
@@ -326,20 +5037,370 @@ func ParseGetMetaResponse(rsp *http.Response) (*GetMetaResponse, error) {
 	return response, nil
 }
 
+// ParseGetOrgResponse parses an HTTP response from a GetOrgWithResponse call
+func ParseGetOrgResponse(rsp *http.Response) (*GetOrgResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetOrgResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Org
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetOrgLogoResponse parses an HTTP response from a GetOrgLogoWithResponse call
+func ParseGetOrgLogoResponse(rsp *http.Response) (*GetOrgLogoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetOrgLogoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCompleteSetupResponse parses an HTTP response from a CompleteSetupWithResponse call
+func ParseCompleteSetupResponse(rsp *http.Response) (*CompleteSetupResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CompleteSetupResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SetupResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListUsersResponse parses an HTTP response from a ListUsersWithResponse call
+func ParseListUsersResponse(rsp *http.Response) (*ListUsersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListUsersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []UserSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// ChangePassword Change your password
+	// (POST /account/password)
+	ChangePassword(w http.ResponseWriter, r *http.Request)
+	// RegenerateRecoveryCodes Replace your 2FA recovery codes
+	// (POST /account/recovery-codes)
+	RegenerateRecoveryCodes(w http.ResponseWriter, r *http.Request)
+	// ListTokens List your personal access tokens
+	// (GET /account/tokens)
+	ListTokens(w http.ResponseWriter, r *http.Request)
+	// CreateToken Create a personal access token
+	// (POST /account/tokens)
+	CreateToken(w http.ResponseWriter, r *http.Request)
+	// DeleteToken Revoke a personal access token
+	// (DELETE /account/tokens/{id})
+	DeleteToken(w http.ResponseWriter, r *http.Request, id int64)
+	// StartTotpSetup Begin 2FA setup
+	// (POST /account/totp)
+	StartTotpSetup(w http.ResponseWriter, r *http.Request)
+	// DisableTotp Turn off 2FA
+	// (POST /account/totp/disable)
+	DisableTotp(w http.ResponseWriter, r *http.Request)
+	// EnableTotp Confirm 2FA setup with a code
+	// (POST /account/totp/enable)
+	EnableTotp(w http.ResponseWriter, r *http.Request)
+	// ListAuditLog Security audit log, newest first
+	// (GET /admin/audit-log)
+	ListAuditLog(w http.ResponseWriter, r *http.Request, params ListAuditLogParams)
+	// UpdateOrg Update org settings
+	// (PATCH /admin/org)
+	UpdateOrg(w http.ResponseWriter, r *http.Request)
+	// DeleteOrgLogo Remove the org logo
+	// (DELETE /admin/org/logo)
+	DeleteOrgLogo(w http.ResponseWriter, r *http.Request)
+	// UploadOrgLogo Upload the org logo
+	// (PUT /admin/org/logo)
+	UploadOrgLogo(w http.ResponseWriter, r *http.Request)
+	// AdminListUsers List all users with admin details
+	// (GET /admin/users)
+	AdminListUsers(w http.ResponseWriter, r *http.Request)
+	// AdminCreateUser Create a user with a temporary password
+	// (POST /admin/users)
+	AdminCreateUser(w http.ResponseWriter, r *http.Request)
+	// AdminGetUser Get a user
+	// (GET /admin/users/{username})
+	AdminGetUser(w http.ResponseWriter, r *http.Request, username string)
+	// AdminUpdateUser Update a user's profile, role, repo access or disabled state
+	// (PATCH /admin/users/{username})
+	AdminUpdateUser(w http.ResponseWriter, r *http.Request, username string)
+	// AdminResetPassword Issue a new temporary password
+	// (POST /admin/users/{username}/reset-password)
+	AdminResetPassword(w http.ResponseWriter, r *http.Request, username string)
+	// AdminResetTotp Turn off a user's 2FA (e.g. lost device)
+	// (POST /admin/users/{username}/reset-totp)
+	AdminResetTotp(w http.ResponseWriter, r *http.Request, username string)
+	// Login Log in with username and password
+	// (POST /auth/login)
+	Login(w http.ResponseWriter, r *http.Request)
+	// Logout End the current session
+	// (POST /auth/logout)
+	Logout(w http.ResponseWriter, r *http.Request)
+	// GetSession The current user and how they authenticated
+	// (GET /auth/session)
+	GetSession(w http.ResponseWriter, r *http.Request)
 	// GetMeta Server version and setup state
 	// (GET /meta)
 	GetMeta(w http.ResponseWriter, r *http.Request)
+	// GetOrg Org settings
+	// (GET /org)
+	GetOrg(w http.ResponseWriter, r *http.Request)
+	// GetOrgLogo Org logo image
+	// (GET /org/logo)
+	GetOrgLogo(w http.ResponseWriter, r *http.Request)
+	// CompleteSetup Complete first-start setup
+	// (POST /setup)
+	CompleteSetup(w http.ResponseWriter, r *http.Request)
+	// ListUsers List team members
+	// (GET /users)
+	ListUsers(w http.ResponseWriter, r *http.Request)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
 
+// ChangePassword Change your password
+// (POST /account/password)
+func (_ Unimplemented) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RegenerateRecoveryCodes Replace your 2FA recovery codes
+// (POST /account/recovery-codes)
+func (_ Unimplemented) RegenerateRecoveryCodes(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListTokens List your personal access tokens
+// (GET /account/tokens)
+func (_ Unimplemented) ListTokens(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateToken Create a personal access token
+// (POST /account/tokens)
+func (_ Unimplemented) CreateToken(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteToken Revoke a personal access token
+// (DELETE /account/tokens/{id})
+func (_ Unimplemented) DeleteToken(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// StartTotpSetup Begin 2FA setup
+// (POST /account/totp)
+func (_ Unimplemented) StartTotpSetup(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DisableTotp Turn off 2FA
+// (POST /account/totp/disable)
+func (_ Unimplemented) DisableTotp(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// EnableTotp Confirm 2FA setup with a code
+// (POST /account/totp/enable)
+func (_ Unimplemented) EnableTotp(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListAuditLog Security audit log, newest first
+// (GET /admin/audit-log)
+func (_ Unimplemented) ListAuditLog(w http.ResponseWriter, r *http.Request, params ListAuditLogParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateOrg Update org settings
+// (PATCH /admin/org)
+func (_ Unimplemented) UpdateOrg(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteOrgLogo Remove the org logo
+// (DELETE /admin/org/logo)
+func (_ Unimplemented) DeleteOrgLogo(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UploadOrgLogo Upload the org logo
+// (PUT /admin/org/logo)
+func (_ Unimplemented) UploadOrgLogo(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AdminListUsers List all users with admin details
+// (GET /admin/users)
+func (_ Unimplemented) AdminListUsers(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AdminCreateUser Create a user with a temporary password
+// (POST /admin/users)
+func (_ Unimplemented) AdminCreateUser(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AdminGetUser Get a user
+// (GET /admin/users/{username})
+func (_ Unimplemented) AdminGetUser(w http.ResponseWriter, r *http.Request, username string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AdminUpdateUser Update a user's profile, role, repo access or disabled state
+// (PATCH /admin/users/{username})
+func (_ Unimplemented) AdminUpdateUser(w http.ResponseWriter, r *http.Request, username string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AdminResetPassword Issue a new temporary password
+// (POST /admin/users/{username}/reset-password)
+func (_ Unimplemented) AdminResetPassword(w http.ResponseWriter, r *http.Request, username string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AdminResetTotp Turn off a user's 2FA (e.g. lost device)
+// (POST /admin/users/{username}/reset-totp)
+func (_ Unimplemented) AdminResetTotp(w http.ResponseWriter, r *http.Request, username string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Login Log in with username and password
+// (POST /auth/login)
+func (_ Unimplemented) Login(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Logout End the current session
+// (POST /auth/logout)
+func (_ Unimplemented) Logout(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetSession The current user and how they authenticated
+// (GET /auth/session)
+func (_ Unimplemented) GetSession(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetMeta Server version and setup state
 // (GET /meta)
 func (_ Unimplemented) GetMeta(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetOrg Org settings
+// (GET /org)
+func (_ Unimplemented) GetOrg(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetOrgLogo Org logo image
+// (GET /org/logo)
+func (_ Unimplemented) GetOrgLogo(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CompleteSetup Complete first-start setup
+// (POST /setup)
+func (_ Unimplemented) CompleteSetup(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListUsers List team members
+// (GET /users)
+func (_ Unimplemented) ListUsers(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -352,11 +5413,479 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
+// ChangePassword operation middleware
+func (siw *ServerInterfaceWrapper) ChangePassword(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ChangePassword(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RegenerateRecoveryCodes operation middleware
+func (siw *ServerInterfaceWrapper) RegenerateRecoveryCodes(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RegenerateRecoveryCodes(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListTokens operation middleware
+func (siw *ServerInterfaceWrapper) ListTokens(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListTokens(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateToken operation middleware
+func (siw *ServerInterfaceWrapper) CreateToken(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateToken(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteToken operation middleware
+func (siw *ServerInterfaceWrapper) DeleteToken(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteToken(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StartTotpSetup operation middleware
+func (siw *ServerInterfaceWrapper) StartTotpSetup(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StartTotpSetup(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DisableTotp operation middleware
+func (siw *ServerInterfaceWrapper) DisableTotp(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DisableTotp(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// EnableTotp operation middleware
+func (siw *ServerInterfaceWrapper) EnableTotp(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.EnableTotp(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAuditLog operation middleware
+func (siw *ServerInterfaceWrapper) ListAuditLog(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAuditLogParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "before" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "before", r.URL.Query(), &params.Before, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "before"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "before", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "actor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "actor", r.URL.Query(), &params.Actor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "actor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "actor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "action" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "action", r.URL.Query(), &params.Action, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "action"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "action", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAuditLog(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateOrg operation middleware
+func (siw *ServerInterfaceWrapper) UpdateOrg(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateOrg(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteOrgLogo operation middleware
+func (siw *ServerInterfaceWrapper) DeleteOrgLogo(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteOrgLogo(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UploadOrgLogo operation middleware
+func (siw *ServerInterfaceWrapper) UploadOrgLogo(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UploadOrgLogo(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AdminListUsers operation middleware
+func (siw *ServerInterfaceWrapper) AdminListUsers(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AdminListUsers(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AdminCreateUser operation middleware
+func (siw *ServerInterfaceWrapper) AdminCreateUser(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AdminCreateUser(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AdminGetUser operation middleware
+func (siw *ServerInterfaceWrapper) AdminGetUser(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "username" -------------
+	var username string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "username", chi.URLParam(r, "username"), &username, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "username", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AdminGetUser(w, r, username)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AdminUpdateUser operation middleware
+func (siw *ServerInterfaceWrapper) AdminUpdateUser(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "username" -------------
+	var username string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "username", chi.URLParam(r, "username"), &username, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "username", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AdminUpdateUser(w, r, username)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AdminResetPassword operation middleware
+func (siw *ServerInterfaceWrapper) AdminResetPassword(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "username" -------------
+	var username string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "username", chi.URLParam(r, "username"), &username, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "username", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AdminResetPassword(w, r, username)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AdminResetTotp operation middleware
+func (siw *ServerInterfaceWrapper) AdminResetTotp(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "username" -------------
+	var username string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "username", chi.URLParam(r, "username"), &username, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "username", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AdminResetTotp(w, r, username)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// Login operation middleware
+func (siw *ServerInterfaceWrapper) Login(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.Login(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// Logout operation middleware
+func (siw *ServerInterfaceWrapper) Logout(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.Logout(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetSession operation middleware
+func (siw *ServerInterfaceWrapper) GetSession(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetSession(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetMeta operation middleware
 func (siw *ServerInterfaceWrapper) GetMeta(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetMeta(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOrg operation middleware
+func (siw *ServerInterfaceWrapper) GetOrg(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOrg(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOrgLogo operation middleware
+func (siw *ServerInterfaceWrapper) GetOrgLogo(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOrgLogo(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CompleteSetup operation middleware
+func (siw *ServerInterfaceWrapper) CompleteSetup(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CompleteSetup(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListUsers operation middleware
+func (siw *ServerInterfaceWrapper) ListUsers(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListUsers(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -482,11 +6011,876 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/meta", wrapper.GetMeta)
 	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/setup", wrapper.CompleteSetup)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/login", wrapper.Login)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/logout", wrapper.Logout)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/auth/session", wrapper.GetSession)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/account/password", wrapper.ChangePassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/account/totp", wrapper.StartTotpSetup)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/account/totp/enable", wrapper.EnableTotp)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/account/totp/disable", wrapper.DisableTotp)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/account/recovery-codes", wrapper.RegenerateRecoveryCodes)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/account/tokens", wrapper.ListTokens)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/account/tokens", wrapper.CreateToken)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/account/tokens/{id}", wrapper.DeleteToken)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/users", wrapper.ListUsers)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/org", wrapper.GetOrg)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/org/logo", wrapper.GetOrgLogo)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/admin/org", wrapper.UpdateOrg)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/admin/org/logo", wrapper.DeleteOrgLogo)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/admin/org/logo", wrapper.UploadOrgLogo)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/admin/users", wrapper.AdminListUsers)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/admin/users", wrapper.AdminCreateUser)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/admin/users/{username}", wrapper.AdminGetUser)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/admin/users/{username}", wrapper.AdminUpdateUser)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/admin/users/{username}/reset-password", wrapper.AdminResetPassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/admin/users/{username}/reset-totp", wrapper.AdminResetTotp)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/admin/audit-log", wrapper.ListAuditLog)
+	})
 
 	return r
 }
 
 type ErrorJSONResponse Error
+
+type ChangePasswordRequestObject struct {
+	Body *ChangePasswordJSONRequestBody
+}
+
+type ChangePasswordResponseObject interface {
+	VisitChangePasswordResponse(w http.ResponseWriter) error
+}
+
+type ChangePassword200JSONResponse User
+
+func (response ChangePassword200JSONResponse) VisitChangePasswordResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ChangePassworddefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ChangePassworddefaultJSONResponse) VisitChangePasswordResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RegenerateRecoveryCodesRequestObject struct {
+	Body *RegenerateRecoveryCodesJSONRequestBody
+}
+
+type RegenerateRecoveryCodesResponseObject interface {
+	VisitRegenerateRecoveryCodesResponse(w http.ResponseWriter) error
+}
+
+type RegenerateRecoveryCodes200JSONResponse RecoveryCodes
+
+func (response RegenerateRecoveryCodes200JSONResponse) VisitRegenerateRecoveryCodesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RegenerateRecoveryCodesdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response RegenerateRecoveryCodesdefaultJSONResponse) VisitRegenerateRecoveryCodesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListTokensRequestObject struct {
+}
+
+type ListTokensResponseObject interface {
+	VisitListTokensResponse(w http.ResponseWriter) error
+}
+
+type ListTokens200JSONResponse []AccessToken
+
+func (response ListTokens200JSONResponse) VisitListTokensResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListTokensdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListTokensdefaultJSONResponse) VisitListTokensResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateTokenRequestObject struct {
+	Body *CreateTokenJSONRequestBody
+}
+
+type CreateTokenResponseObject interface {
+	VisitCreateTokenResponse(w http.ResponseWriter) error
+}
+
+type CreateToken201JSONResponse CreatedToken
+
+func (response CreateToken201JSONResponse) VisitCreateTokenResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateTokendefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreateTokendefaultJSONResponse) VisitCreateTokenResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteTokenRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type DeleteTokenResponseObject interface {
+	VisitDeleteTokenResponse(w http.ResponseWriter) error
+}
+
+type DeleteToken204Response struct {
+}
+
+func (response DeleteToken204Response) VisitDeleteTokenResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteTokendefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteTokendefaultJSONResponse) VisitDeleteTokenResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartTotpSetupRequestObject struct {
+}
+
+type StartTotpSetupResponseObject interface {
+	VisitStartTotpSetupResponse(w http.ResponseWriter) error
+}
+
+type StartTotpSetup200JSONResponse TotpSetup
+
+func (response StartTotpSetup200JSONResponse) VisitStartTotpSetupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartTotpSetupdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response StartTotpSetupdefaultJSONResponse) VisitStartTotpSetupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DisableTotpRequestObject struct {
+	Body *DisableTotpJSONRequestBody
+}
+
+type DisableTotpResponseObject interface {
+	VisitDisableTotpResponse(w http.ResponseWriter) error
+}
+
+type DisableTotp204Response struct {
+}
+
+func (response DisableTotp204Response) VisitDisableTotpResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DisableTotpdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DisableTotpdefaultJSONResponse) VisitDisableTotpResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EnableTotpRequestObject struct {
+	Body *EnableTotpJSONRequestBody
+}
+
+type EnableTotpResponseObject interface {
+	VisitEnableTotpResponse(w http.ResponseWriter) error
+}
+
+type EnableTotp200JSONResponse RecoveryCodes
+
+func (response EnableTotp200JSONResponse) VisitEnableTotpResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EnableTotpdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response EnableTotpdefaultJSONResponse) VisitEnableTotpResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAuditLogRequestObject struct {
+	Params ListAuditLogParams
+}
+
+type ListAuditLogResponseObject interface {
+	VisitListAuditLogResponse(w http.ResponseWriter) error
+}
+
+type ListAuditLog200JSONResponse AuditPage
+
+func (response ListAuditLog200JSONResponse) VisitListAuditLogResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAuditLogdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListAuditLogdefaultJSONResponse) VisitListAuditLogResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateOrgRequestObject struct {
+	Body *UpdateOrgJSONRequestBody
+}
+
+type UpdateOrgResponseObject interface {
+	VisitUpdateOrgResponse(w http.ResponseWriter) error
+}
+
+type UpdateOrg200JSONResponse Org
+
+func (response UpdateOrg200JSONResponse) VisitUpdateOrgResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateOrgdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdateOrgdefaultJSONResponse) VisitUpdateOrgResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteOrgLogoRequestObject struct {
+}
+
+type DeleteOrgLogoResponseObject interface {
+	VisitDeleteOrgLogoResponse(w http.ResponseWriter) error
+}
+
+type DeleteOrgLogo204Response struct {
+}
+
+func (response DeleteOrgLogo204Response) VisitDeleteOrgLogoResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteOrgLogodefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteOrgLogodefaultJSONResponse) VisitDeleteOrgLogoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadOrgLogoRequestObject struct {
+	Body io.Reader
+}
+
+type UploadOrgLogoResponseObject interface {
+	VisitUploadOrgLogoResponse(w http.ResponseWriter) error
+}
+
+type UploadOrgLogo200JSONResponse Org
+
+func (response UploadOrgLogo200JSONResponse) VisitUploadOrgLogoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadOrgLogodefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UploadOrgLogodefaultJSONResponse) VisitUploadOrgLogoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListUsersRequestObject struct {
+}
+
+type AdminListUsersResponseObject interface {
+	VisitAdminListUsersResponse(w http.ResponseWriter) error
+}
+
+type AdminListUsers200JSONResponse []User
+
+func (response AdminListUsers200JSONResponse) VisitAdminListUsersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminListUsersdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response AdminListUsersdefaultJSONResponse) VisitAdminListUsersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreateUserRequestObject struct {
+	Body *AdminCreateUserJSONRequestBody
+}
+
+type AdminCreateUserResponseObject interface {
+	VisitAdminCreateUserResponse(w http.ResponseWriter) error
+}
+
+type AdminCreateUser201JSONResponse UserWithTempPassword
+
+func (response AdminCreateUser201JSONResponse) VisitAdminCreateUserResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminCreateUserdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response AdminCreateUserdefaultJSONResponse) VisitAdminCreateUserResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetUserRequestObject struct {
+	Username string `json:"username"`
+}
+
+type AdminGetUserResponseObject interface {
+	VisitAdminGetUserResponse(w http.ResponseWriter) error
+}
+
+type AdminGetUser200JSONResponse User
+
+func (response AdminGetUser200JSONResponse) VisitAdminGetUserResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminGetUserdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response AdminGetUserdefaultJSONResponse) VisitAdminGetUserResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateUserRequestObject struct {
+	Username string `json:"username"`
+	Body     *AdminUpdateUserJSONRequestBody
+}
+
+type AdminUpdateUserResponseObject interface {
+	VisitAdminUpdateUserResponse(w http.ResponseWriter) error
+}
+
+type AdminUpdateUser200JSONResponse User
+
+func (response AdminUpdateUser200JSONResponse) VisitAdminUpdateUserResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminUpdateUserdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response AdminUpdateUserdefaultJSONResponse) VisitAdminUpdateUserResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminResetPasswordRequestObject struct {
+	Username string `json:"username"`
+}
+
+type AdminResetPasswordResponseObject interface {
+	VisitAdminResetPasswordResponse(w http.ResponseWriter) error
+}
+
+type AdminResetPassword200JSONResponse UserWithTempPassword
+
+func (response AdminResetPassword200JSONResponse) VisitAdminResetPasswordResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminResetPassworddefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response AdminResetPassworddefaultJSONResponse) VisitAdminResetPasswordResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminResetTotpRequestObject struct {
+	Username string `json:"username"`
+}
+
+type AdminResetTotpResponseObject interface {
+	VisitAdminResetTotpResponse(w http.ResponseWriter) error
+}
+
+type AdminResetTotp200JSONResponse User
+
+func (response AdminResetTotp200JSONResponse) VisitAdminResetTotpResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type AdminResetTotpdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response AdminResetTotpdefaultJSONResponse) VisitAdminResetTotpResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type LoginRequestObject struct {
+	Body *LoginJSONRequestBody
+}
+
+type LoginResponseObject interface {
+	VisitLoginResponse(w http.ResponseWriter) error
+}
+
+type Login200JSONResponse Session
+
+func (response Login200JSONResponse) VisitLoginResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type LogindefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response LogindefaultJSONResponse) VisitLoginResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type LogoutRequestObject struct {
+}
+
+type LogoutResponseObject interface {
+	VisitLogoutResponse(w http.ResponseWriter) error
+}
+
+type Logout204Response struct {
+}
+
+func (response Logout204Response) VisitLogoutResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type LogoutdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response LogoutdefaultJSONResponse) VisitLogoutResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetSessionRequestObject struct {
+}
+
+type GetSessionResponseObject interface {
+	VisitGetSessionResponse(w http.ResponseWriter) error
+}
+
+type GetSession200JSONResponse Session
+
+func (response GetSession200JSONResponse) VisitGetSessionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetSessiondefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetSessiondefaultJSONResponse) VisitGetSessionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
 
 type GetMetaRequestObject struct {
 }
@@ -526,11 +6920,246 @@ func (response GetMetadefaultJSONResponse) VisitGetMetaResponse(w http.ResponseW
 	return err
 }
 
+type GetOrgRequestObject struct {
+}
+
+type GetOrgResponseObject interface {
+	VisitGetOrgResponse(w http.ResponseWriter) error
+}
+
+type GetOrg200JSONResponse Org
+
+func (response GetOrg200JSONResponse) VisitGetOrgResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOrgdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetOrgdefaultJSONResponse) VisitGetOrgResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOrgLogoRequestObject struct {
+}
+
+type GetOrgLogoResponseObject interface {
+	VisitGetOrgLogoResponse(w http.ResponseWriter) error
+}
+
+type GetOrgLogo200ImageResponse struct {
+	Body          io.Reader
+	ContentType   string
+	ContentLength int64
+}
+
+func (response GetOrgLogo200ImageResponse) VisitGetOrgLogoResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", response.ContentType)
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type GetOrgLogodefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetOrgLogodefaultJSONResponse) VisitGetOrgLogoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CompleteSetupRequestObject struct {
+	Body *CompleteSetupJSONRequestBody
+}
+
+type CompleteSetupResponseObject interface {
+	VisitCompleteSetupResponse(w http.ResponseWriter) error
+}
+
+type CompleteSetup200JSONResponse SetupResponse
+
+func (response CompleteSetup200JSONResponse) VisitCompleteSetupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CompleteSetupdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CompleteSetupdefaultJSONResponse) VisitCompleteSetupResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListUsersRequestObject struct {
+}
+
+type ListUsersResponseObject interface {
+	VisitListUsersResponse(w http.ResponseWriter) error
+}
+
+type ListUsers200JSONResponse []UserSummary
+
+func (response ListUsers200JSONResponse) VisitListUsersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListUsersdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListUsersdefaultJSONResponse) VisitListUsersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// ChangePassword Change your password
+	// (POST /account/password)
+	ChangePassword(ctx context.Context, request ChangePasswordRequestObject) (ChangePasswordResponseObject, error)
+	// RegenerateRecoveryCodes Replace your 2FA recovery codes
+	// (POST /account/recovery-codes)
+	RegenerateRecoveryCodes(ctx context.Context, request RegenerateRecoveryCodesRequestObject) (RegenerateRecoveryCodesResponseObject, error)
+	// ListTokens List your personal access tokens
+	// (GET /account/tokens)
+	ListTokens(ctx context.Context, request ListTokensRequestObject) (ListTokensResponseObject, error)
+	// CreateToken Create a personal access token
+	// (POST /account/tokens)
+	CreateToken(ctx context.Context, request CreateTokenRequestObject) (CreateTokenResponseObject, error)
+	// DeleteToken Revoke a personal access token
+	// (DELETE /account/tokens/{id})
+	DeleteToken(ctx context.Context, request DeleteTokenRequestObject) (DeleteTokenResponseObject, error)
+	// StartTotpSetup Begin 2FA setup
+	// (POST /account/totp)
+	StartTotpSetup(ctx context.Context, request StartTotpSetupRequestObject) (StartTotpSetupResponseObject, error)
+	// DisableTotp Turn off 2FA
+	// (POST /account/totp/disable)
+	DisableTotp(ctx context.Context, request DisableTotpRequestObject) (DisableTotpResponseObject, error)
+	// EnableTotp Confirm 2FA setup with a code
+	// (POST /account/totp/enable)
+	EnableTotp(ctx context.Context, request EnableTotpRequestObject) (EnableTotpResponseObject, error)
+	// ListAuditLog Security audit log, newest first
+	// (GET /admin/audit-log)
+	ListAuditLog(ctx context.Context, request ListAuditLogRequestObject) (ListAuditLogResponseObject, error)
+	// UpdateOrg Update org settings
+	// (PATCH /admin/org)
+	UpdateOrg(ctx context.Context, request UpdateOrgRequestObject) (UpdateOrgResponseObject, error)
+	// DeleteOrgLogo Remove the org logo
+	// (DELETE /admin/org/logo)
+	DeleteOrgLogo(ctx context.Context, request DeleteOrgLogoRequestObject) (DeleteOrgLogoResponseObject, error)
+	// UploadOrgLogo Upload the org logo
+	// (PUT /admin/org/logo)
+	UploadOrgLogo(ctx context.Context, request UploadOrgLogoRequestObject) (UploadOrgLogoResponseObject, error)
+	// AdminListUsers List all users with admin details
+	// (GET /admin/users)
+	AdminListUsers(ctx context.Context, request AdminListUsersRequestObject) (AdminListUsersResponseObject, error)
+	// AdminCreateUser Create a user with a temporary password
+	// (POST /admin/users)
+	AdminCreateUser(ctx context.Context, request AdminCreateUserRequestObject) (AdminCreateUserResponseObject, error)
+	// AdminGetUser Get a user
+	// (GET /admin/users/{username})
+	AdminGetUser(ctx context.Context, request AdminGetUserRequestObject) (AdminGetUserResponseObject, error)
+	// AdminUpdateUser Update a user's profile, role, repo access or disabled state
+	// (PATCH /admin/users/{username})
+	AdminUpdateUser(ctx context.Context, request AdminUpdateUserRequestObject) (AdminUpdateUserResponseObject, error)
+	// AdminResetPassword Issue a new temporary password
+	// (POST /admin/users/{username}/reset-password)
+	AdminResetPassword(ctx context.Context, request AdminResetPasswordRequestObject) (AdminResetPasswordResponseObject, error)
+	// AdminResetTotp Turn off a user's 2FA (e.g. lost device)
+	// (POST /admin/users/{username}/reset-totp)
+	AdminResetTotp(ctx context.Context, request AdminResetTotpRequestObject) (AdminResetTotpResponseObject, error)
+	// Login Log in with username and password
+	// (POST /auth/login)
+	Login(ctx context.Context, request LoginRequestObject) (LoginResponseObject, error)
+	// Logout End the current session
+	// (POST /auth/logout)
+	Logout(ctx context.Context, request LogoutRequestObject) (LogoutResponseObject, error)
+	// GetSession The current user and how they authenticated
+	// (GET /auth/session)
+	GetSession(ctx context.Context, request GetSessionRequestObject) (GetSessionResponseObject, error)
 	// GetMeta Server version and setup state
 	// (GET /meta)
 	GetMeta(ctx context.Context, request GetMetaRequestObject) (GetMetaResponseObject, error)
+	// GetOrg Org settings
+	// (GET /org)
+	GetOrg(ctx context.Context, request GetOrgRequestObject) (GetOrgResponseObject, error)
+	// GetOrgLogo Org logo image
+	// (GET /org/logo)
+	GetOrgLogo(ctx context.Context, request GetOrgLogoRequestObject) (GetOrgLogoResponseObject, error)
+	// CompleteSetup Complete first-start setup
+	// (POST /setup)
+	CompleteSetup(ctx context.Context, request CompleteSetupRequestObject) (CompleteSetupResponseObject, error)
+	// ListUsers List team members
+	// (GET /users)
+	ListUsers(ctx context.Context, request ListUsersRequestObject) (ListUsersResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error)
@@ -572,6 +7201,587 @@ type strictHandler struct {
 	options     StrictHTTPServerOptions
 }
 
+// ChangePassword operation middleware
+func (sh *strictHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	var request ChangePasswordRequestObject
+
+	var body ChangePasswordJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ChangePassword(ctx, request.(ChangePasswordRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ChangePassword")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ChangePasswordResponseObject); ok {
+		if err := validResponse.VisitChangePasswordResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RegenerateRecoveryCodes operation middleware
+func (sh *strictHandler) RegenerateRecoveryCodes(w http.ResponseWriter, r *http.Request) {
+	var request RegenerateRecoveryCodesRequestObject
+
+	var body RegenerateRecoveryCodesJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RegenerateRecoveryCodes(ctx, request.(RegenerateRecoveryCodesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RegenerateRecoveryCodes")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RegenerateRecoveryCodesResponseObject); ok {
+		if err := validResponse.VisitRegenerateRecoveryCodesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListTokens operation middleware
+func (sh *strictHandler) ListTokens(w http.ResponseWriter, r *http.Request) {
+	var request ListTokensRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListTokens(ctx, request.(ListTokensRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListTokens")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListTokensResponseObject); ok {
+		if err := validResponse.VisitListTokensResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateToken operation middleware
+func (sh *strictHandler) CreateToken(w http.ResponseWriter, r *http.Request) {
+	var request CreateTokenRequestObject
+
+	var body CreateTokenJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateToken(ctx, request.(CreateTokenRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateToken")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateTokenResponseObject); ok {
+		if err := validResponse.VisitCreateTokenResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteToken operation middleware
+func (sh *strictHandler) DeleteToken(w http.ResponseWriter, r *http.Request, id int64) {
+	var request DeleteTokenRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteToken(ctx, request.(DeleteTokenRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteToken")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteTokenResponseObject); ok {
+		if err := validResponse.VisitDeleteTokenResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StartTotpSetup operation middleware
+func (sh *strictHandler) StartTotpSetup(w http.ResponseWriter, r *http.Request) {
+	var request StartTotpSetupRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StartTotpSetup(ctx, request.(StartTotpSetupRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StartTotpSetup")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StartTotpSetupResponseObject); ok {
+		if err := validResponse.VisitStartTotpSetupResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DisableTotp operation middleware
+func (sh *strictHandler) DisableTotp(w http.ResponseWriter, r *http.Request) {
+	var request DisableTotpRequestObject
+
+	var body DisableTotpJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DisableTotp(ctx, request.(DisableTotpRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DisableTotp")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DisableTotpResponseObject); ok {
+		if err := validResponse.VisitDisableTotpResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// EnableTotp operation middleware
+func (sh *strictHandler) EnableTotp(w http.ResponseWriter, r *http.Request) {
+	var request EnableTotpRequestObject
+
+	var body EnableTotpJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.EnableTotp(ctx, request.(EnableTotpRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "EnableTotp")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(EnableTotpResponseObject); ok {
+		if err := validResponse.VisitEnableTotpResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAuditLog operation middleware
+func (sh *strictHandler) ListAuditLog(w http.ResponseWriter, r *http.Request, params ListAuditLogParams) {
+	var request ListAuditLogRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAuditLog(ctx, request.(ListAuditLogRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAuditLog")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListAuditLogResponseObject); ok {
+		if err := validResponse.VisitListAuditLogResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateOrg operation middleware
+func (sh *strictHandler) UpdateOrg(w http.ResponseWriter, r *http.Request) {
+	var request UpdateOrgRequestObject
+
+	var body UpdateOrgJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateOrg(ctx, request.(UpdateOrgRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateOrg")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateOrgResponseObject); ok {
+		if err := validResponse.VisitUpdateOrgResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteOrgLogo operation middleware
+func (sh *strictHandler) DeleteOrgLogo(w http.ResponseWriter, r *http.Request) {
+	var request DeleteOrgLogoRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteOrgLogo(ctx, request.(DeleteOrgLogoRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteOrgLogo")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteOrgLogoResponseObject); ok {
+		if err := validResponse.VisitDeleteOrgLogoResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UploadOrgLogo operation middleware
+func (sh *strictHandler) UploadOrgLogo(w http.ResponseWriter, r *http.Request) {
+	var request UploadOrgLogoRequestObject
+
+	request.Body = r.Body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UploadOrgLogo(ctx, request.(UploadOrgLogoRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UploadOrgLogo")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UploadOrgLogoResponseObject); ok {
+		if err := validResponse.VisitUploadOrgLogoResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminListUsers operation middleware
+func (sh *strictHandler) AdminListUsers(w http.ResponseWriter, r *http.Request) {
+	var request AdminListUsersRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminListUsers(ctx, request.(AdminListUsersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminListUsers")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(AdminListUsersResponseObject); ok {
+		if err := validResponse.VisitAdminListUsersResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminCreateUser operation middleware
+func (sh *strictHandler) AdminCreateUser(w http.ResponseWriter, r *http.Request) {
+	var request AdminCreateUserRequestObject
+
+	var body AdminCreateUserJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminCreateUser(ctx, request.(AdminCreateUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminCreateUser")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(AdminCreateUserResponseObject); ok {
+		if err := validResponse.VisitAdminCreateUserResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminGetUser operation middleware
+func (sh *strictHandler) AdminGetUser(w http.ResponseWriter, r *http.Request, username string) {
+	var request AdminGetUserRequestObject
+
+	request.Username = username
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminGetUser(ctx, request.(AdminGetUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminGetUser")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(AdminGetUserResponseObject); ok {
+		if err := validResponse.VisitAdminGetUserResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminUpdateUser operation middleware
+func (sh *strictHandler) AdminUpdateUser(w http.ResponseWriter, r *http.Request, username string) {
+	var request AdminUpdateUserRequestObject
+
+	request.Username = username
+
+	var body AdminUpdateUserJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminUpdateUser(ctx, request.(AdminUpdateUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminUpdateUser")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(AdminUpdateUserResponseObject); ok {
+		if err := validResponse.VisitAdminUpdateUserResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminResetPassword operation middleware
+func (sh *strictHandler) AdminResetPassword(w http.ResponseWriter, r *http.Request, username string) {
+	var request AdminResetPasswordRequestObject
+
+	request.Username = username
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminResetPassword(ctx, request.(AdminResetPasswordRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminResetPassword")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(AdminResetPasswordResponseObject); ok {
+		if err := validResponse.VisitAdminResetPasswordResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// AdminResetTotp operation middleware
+func (sh *strictHandler) AdminResetTotp(w http.ResponseWriter, r *http.Request, username string) {
+	var request AdminResetTotpRequestObject
+
+	request.Username = username
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.AdminResetTotp(ctx, request.(AdminResetTotpRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AdminResetTotp")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(AdminResetTotpResponseObject); ok {
+		if err := validResponse.VisitAdminResetTotpResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// Login operation middleware
+func (sh *strictHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var request LoginRequestObject
+
+	var body LoginJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.Login(ctx, request.(LoginRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "Login")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(LoginResponseObject); ok {
+		if err := validResponse.VisitLoginResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// Logout operation middleware
+func (sh *strictHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	var request LogoutRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.Logout(ctx, request.(LogoutRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "Logout")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(LogoutResponseObject); ok {
+		if err := validResponse.VisitLogoutResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetSession operation middleware
+func (sh *strictHandler) GetSession(w http.ResponseWriter, r *http.Request) {
+	var request GetSessionRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetSession(ctx, request.(GetSessionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetSession")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetSessionResponseObject); ok {
+		if err := validResponse.VisitGetSessionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetMeta operation middleware
 func (sh *strictHandler) GetMeta(w http.ResponseWriter, r *http.Request) {
 	var request GetMetaRequestObject
@@ -596,25 +7806,189 @@ func (sh *strictHandler) GetMeta(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetOrg operation middleware
+func (sh *strictHandler) GetOrg(w http.ResponseWriter, r *http.Request) {
+	var request GetOrgRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOrg(ctx, request.(GetOrgRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOrg")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOrgResponseObject); ok {
+		if err := validResponse.VisitGetOrgResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOrgLogo operation middleware
+func (sh *strictHandler) GetOrgLogo(w http.ResponseWriter, r *http.Request) {
+	var request GetOrgLogoRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOrgLogo(ctx, request.(GetOrgLogoRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOrgLogo")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOrgLogoResponseObject); ok {
+		if err := validResponse.VisitGetOrgLogoResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CompleteSetup operation middleware
+func (sh *strictHandler) CompleteSetup(w http.ResponseWriter, r *http.Request) {
+	var request CompleteSetupRequestObject
+
+	var body CompleteSetupJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CompleteSetup(ctx, request.(CompleteSetupRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CompleteSetup")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CompleteSetupResponseObject); ok {
+		if err := validResponse.VisitCompleteSetupResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListUsers operation middleware
+func (sh *strictHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	var request ListUsersRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListUsers(ctx, request.(ListUsersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListUsers")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListUsersResponseObject); ok {
+		if err := validResponse.VisitListUsersResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // Base64 encoded, compressed with deflate, json marshaled OpenAPI spec.
 // Stored as a slice of fixed-width chunks rather than one concatenated
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"rFVBj+M2D/0rhL7v0AIeJ9u9uadisWgHaLGDzvS0Dsa0RdtayJIq0ZkGgf97ISmTZCYueukpMkU+Pj6S",
-	"ylF0dnLWkOEgqqPwFJw1gdLHZ++tj4fOGibD8YjOadUhK2s234I10Ra6kSaMp/976kUl/re5oG7ybdhk",
-	"tGVZCiEpdF65CCKqnAZeM4vocIp5Q8J568izytxo3dxZSfH3bYZHxlYTTNiNytCdJ5TJkEAgxhRA5VBC",
-	"Yyw/93Y2simg6a1vlZRk4scetZKp7ucelSbZlKIQ9BdOTpOoxDlSFIIPLpoCe2UGkQpmVDoxRClVREH9",
-	"cMWc/Uzvdfnish8E9nPHsycJJyD4LtF15O96RVrChV0uKnxfXnjY9ht1HHlMFAIOKwr9Mk9o4CzMya+8",
-	"rWUphKc/Z+VJiupr1vuCu7vJ+c4/t223Qu03Ylzr5zSpNHg3mlo/PBucVor54geQKjiNB4gePwJNjg/Q",
-	"Um89QSCeXbnWpnTzfOH7HvjJzwSzYaWBR4Je+cCAclIG0EiwfoAR9wQtkYHOml4NsWtXuVprNaGJyfbk",
-	"g8oLdJmiD+W23P6r6q+hxas+N9Sv5FnpyVIIZXp7W+Dvnx+f4KeHe+itBx5cAQiBdH832sAkYVAMTiP3",
-	"1k/JByEoM2gCJpzK2jyNBC/Uwh/3SZGoUsODa+DTr/eAnqC1PEI7K81gDfCoQsxX1qY2adMDoH7BQ4A5",
-	"UA5P5gbyk1BBc6zzFNWigmOdJjAea1GWZS0KqF+n8cq6LE1ZR71YcdKZBxfziqs2nLSPk+XIoFOiEh/L",
-	"bflRFMIhj2keN9NpTAfiW/ke5larDshIZ5XhEj5pRYZzMYqBbVxg6hgwqguB/J58UuplJB7J55m6C4ye",
-	"86CCCuDISGWGOEdxOdKe30tRiZ+J094Ubx/uH7bb/+zZTvgrr/Zj5h71kBhdokOPs+Z/QjxTPP8VFCJQ",
-	"N3vFB1F93RUizNOE/nBBPzUnKZTVCIxMsZE4hLgKqR+7JWPFmGg9itlrUYkNOrXZfxDL7hxwXC8jroOf",
-	"kj6iEPlZydjLbvl7AA==",
+	"3Fx7c9s4kv8qXdyr2iRFS3nMTNUpfyWejNe3ubHPdmquKk6JENmisCEBDgBa0aX83a8aAClShCQ7sr17",
+	"98+MRYJ49Lt/3cj3KJVlJQUKo6PJ90ihrqTQaH98UEoq+iOVwqAw9CerqoKnzHApxv/QUtAznS6wZPTX",
+	"vymcR5PoL+P1rGP3Vo/dbLe3t3GUoU4Vr2iSaOKWgWbliAb4b2jKd2mKWl/Jr2jXqpSsUBnudpgqZAaz",
+	"KbN7m0tV0l9RxgweGV5iFEdmVWE0ibRRXOTRbRzht4or1Lu+EXVRsFmB0cSoGgNz8Kz3LRfml5/Wa3Fh",
+	"MEdFAwumzbTWmB20nGAl0teDF5XCOf9Gr/ok/Y0rbSBdMMVSg0qDnINZIBgiYwxGgsJU5oJrBG5GITLp",
+	"VFaOyNxgqfdx1zLokr6JbtvZmFJsZRmq8M+aK8yiyWcinj9Se4B2ubjL0i/tRHL2D0wNzfyuzrj5IIxa",
+	"DaWBpe743yP8xsqKCBrVGtXIzRk6JUuNVEP6fdKoaIdEt+VC4g0qyHgG3LwFLCuzgrlUwIQUq1LWGtzK",
+	"GnSdLoBpmDNeYAaFzLnQQfL+iORmaBgv3FGzjNOSrDjvkKAnPmua3VlaeRWUMsNUjmbHq6l7vkn34RlC",
+	"kuBYEDfc68/Z/Irs5tYkuJucnLMch2KCwih+D9HuiNxAtONI4DczneFcKhzK0TnTmuQhcQMS0rwcjdVF",
+	"+hAqluNbYDONwoAU9gXZDPuCBGfAtS3GouXiBombw4ZodLxgIkfa41Kq7AL/rFGbgJGtlUJhppUfGBQE",
+	"gcvegD4d3hkokI716mXHKo32Cshg6Y2FgqeygmHt0dYjNT6Ai2nGVnq44bOSG6fjzmaCWTADwhoC/zHt",
+	"vmTfeFmX0eTNLz+/jKOSC/fzVUi7Giu+VpKCVUZWcPzx9MEtcMnFqfvq1R5z7C2xX207RckmbiUoK4qp",
+	"wkp6Us5ZXZhoMmeFxk13f8JvEJj16qQORNIV2G+5kWoFz3gupMLMkT8rudAxGWFgxZKtNCzYDTmt5x3p",
+	"mUlZIBPWRnJdFWw13eoysWS8CL5RssB9RL6gMbexNW/NEv3jfZRLVCnTCAUakvIYMp5zo2NIjpIYkmkC",
+	"TGSQjJK38Orozb93FCIGbZgyXOSw5GYBzM8BUrlJ9mtMuzF/nu38zLbEVI41U9O83WkaO8EZ2cbmmz5J",
+	"rhYIGlOFZgSXC7kUIEWxAilS3H8gN2fc31boVG20uqHq4cepzALMuzRkWqFk6YILPFLIMvvATgL0DW14",
+	"rcBCmulc1iI7wF1vGJ7KjQNtVJ2amhTBTwTPcJSPoEJ1NOdYZHDDCp7ZUNxtUHd1Yk2YErX2jrC/1t/q",
+	"kgloD+nH3cEqE+3W8w6ZsTHesSDEs48UIG01KjsdjsJUkumYNpwcjDDSVNvfbtfgdfCnwFqLe2ndTt/0",
+	"n2hYSBbLkofjqwXT00LmsvOyY+ykyqfhM5ypHLwpBBrRhK0uDgGNpq7CYT+9ma7PNtBlVSPUwvDCxipz",
+	"m2hYK22tmlS5M9AzRAGpFHOekwyHjfUNKj2I2F+NXo5e7qV482ncUG+w9Q55OnQMceVM5UOmzJjGaa2K",
+	"QFBXzwqewqeLjy6t4ho0qhtUMVCmB1xAWkiBNEJbqixxtpDyazgT6E1+bxHY4ufCPr67VLw+4R7yNAHi",
+	"MXFTlffS04197FSOC6/RxzJDPVwlbR5vmGwu8gKPao3WPmsbNhQyz8mLcmEdqaxdyM1qs0BhCL+QKuiL",
+	"2khraE12xVBub8FD+aCiv+nEakwycdGPWXCRx8BFWtQZbdvu1epUxQQWVoZsvkMv21CJox5di6RkXBjG",
+	"BapkYo35eKm4QcomcsWEwWzwiUFt2uExcK1r1DGQJqGgSEXhDcelE97jU1B4pGqhd0wZxREKinw/R3bj",
+	"NjZu9hXFkVuxQ6E1YS9RN0ZgIxCpzWJaollIK1nN/NqPb8KN0Jxlrc00telNKG3p6I+dY7oOtTdUXaHN",
+	"zJYLFF3pwawJ0Oz395Ec53n2BVbkg4JeJop7dNly1JAkXpJ53B7AW64NHh8QTu/03l3v+zCuVe4z4vc2",
+	"vPcwraENOXe0JSQ+Ew7m8dllpbjVKu4QAJNXR86lkCUjtXN+1mYHQSdCVAqlsU00id+MYmBHvQVk6YJg",
+	"CE3yi2UlFVMraKjbE+ZdMjpMC/eZyS5J4tZQEOd2CKyHhbdL7H496tDnTiejr/7gZnGFZdV4v72Ha47j",
+	"lgodqJOhd+wZ2eAojqzRbqkSMmpX0lSWJkNaSFNZqxCMVxL/djIeJzZqsfCvyFARNMXgvy7azCYQDqYK",
+	"zXDO90zjm9c+q7Mut2SiJkETRq32B8x+3ri38xDNPlUZM3im8q2W65F0fMtO7o6CBLEJSrQCUfWv/o3T",
+	"UEiZ+Kuxqu/DarNArsB7PueWrRZp0EZWsJTqKxf5PxERCRLM+7mdSFEPJdwKCo3gD/LADk9qwCOuoeAl",
+	"J7tJn3yjwhQ3xSoco8A7Bx9R0t2BlsI0+yF0vsPdB+XC/YpNtuZwULXp7sHTfRAzcjTtdNOHKMLZ/B7F",
+	"DqLfPcqwlYhOqNFjV8Mcf+C4I8NbqLWxuY5w7C1ckNZc1mXJQhWuvVJ0Z1n5UbDzIDJuRSSDDndw+p4I",
+	"BTLBjXQOCHekzQDxCByPgBtgxsdTVleCfu/e0hqMyA6J8vuH3bGjIPymMa0VN6tLWsn7SWQKVQv62j1Y",
+	"fbHP10dYGFM512+9zbGUX7llPScip+5n4zkjk1fTTkbmpmAV/zuuXK2fi7kc8uriw+UVvDs/tZbY5FUM",
+	"DDQW86OF1GS6c26gKpghWvs6jLaJPhhk5ehaEG+XOINPp42DhMTkVULFFGAKYSbNAmY1L3xdjWtab3Qt",
+	"rsVf/gLv1rkcl+JaHMGLF++VXJK0NG72xQuSnnbq5pgJOBqARgOzFSTnZ5dXMKYoZmwFKhldC4BPQrM5",
+	"gnKxgoZnNGx8/ulqfP7u6vhv418/fPxw9eE5lCxDl0zSQn5qK7CYLiQ9pNnsBlKt5u3qN6yosUkYkv8+",
+	"Or68+O3IcjeBBbIM1cgd6xyVtjlAW3OhwOHFC8glfZ4QKaTi/2MpMYH3VhyIJ9OKmeloNErgmVR2ExtD",
+	"7UxAI56P4HcJtAW/NjlngZhhNgK7KXAp9sTOQyFvAs9OPly19HkeQ2JD4ASerUERwEIjvXJ4CTyz/wcU",
+	"WSW5MPotTWd6as4KLWGGwITz8M8bltv6gL4W7v9NNanlsH2cgFPNCSTfrx1ufR1N4Pu1RXjoz+toNBpd",
+	"RzFcN/h35+ntLfHe4ldWBrUtJ0wgmbFs6k9KJaA1cD91nQL0sBY9gIEezaWa8SxDkcTXImmLDfSKoNWC",
+	"p3Y6xQxOfShEv/tAKD1p7YZ3VOt3hAaRq+qOJjehBCumlgCJg3cMN4VXeFKkqIPeesiWkvAKBat4NIne",
+	"jF6O3tic3Sys+RmzNJW1MOOuAa+kDiQXv1l9tyxtUJZBlkok2CgOJyR0Nn0e5rRwyXOhgYDAlawVSLPo",
+	"aDq5AHI0liWnWTTZKI1HzkKjNu9ltnqwjqhw/f227xAo+LEPOo1Zr1++fLBNeB806MpqtuX9ZuayKV/Y",
+	"DU/Z7rHt9Yoj3YQynqSO/F2/xnJt02cnHtEX+qoVlqbKc9Siv43I9Pl1gTkKeoB9FPlxGLeJiD8xy/pH",
+	"DPDud1xCQzmHir8FWWQgBfYzxoOZeoFVwVLP1de/vdtYdi9/nTOitXMMsPUj1+bKDTmQnnfr9NkoZ/fh",
+	"ngGZ3c7gmQMznMl3LSIKTa0EZsByxsXzg8lMdPCaE/TmQTrHW3Sl0yDzWIZt2IJzJxV59cA78C0O21gH",
+	"PhV7C4lxgRPXoPtZxOFmz64BLMy5OyrI+DvPbp2jLNDgkKe/2ucNTyumWInGQp6ffeBOjngdtvMs2mRH",
+	"3CHt3gTy9suAeT8Fony8kV8fwHW4eQ6goam2Rxsn3nEQFCpwCVdnV+dtu8qpAa4JjGOp4TdN5Tt1dr+p",
+	"AiUuzyd8NhmGEpeGKbPGbh/RL6wXCflzFLa22DnewXx5jzkX1uxrf7b9jBh7KGS7L/dgKJ3mX8l/B+Sb",
+	"Tt4iO4cS86pWAuR8TvS8GyWd2G0n5AfxAHQMt0112jVev/np51/u1jMUgCr+tQInYqgH7d5uhDIuoVs7",
+	"ByGXh/sGJ39rDWryHd9htUUGKK0dM+pKPipkvjN4sr3LH2W+xSn8WaNarb1CwX0nTUvN9ng/v+x0u75+",
+	"uafZ9TYeugKKiMC3I7tzcuqQX6Ki5loP0TxLa6WlgrmSJSSd3urE9raFNu3eR/dzX/HwxkRhUBGeY/vR",
+	"oQExt63adK2vFx3I/84luBTgLj/EYNv6EntTIQGpICEgYOSxpO3rO8ht+wa+PKImrdvrA1pkXzasPlhJ",
+	"Lj2UCVbiCbONyU+j9ihuV09c7bSjJU1XADPpYqghbXHxkfzMoHj5xPaOThbgj9uWbdY7mDtuLpqKLJjh",
+	"Itf7GDJuutl2B7NnKv9IA+8WaJby5kECTZrHgkh0osKtv3maOKrqQCB5wZZw/vtJDP9x/uEkhpPT30iZ",
+	"/8DZOcxWBnVMhYdSagM/v3oNf+fvh7Hip6qQLOue/C5CKVOD5kgbhazsC0drCGdcMGs+No3E/z95JAru",
+	"4+BaHtvGkKALfUdjyI9+ssOeAoNoOlb2gQ9uRw8CLLCi8I0HLvygQ8P6plVA/KXeRqx1U9CjYgu9rqOn",
+	"hRbCzUFhBnURhm797nGRht3I+X51GH9vop/b3Zpxgqbl9BPD042aHESxEzSeXGEx3wujdG/bbAVTAnHZ",
+	"lnjEEnXdZ/SoUcm9NegJeOr9QP0QvHWTefb+VUOl5JwXGIOS9r9YyQZFkqrN4kEbf1P4zipC+0Bz1Ctr",
+	"PZ7gBCEsV9xq66BU5bI11OUCleuDWLniqEbjUa5mu2CvNX7r9EIERPKCTtgrhj2iZNzFtlKBI1QTfGiT",
+	"eqp1jZ5iB1pSLyYtFvnoIrKNjy0e9H9Zu1uwrNVvwlDcBblCagMZ3vAUn29jUdussR0XvkTjdMpXiX3j",
+	"xQhO52tVWzANHdDI9qII5GaBqqmspzLDBATl9b07azYGyPkNitj+ewE++toox7+9FiQ4IutCQ+0eGiLZ",
+	"fSShVrSJbXikOr/ViiRH4y9cUKWfwuPa+Aupaa8cndgaYeeqVzPjteC6KQq71oAN2MmS9XFcV+++4BN7",
+	"LU+2kGh/lHluu/d/VK49xBFNPn/pReeyvcLUAlKWVyELVJvFhnTL2nTFe8Amen+X7Nofj4YfqrcffK+W",
+	"792ATuvYlnPo9fWgYCB60gp09M9h/vHGUQ42bR3yWBtDDF/IJdFt1b+EFCZb6S+Z5mi2XV4cwXHBaS+0",
+	"AnADRlLChymFB9Th42+f2MuLC7TNMhZsO7JXUDxYzTVUrqo0jBtO0NjLro/IEzt/gCGXbu9EhozRkAfV",
+	"ST+7b36yFHLU2IwcLRscRzwKuU1+GwDyaVGXswdAW87CsJ+90dOcvIX7dhw/DPRtkoCXLMfxix+AuAb2",
+	"TD6wVJx5rAnsHoOk0O3VnWC44bJ3vXmrOl5fotYtqkVCJ/3VrmLlQQYNpVR4LWzgGVtQhwuQAsEoJrQr",
+	"GIzgwjlMP1lzDc2JcO8y2rXwzaXrm2gjOKMgggIDDcsFL3BoCeBMgK59eZ6aV1NWFK4htGjcJDC3PIXV",
+	"9pShOOJYUoXR4Lps/vDxRO9O5JPHE93rbUE7RqRNPRkeWGAb6g7Nekd43W8nvptA6eA+GE+Ber2Bzdr8",
+	"s+2a0Kh8mYt6uSuefnU3memWsf+HgIa1y6fFXJs7F08LvRpkJZRYztxRG8L7O4S3Gxz8vtmU//kLlRl7",
+	"nf2fv1AS6HTW5Zb2blw0ZhUf37yKbr+0y3xvUk3rqm7j9rfje+eBjS66v31BuvOo9kRpHzg0f/2JTb9u",
+	"v9z+7wA=",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

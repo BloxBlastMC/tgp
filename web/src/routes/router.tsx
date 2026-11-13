@@ -1,27 +1,35 @@
-import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { Sidebar } from '../components/Sidebar'
+import { type QueryClient, useQuery } from '@tanstack/react-query'
+import { createRootRouteWithContext, createRoute, createRouter, Outlet, redirect } from '@tanstack/react-router'
+import { useState } from 'react'
+import { metaQuery, sessionQuery } from '../api/queries'
+import { CommandPalette } from '../components/CommandPalette'
 import { EmptyState, Page } from '../components/Page'
-import { metaQuery } from '../api/queries'
+import { Sidebar } from '../components/Sidebar'
+import { useCommands } from '../lib/commands'
+import { useTheme } from '../lib/theme'
+import { AdminAuditPage } from '../pages/admin/AdminAuditPage'
+import { AdminLayout } from '../pages/admin/AdminLayout'
+import { AdminOrgPage } from '../pages/admin/AdminOrgPage'
+import { AdminUsersPage } from '../pages/admin/AdminUsersPage'
+import { ChangePasswordPage } from '../pages/ChangePasswordPage'
+import { LoginPage } from '../pages/LoginPage'
+import { SettingsPage } from '../pages/settings/SettingsPage'
+import { SetupPage } from '../pages/SetupPage'
 
-function RootLayout() {
-  const meta = useQuery(metaQuery)
+type RouterContext = { queryClient: QueryClient }
+
+function AppLayout() {
+  const session = useQuery(sessionQuery)
+  const [theme, toggleTheme] = useTheme()
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const commands = useCommands(session.data, toggleTheme)
   return (
     <div className="flex h-full">
-      <Sidebar />
-      <main className="flex min-w-0 flex-1 flex-col">
-        {meta.data?.setup_required && (
-          <div className="border-b border-border bg-accent-subtle px-4 py-1.5 text-[12px]">
-            This server hasn't been set up yet. First-start setup arrives in the next milestone.
-          </div>
-        )}
-        {meta.isError && (
-          <div className="border-b border-border bg-danger/15 px-4 py-1.5 text-[12px] text-danger">
-            Can't reach the tgp API: {meta.error.message}
-          </div>
-        )}
+      <Sidebar theme={theme} toggleTheme={toggleTheme} openPalette={() => setPaletteOpen(true)} />
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <Outlet />
       </main>
+      <CommandPalette commands={commands} open={paletteOpen} setOpen={setPaletteOpen} />
     </div>
   )
 }
@@ -36,8 +44,8 @@ function placeholder(title: string, body: string) {
   }
 }
 
-const rootRoute = createRootRoute({
-  component: RootLayout,
+const rootRoute = createRootRouteWithContext<RouterContext>()({
+  component: Outlet,
   notFoundComponent: () => (
     <Page title="Not found">
       <EmptyState title="Page not found">That page doesn't exist.</EmptyState>
@@ -45,21 +53,101 @@ const rootRoute = createRootRoute({
   ),
 })
 
-const routes = [
-  createRoute({ getParentRoute: () => rootRoute, path: '/', component: placeholder('Repositories', 'Admins create repositories for the team.') }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/pulls', component: placeholder('Pull requests', 'Pull requests across all repositories you can access.') }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/issues', component: placeholder('Issues', 'Issues across all repositories you can access.') }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/ci', component: placeholder('CI', 'Workflow runs across all repositories.') }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/admin', component: placeholder('Admin', 'Users, runners, CI limits and server settings.') }),
-]
-
-export const router = createRouter({
-  routeTree: rootRoute.addChildren(routes),
-  defaultPreload: 'intent',
+const setupRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/setup',
+  beforeLoad: async ({ context }) => {
+    const meta = await context.queryClient.ensureQueryData(metaQuery)
+    if (!meta.setup_required) throw redirect({ to: '/' })
+  },
+  component: SetupPage,
 })
+
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  validateSearch: (s: Record<string, unknown>): { next?: string } => (typeof s.next === 'string' ? { next: s.next } : {}),
+  beforeLoad: async ({ context }) => {
+    const meta = await context.queryClient.ensureQueryData(metaQuery)
+    if (meta.setup_required) throw redirect({ to: '/setup' })
+    const session = await context.queryClient.ensureQueryData(sessionQuery)
+    if (session) throw redirect({ to: session.must_change_password ? '/change-password' : '/' })
+  },
+  component: LoginPage,
+})
+
+const changePasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/change-password',
+  beforeLoad: async ({ context }) => {
+    const session = await context.queryClient.ensureQueryData(sessionQuery)
+    if (!session) throw redirect({ to: '/login' })
+  },
+  component: ChangePasswordPage,
+})
+
+/** Everything inside the app shell requires a fully set-up, logged-in user. */
+const appRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'app',
+  beforeLoad: async ({ context, location }) => {
+    const meta = await context.queryClient.ensureQueryData(metaQuery)
+    if (meta.setup_required) throw redirect({ to: '/setup' })
+    const session = await context.queryClient.ensureQueryData(sessionQuery)
+    if (!session) throw redirect({ to: '/login', search: location.href === '/' ? {} : { next: location.href } })
+    if (session.must_change_password) throw redirect({ to: '/change-password' })
+    return { session }
+  },
+  component: AppLayout,
+})
+
+const adminRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/admin',
+  beforeLoad: ({ context }) => {
+    if (context.session.user.role !== 'admin') throw redirect({ to: '/' })
+  },
+  component: AdminLayout,
+})
+
+const adminIndexRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/',
+  beforeLoad: () => {
+    throw redirect({ to: '/admin/users' })
+  },
+})
+
+const routeTree = rootRoute.addChildren([
+  setupRoute,
+  loginRoute,
+  changePasswordRoute,
+  appRoute.addChildren([
+    createRoute({ getParentRoute: () => appRoute, path: '/', component: placeholder('Repositories', 'Repositories arrive in the next milestone.') }),
+    createRoute({ getParentRoute: () => appRoute, path: '/pulls', component: placeholder('Pull requests', 'Pull requests across all repositories you can access.') }),
+    createRoute({ getParentRoute: () => appRoute, path: '/issues', component: placeholder('Issues', 'Issues across all repositories you can access.') }),
+    createRoute({ getParentRoute: () => appRoute, path: '/ci', component: placeholder('CI', 'Workflow runs across all repositories.') }),
+    createRoute({ getParentRoute: () => appRoute, path: '/settings', component: SettingsPage }),
+    adminRoute.addChildren([
+      adminIndexRoute,
+      createRoute({ getParentRoute: () => adminRoute, path: '/users', component: AdminUsersPage }),
+      createRoute({ getParentRoute: () => adminRoute, path: '/org', component: AdminOrgPage }),
+      createRoute({ getParentRoute: () => adminRoute, path: '/audit', component: AdminAuditPage }),
+    ]),
+  ]),
+])
+
+export function makeRouter(queryClient: QueryClient) {
+  return createRouter({
+    routeTree,
+    context: { queryClient },
+    defaultPreload: 'intent',
+    defaultPreloadStaleTime: 0,
+  })
+}
 
 declare module '@tanstack/react-router' {
   interface Register {
-    router: typeof router
+    router: ReturnType<typeof makeRouter>
   }
 }

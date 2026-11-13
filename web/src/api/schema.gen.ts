@@ -13,9 +13,404 @@ export interface paths {
         };
         /**
          * Server version and setup state
-         * @description Public endpoint. Clients use it to detect a tgp server and whether first-start setup is pending.
+         * @description Public. Clients use it to detect a tgp server and whether first-start setup is pending.
          */
         get: operations["getMeta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete first-start setup
+         * @description Creates the first admin, configures the org and optionally creates more
+         *     users, all in one transaction. Requires the one-time setup token printed
+         *     in the server log. Only works while setup is pending. On success the
+         *     caller is logged in as the new admin.
+         */
+        post: operations["completeSetup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Log in with username and password
+         * @description Sets the session cookie. If the user has 2FA enabled and neither
+         *     `totp_code` nor `recovery_code` is given, fails with `totp_required`;
+         *     resend with a code. If the response has `must_change_password: true`,
+         *     only `getSession`, `logout` and `changePassword` work until the password
+         *     is changed.
+         */
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End the current session */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The current user and how they authenticated */
+        get: operations["getSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change your password
+         * @description For a user with a temporary password, `current_password` is the temporary password. Signs out your other sessions.
+         */
+        post: operations["changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Begin 2FA setup
+         * @description Generates a new TOTP secret. It isn't active until confirmed with `enableTotp`.
+         */
+        post: operations["startTotpSetup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/totp/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm 2FA setup with a code */
+        post: operations["enableTotp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/totp/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn off 2FA */
+        post: operations["disableTotp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/recovery-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replace your 2FA recovery codes */
+        post: operations["regenerateRecoveryCodes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List your personal access tokens */
+        get: operations["listTokens"];
+        put?: never;
+        /** Create a personal access token */
+        post: operations["createToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account/tokens/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke a personal access token */
+        delete: operations["deleteToken"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List team members
+         * @description Basic info about every active user, e.g. for picking reviewers.
+         */
+        get: operations["listUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/org": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Org settings */
+        get: operations["getOrg"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/org/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Org logo image */
+        get: operations["getOrgLogo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/org": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update org settings */
+        patch: operations["updateOrg"];
+        trace?: never;
+    };
+    "/admin/org/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Upload the org logo
+         * @description Raw PNG, JPEG, GIF or WebP bytes, at most 512 KiB.
+         */
+        put: operations["uploadOrgLogo"];
+        post?: never;
+        /** Remove the org logo */
+        delete: operations["deleteOrgLogo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all users with admin details */
+        get: operations["adminListUsers"];
+        put?: never;
+        /** Create a user with a temporary password */
+        post: operations["adminCreateUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        /** Get a user */
+        get: operations["adminGetUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update a user's profile, role, repo access or disabled state */
+        patch: operations["adminUpdateUser"];
+        trace?: never;
+    };
+    "/admin/users/{username}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Issue a new temporary password
+         * @description Signs the user out everywhere. They must set a new password at next login.
+         */
+        post: operations["adminResetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{username}/reset-totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn off a user's 2FA (e.g. lost device) */
+        post: operations["adminResetTotp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Security audit log, newest first */
+        get: operations["listAuditLog"];
         put?: never;
         post?: never;
         delete?: never;
@@ -31,7 +426,7 @@ export interface components {
         Error: {
             error: {
                 /**
-                 * @description Stable machine-readable error code, e.g. `not_found`, `forbidden`, `validation_failed`.
+                 * @description Stable machine-readable error code.
                  * @example not_found
                  */
                 code: string;
@@ -51,6 +446,186 @@ export interface components {
             setup_required: boolean;
             /** @description Org display name; empty before setup. */
             org_name: string;
+            has_logo: boolean;
+        };
+        /**
+         * @description `admin`: everything, including the admin panel and creating repositories.
+         *     `maintainer`: read/write on granted repositories.
+         *     `tester`: read, issues, comments, reviews and CI re-runs on granted repositories.
+         * @enum {string}
+         */
+        Role: "admin" | "maintainer" | "tester";
+        UserSummary: {
+            /** Format: int64 */
+            id: number;
+            username: string;
+            display_name: string;
+            role: components["schemas"]["Role"];
+        };
+        User: {
+            /** Format: int64 */
+            id: number;
+            username: string;
+            display_name: string;
+            email: string;
+            role: components["schemas"]["Role"];
+            /** @description Access to every repository. When false, access is limited to explicitly granted repositories. Always true for admins. */
+            all_repos: boolean;
+            must_change_password: boolean;
+            /** Format: date-time */
+            temp_password_expires_at?: string | null;
+            totp_enabled: boolean;
+            disabled: boolean;
+            /** Format: date-time */
+            last_login_at?: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        UserWithTempPassword: {
+            user: components["schemas"]["User"];
+            /** @description Shown only once. The user must change it at first login. */
+            temp_password: string;
+            /** Format: date-time */
+            temp_password_expires_at: string;
+        };
+        CreateUserRequest: {
+            /** @description Lowercase letters, digits, `-`, `_` and `.`; 1-39 characters, starting with a letter or digit. */
+            username: string;
+            display_name?: string;
+            email?: string;
+            role: components["schemas"]["Role"];
+            /**
+             * @description Give access to every repository (ignored for admins, who always have it).
+             * @default false
+             */
+            all_repos: boolean;
+        };
+        UpdateUserRequest: {
+            display_name?: string;
+            email?: string;
+            role?: components["schemas"]["Role"];
+            all_repos?: boolean;
+            /** @description Disabled users can't log in and their sessions and tokens stop working. */
+            disabled?: boolean;
+        };
+        Session: {
+            user: components["schemas"]["User"];
+            /** @enum {string} */
+            auth_method: "session" | "token";
+            must_change_password: boolean;
+            /** @description Present when authenticated with a token. */
+            token_scopes?: string[];
+        };
+        LoginRequest: {
+            /** @description Username or email. */
+            username: string;
+            password: string;
+            totp_code?: string;
+            recovery_code?: string;
+        };
+        ChangePasswordRequest: {
+            current_password: string;
+            /** @description At least 10 characters. */
+            new_password: string;
+        };
+        PasswordConfirm: {
+            password: string;
+        };
+        TotpSetup: {
+            /** @description Base32 secret for manual entry. */
+            secret: string;
+            /** @description `otpauth://` URL to render as a QR code. */
+            otpauth_url: string;
+        };
+        RecoveryCodes: {
+            /** @description Single-use codes for logging in without the authenticator. Shown only once. */
+            codes: string[];
+        };
+        /** @enum {string} */
+        TokenScope: "read" | "write" | "admin";
+        AccessToken: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @description First characters of the token, to recognise it. */
+            prefix: string;
+            scopes: components["schemas"]["TokenScope"][];
+            /** Format: date-time */
+            last_used_at?: string | null;
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        CreateTokenRequest: {
+            /** @example laptop CLI */
+            name: string;
+            scopes: components["schemas"]["TokenScope"][];
+            /** @description Omit for a token that never expires. */
+            expires_in_days?: number;
+        };
+        CreatedToken: {
+            /** @description The secret. Shown only once. */
+            token: string;
+            access_token: components["schemas"]["AccessToken"];
+        };
+        Org: {
+            name: string;
+            description: string;
+            /** @description Public URL of this server, used in clone URLs and webhooks. */
+            base_url: string;
+            has_logo: boolean;
+        };
+        UpdateOrgRequest: {
+            name?: string;
+            description?: string;
+            base_url?: string;
+        };
+        SetupRequest: {
+            /** @description One-time token printed in the tgp-server log on first start. */
+            setup_token: string;
+            admin: {
+                username: string;
+                display_name?: string;
+                email?: string;
+                password: string;
+            };
+            org: {
+                name: string;
+                description?: string;
+                base_url?: string;
+            };
+            /** @description Optional extra users; each gets a temporary password. */
+            users?: components["schemas"]["CreateUserRequest"][];
+        };
+        SetupResponse: {
+            admin: components["schemas"]["User"];
+            users: components["schemas"]["UserWithTempPassword"][];
+        };
+        AuditEntry: {
+            /** Format: int64 */
+            id: number;
+            /** @description Username of whoever did it; empty for anonymous actions such as failed logins. */
+            actor: string;
+            /** @example user.create */
+            action: string;
+            /** @example user */
+            target_type: string;
+            target: string;
+            ip: string;
+            details: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            created_at: string;
+        };
+        AuditPage: {
+            entries: components["schemas"]["AuditEntry"][];
+            /**
+             * Format: int64
+             * @description Pass as `before` to get the next page; absent on the last page.
+             */
+            next_before?: number | null;
         };
     };
     responses: {
@@ -87,6 +662,588 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Meta"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    completeSetup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetupRequest"];
+            };
+        };
+        responses: {
+            /** @description Setup complete */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupResponse"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Logged in */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Logged out */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Password changed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    startTotpSetup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pending TOTP secret */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TotpSetup"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    enableTotp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example 123456 */
+                    code: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 2FA enabled; recovery codes are shown only now */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryCodes"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    disableTotp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordConfirm"];
+            };
+        };
+        responses: {
+            /** @description 2FA disabled */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    regenerateRecoveryCodes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordConfirm"];
+            };
+        };
+        responses: {
+            /** @description New recovery codes; old ones stop working */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryCodes"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listTokens: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tokens (secrets are never returned again) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessToken"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description Token created; `token` is shown only once */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedToken"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revoked */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Users */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserSummary"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOrg: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Org */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Org"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getOrgLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Logo */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateOrg: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOrgRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated org */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Org"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    uploadOrgLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description Updated org */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Org"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteOrgLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    adminListUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Users */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    adminCreateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description User created; `temp_password` is shown only once */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserWithTempPassword"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    adminGetUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description User */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    adminUpdateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    adminResetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description New temporary password, shown only once */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserWithTempPassword"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    adminResetTotp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Updated user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listAuditLog: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Return entries with id lower than this (cursor from `next_before`). */
+                before?: number;
+                /** @description Filter by actor username. */
+                actor?: string;
+                /** @description Filter by action prefix, e.g. `user.` or `auth.login`. */
+                action?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Audit entries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditPage"];
                 };
             };
             default: components["responses"]["Error"];
