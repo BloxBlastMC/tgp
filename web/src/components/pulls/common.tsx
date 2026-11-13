@@ -130,7 +130,8 @@ export function MarkdownEditor({
   )
 }
 
-/** Invalidates every query about one pull request plus PR lists. */
+/** Invalidates every query about one pull request or issue (they share
+ * numbers), plus PR/issue lists and label/milestone counts. */
 export function useInvalidatePull(repo: string, number: number) {
   const qc = useQueryClient()
   return () => {
@@ -138,6 +139,13 @@ export function useInvalidatePull(repo: string, number: number) {
     void qc.invalidateQueries({ queryKey: ['repo', repo, 'pulls'] })
     void qc.invalidateQueries({ queryKey: ['pulls'] })
     void qc.invalidateQueries({ queryKey: ['repo', repo, 'branches'] })
+    // Issues share numbers and comment endpoints with pull requests, and
+    // label/milestone counts include both.
+    void qc.invalidateQueries({ queryKey: ['repo', repo, 'issue', number] })
+    void qc.invalidateQueries({ queryKey: ['repo', repo, 'issues'] })
+    void qc.invalidateQueries({ queryKey: ['issues'] })
+    void qc.invalidateQueries({ queryKey: ['repo', repo, 'labels'] })
+    void qc.invalidateQueries({ queryKey: ['repo', repo, 'milestones'] })
   }
 }
 

@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router'
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, Milestone } from 'lucide-react'
 import type { PullSummary } from '../../api/client'
 import { BranchName, DecisionBadge, PullStateIcon } from '../../components/pulls/common'
+import { LabelChip } from '../../components/issues/meta'
 import { Badge, cx, Time } from '../../components/ui'
 import type { PullState } from '../../api/queries'
 
@@ -55,6 +56,9 @@ export function PullRows({ pulls, showRepo }: { pulls: PullSummary[]; showRepo?:
                 <span className="font-medium">{p.title}</span>
                 {p.draft && p.state === 'open' && <Badge>draft</Badge>}
                 <DecisionBadge decision={p.review_decision} />
+                {p.labels.map((l) => (
+                  <LabelChip key={l.id} label={l} />
+                ))}
               </div>
               <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-fg-faint">
                 <span>#{p.number}</span>
@@ -78,6 +82,11 @@ export function PullRows({ pulls, showRepo }: { pulls: PullSummary[]; showRepo?:
                   <BranchName>{p.head_branch}</BranchName> → <BranchName>{p.base_branch}</BranchName>
                 </span>
                 {p.requested_reviewers.length > 0 && <span>review requested from {p.requested_reviewers.map((u) => u.display_name).join(', ')}</span>}
+                {p.milestone && (
+                  <span className="inline-flex items-center gap-1">
+                    <Milestone size={12} /> {p.milestone.title}
+                  </span>
+                )}
               </div>
             </div>
             {p.comments > 0 && (

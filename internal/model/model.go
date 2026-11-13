@@ -171,6 +171,8 @@ type Issue struct {
 	ClosedAt     *time.Time `bun:"closed_at"`
 	ClosedByID   *int64     `bun:"closed_by_id"`
 	CommentCount int        `bun:"comment_count"`
+	MilestoneID  *int64     `bun:"milestone_id"`
+	StateReason  string     `bun:"state_reason"` // completed, not_planned (closed issues)
 	CreatedAt    time.Time  `bun:"created_at"`
 	UpdatedAt    time.Time  `bun:"updated_at"`
 }
@@ -284,4 +286,45 @@ type BranchProtection struct {
 	AdminsBypass          bool      `bun:"admins_bypass"`
 	CreatedAt             time.Time `bun:"created_at"`
 	UpdatedAt             time.Time `bun:"updated_at"`
+}
+
+type Label struct {
+	bun.BaseModel `bun:"table:labels,alias:l"`
+
+	ID          int64     `bun:"id,pk,autoincrement"`
+	RepoID      int64     `bun:"repo_id"`
+	Name        string    `bun:"name"`
+	LowerName   string    `bun:"lower_name"`
+	Color       string    `bun:"color"`
+	Description string    `bun:"description"`
+	CreatedAt   time.Time `bun:"created_at"`
+}
+
+type IssueLabel struct {
+	bun.BaseModel `bun:"table:issue_labels"`
+
+	IssueID int64 `bun:"issue_id,pk"`
+	LabelID int64 `bun:"label_id,pk"`
+}
+
+type Milestone struct {
+	bun.BaseModel `bun:"table:milestones,alias:m"`
+
+	ID          int64      `bun:"id,pk,autoincrement"`
+	RepoID      int64      `bun:"repo_id"`
+	Title       string     `bun:"title"`
+	LowerTitle  string     `bun:"lower_title"`
+	Description string     `bun:"description"`
+	DueOn       *time.Time `bun:"due_on"`
+	State       string     `bun:"state"`
+	ClosedAt    *time.Time `bun:"closed_at"`
+	CreatedAt   time.Time  `bun:"created_at"`
+	UpdatedAt   time.Time  `bun:"updated_at"`
+}
+
+type IssueAssignee struct {
+	bun.BaseModel `bun:"table:issue_assignees"`
+
+	IssueID int64 `bun:"issue_id,pk"`
+	UserID  int64 `bun:"user_id,pk"`
 }

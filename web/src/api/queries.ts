@@ -196,3 +196,59 @@ export const protectionsQuery = (repo: string) =>
     queryKey: ['repo', repo, 'protections'],
     queryFn: () => unwrap(api.GET('/repos/{repo}/protections', { params: { path: { repo } } })),
   })
+
+// --- issues, labels, milestones ---
+
+export type IssueFilters = {
+  state?: 'open' | 'closed' | 'all'
+  labels?: string
+  milestone?: string
+  assignee?: string
+  author?: string
+  q?: string
+  sort?: 'updated' | 'created' | 'comments'
+  page?: number
+  per_page?: number
+}
+
+export const issuesQuery = (repo: string, f: IssueFilters) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'issues', 'list', f],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/issues', { params: { path: { repo }, query: { per_page: 50, ...f } } })),
+  })
+
+export type MyIssuesFilter = 'assigned' | 'created' | 'all'
+
+export const myIssuesQuery = (filter: MyIssuesFilter, state: 'open' | 'closed' | 'all' = 'open') =>
+  queryOptions({
+    queryKey: ['issues', filter, state],
+    queryFn: () => unwrap(api.GET('/issues', { params: { query: { filter, state, per_page: 100 } } })),
+  })
+
+const issueKey = (repo: string, n: number) => ['repo', repo, 'issue', n] as const
+export const issueKeyPrefix = issueKey
+
+export const issueQuery = (repo: string, n: number) =>
+  queryOptions({
+    queryKey: [...issueKey(repo, n), 'detail'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/issues/{number}', { params: { path: { repo, number: n } } })),
+    retry: false,
+  })
+
+export const issueTimelineQuery = (repo: string, n: number) =>
+  queryOptions({
+    queryKey: [...issueKey(repo, n), 'timeline'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/issues/{number}/timeline', { params: { path: { repo, number: n } } })),
+  })
+
+export const labelsQuery = (repo: string) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'labels'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/labels', { params: { path: { repo } } })),
+  })
+
+export const milestonesQuery = (repo: string, state: 'open' | 'closed' | 'all' = 'open') =>
+  queryOptions({
+    queryKey: ['repo', repo, 'milestones', state],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/milestones', { params: { path: { repo }, query: { state } } })),
+  })

@@ -30,6 +30,13 @@ import { GlobalPullsPage, validateGlobalPulls } from '../pages/pulls/GlobalPulls
 import { validatePullList } from '../pages/pulls/PullList'
 import { PullPage, validatePull } from '../pages/pulls/PullPage'
 import { RepoPullsPage } from '../pages/pulls/RepoPullsPage'
+import { GlobalIssuesPage, validateGlobalIssues } from '../pages/issues/GlobalIssuesPage'
+import { IssuePage } from '../pages/issues/IssuePage'
+import { LabelsPage } from '../pages/issues/LabelsPage'
+import { MilestonesPage, validateMilestones } from '../pages/issues/MilestonesPage'
+import { NewIssuePage } from '../pages/issues/NewIssuePage'
+import { RepoIssuesPage } from '../pages/issues/RepoIssuesPage'
+import { validateIssueList } from '../lib/issues'
 
 type RouterContext = { queryClient: QueryClient }
 
@@ -146,6 +153,11 @@ const repoRoutes = [
   createRoute({ getParentRoute: () => repoRoute, path: '/commits', validateSearch: validateCommits, component: CommitsPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/commit/$sha', component: CommitPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/branches', component: BranchesPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/issues', validateSearch: validateIssueList, component: RepoIssuesPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/issues/new', component: NewIssuePage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/issues/$number', component: IssuePage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/labels', component: LabelsPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/milestones', validateSearch: validateMilestones, component: MilestonesPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/pulls', validateSearch: validatePullList, component: RepoPullsPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/pulls/$number', validateSearch: validatePull, component: PullPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/compare/$', component: ComparePage }),
@@ -160,7 +172,7 @@ const routeTree = rootRoute.addChildren([
     createRoute({ getParentRoute: () => appRoute, path: '/', component: ReposPage }),
     repoRoute.addChildren(repoRoutes),
     createRoute({ getParentRoute: () => appRoute, path: '/pulls', validateSearch: validateGlobalPulls, component: GlobalPullsPage }),
-    createRoute({ getParentRoute: () => appRoute, path: '/issues', component: placeholder('Issues', 'Issues across all repositories you can access.') }),
+    createRoute({ getParentRoute: () => appRoute, path: '/issues', validateSearch: validateGlobalIssues, component: GlobalIssuesPage }),
     createRoute({ getParentRoute: () => appRoute, path: '/ci', component: placeholder('CI', 'Workflow runs across all repositories.') }),
     createRoute({ getParentRoute: () => appRoute, path: '/settings', component: SettingsPage }),
     adminRoute.addChildren([

@@ -127,8 +127,8 @@ func printPullList(w io.Writer, a *app, pulls []apigen.PullSummary, withRepo boo
 
 func newPRListCmd(a *app) *cobra.Command {
 	var (
-		repoFlag, state, author, base, head, search string
-		limit                                       int
+		repoFlag, state, author, base, head, search, labels string
+		limit                                               int
 	)
 	cmd := &cobra.Command{
 		Use:     "list",
@@ -165,6 +165,9 @@ func newPRListCmd(a *app) *cobra.Command {
 				if search != "" {
 					p.Q = &search
 				}
+				if labels != "" {
+					p.Labels = &labels
+				}
 				r, err := c.ListPullsWithResponse(cmd.Context(), repo, p)
 				if err != nil {
 					return err
@@ -194,6 +197,7 @@ func newPRListCmd(a *app) *cobra.Command {
 	f.StringVarP(&base, "base", "B", "", "only pull requests into this branch")
 	f.StringVarP(&head, "head", "H", "", "only pull requests from this branch")
 	f.StringVarP(&search, "search", "q", "", "only titles containing `text`")
+	f.StringVarP(&labels, "label", "l", "", "comma-separated labels (all must match)")
 	f.IntVarP(&limit, "limit", "L", 30, "show at most `n` (0 = all)")
 	return withOutput(cmd, "[]PullSummary")
 }
@@ -447,6 +451,7 @@ func currentBranch() string {
 func newPRCreateCmd(a *app) *cobra.Command {
 	var (
 		repoFlag, title, body, bodyFile, base, head, reviewers string
+		labels, assignees, milestone                           string
 		draft, fill                                            bool
 	)
 	cmd := &cobra.Command{
@@ -514,6 +519,10 @@ pushed. --fill takes the title and body from the commits.`,
 			if rs := splitList(reviewers); len(rs) > 0 {
 				req.Reviewers = &rs
 			}
+			req.Labels, req.Assignees = listPtr(labels), listPtr(assignees)
+			if req.Milestone, err = milestoneID(cmd.Context(), c, repo, milestone); err != nil {
+				return err
+			}
 			r, err := c.CreatePullWithResponse(cmd.Context(), repo, req)
 			if err != nil {
 				return err
@@ -539,6 +548,9 @@ pushed. --fill takes the title and body from the commits.`,
 	f.StringVarP(&reviewers, "reviewer", "r", "", "comma-separated usernames to request reviews from")
 	f.BoolVarP(&draft, "draft", "d", false, "open as a draft")
 	f.BoolVarP(&fill, "fill", "f", false, "use the commits for the title and body")
+	f.StringVarP(&labels, "label", "l", "", "comma-separated labels")
+	f.StringVarP(&assignees, "assignee", "a", "", "comma-separated usernames")
+	f.StringVarP(&milestone, "milestone", "m", "", "milestone title or id")
 	return withOutput(cmd, "PullRequest")
 }
 
@@ -1084,10 +1096,13 @@ func newPRStateCmd(a *app, verb string) *cobra.Command {
 }
 
 func newPREditCmd(a *app) *cobra.Command {
-	var repoFlag, title, body, bodyFile, base, addRev, rmRev string
+	var (
+		repoFlag, title, body, bodyFile, base, addRev, rmRev string
+		meta                                                 metaFlags
+	)
 	cmd := &cobra.Command{
 		Use:   "edit [NUMBER | URL | BRANCH]",
-		Short: "Change a pull request's title, description, base or reviewers",
+		Short: "Change a pull request's title, description, base, reviewers, labels, assignees or milestone",
 		Example: `  tgp pr edit 12 --title "Shop: add refunds"
   tgp pr edit 12 --add-reviewer tom --remove-reviewer ana
   tgp pr edit 12 --base release`,
@@ -1140,8 +1155,13 @@ func newPREditCmd(a *app) *cobra.Command {
 				}
 				req.Reviewers = &set
 			}
-			if req == (apigen.UpdatePullRequest{}) {
-				return usageErr("nothing to change: pass --title, --body, --base, --add-reviewer or --remove-reviewer")
+			req.AddLabels, req.RemoveLabels, req.Labels = listPtr(meta.addLabels), listPtr(meta.removeLabels), setList(cmd, "labels", meta.setLabels)
+			req.AddAssignees, req.RemoveAssignees, req.Assignees = listPtr(meta.addAssignees), listPtr(meta.removeAssignees), setList(cmd, "assignees", meta.setAssignees)
+			if req.Milestone, err = milestoneID(cmd.Context(), c, repo, meta.milestone); err != nil {
+				return err
+			}
+			if req.Title == nil && req.Body == nil && req.Base == nil && req.Reviewers == nil && !meta.changed(cmd) {
+				return usageErr("nothing to change: pass --title, --body, --base, reviewer, label, assignee or milestone flags")
 			}
 			r, err := c.UpdatePullWithResponse(cmd.Context(), repo, n, req)
 			if err != nil {
@@ -1165,6 +1185,7 @@ func newPREditCmd(a *app) *cobra.Command {
 	f.StringVarP(&base, "base", "B", "", "new base branch")
 	f.StringVar(&addRev, "add-reviewer", "", "comma-separated usernames to request reviews from")
 	f.StringVar(&rmRev, "remove-reviewer", "", "comma-separated usernames to stop requesting")
+	meta.register(cmd)
 	return withOutput(cmd, "PullRequest")
 }
 

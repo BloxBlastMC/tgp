@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -126,6 +127,9 @@ func (e *cliEnv) jsonOK(out any, args ...string) {
 	r := e.ok("", args...)
 	validateOutput(e.t, args, r.stdout)
 	if out != nil {
+		// Start from zero: decoding into a used map would keep stale keys.
+		v := reflect.ValueOf(out).Elem()
+		v.Set(reflect.Zero(v.Type()))
 		if err := json.Unmarshal([]byte(r.stdout), out); err != nil {
 			e.t.Fatalf("decode %q: %v", r.stdout, err)
 		}

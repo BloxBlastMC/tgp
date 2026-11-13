@@ -7,7 +7,7 @@ Each milestone ships as its own pull request.
 3. **Repos & git**: create/list/rename/archive/delete repos, per-user repository grants, git smart HTTP push/pull with authorization, code browsing API + UI (tree, file, blame, history, commit diffs, README), pre/post-receive hooks. ✅
 4. **CLI foundation**: auth + git credential helper, repo commands, `--json`/`--jq`/error/exit-code framework, `tgp api`, `tgp schema`, admin user commands. ✅ See [cli.md](cli.md).
 5. **Pull requests & reviews**: PR lifecycle, diffs, inline comments, reviews, merge/squash/rebase, branch protection, `tgp pr`. ✅ See [pull-requests.md](pull-requests.md).
-6. **Issues, labels, milestones.**
+6. **Issues, labels, milestones**: plus assignees, closing keywords, `#N` links, `tgp issue/label/milestone`. ✅ See [issues.md](issues.md).
 7. **CI core**: workflow YAML, triggers, resource-limited scheduler, runner protocol, Docker executor, live logs, secrets.
 8. **Artifacts, cache, releases**: local/S3 storage, retention.
 9. **Webhooks**: signed deliveries, retries, delivery log.

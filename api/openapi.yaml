@@ -36,6 +36,7 @@ tags:
   - name: repos
   - name: code
   - name: pulls
+  - name: issues
 paths:
   /meta:
     get:
@@ -885,6 +886,7 @@ paths:
         - { name: base, in: query, description: Only pull requests into this branch., schema: { type: string } }
         - { name: head, in: query, description: Only pull requests from this branch., schema: { type: string } }
         - { name: q, in: query, description: Case-insensitive substring of the title., schema: { type: string } }
+        - { name: labels, in: query, description: "Comma-separated label names; pull requests must have all of them.", schema: { type: string } }
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/PerPage"
       responses:
@@ -1171,6 +1173,287 @@ paths:
               schema: { $ref: "#/components/schemas/PullRequest" }
         default: { $ref: "#/components/responses/Error" }
 
+  /issues:
+    get:
+      operationId: listMyIssues
+      tags: [issues]
+      summary: Issues across all repositories you can access
+      parameters:
+        - name: filter
+          in: query
+          description: "`assigned`: assigned to you. `created`: opened by you. `all`: every issue you can see."
+          schema: { type: string, enum: [assigned, created, all], default: assigned }
+        - $ref: "#/components/parameters/IssueStateParam"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Issues, most recently updated first
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IssuePage" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/issues:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listIssues
+      tags: [issues]
+      summary: List issues (not pull requests)
+      parameters:
+        - $ref: "#/components/parameters/IssueStateParam"
+        - { name: labels, in: query, description: "Comma-separated label names; issues must have all of them.", schema: { type: string } }
+        - { name: milestone, in: query, description: "Milestone title, `none` (no milestone) or `*` (any milestone).", schema: { type: string } }
+        - { name: assignee, in: query, description: "Username, `none` or `*`.", schema: { type: string } }
+        - { name: author, in: query, description: Username of the author., schema: { type: string } }
+        - { name: q, in: query, description: Case-insensitive substring of the title., schema: { type: string } }
+        - { name: sort, in: query, schema: { type: string, enum: [updated, created, comments], default: updated } }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Issues
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IssuePage" }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createIssue
+      tags: [issues]
+      summary: Open an issue (triage access, so testers can file bugs)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateIssue" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Issue" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/issues/{number}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/IssueNumber"
+    get:
+      operationId: getIssue
+      tags: [issues]
+      summary: Get an issue
+      description: For a pull request's number this fails with `not_found` and `details.is_pull = true`.
+      responses:
+        "200":
+          description: Issue
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Issue" }
+        default: { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: updateIssue
+      tags: [issues]
+      summary: Edit, close or reopen an issue, or change its labels, assignees and milestone
+      description: |
+        Title and body: the author or write access. Everything else: triage access.
+        `labels`/`assignees` replace the lists; `add_*`/`remove_*` change them.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateIssue" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Issue" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/issues/{number}/timeline:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/IssueNumber"
+    get:
+      operationId: getIssueTimeline
+      tags: [issues]
+      summary: Comments and events, oldest first
+      responses:
+        "200":
+          description: Timeline
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/TimelineItem" } }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/issues/{number}/comments:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/IssueNumber"
+    get:
+      operationId: listIssueComments
+      tags: [issues]
+      summary: Comments, oldest first
+      responses:
+        "200":
+          description: Comments
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Comment" } }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createIssueComment
+      tags: [issues]
+      summary: Comment on an issue (triage access)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Comment" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/labels:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listLabels
+      tags: [issues]
+      summary: List labels, by name
+      responses:
+        "200":
+          description: Labels
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Label" } }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createLabel
+      tags: [issues]
+      summary: Create a label (write access)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LabelInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Label" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/labels/{id}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+    patch:
+      operationId: updateLabel
+      tags: [issues]
+      summary: Rename or recolour a label (write access)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LabelPatch" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Label" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteLabel
+      tags: [issues]
+      summary: Delete a label, removing it from issues and pull requests (write access)
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/milestones:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listMilestones
+      tags: [issues]
+      summary: List milestones (open ones by due date, then closed)
+      parameters:
+        - { name: state, in: query, schema: { type: string, enum: [open, closed, all], default: open } }
+      responses:
+        "200":
+          description: Milestones
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Milestone" } }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createMilestone
+      tags: [issues]
+      summary: Create a milestone (write access)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MilestoneInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Milestone" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/milestones/{id}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+    get:
+      operationId: getMilestone
+      tags: [issues]
+      summary: Get a milestone
+      responses:
+        "200":
+          description: Milestone
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Milestone" }
+        default: { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: updateMilestone
+      tags: [issues]
+      summary: Edit, close or reopen a milestone (write access)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MilestonePatch" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Milestone" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteMilestone
+      tags: [issues]
+      summary: Delete a milestone; its issues and pull requests keep existing without it (write access)
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
 components:
   parameters:
     RepoName:
@@ -1212,6 +1495,15 @@ components:
       name: per_page
       in: query
       schema: { type: integer, minimum: 1, maximum: 100, default: 30 }
+    IssueNumber:
+      name: number
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    IssueStateParam:
+      name: state
+      in: query
+      schema: { type: string, enum: [open, closed, all], default: open }
   securitySchemes:
     sessionCookie:
       type: apiKey
@@ -1755,7 +2047,7 @@ components:
 
     PullSummary:
       type: object
-      required: [number, repo, title, state, draft, author, head_branch, base_branch, comments, review_decision, requested_reviewers, created_at, updated_at]
+      required: [number, repo, title, state, draft, author, head_branch, base_branch, comments, review_decision, requested_reviewers, labels, assignees, created_at, updated_at]
       properties:
         number: { type: integer, format: int64 }
         repo: { type: string, description: Repository name. }
@@ -1768,6 +2060,11 @@ components:
         comments: { type: integer }
         review_decision: { $ref: "#/components/schemas/ReviewDecision" }
         requested_reviewers: { type: array, items: { $ref: "#/components/schemas/UserSummary" } }
+        labels: { type: array, items: { $ref: "#/components/schemas/Label" } }
+        assignees: { type: array, items: { $ref: "#/components/schemas/UserSummary" } }
+        milestone:
+          allOf: [{ $ref: "#/components/schemas/MilestoneRef" }]
+          nullable: true
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
         closed_at: { type: string, format: date-time, nullable: true }
@@ -1811,7 +2108,7 @@ components:
 
     PullRequest:
       type: object
-      required: [number, repo, title, body, body_html, state, draft, author, head, base, merge_base, commits, additions, deletions, changed_files, comments, mergeable, conflict_files, review_decision, reviewers, requested_reviewers, blockers, can_merge, viewer_permission, created_at, updated_at]
+      required: [number, repo, title, body, body_html, state, draft, author, head, base, merge_base, commits, additions, deletions, changed_files, comments, mergeable, conflict_files, review_decision, reviewers, requested_reviewers, labels, assignees, blockers, can_merge, viewer_permission, created_at, updated_at]
       properties:
         number: { type: integer, format: int64 }
         repo: { type: string }
@@ -1841,6 +2138,11 @@ components:
           description: Each reviewer's latest review state, plus requested reviewers who haven't reviewed.
           items: { $ref: "#/components/schemas/ReviewerState" }
         requested_reviewers: { type: array, items: { $ref: "#/components/schemas/UserSummary" } }
+        labels: { type: array, items: { $ref: "#/components/schemas/Label" } }
+        assignees: { type: array, items: { $ref: "#/components/schemas/UserSummary" } }
+        milestone:
+          allOf: [{ $ref: "#/components/schemas/MilestoneRef" }]
+          nullable: true
         protection:
           allOf: [{ $ref: "#/components/schemas/BranchProtection" }]
           nullable: true
@@ -1871,6 +2173,9 @@ components:
         base: { type: string, description: Branch to merge into; defaults to the default branch. }
         draft: { type: boolean, default: false }
         reviewers: { type: array, items: { type: string }, description: Usernames to request reviews from. }
+        labels: { type: array, items: { type: string }, description: Label names. }
+        assignees: { type: array, items: { type: string }, description: Usernames. }
+        milestone: { type: integer, format: int64, description: Milestone id. }
 
     UpdatePullRequest:
       type: object
@@ -1881,6 +2186,13 @@ components:
         state: { type: string, enum: [open, closed], description: Close or reopen. }
         draft: { type: boolean, description: false marks the pull request ready for review. }
         reviewers: { type: array, items: { type: string }, description: Replaces the requested reviewers. }
+        labels: { type: array, items: { type: string }, description: Replaces the labels. }
+        add_labels: { type: array, items: { type: string } }
+        remove_labels: { type: array, items: { type: string } }
+        assignees: { type: array, items: { type: string }, description: Replaces the assignees. }
+        add_assignees: { type: array, items: { type: string } }
+        remove_assignees: { type: array, items: { type: string } }
+        milestone: { type: integer, format: int64, description: Milestone id; 0 removes the milestone. }
 
     MergePullRequest:
       type: object
@@ -1973,7 +2285,7 @@ components:
         id: { type: integer, format: int64 }
         type:
           type: string
-          enum: [closed, reopened, merged, pushed, base_changed, title_changed, ready_for_review, converted_to_draft, review_requested, review_request_removed, review_dismissed, head_deleted, head_restored, branch_deleted, branch_updated]
+          enum: [closed, reopened, merged, pushed, base_changed, title_changed, ready_for_review, converted_to_draft, review_requested, review_request_removed, review_dismissed, head_deleted, head_restored, branch_deleted, branch_updated, labeled, unlabeled, milestoned, demilestoned, assigned, unassigned]
         actor:
           allOf: [{ $ref: "#/components/schemas/UserSummary" }]
           nullable: true
@@ -1984,7 +2296,11 @@ components:
             Type-specific: `pushed` {before, after, commits, forced}; `base_changed`
             and `title_changed` {from, to}; `merged` {commit, method}; `review_requested`
             and `review_request_removed` {reviewer}; `review_dismissed` {reviewer, message};
-            `branch_deleted` {branch}; `branch_updated` {commit}.
+            `branch_deleted` {branch}; `branch_updated` {commit}; `labeled`/`unlabeled`
+            {label, color}; `milestoned`/`demilestoned` {milestone}; `assigned`/`unassigned`
+            {assignee}; `closed` on issues {reason, and pull + commit when closed by a
+            merged pull request ("Fixes #12")}.
+            Used for both pull requests and issues.
         created_at: { type: string, format: date-time }
 
     TimelineItem:
@@ -2054,3 +2370,143 @@ components:
         block_force_push: { type: boolean }
         allow_deletion: { type: boolean }
         admins_bypass: { type: boolean }
+
+    Label:
+      type: object
+      required: [id, name, color, description]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        color: { type: string, description: "Six hex digits without #, e.g. d73a4a.", example: d73a4a }
+        description: { type: string }
+        open_issues: { type: integer, description: Open issues and pull requests with this label (in label lists only). }
+
+    LabelInput:
+      type: object
+      required: [name, color]
+      properties:
+        name: { type: string }
+        color: { type: string }
+        description: { type: string }
+
+    LabelPatch:
+      type: object
+      properties:
+        name: { type: string }
+        color: { type: string }
+        description: { type: string }
+
+    MilestoneRef:
+      type: object
+      required: [id, title, state]
+      properties:
+        id: { type: integer, format: int64 }
+        title: { type: string }
+        state: { type: string, enum: [open, closed] }
+        due_on: { type: string, format: date, nullable: true }
+
+    Milestone:
+      type: object
+      required: [id, title, description, description_html, state, open_issues, closed_issues, created_at, updated_at]
+      properties:
+        id: { type: integer, format: int64 }
+        title: { type: string }
+        description: { type: string }
+        description_html: { type: string }
+        state: { type: string, enum: [open, closed] }
+        due_on: { type: string, format: date, nullable: true }
+        open_issues: { type: integer, description: Open issues and pull requests in the milestone. }
+        closed_issues: { type: integer, description: Closed (and merged) issues and pull requests in the milestone. }
+        closed_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    MilestoneInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string }
+        description: { type: string }
+        due_on: { type: string, format: date }
+
+    MilestonePatch:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        due_on: { type: string, format: date, description: "Empty string clears it." }
+        clear_due_on: { type: boolean, description: Remove the due date. }
+        state: { type: string, enum: [open, closed] }
+
+    IssueStateReason:
+      type: string
+      enum: [completed, not_planned]
+      description: Why a closed issue was closed.
+
+    IssueSummary:
+      type: object
+      required: [number, repo, title, state, author, labels, assignees, comments, created_at, updated_at]
+      properties:
+        number: { type: integer, format: int64 }
+        repo: { type: string }
+        title: { type: string }
+        state: { type: string, enum: [open, closed] }
+        state_reason:
+          allOf: [{ $ref: "#/components/schemas/IssueStateReason" }]
+          nullable: true
+        author: { $ref: "#/components/schemas/UserSummary" }
+        labels: { type: array, items: { $ref: "#/components/schemas/Label" } }
+        assignees: { type: array, items: { $ref: "#/components/schemas/UserSummary" } }
+        milestone:
+          allOf: [{ $ref: "#/components/schemas/MilestoneRef" }]
+          nullable: true
+        comments: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        closed_at: { type: string, format: date-time, nullable: true }
+
+    Issue:
+      allOf:
+        - { $ref: "#/components/schemas/IssueSummary" }
+        - type: object
+          required: [body, body_html, viewer_permission, can_edit]
+          properties:
+            body: { type: string }
+            body_html: { type: string }
+            closed_by:
+              allOf: [{ $ref: "#/components/schemas/UserSummary" }]
+              nullable: true
+            viewer_permission: { $ref: "#/components/schemas/Permission" }
+            can_edit: { type: boolean, description: You can edit the title and body. }
+
+    IssuePage:
+      type: object
+      required: [issues, total]
+      properties:
+        issues: { type: array, items: { $ref: "#/components/schemas/IssueSummary" } }
+        total: { type: integer }
+
+    CreateIssue:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string }
+        body: { type: string }
+        labels: { type: array, items: { type: string }, description: Label names. }
+        assignees: { type: array, items: { type: string }, description: Usernames. }
+        milestone: { type: integer, format: int64, description: Milestone id. }
+
+    UpdateIssue:
+      type: object
+      properties:
+        title: { type: string }
+        body: { type: string }
+        state: { type: string, enum: [open, closed] }
+        state_reason: { $ref: "#/components/schemas/IssueStateReason" }
+        labels: { type: array, items: { type: string } }
+        add_labels: { type: array, items: { type: string } }
+        remove_labels: { type: array, items: { type: string } }
+        assignees: { type: array, items: { type: string } }
+        add_assignees: { type: array, items: { type: string } }
+        remove_assignees: { type: array, items: { type: string } }
+        milestone: { type: integer, format: int64, description: Milestone id; 0 removes the milestone. }
