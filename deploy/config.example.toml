@@ -6,10 +6,13 @@
 data_dir = "/var/lib/tgp"
 
 [server]
-listen = ":3000"                       # TGP_LISTEN
+# Only the reverse proxy should reach this port. (TGP_LISTEN)
+listen = "127.0.0.1:3000"
 # Public URL users reach tgp on. Used in clone URLs and webhooks.
 base_url = "https://git.example.com"   # TGP_BASE_URL
-# Honour X-Forwarded-* headers. Enable only behind a reverse proxy. (TGP_TRUST_PROXY)
+# Honour X-Forwarded-For/-Proto from a reverse proxy (one hop). Only safe
+# when the proxy is the only way to reach `listen`; otherwise clients can
+# fake their address. Set false when clients connect directly. (TGP_TRUST_PROXY)
 trust_proxy = true
 shutdown_timeout = "30s"
 
@@ -60,10 +63,11 @@ type = "local"                         # TGP_STORAGE_TYPE
 
 [webhooks]
 # Deliveries to link-local addresses (cloud metadata services) are always
-# refused. Set this to also refuse loopback and private networks (10/8,
-# 172.16/12, 192.168/16, 100.64/10, fc00::/7) if maintainers shouldn't be
-# able to reach internal services. (TGP_WEBHOOKS_BLOCK_PRIVATE)
-block_private_networks = false
+# refused. Loopback and private networks (10/8, 172.16/12, 192.168/16,
+# 100.64/10 incl. Tailscale, fc00::/7) are refused by default too. Set false
+# only if webhooks must reach internal services; maintainers can then read
+# those services' responses. (TGP_WEBHOOKS_BLOCK_PRIVATE)
+# block_private_networks = true
 timeout = "10s"                        # per delivery attempt
 workers = 4                            # deliveries sent at once per server
 

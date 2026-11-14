@@ -118,8 +118,13 @@ tgp speaks plain HTTP; put it behind a proxy that terminates TLS.
 - Set `base_url` to the public `https://` URL. Clone URLs, webhooks and
   secure cookies use it.
 - Set `trust_proxy = true` so the audit log and login rate limits see real
-  client addresses. Only enable it when the proxy is the only way in;
-  otherwise clients can fake their address.
+  client addresses. Only enable it when the proxy is the only way in (bind
+  `listen` to `127.0.0.1` or firewall it); otherwise clients can fake their
+  address.
+- tgp expects **one** proxy hop: it takes the client address from the
+  rightmost `X-Forwarded-For` entry (falling back to `X-Real-IP`) and ignores
+  `True-Client-IP`. HTTPS is detected from `X-Forwarded-Proto: https`, which
+  also turns on `Strict-Transport-Security`.
 
 The proxy must:
 
@@ -140,6 +145,42 @@ Ready-made configurations:
   `proxy_buffering off` and one-hour timeouts.
 
 Serve tgp on its own host name (`git.example.com`), not under a path.
+
+### Tailscale
+
+tgp can't terminate TLS itself, so pick one of:
+
+- **Recommended: `tailscale serve`.** It terminates TLS with the tailnet's
+  certificate and proxies to tgp:
+
+  ```sh
+  tailscale serve --bg 3000          # https://<host>.<tailnet>.ts.net → 127.0.0.1:3000
+  ```
+
+  ```toml
+  [server]
+  listen = "127.0.0.1:3000"
+  base_url = "https://<host>.<tailnet>.ts.net"
+  trust_proxy = true
+  ```
+
+  `tailscale serve` replaces any client-sent `X-Forwarded-For` with the
+  caller's tailnet address and sets `X-Forwarded-Proto: https`, so login
+  rate limits and the audit log see real addresses. Caddy or nginx on the
+  same host (above) work the same way.
+
+- **Plain HTTP over the tailnet.** WireGuard already encrypts the traffic,
+  but cookies can't be `Secure` and browsers get no HSTS:
+
+  ```toml
+  [server]
+  listen = "100.x.y.z:3000"          # the host's Tailscale address
+  base_url = "http://<host>:3000"
+  trust_proxy = false                 # no proxy: never trust forwarded headers
+  ```
+
+  Don't use an `https://` `base_url` here: it makes cookies `Secure` and
+  logging in over plain HTTP fails.
 
 ## Runners
 
@@ -250,6 +291,8 @@ deliveries all live in the database.
 - Backups contain password hashes and encrypted secrets alongside the key:
   store them like the server's data.
 - Run runners on machines dedicated to CI.
-- Set `[webhooks] block_private_networks = true` if maintainers shouldn't be
-  able to reach internal services through webhooks (see
-  [webhooks.md](webhooks.md)).
+- Keep `trust_proxy = false` unless a proxy is the only way to reach tgp.
+- Leave `[webhooks] block_private_networks` unset (blocked) unless webhooks
+  must reach internal services; check upgraded configs for an old explicit
+  `false` (see [webhooks.md](webhooks.md)).
+- To revoke a runner, remove it; disabling only stops new jobs.

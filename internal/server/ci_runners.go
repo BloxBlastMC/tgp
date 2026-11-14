@@ -131,12 +131,25 @@ func (s *Server) handleRunnerRegister(w http.ResponseWriter, r *http.Request) {
 		case now.After(rt.ExpiresAt):
 			return apierr.Unauthenticated("this registration token expired; create a new one")
 		}
+		// Claim the token before creating the runner. The conditional update
+		// makes the claim atomic: of concurrent requests (possible on
+		// Postgres) only one sees a row change; the others roll back.
+		res, err := tx.NewUpdate().Model((*model.RunnerToken)(nil)).Set("used_at = ?", now).
+			Where("id = ? AND used_at IS NULL", rt.ID).Exec(ctx)
+		if err != nil {
+			return err
+		}
+		if n, err := res.RowsAffected(); err != nil {
+			return err
+		} else if n != 1 {
+			return apierr.Unauthenticated("this registration token was already used; create a new one")
+		}
 		rn.CreatedByID = rt.CreatedByID
 		if _, err := tx.NewInsert().Model(rn).Exec(ctx); err != nil {
 			return err
 		}
 		rt.UsedAt, rt.RunnerID = &now, &rn.ID
-		if _, err := tx.NewUpdate().Model(rt).Column("used_at", "runner_id").WherePK().Exec(ctx); err != nil {
+		if _, err := tx.NewUpdate().Model(rt).Column("runner_id").WherePK().Exec(ctx); err != nil {
 			return err
 		}
 		e := audit.Entry{Action: audit.RunnerRegister, TargetType: "runner", Target: rn.Name, IP: clientIP(r),

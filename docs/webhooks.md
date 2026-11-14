@@ -119,9 +119,16 @@ Deliveries never go to link-local addresses (such as the cloud metadata
 service at 169.254.169.254). The address is checked when connecting, after
 DNS. Proxies aren't used, so the check sees the real destination.
 
-By default, receivers on the local network and on localhost are allowed,
-since a team often runs its own tools there. To stop maintainers reaching
-internal services through webhooks, set `block_private_networks = true` in
-`[webhooks]` (`TGP_WEBHOOKS_BLOCK_PRIVATE=true`).
+Receivers on localhost and private networks (10/8, 172.16/12, 192.168/16,
+100.64/10, which includes Tailscale addresses, and fc00::/7) are refused by
+default too. Delivery responses are visible to whoever manages the webhook,
+so allowing these would let maintainers read internal services from the
+server's point of view. If a receiver must live on an internal network, set
+`block_private_networks = false` in `[webhooks]`
+(`TGP_WEBHOOKS_BLOCK_PRIVATE=false`).
+
+**Upgrading:** before this default changed, the example config shipped
+`block_private_networks = false`. If you copied it, that line still allows
+private destinations; delete it to get the new default.
 
 Creating, changing and deleting webhooks is recorded in the audit log.

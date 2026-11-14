@@ -58,7 +58,7 @@ func (s *Server) cloneURL(ctx context.Context, repo *model.Repo) string {
 	if base == "" {
 		_, r := httpFrom(ctx)
 		scheme := "http"
-		if r.TLS != nil || (s.cfg.Server.TrustProxy && r.Header.Get("X-Forwarded-Proto") == "https") {
+		if s.isHTTPS(r) {
 			scheme = "https"
 		}
 		base = scheme + "://" + r.Host

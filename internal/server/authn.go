@@ -90,7 +90,7 @@ func httpFrom(ctx context.Context) (http.ResponseWriter, *http.Request) {
 	return p.w, p.r
 }
 
-// clientIP is the caller's IP (RealIP middleware has applied proxy headers
+// clientIP is the caller's IP (the realIP middleware has applied proxy headers
 // when trust_proxy is on).
 func clientIP(r *http.Request) string {
 	host, _, err := net.SplitHostPort(r.RemoteAddr)

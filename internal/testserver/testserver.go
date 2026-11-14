@@ -57,6 +57,8 @@ func Config(dir string) *config.Config {
 	cfg.Database.DSN = filepath.Join(dir, "tgp.db")
 	cfg.Repos.Root = filepath.Join(dir, "repos")
 	cfg.Security.MasterKeyFile = filepath.Join(dir, "master.key")
+	blockPrivate := false // webhook receivers in tests listen on loopback
+	cfg.Webhooks.BlockPrivateNetworks = &blockPrivate
 	return cfg
 }
 

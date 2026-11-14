@@ -33,9 +33,10 @@ type Config struct {
 // WebhooksConfig controls outgoing webhook deliveries.
 type WebhooksConfig struct {
 	// BlockPrivateNetworks refuses deliveries to loopback and private
-	// addresses (RFC 1918, ULA). Link-local addresses (cloud metadata
-	// services) are always refused.
-	BlockPrivateNetworks bool `toml:"block_private_networks"`
+	// addresses (RFC 1918, ULA, 100.64/10). Default true; set false for
+	// integrations on internal networks. Link-local addresses (cloud
+	// metadata services) are always refused.
+	BlockPrivateNetworks *bool `toml:"block_private_networks"`
 	// Timeout per delivery attempt. Default 10s.
 	Timeout Duration `toml:"timeout"`
 	// Workers is how many deliveries run at once per server. Default 4.
@@ -241,6 +242,12 @@ func (c *Config) UseSecureCookies() bool {
 	return strings.HasPrefix(c.Server.BaseURL, "https://")
 }
 
+// WebhooksBlockPrivate reports whether webhook deliveries to loopback and
+// private networks are refused (the default).
+func (c *Config) WebhooksBlockPrivate() bool {
+	return c.Webhooks.BlockPrivateNetworks == nil || *c.Webhooks.BlockPrivateNetworks
+}
+
 // envBinding maps an environment variable to a config field setter.
 type envBinding struct {
 	name string
@@ -258,6 +265,17 @@ func boolean(f func(c *Config) *bool) func(*Config, string) error {
 			return err
 		}
 		*f(c) = b
+		return nil
+	}
+}
+
+func optBoolean(f func(c *Config) **bool) func(*Config, string) error {
+	return func(c *Config, v string) error {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return err
+		}
+		*f(c) = &b
 		return nil
 	}
 }
@@ -280,7 +298,7 @@ var envBindings = []envBinding{
 	{"TGP_S3_ACCESS_KEY", str(func(c *Config) *string { return &c.Storage.S3.AccessKey })},
 	{"TGP_S3_SECRET_KEY", str(func(c *Config) *string { return &c.Storage.S3.SecretKey })},
 	{"TGP_MASTER_KEY_FILE", str(func(c *Config) *string { return &c.Security.MasterKeyFile })},
-	{"TGP_WEBHOOKS_BLOCK_PRIVATE", boolean(func(c *Config) *bool { return &c.Webhooks.BlockPrivateNetworks })},
+	{"TGP_WEBHOOKS_BLOCK_PRIVATE", optBoolean(func(c *Config) **bool { return &c.Webhooks.BlockPrivateNetworks })},
 	{"TGP_LOG_LEVEL", str(func(c *Config) *string { return &c.Log.Level })},
 	{"TGP_LOG_FORMAT", str(func(c *Config) *string { return &c.Log.Format })},
 }

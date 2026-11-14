@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -742,5 +743,46 @@ func TestRunnerRegistrationTokens(t *testing.T) {
 		if !seen[a] {
 			t.Errorf("audit lacks %s", a)
 		}
+	}
+}
+
+// Concurrent registrations with one token create exactly one runner.
+func TestRunnerRegistrationTokenSingleUse(t *testing.T) {
+	p := newPREnv(t)
+	var tok apigen.RunnerRegistrationToken
+	p.admin.mustDo("POST", "/admin/runners/registration-tokens", map[string]any{}, 201).decode(t, &tok)
+	const n = 8
+	statuses := make(chan int, n)
+	var wg sync.WaitGroup
+	for i := range n {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			b, _ := json.Marshal(runnerapi.RegisterRequest{Token: tok.Token, Name: fmt.Sprintf("r%d", i)})
+			res, err := http.Post(p.ts.URL+runnerapi.Prefix+"/register", "application/json", bytes.NewReader(b))
+			if err != nil {
+				statuses <- -1
+				return
+			}
+			res.Body.Close()
+			statuses <- res.StatusCode
+		}()
+	}
+	wg.Wait()
+	close(statuses)
+	ok := 0
+	for s := range statuses {
+		switch s {
+		case 200:
+			ok++
+		case 401:
+		default:
+			t.Errorf("unexpected status %d", s)
+		}
+	}
+	var list struct{ Runners []apigen.Runner }
+	p.admin.mustDo("GET", "/admin/runners", nil, 200).decode(t, &list)
+	if ok != 1 || len(list.Runners) != 1 {
+		t.Fatalf("%d registrations succeeded, %d runners exist; want 1", ok, len(list.Runners))
 	}
 }

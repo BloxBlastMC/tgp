@@ -44,6 +44,8 @@ func newEnv(t *testing.T) *testEnv {
 	cfg := config.Default()
 	cfg.DataDir = t.TempDir()
 	cfg.Database.DSN = filepath.Join(cfg.DataDir, "tgp.db")
+	blockPrivate := false // webhook receivers in tests listen on loopback
+	cfg.Webhooks.BlockPrivateNetworks = &blockPrivate
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	ctx := context.Background()
 	d, err := db.Open(ctx, cfg.Database)

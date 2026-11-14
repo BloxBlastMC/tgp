@@ -126,8 +126,9 @@ func (s *Server) Handler() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	if s.cfg.Server.TrustProxy {
-		r.Use(middleware.RealIP)
+		r.Use(realIP)
 	}
+	r.Use(s.hsts)
 	r.Use(s.recoverer)
 	r.Use(s.requestLogger)
 	r.Use(s.gitRoutes)
