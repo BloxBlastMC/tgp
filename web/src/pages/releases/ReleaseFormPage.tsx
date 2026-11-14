@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from '@tanstack/react-router'
-import { ArrowLeft, FileArchive, Upload, X } from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useNavigate, useParams } from '@tanstack/react-router'
+import { FileArchive, Lock, Rocket, Upload, X } from 'lucide-react'
+import { useEffect, useId, useState } from 'react'
 import { api, errorMessage, unwrap, type Release } from '../../api/client'
 import { branchesQuery, repoQuery, tagsQuery } from '../../api/queries'
-import { EmptyState } from '../../components/Page'
+import { EmptyState, SubHeader } from '../../components/Page'
 import { MarkdownEditor } from '../../components/pulls/common'
-import { Alert, Button, Checkbox, Field, Input, Select, Spinner } from '../../components/ui'
-import { formatBytes } from '../../lib/ci'
+import { Alert, Button, Card, Checkbox, ErrorState, Field, FileDrop, IconButton, Input, Meter, PageSkeleton, Select, useConfirm, useToast } from '../../components/ui'
+import { formatBytes } from '../../lib/format'
 import { assetUrl, releaseTitle, tagError, uploadAsset } from '../../lib/releases'
 import { useRepoName } from '../repos/RepoLayout'
 import { canWriteRepo } from './ReleasesPage'
@@ -24,8 +24,8 @@ export function EditReleasePage() {
     queryFn: () => unwrap(api.GET('/repos/{repo}/releases/{id}', { params: { path: { repo, id: Number(id) } } })),
     retry: false,
   })
-  if (q.isPending) return <Spinner />
-  if (q.isError) return <div className="p-4"><Alert>{errorMessage(q.error)}</Alert></div>
+  if (q.isPending) return <PageSkeleton rows={3} />
+  if (q.isError) return <ErrorState error={q.error} />
   return <ReleaseForm key={q.data.id} release={q.data} />
 }
 
@@ -43,7 +43,8 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const listId = useId()
-  const fileRef = useRef<HTMLInputElement>(null)
+  const confirm = useConfirm()
+  const toast = useToast()
   const [tag, setTag] = useState(release?.tag ?? '')
   const [target, setTarget] = useState(release?.target || r.default_branch)
   const [name, setName] = useState(release?.name ?? '')
@@ -94,7 +95,10 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
       const ok = await uploadAll(rel)
       setBusy(false)
       invalidate()
-      if (ok) void navigate({ to: '/$repo/releases/tag/$', params: { repo, _splat: rel.tag } })
+      if (ok) {
+        toast.success(rel.draft ? 'Draft saved' : `Published ${releaseTitle(rel)}`)
+        void navigate({ to: '/$repo/releases/tag/$', params: { repo, _splat: rel.tag } })
+      }
       else {
         setUploadError('Some files failed to upload. The release was saved; fix the problem and save again to retry.')
         setCreated(rel)
@@ -107,11 +111,15 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
     onSuccess: () => invalidate(),
   })
 
-  if (!canWriteRepo(r.permission)) return <EmptyState title="Can't edit releases">You need write access to {repo}.</EmptyState>
+  if (!canWriteRepo(r.permission))
+    return (
+      <EmptyState icon={<Lock size={20} />} title="Can't edit releases">
+        You need write access to {repo}.
+      </EmptyState>
+    )
 
-  const addFiles = (list: FileList | null) => {
-    if (!list) return
-    const add = Array.from(list).filter((f) => !files.some((p) => p.file.name === f.name))
+  const addFiles = (list: File[]) => {
+    const add = list.filter((f) => !files.some((p) => p.file.name === f.name))
     setFiles((fs) => [...fs, ...add.map((file) => ({ file, progress: 0 }))])
   }
   const assets = release?.assets ?? []
@@ -119,144 +127,130 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
   const submit = (draft: boolean) => !invalid && save.mutate(draft)
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-4 p-4">
-      <div>
-        <Link to="/$repo/releases" params={{ repo }} search={{}} className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg">
-          <ArrowLeft size={12} /> Releases
-        </Link>
-        <h2 className="mt-1 text-lg font-semibold">{release ? `Edit ${releaseTitle(release)}` : 'New release'}</h2>
-      </div>
+    <div className="mx-auto flex max-w-4xl flex-col px-6 py-5">
+      <SubHeader back={{ to: '/$repo/releases', params: { repo }, search: {}, label: 'Releases' }} title={release ? `Edit ${releaseTitle(release)}` : 'New release'} />
       <form
         aria-label={release ? 'Edit release' : 'New release'}
-        className="flex flex-col gap-4 rounded-md border border-border p-4"
         onSubmit={(e) => {
           e.preventDefault()
           submit(release ? release.draft : false)
         }}
       >
-        <div className="grid gap-3 md:grid-cols-2">
-          <Field
-            label="Tag"
-            hint={
-              tag.trim() && !invalid
-                ? existingTag
-                  ? `Existing tag at ${existingTag.commit.slice(0, 7)}`
-                  : tagLocked
-                    ? 'The tag is renamed in the release only'
-                    : 'New tag — created from the target when the release is published'
-                : undefined
-            }
-          >
-            {(id) => (
-              <>
-                <Input id={id} value={tag} onChange={(e) => setTag(e.target.value)} placeholder="v1.0.0" list={listId} autoFocus={!release} className="font-mono" />
-                <datalist id={listId}>
-                  {(tags.data ?? []).map((t) => (
-                    <option key={t.name} value={t.name} />
-                  ))}
-                </datalist>
-              </>
-            )}
-          </Field>
-          {!existingTag && (
-            <Field label="Target" hint="Branch the new tag points at">
-              {(id) => (
-                <Select id={id} value={target} onChange={(e) => setTarget(e.target.value)}>
-                  {(branches.data ?? [{ name: r.default_branch }]).map((b) => (
-                    <option key={b.name} value={b.name}>
-                      {b.name}
-                    </option>
-                  ))}
-                  {target && !(branches.data ?? []).some((b) => b.name === target) && <option value={target}>{target}</option>}
-                </Select>
+        <Card
+          footer={
+            <>
+              {(!release || release.draft) && (
+                <Button loading={pending && save.variables === true} disabled={!!invalid || pending} onClick={() => submit(true)}>
+                  {release ? 'Save draft' : 'Save as draft'}
+                </Button>
               )}
-            </Field>
-          )}
-        </div>
-        {tag.trim() && invalid && <p className="-mt-2 text-sm text-danger">{invalid}</p>}
-        <Field label="Title">{(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} placeholder={tag.trim() || 'Release title'} maxLength={200} />}</Field>
-        <MarkdownEditor value={body} onChange={setBody} repo={repo} label="Release notes" placeholder="What changed in this release?" minRows={10} onSubmit={() => submit(release ? release.draft : false)} />
-        <Checkbox checked={prerelease} onChange={setPrerelease} label="This is a pre-release" hint="Pre-releases are never marked Latest." />
-
-        <section aria-label="Release files" className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-fg-muted">Files</h3>
-            <Button onClick={() => fileRef.current?.click()}>
-              <Upload size={13} /> Attach files
-            </Button>
-            <input ref={fileRef} type="file" multiple hidden aria-label="Attach files" onChange={(e) => (addFiles(e.target.files), (e.target.value = ''))} />
-          </div>
-          <div
-            className="flex min-h-14 flex-col justify-center rounded border border-dashed border-border-strong bg-bg-subtle"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault()
-              addFiles(e.dataTransfer.files)
-            }}
-          >
-            {assets.length === 0 && files.length === 0 && <p className="py-3 text-center text-sm text-fg-faint">Drop files here or attach them. They're uploaded when you save.</p>}
-            <ul className="divide-y divide-border">
-              {assets.map((a) => (
-                <li key={a.id} className="flex h-8 items-center gap-2 px-2.5 text-base">
-                  <FileArchive size={13} className="text-fg-muted" />
-                  <a href={assetUrl(repo, release!.id, a.id)} className="min-w-0 flex-1 truncate hover:underline">
-                    {a.name}
-                  </a>
-                  <span className="text-sm text-fg-faint tabular-nums">{formatBytes(a.size_bytes)}</span>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${a.name}`}
-                    className="rounded p-1 text-fg-muted hover:bg-bg-hover hover:text-danger disabled:opacity-40"
-                    disabled={delAsset.isPending}
-                    onClick={() => window.confirm(`Delete ${a.name}?`) && delAsset.mutate(a.id)}
-                  >
-                    <X size={13} />
-                  </button>
-                </li>
-              ))}
-              {files.map((p, i) => (
-                <li key={p.file.name} className="flex flex-col gap-1 px-2.5 py-1.5 text-base">
-                  <div className="flex items-center gap-2">
-                    <Upload size={13} className="text-accent" />
-                    <span className="min-w-0 flex-1 truncate">{p.file.name}</span>
-                    <span className="text-sm text-fg-faint tabular-nums">{p.progress >= 1 && !p.error ? 'uploaded' : p.progress > 0 ? `${Math.round(p.progress * 100)}%` : formatBytes(p.file.size)}</span>
-                    {!pending && (
-                      <button type="button" aria-label={`Remove ${p.file.name}`} className="rounded p-1 text-fg-muted hover:bg-bg-hover hover:text-fg" onClick={() => setFiles((fs) => fs.filter((_, j) => j !== i))}>
-                        <X size={13} />
-                      </button>
-                    )}
-                  </div>
-                  {p.progress > 0 && p.progress < 1 && (
-                    <div className="h-1 overflow-hidden rounded bg-bg-hover">
-                      <div className="h-full bg-accent transition-[width]" style={{ width: `${p.progress * 100}%` }} />
-                    </div>
+              {release && !release.draft ? (
+                <Button type="submit" variant="primary" loading={pending} disabled={!!invalid}>
+                  Save release
+                </Button>
+              ) : (
+                <Button variant="primary" icon={<Rocket size={13} />} loading={pending && save.variables === false} disabled={!!invalid || pending} onClick={() => submit(false)}>
+                  Publish release
+                </Button>
+              )}
+            </>
+          }
+        >
+          <div className="flex flex-col gap-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field
+                label="Tag"
+                error={tag.trim() && invalid ? invalid : undefined}
+                hint={
+                  tag.trim() && !invalid
+                    ? existingTag
+                      ? `Existing tag at ${existingTag.commit.slice(0, 7)}`
+                      : tagLocked
+                        ? 'The tag is renamed in the release only'
+                        : 'New tag — created from the target when the release is published'
+                    : 'Pick an existing tag or type a new one, like v1.2.0.'
+                }
+              >
+                {(id) => (
+                  <>
+                    <Input id={id} value={tag} onChange={(e) => setTag(e.target.value)} placeholder="v1.0.0" list={listId} autoFocus={!release} className="font-mono" aria-invalid={!!(tag.trim() && invalid) || undefined} />
+                    <datalist id={listId}>
+                      {(tags.data ?? []).map((t) => (
+                        <option key={t.name} value={t.name} />
+                      ))}
+                    </datalist>
+                  </>
+                )}
+              </Field>
+              {!existingTag && (
+                <Field label="Target" hint="Branch the new tag points at">
+                  {(id) => (
+                    <Select id={id} value={target} onChange={(e) => setTarget(e.target.value)} className="font-mono">
+                      {(branches.data ?? [{ name: r.default_branch }]).map((b) => (
+                        <option key={b.name} value={b.name}>
+                          {b.name}
+                        </option>
+                      ))}
+                      {target && !(branches.data ?? []).some((b) => b.name === target) && <option value={target}>{target}</option>}
+                    </Select>
                   )}
-                  {p.error && <p className="text-sm text-danger">{p.error}</p>}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+                </Field>
+              )}
+            </div>
+            <Field label="Title">{(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} placeholder={tag.trim() || 'Release title'} maxLength={200} size="lg" />}</Field>
+            <MarkdownEditor value={body} onChange={setBody} repo={repo} label="Release notes" placeholder="What changed in this release?" minRows={10} onSubmit={() => submit(release ? release.draft : false)} />
+            <Checkbox checked={prerelease} onChange={setPrerelease} label="This is a pre-release" hint="Pre-releases are never marked Latest." />
 
-        {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
-        {delAsset.isError && <Alert>{errorMessage(delAsset.error)}</Alert>}
-        {uploadError && <Alert>{uploadError}</Alert>}
-        <div className="flex justify-end gap-2">
-          {(!release || release.draft) && (
-            <Button loading={pending && save.variables === true} disabled={!!invalid || pending} onClick={() => submit(true)}>
-              {release ? 'Save draft' : 'Save as draft'}
-            </Button>
-          )}
-          {release && !release.draft ? (
-            <Button type="submit" variant="primary" loading={pending} disabled={!!invalid}>
-              Save release
-            </Button>
-          ) : (
-            <Button variant="primary" loading={pending && save.variables === false} disabled={!!invalid || pending} onClick={() => submit(false)}>
-              Publish release
-            </Button>
-          )}
-        </div>
+            <section aria-label="Release files" className="flex flex-col gap-2">
+              <h3 className="text-sm font-medium">Files</h3>
+              <FileDrop multiple label="Attach files" onFiles={addFiles} disabled={pending} hint="They're uploaded when you save." />
+              {(assets.length > 0 || files.length > 0) && (
+                <ul className="divide-y divide-border overflow-hidden rounded-md border border-border">
+                  {assets.map((a) => (
+                    <li key={a.id} className="flex h-10 items-center gap-2.5 px-3 text-base">
+                      <FileArchive size={14} className="text-fg-muted" />
+                      <a href={assetUrl(repo, release!.id, a.id)} className="min-w-0 flex-1 truncate hover:underline">
+                        {a.name}
+                      </a>
+                      <span className="text-sm text-fg-faint tabular-nums">{formatBytes(a.size_bytes)}</span>
+                      <IconButton
+                        label={`Delete ${a.name}`}
+                        size="sm"
+                        className="hover:bg-danger/10 hover:text-danger"
+                        disabled={delAsset.isPending}
+                        onClick={async () => {
+                          if (await confirm({ title: `Delete ${a.name}?`, description: 'The file is removed from the release right away.', confirmLabel: 'Delete file' })) delAsset.mutate(a.id)
+                        }}
+                      >
+                        <X size={13} />
+                      </IconButton>
+                    </li>
+                  ))}
+                  {files.map((p, i) => (
+                    <li key={p.file.name} className="flex flex-col gap-1.5 px-3 py-2 text-base">
+                      <div className="flex items-center gap-2.5">
+                        <Upload size={14} className="text-accent" />
+                        <span className="min-w-0 flex-1 truncate">{p.file.name}</span>
+                        <span className="text-sm text-fg-faint tabular-nums">{p.progress >= 1 && !p.error ? 'uploaded' : p.progress > 0 ? `${Math.round(p.progress * 100)}%` : formatBytes(p.file.size)}</span>
+                        {!pending && (
+                          <IconButton label={`Remove ${p.file.name}`} size="sm" onClick={() => setFiles((fs) => fs.filter((_, j) => j !== i))}>
+                            <X size={13} />
+                          </IconButton>
+                        )}
+                      </div>
+                      {p.progress > 0 && p.progress < 1 && <Meter value={p.progress * 100} label={`Uploading ${p.file.name}`} tone="accent" size="sm" />}
+                      {p.error && <p className="text-sm text-danger">{p.error}</p>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
+            {delAsset.isError && <Alert>{errorMessage(delAsset.error)}</Alert>}
+            {uploadError && <Alert>{uploadError}</Alert>}
+          </div>
+        </Card>
       </form>
     </div>
   )
