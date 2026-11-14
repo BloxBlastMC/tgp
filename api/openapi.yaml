@@ -6,37 +6,462 @@ info:
     REST API for tgp, a self-hosted git platform for a single team.
     The web UI and the `tgp` CLI are both built on this API.
 
+    ## Authentication
+    - **Browser sessions** use the `tgp_session` cookie set by `POST /auth/login`.
+      Unsafe requests (POST/PUT/PATCH/DELETE) made with the cookie must echo the
+      `tgp_csrf` cookie value in the `X-CSRF-Token` header.
+    - **Personal access tokens** go in `Authorization: Bearer tgp_pat_...` (or
+      `Authorization: token ...`). No CSRF header is needed. Token scopes:
+      `read` (GET requests), `write` (everything else), `admin` (admin endpoints;
+      the user must also be an admin).
+
+    ## Errors
     Errors always use the `Error` schema: `{"error": {"code": "...", "message": "..."}}`.
+    Codes are stable: `bad_request`, `validation_failed`, `unauthenticated`, `forbidden`,
+    `not_found`, `conflict`, `rate_limited`, `setup_required`, `password_change_required`,
+    `totp_required`, `internal_error`.
 servers:
   - url: /api/v1
+security:
+  - sessionCookie: []
+  - bearerToken: []
 tags:
   - name: meta
-    description: Server information
+  - name: setup
+  - name: auth
+  - name: account
+  - name: users
+  - name: org
+  - name: admin
 paths:
   /meta:
     get:
       operationId: getMeta
       tags: [meta]
       summary: Server version and setup state
-      description: Public endpoint. Clients use it to detect a tgp server and whether first-start setup is pending.
+      description: Public. Clients use it to detect a tgp server and whether first-start setup is pending.
       security: []
       responses:
         "200":
           description: Server metadata
           content:
             application/json:
+              schema: { $ref: "#/components/schemas/Meta" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /setup:
+    post:
+      operationId: completeSetup
+      tags: [setup]
+      summary: Complete first-start setup
+      description: |
+        Creates the first admin, configures the org and optionally creates more
+        users, all in one transaction. Requires the one-time setup token printed
+        in the server log. Only works while setup is pending. On success the
+        caller is logged in as the new admin.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SetupRequest" }
+      responses:
+        "200":
+          description: Setup complete
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SetupResponse" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in with username and password
+      description: |
+        Sets the session cookie. If the user has 2FA enabled and neither
+        `totp_code` nor `recovery_code` is given, fails with `totp_required`;
+        resend with a code. If the response has `must_change_password: true`,
+        only `getSession`, `logout` and `changePassword` work until the password
+        is changed.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: End the current session
+      responses:
+        "204": { description: Logged out }
+        default: { $ref: "#/components/responses/Error" }
+
+  /auth/session:
+    get:
+      operationId: getSession
+      tags: [auth]
+      summary: The current user and how they authenticated
+      responses:
+        "200":
+          description: Current session
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /account/password:
+    post:
+      operationId: changePassword
+      tags: [account]
+      summary: Change your password
+      description: For a user with a temporary password, `current_password` is the temporary password. Signs out your other sessions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChangePasswordRequest" }
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /account/totp:
+    post:
+      operationId: startTotpSetup
+      tags: [account]
+      summary: Begin 2FA setup
+      description: Generates a new TOTP secret. It isn't active until confirmed with `enableTotp`.
+      responses:
+        "200":
+          description: Pending TOTP secret
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TotpSetup" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /account/totp/enable:
+    post:
+      operationId: enableTotp
+      tags: [account]
+      summary: Confirm 2FA setup with a code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, example: "123456" }
+      responses:
+        "200":
+          description: 2FA enabled; recovery codes are shown only now
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RecoveryCodes" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /account/totp/disable:
+    post:
+      operationId: disableTotp
+      tags: [account]
+      summary: Turn off 2FA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PasswordConfirm" }
+      responses:
+        "204": { description: 2FA disabled }
+        default: { $ref: "#/components/responses/Error" }
+
+  /account/recovery-codes:
+    post:
+      operationId: regenerateRecoveryCodes
+      tags: [account]
+      summary: Replace your 2FA recovery codes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PasswordConfirm" }
+      responses:
+        "200":
+          description: New recovery codes; old ones stop working
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RecoveryCodes" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /account/tokens:
+    get:
+      operationId: listTokens
+      tags: [account]
+      summary: List your personal access tokens
+      responses:
+        "200":
+          description: Tokens (secrets are never returned again)
+          content:
+            application/json:
               schema:
-                $ref: "#/components/schemas/Meta"
-        default:
-          $ref: "#/components/responses/Error"
+                type: array
+                items: { $ref: "#/components/schemas/AccessToken" }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createToken
+      tags: [account]
+      summary: Create a personal access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateTokenRequest" }
+      responses:
+        "201":
+          description: Token created; `token` is shown only once
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CreatedToken" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /account/tokens/{id}:
+    delete:
+      operationId: deleteToken
+      tags: [account]
+      summary: Revoke a personal access token
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        "204": { description: Revoked }
+        default: { $ref: "#/components/responses/Error" }
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List team members
+      description: Basic info about every active user, e.g. for picking reviewers.
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UserSummary" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /org:
+    get:
+      operationId: getOrg
+      tags: [org]
+      summary: Org settings
+      responses:
+        "200":
+          description: Org
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Org" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /org/logo:
+    get:
+      operationId: getOrgLogo
+      tags: [org]
+      summary: Org logo image
+      security: []
+      responses:
+        "200":
+          description: Logo
+          content:
+            image/*:
+              schema: { type: string, format: binary }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/org:
+    patch:
+      operationId: updateOrg
+      tags: [admin]
+      summary: Update org settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateOrgRequest" }
+      responses:
+        "200":
+          description: Updated org
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Org" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/org/logo:
+    put:
+      operationId: uploadOrgLogo
+      tags: [admin]
+      summary: Upload the org logo
+      description: Raw PNG, JPEG, GIF or WebP bytes, at most 512 KiB.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        "200":
+          description: Updated org
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Org" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteOrgLogo
+      tags: [admin]
+      summary: Remove the org logo
+      responses:
+        "204": { description: Removed }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin]
+      summary: List all users with admin details
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/User" }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: adminCreateUser
+      tags: [admin]
+      summary: Create a user with a temporary password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateUserRequest" }
+      responses:
+        "201":
+          description: User created; `temp_password` is shown only once
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserWithTempPassword" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/users/{username}:
+    parameters:
+      - { name: username, in: path, required: true, schema: { type: string } }
+    get:
+      operationId: adminGetUser
+      tags: [admin]
+      summary: Get a user
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        default: { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: adminUpdateUser
+      tags: [admin]
+      summary: Update a user's profile, role, repo access or disabled state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateUserRequest" }
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/users/{username}/reset-password:
+    parameters:
+      - { name: username, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: adminResetPassword
+      tags: [admin]
+      summary: Issue a new temporary password
+      description: Signs the user out everywhere. They must set a new password at next login.
+      responses:
+        "200":
+          description: New temporary password, shown only once
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserWithTempPassword" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/users/{username}/reset-totp:
+    parameters:
+      - { name: username, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: adminResetTotp
+      tags: [admin]
+      summary: Turn off a user's 2FA (e.g. lost device)
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/audit-log:
+    get:
+      operationId: listAuditLog
+      tags: [admin]
+      summary: Security audit log, newest first
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+        - { name: before, in: query, description: Return entries with id lower than this (cursor from `next_before`)., schema: { type: integer, format: int64 } }
+        - { name: actor, in: query, description: Filter by actor username., schema: { type: string } }
+        - { name: action, in: query, description: "Filter by action prefix, e.g. `user.` or `auth.login`.", schema: { type: string } }
+      responses:
+        "200":
+          description: Audit entries
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuditPage" }
+        default: { $ref: "#/components/responses/Error" }
+
 components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: tgp_session
+    bearerToken:
+      type: http
+      scheme: bearer
   responses:
     Error:
       description: Error response
       content:
         application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
+          schema: { $ref: "#/components/schemas/Error" }
   schemas:
     Error:
       type: object
@@ -48,7 +473,7 @@ components:
           properties:
             code:
               type: string
-              description: Stable machine-readable error code, e.g. `not_found`, `forbidden`, `validation_failed`.
+              description: Stable machine-readable error code.
               example: not_found
             message:
               type: string
@@ -57,18 +482,279 @@ components:
               type: object
               additionalProperties: true
               description: Optional structured details (e.g. per-field validation errors).
+
     Meta:
       type: object
-      required: [version, commit, setup_required, org_name]
+      required: [version, commit, setup_required, org_name, has_logo]
       properties:
-        version:
-          type: string
-          example: 1.0.0
-        commit:
-          type: string
+        version: { type: string, example: 1.0.0 }
+        commit: { type: string }
         setup_required:
           type: boolean
           description: True until the first admin and org have been configured.
         org_name:
           type: string
           description: Org display name; empty before setup.
+        has_logo: { type: boolean }
+
+    Role:
+      type: string
+      enum: [admin, maintainer, tester]
+      description: |
+        `admin`: everything, including the admin panel and creating repositories.
+        `maintainer`: read/write on granted repositories.
+        `tester`: read, issues, comments, reviews and CI re-runs on granted repositories.
+
+    UserSummary:
+      type: object
+      required: [id, username, display_name, role]
+      properties:
+        id: { type: integer, format: int64 }
+        username: { type: string }
+        display_name: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+
+    User:
+      type: object
+      required: [id, username, display_name, email, role, all_repos, must_change_password, totp_enabled, disabled, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        username: { type: string }
+        display_name: { type: string }
+        email: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        all_repos:
+          type: boolean
+          description: Access to every repository. When false, access is limited to explicitly granted repositories. Always true for admins.
+        must_change_password: { type: boolean }
+        temp_password_expires_at: { type: string, format: date-time, nullable: true }
+        totp_enabled: { type: boolean }
+        disabled: { type: boolean }
+        last_login_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    UserWithTempPassword:
+      type: object
+      required: [user, temp_password, temp_password_expires_at]
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+        temp_password:
+          type: string
+          description: Shown only once. The user must change it at first login.
+        temp_password_expires_at: { type: string, format: date-time }
+
+    CreateUserRequest:
+      type: object
+      required: [username, role]
+      properties:
+        username:
+          type: string
+          description: Lowercase letters, digits, `-`, `_` and `.`; 1-39 characters, starting with a letter or digit.
+        display_name: { type: string }
+        email: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        all_repos:
+          type: boolean
+          default: false
+          description: Give access to every repository (ignored for admins, who always have it).
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        display_name: { type: string }
+        email: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        all_repos: { type: boolean }
+        disabled:
+          type: boolean
+          description: Disabled users can't log in and their sessions and tokens stop working.
+
+    Session:
+      type: object
+      required: [user, auth_method, must_change_password]
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+        auth_method:
+          type: string
+          enum: [session, token]
+        must_change_password: { type: boolean }
+        token_scopes:
+          type: array
+          items: { type: string }
+          description: Present when authenticated with a token.
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          description: Username or email.
+        password: { type: string }
+        totp_code: { type: string }
+        recovery_code: { type: string }
+
+    ChangePasswordRequest:
+      type: object
+      required: [current_password, new_password]
+      properties:
+        current_password: { type: string }
+        new_password:
+          type: string
+          description: At least 10 characters.
+
+    PasswordConfirm:
+      type: object
+      required: [password]
+      properties:
+        password: { type: string }
+
+    TotpSetup:
+      type: object
+      required: [secret, otpauth_url]
+      properties:
+        secret:
+          type: string
+          description: Base32 secret for manual entry.
+        otpauth_url:
+          type: string
+          description: "`otpauth://` URL to render as a QR code."
+
+    RecoveryCodes:
+      type: object
+      required: [codes]
+      properties:
+        codes:
+          type: array
+          items: { type: string }
+          description: Single-use codes for logging in without the authenticator. Shown only once.
+
+    TokenScope:
+      type: string
+      enum: [read, write, admin]
+
+    AccessToken:
+      type: object
+      required: [id, name, prefix, scopes, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        prefix:
+          type: string
+          description: First characters of the token, to recognise it.
+        scopes:
+          type: array
+          items: { $ref: "#/components/schemas/TokenScope" }
+        last_used_at: { type: string, format: date-time, nullable: true }
+        expires_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    CreateTokenRequest:
+      type: object
+      required: [name, scopes]
+      properties:
+        name: { type: string, example: laptop CLI }
+        scopes:
+          type: array
+          items: { $ref: "#/components/schemas/TokenScope" }
+          minItems: 1
+        expires_in_days:
+          type: integer
+          minimum: 1
+          maximum: 3650
+          description: Omit for a token that never expires.
+
+    CreatedToken:
+      type: object
+      required: [token, access_token]
+      properties:
+        token:
+          type: string
+          description: The secret. Shown only once.
+        access_token: { $ref: "#/components/schemas/AccessToken" }
+
+    Org:
+      type: object
+      required: [name, description, base_url, has_logo]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        base_url:
+          type: string
+          description: Public URL of this server, used in clone URLs and webhooks.
+        has_logo: { type: boolean }
+
+    UpdateOrgRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        base_url: { type: string }
+
+    SetupRequest:
+      type: object
+      required: [setup_token, admin, org]
+      properties:
+        setup_token:
+          type: string
+          description: One-time token printed in the tgp-server log on first start.
+        admin:
+          type: object
+          required: [username, password]
+          properties:
+            username: { type: string }
+            display_name: { type: string }
+            email: { type: string }
+            password: { type: string }
+        org:
+          type: object
+          required: [name]
+          properties:
+            name: { type: string }
+            description: { type: string }
+            base_url: { type: string }
+        users:
+          type: array
+          description: Optional extra users; each gets a temporary password.
+          items: { $ref: "#/components/schemas/CreateUserRequest" }
+
+    SetupResponse:
+      type: object
+      required: [admin, users]
+      properties:
+        admin: { $ref: "#/components/schemas/User" }
+        users:
+          type: array
+          items: { $ref: "#/components/schemas/UserWithTempPassword" }
+
+    AuditEntry:
+      type: object
+      required: [id, actor, action, target_type, target, ip, details, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        actor:
+          type: string
+          description: Username of whoever did it; empty for anonymous actions such as failed logins.
+        action:
+          type: string
+          example: user.create
+        target_type: { type: string, example: user }
+        target: { type: string }
+        ip: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+        created_at: { type: string, format: date-time }
+
+    AuditPage:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/AuditEntry" }
+        next_before:
+          type: integer
+          format: int64
+          nullable: true
+          description: Pass as `before` to get the next page; absent on the last page.

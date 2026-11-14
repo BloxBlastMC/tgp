@@ -10,7 +10,7 @@ export CGO_ENABLED ?= 0
 
 BINARIES := tgp-server tgp tgp-runner
 
-.PHONY: all build web web-deps generate check-generate test test-go test-web lint fmt run clean
+.PHONY: all build web web-deps generate check-generate test test-go test-web e2e lint fmt run clean
 
 all: web build
 
@@ -43,6 +43,11 @@ test-go:
 
 test-web:
 	cd web && pnpm test
+
+# Browser end-to-end tests against a freshly built server. Set CHROMIUM_PATH
+# to use a system Chromium instead of Playwright's download.
+e2e: web build
+	cd web && pnpm e2e
 
 lint:
 	go vet ./...

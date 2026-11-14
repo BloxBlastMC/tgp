@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -15,8 +16,10 @@ import (
 
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/api/apigen"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/apierr"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/auth"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/config"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/db"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/secretbox"
 )
 
 // Server is the tgp HTTP server.
@@ -25,6 +28,14 @@ type Server struct {
 	db  *db.DB
 	log *slog.Logger
 	web http.Handler
+	box *secretbox.Box
+
+	// Login rate limits: per username and per client IP.
+	userLimiter *auth.FailureLimiter
+	ipLimiter   *auth.FailureLimiter
+
+	// setupDone caches setup completion; it never reverts once true.
+	setupDone atomic.Bool
 }
 
 // Options configures a Server.
@@ -34,11 +45,21 @@ type Options struct {
 	Logger *slog.Logger
 	// Web serves the embedded UI. If nil a placeholder page is served.
 	Web http.Handler
+	// Box encrypts secrets at rest with the master key.
+	Box *secretbox.Box
 }
 
 // New creates a Server.
 func New(o Options) *Server {
-	return &Server{cfg: o.Config, db: o.DB, log: o.Logger, web: o.Web}
+	return &Server{
+		cfg:         o.Config,
+		db:          o.DB,
+		log:         o.Logger,
+		web:         o.Web,
+		box:         o.Box,
+		userLimiter: auth.NewFailureLimiter(10, 15*time.Minute),
+		ipLimiter:   auth.NewFailureLimiter(50, 15*time.Minute),
+	}
 }
 
 // Handler builds the root HTTP handler.
@@ -73,13 +94,14 @@ func (s *Server) Handler() http.Handler {
 
 func (s *Server) apiV1() http.Handler {
 	r := chi.NewRouter()
+	r.Use(limitBody(2<<20), s.csrf, s.authenticate)
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		apierr.Write(w, apierr.NotFound("no API route for %s %s", r.Method, r.URL.Path))
 	})
 	r.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
 		apierr.Write(w, apierr.New(http.StatusMethodNotAllowed, apierr.CodeMethodNotAllowed, "method %s not allowed on %s", r.Method, r.URL.Path))
 	})
-	strict := apigen.NewStrictHandlerWithOptions(&api{s: s}, nil, apigen.StrictHTTPServerOptions{
+	strict := apigen.NewStrictHandlerWithOptions(&api{s: s}, []apigen.StrictMiddlewareFunc{s.policyMiddleware}, apigen.StrictHTTPServerOptions{
 		RequestErrorHandlerFunc: func(w http.ResponseWriter, _ *http.Request, err error) {
 			apierr.Write(w, apierr.BadRequest("invalid request: %v", err))
 		},

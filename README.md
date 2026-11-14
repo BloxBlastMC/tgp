@@ -5,8 +5,8 @@
 A self-hosted git platform for a single team: repositories, pull requests,
 issues, CI with strict resource limits, and an agent-friendly CLI.
 
-> **Status:** early development. This is the project skeleton (milestone 1).
-> See [docs/roadmap.md](docs/roadmap.md) for what's coming.
+> **Status:** early development: setup, users and authentication work;
+> repositories come next. See [docs/roadmap.md](docs/roadmap.md).
 
 ## Components
 
@@ -25,6 +25,7 @@ make            # build the web UI, then bin/tgp-server, bin/tgp, bin/tgp-runner
 make test       # Go + web tests
 make lint
 make generate   # regenerate code from api/openapi.yaml after editing it
+make e2e        # browser tests (set CHROMIUM_PATH to use a system Chromium)
 ```
 
 ## Running
@@ -34,6 +35,19 @@ make generate   # regenerate code from api/openapi.yaml after editing it
 ./bin/tgp-server -c deploy/config.example.toml
 ./bin/tgp-server migrate status
 ```
+
+### First start
+
+On first start `tgp-server` prints a one-time **setup token** to its log.
+Open the web UI, enter the token, then create the first admin, name the org
+and optionally add your team. Each new person gets a temporary password
+(valid 72 hours) and picks their own password at first login, with optional
+two-factor authentication. See [docs/authentication.md](docs/authentication.md).
+
+The server also creates `master.key` in the data dir. It encrypts 2FA seeds
+(and later CI secrets): back it up with the database.
+
+### Configuration
 
 Configuration is a TOML file (see [deploy/config.example.toml](deploy/config.example.toml))
 with `TGP_*` environment overrides.
@@ -49,9 +63,14 @@ api/            openapi.yaml: source of truth for the REST API
 internal/
   api/apigen    Go server interface + client generated from the spec
   apierr        structured API errors ({"error":{"code","message"}})
+  audit         security audit log
+  auth          password hashing, tokens, TOTP, login rate limiting
   config        TOML + env configuration
   db            bun (SQLite/Postgres) + embedded migrations
-  server        HTTP server, routing, SPA serving
+  model         database models
+  secretbox     AES-GCM encryption of secrets under the master key
+  server        HTTP server, routing, authn/authz policy, API handlers
+  users         user creation and management shared by setup and admin
   servercmd     tgp-server CLI
   cli           tgp CLI
   runnercmd     tgp-runner CLI

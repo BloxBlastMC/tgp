@@ -15,6 +15,7 @@ import (
 
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/config"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/db"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/secretbox"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/server"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/version"
 	"git.taile67276.ts.net/BloxBlast/tgp/web"
@@ -167,15 +168,62 @@ func runServe(parent context.Context, o *rootOpts) error {
 		return err
 	}
 
+	key, created, err := secretbox.LoadOrCreateKey(cfg.Security.MasterKeyFile)
+	if err != nil {
+		return err
+	}
+	if created {
+		log.Warn("generated a new master key; back it up, it encrypts 2FA seeds and CI secrets", "path", cfg.Security.MasterKeyFile)
+	}
+	box, err := secretbox.New(key)
+	if err != nil {
+		return err
+	}
+
 	srv := server.New(server.Options{
 		Config: cfg,
 		DB:     d,
 		Logger: log,
 		Web:    server.SPAHandler(web.Dist()),
+		Box:    box,
 	})
+	tok, err := srv.EnsureSetupToken(ctx)
+	if err != nil {
+		return err
+	}
+	if tok != "" {
+		printSetupBanner(cfg, tok)
+	}
 	if err := srv.ListenAndServe(ctx); err != nil && !errors.Is(err, context.Canceled) {
 		return err
 	}
 	log.Info("stopped")
 	return nil
+}
+
+// printSetupBanner shows the one-time setup token. It goes straight to
+// stderr (not through the logger) so it stands out and isn't filtered by
+// log level.
+func printSetupBanner(cfg *config.Config, tok string) {
+	url := cfg.Server.BaseURL
+	if url == "" {
+		url = "http://localhost" + cfg.Server.Listen
+		if cfg.Server.Listen != "" && cfg.Server.Listen[0] != ':' {
+			url = "http://" + cfg.Server.Listen
+		}
+	}
+	fmt.Fprintf(os.Stderr, `
+  ┌──────────────────────────────────────────────────────────────┐
+  │  tgp first-start setup                                       │
+  │                                                              │
+  │  Open %-55s│
+  │  and enter this setup token:                                 │
+  │                                                              │
+  │      %-56s│
+  │                                                              │
+  │  The token changes every time the server restarts until      │
+  │  setup is complete.                                          │
+  └──────────────────────────────────────────────────────────────┘
+
+`, url+"/setup", tok)
 }
