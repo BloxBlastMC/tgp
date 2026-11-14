@@ -180,7 +180,7 @@ function Group({ title, header, children }: { title: string; header: LogLine; ch
 export function StepLog({ lines }: { lines: LogLine[] }) {
   const items = buildLogItems(lines)
   return (
-    <div className="font-mono text-[12px] leading-[18px]">
+    <div className="font-mono text-sm">
       {items.map((it) =>
         it.kind === 'group' ? (
           <Group key={it.line.n} title={it.title} header={it.line} children={it.children} />

@@ -30,7 +30,7 @@ export function AdminUsersPage() {
           <Search size={13} className="absolute top-1/2 left-2 -translate-y-1/2 text-fg-faint" />
           <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter users" className="h-7 pl-7" aria-label="Filter users" />
         </div>
-        <span className="flex-1 text-[12px] text-fg-faint">{users.data ? `${users.data.length} users` : ''}</span>
+        <span className="flex-1 text-sm text-fg-faint">{users.data ? `${users.data.length} users` : ''}</span>
         <Button variant="primary" onClick={() => setCreating(true)}>
           <Plus size={14} /> New user
         </Button>
@@ -43,7 +43,7 @@ export function AdminUsersPage() {
         </div>
       ) : (
         <table className="w-full text-left">
-          <thead className="text-[11px] tracking-wide text-fg-faint uppercase">
+          <thead className="text-xs tracking-wide text-fg-faint uppercase">
             <tr className="border-b border-border">
               <th className="px-4 py-1.5 font-medium">User</th>
               <th className="px-2 py-1.5 font-medium">Role</th>
@@ -59,8 +59,8 @@ export function AdminUsersPage() {
                 <td className="px-4">
                   <button type="button" className="text-left" onClick={() => setEditing(u)}>
                     <span className="font-medium">{u.display_name}</span>
-                    <span className="ml-2 font-mono text-[12px] text-fg-faint">{u.username}</span>
-                    {u.id === me?.id && <span className="ml-2 text-[11px] text-fg-faint">(you)</span>}
+                    <span className="ml-2 font-mono text-sm text-fg-faint">{u.username}</span>
+                    {u.id === me?.id && <span className="ml-2 text-xs text-fg-faint">(you)</span>}
                   </button>
                 </td>
                 <td className="px-2">
@@ -369,7 +369,7 @@ function EditUserDialog({
             repos={selectedRepos}
             onRepos={setRepos}
           />
-          {isSelf && <p className="text-[12px] text-fg-faint">You can't change your own role or disable yourself.</p>}
+          {isSelf && <p className="text-sm text-fg-faint">You can't change your own role or disable yourself.</p>}
           <div className="flex flex-wrap gap-2 border-t border-border pt-3">
             {!isSelf && <Button onClick={() => setConfirm('reset')}>Reset password</Button>}
             {user.totp_enabled && <Button onClick={() => setConfirm('totp')}>Reset 2FA</Button>}

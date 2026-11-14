@@ -46,10 +46,10 @@ export function NewIssuePage() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4 p-4">
       <div>
-        <Link to="/$repo/issues" params={{ repo }} className="inline-flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg">
+        <Link to="/$repo/issues" params={{ repo }} className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg">
           <ArrowLeft size={12} /> Issues
         </Link>
-        <h2 className="mt-1 text-[15px] font-semibold">New issue</h2>
+        <h2 className="mt-1 text-lg font-semibold">New issue</h2>
       </div>
       <form
         className="grid gap-6 md:grid-cols-[minmax(0,1fr)_240px]"
@@ -76,7 +76,7 @@ export function NewIssuePage() {
             </Button>
           </div>
         </div>
-        <aside className="flex flex-col gap-3 text-[13px]">
+        <aside className="flex flex-col gap-3 text-base">
           <MetaSections
             repo={repo}
             canEdit

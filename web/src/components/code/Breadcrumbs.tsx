@@ -5,7 +5,7 @@ import { Fragment } from 'react'
 export function Breadcrumbs({ repo, gitRef, path }: { repo: string; gitRef: string; path: string }) {
   const parts = path ? path.split('/') : []
   return (
-    <nav className="flex min-w-0 flex-wrap items-center gap-1 font-mono text-[13px]" aria-label="Path">
+    <nav className="flex min-w-0 flex-wrap items-center gap-1 font-mono text-base" aria-label="Path">
       <Link to="/$repo" params={{ repo }} search={{ ref: gitRef }} className="font-semibold text-accent hover:underline">
         {repo}
       </Link>

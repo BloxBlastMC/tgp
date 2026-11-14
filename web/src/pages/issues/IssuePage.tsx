@@ -73,7 +73,7 @@ function IssueView({ repo, issue }: { repo: string; issue: Issue }) {
           )}
           {v.canTriage && <Composer repo={repo} issue={issue} />}
         </div>
-        <aside className="flex flex-col gap-3 text-[13px]">
+        <aside className="flex flex-col gap-3 text-base">
           <MetaSections
             repo={repo}
             labels={issue.labels}
@@ -104,7 +104,7 @@ function IssueHeader({ repo, issue, canEdit }: { repo: string; issue: Issue; can
             patch.mutate({ title }, { onSuccess: () => setEditing(false) })
           }}
         >
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} aria-label="Title" autoFocus className="text-[15px]" />
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} aria-label="Title" autoFocus className="text-lg" />
           <Button type="submit" variant="primary" loading={patch.isPending} disabled={!title.trim()}>
             Save
           </Button>
@@ -114,7 +114,7 @@ function IssueHeader({ repo, issue, canEdit }: { repo: string; issue: Issue; can
         </form>
       ) : (
         <div className="flex items-start gap-2">
-          <h2 className="min-w-0 flex-1 text-[17px] font-semibold">
+          <h2 className="min-w-0 flex-1 text-xl font-semibold">
             {issue.title} <span className="font-normal text-fg-faint">#{issue.number}</span>
           </h2>
           {canEdit && (
@@ -148,7 +148,7 @@ function BodyCard({ repo, issue, canEdit }: { repo: string; issue: Issue; canEdi
   const [body, setBody] = useState(issue.body)
   return (
     <div className="rounded-md border border-border">
-      <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-[12px] text-fg-muted">
+      <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-sm text-fg-muted">
         <Avatar user={issue.author} size={18} />
         <span className="font-medium text-fg">{issue.author.display_name}</span> opened this <Time iso={issue.created_at} />
         <span className="flex-1" />
@@ -204,7 +204,7 @@ function CloseButton({ onClose, loading, withComment }: { onClose: (reason: 'com
   return (
     <div className="relative flex" ref={ref}>
       <Button className="rounded-r-none" loading={loading} onClick={() => onClose('completed')}>
-        <CheckCircle2 size={13} className="text-[#a371f7]" /> Close issue{suffix}
+        <CheckCircle2 size={13} className="text-done" /> Close issue{suffix}
       </Button>
       <Button className="rounded-l-none border-l-0 px-1.5" onClick={() => setOpen(!open)} aria-label="More ways to close" aria-expanded={open}>
         <ChevronDown size={13} />
@@ -221,10 +221,10 @@ function CloseButton({ onClose, loading, withComment }: { onClose: (reason: 'com
                 onClose('completed')
               }}
             >
-              <CheckCircle2 size={14} className="mt-0.5 text-[#a371f7]" />
+              <CheckCircle2 size={14} className="mt-0.5 text-done" />
               <span>
                 Close as completed
-                <span className="block text-[11px] text-fg-faint">Done, fixed or resolved</span>
+                <span className="block text-xs text-fg-faint">Done, fixed or resolved</span>
               </span>
             </button>
           </li>
@@ -241,7 +241,7 @@ function CloseButton({ onClose, loading, withComment }: { onClose: (reason: 'com
               <CircleSlash size={14} className="mt-0.5 text-fg-faint" />
               <span>
                 Close as not planned
-                <span className="block text-[11px] text-fg-faint">Won't fix, duplicate, can't reproduce</span>
+                <span className="block text-xs text-fg-faint">Won't fix, duplicate, can't reproduce</span>
               </span>
             </button>
           </li>

@@ -53,14 +53,14 @@ const icons: Partial<Record<PullEvent['type'], Icon>> = {
 export function EventLine({ repo, event, isIssue }: { repo: string; event: PullEvent; isIssue?: boolean }) {
   const d = event.data as Record<string, unknown>
   let Icon = icons[event.type] ?? History
-  let tone = event.type === 'merged' ? 'text-[#a371f7]' : event.type === 'closed' ? 'text-danger' : 'text-fg-faint'
+  let tone = event.type === 'merged' ? 'text-done' : event.type === 'closed' ? 'text-danger' : 'text-fg-faint'
   if (isIssue && event.type === 'closed') {
     Icon = d.reason === 'not_planned' ? CircleSlash : CheckCircle2
-    tone = d.reason === 'not_planned' ? 'text-fg-faint' : 'text-[#a371f7]'
+    tone = d.reason === 'not_planned' ? 'text-fg-faint' : 'text-done'
   }
   const text = issueEventText(event) ?? eventText(event)
   return (
-    <div className="flex items-center gap-2 px-3 text-[12px] text-fg-muted" data-testid="event">
+    <div className="flex items-center gap-2 px-3 text-sm text-fg-muted" data-testid="event">
       <Icon size={14} className={cx('shrink-0', tone)} />
       <span className="flex min-w-0 flex-wrap items-center gap-1">
         <span className="font-medium text-fg">{event.actor?.display_name ?? 'Someone'}</span> {text}

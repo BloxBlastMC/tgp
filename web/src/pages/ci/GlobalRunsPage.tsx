@@ -51,7 +51,7 @@ export function GlobalRunsPage() {
           onChange={(v) => set({ mine: v === 'mine' ? true : undefined })}
         />
         <div className="flex-1" />
-        {runs.data && <span className="text-[12px] text-fg-faint">{runs.data.total} runs</span>}
+        {runs.data && <span className="text-sm text-fg-faint">{runs.data.total} runs</span>}
       </div>
       {runs.isPending ? (
         <Spinner />

@@ -112,9 +112,9 @@ function AccessSection({ isAdmin }: { isAdmin: boolean }) {
           {access.data?.map((a) => (
             <li key={a.user.id} className="flex items-center gap-3 py-2">
               <span className="font-medium">{a.user.display_name}</span>
-              <span className="font-mono text-[12px] text-fg-faint">{a.user.username}</span>
+              <span className="font-mono text-sm text-fg-faint">{a.user.username}</span>
               <div className="flex-1" />
-              <span className="text-[12px] text-fg-faint">{sourceLabel[a.source]}</span>
+              <span className="text-sm text-fg-faint">{sourceLabel[a.source]}</span>
               <Badge tone={a.permission === 'admin' ? 'warning' : a.permission === 'write' ? 'accent' : 'neutral'}>{a.permission}</Badge>
             </li>
           ))}
@@ -164,7 +164,7 @@ function DangerZone() {
         <div className="flex items-center gap-3 p-4">
           <div className="flex-1">
             <p className="font-medium">{repo.archived ? 'Unarchive this repository' : 'Archive this repository'}</p>
-            <p className="text-[12px] text-fg-muted">{repo.archived ? 'Allow pushes again.' : 'Make it read-only. Nobody can push until it is unarchived.'}</p>
+            <p className="text-sm text-fg-muted">{repo.archived ? 'Allow pushes again.' : 'Make it read-only. Nobody can push until it is unarchived.'}</p>
           </div>
           <Button variant="danger" onClick={() => update.mutate({ archived: !repo.archived })} loading={update.isPending && update.variables?.archived !== undefined}>
             {repo.archived ? 'Unarchive' : 'Archive'}
@@ -173,7 +173,7 @@ function DangerZone() {
         <div className="flex items-center gap-3 p-4">
           <div className="flex-1">
             <p className="font-medium">Delete this repository</p>
-            <p className="text-[12px] text-fg-muted">Permanently removes the code, history and access grants. This can't be undone.</p>
+            <p className="text-sm text-fg-muted">Permanently removes the code, history and access grants. This can't be undone.</p>
           </div>
           <Button variant="danger" onClick={() => setConfirmDelete(true)}>
             Delete

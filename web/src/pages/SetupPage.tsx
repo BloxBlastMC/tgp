@@ -96,13 +96,13 @@ export function SetupPage() {
 
   return (
     <AuthCard title="Set up tgp" subtitle="Create the first admin and configure your team's server." wide>
-      <ol className="mb-5 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
+      <ol className="mb-5 flex flex-wrap gap-x-4 gap-y-1 text-sm">
         {steps.map((s, i) => (
           <li key={s} className={cx('flex items-center gap-1.5', i === step ? 'text-fg' : 'text-fg-faint')}>
             <span
               className={cx(
-                'flex size-4 items-center justify-center rounded-full text-[10px]',
-                i < step ? 'bg-success/20 text-success' : i === step ? 'bg-accent text-accent-fg' : 'bg-bg-hover',
+                'flex size-4 items-center justify-center rounded-full text-2xs',
+                i < step ? 'bg-success/20 text-success' : i === step ? 'bg-accent-solid text-accent-fg' : 'bg-bg-hover',
               )}
             >
               {i < step ? <Check size={10} /> : i + 1}
@@ -178,7 +178,7 @@ export function SetupPage() {
                     type="file"
                     accept="image/png,image/jpeg,image/gif,image/webp"
                     onChange={(e) => setLogo(e.target.files?.[0] ?? null)}
-                    className="text-[12px] text-fg-muted file:mr-2 file:h-7 file:rounded file:border file:border-border-strong file:bg-bg-elevated file:px-2.5 file:text-fg"
+                    className="text-sm text-fg-muted file:mr-2 file:h-7 file:rounded file:border file:border-border-strong file:bg-bg-elevated file:px-2.5 file:text-fg"
                   />
                 </div>
               )}

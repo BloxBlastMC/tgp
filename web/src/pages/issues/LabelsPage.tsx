@@ -46,7 +46,7 @@ function LabelForm({ repo, label, onDone }: { repo: string; label?: Label; onDon
       }}
     >
       <div className="flex items-center gap-2">
-        <span className="text-[12px] text-fg-muted">Preview</span>
+        <span className="text-sm text-fg-muted">Preview</span>
         <LabelChip label={{ name: name || 'label name', color: isHexColor(color) ? hex : 'cfd3d7' }} />
       </div>
       <div className="grid gap-3 md:grid-cols-[200px_minmax(0,1fr)_200px_auto] md:items-end">
@@ -91,11 +91,11 @@ export function LabelsPage() {
   return (
     <div className="flex flex-col">
       <div className="flex items-center gap-3 border-b border-border px-4 py-2">
-        <Link to="/$repo/issues" params={{ repo }} className="inline-flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg">
+        <Link to="/$repo/issues" params={{ repo }} className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg">
           <ArrowLeft size={12} /> Issues
         </Link>
         <h2 className="font-semibold">Labels</h2>
-        {labels.data && <span className="text-[12px] text-fg-faint">{labels.data.length}</span>}
+        {labels.data && <span className="text-sm text-fg-faint">{labels.data.length}</span>}
         <div className="flex-1" />
         {canWrite && editing !== 'new' && (
           <Button variant="primary" onClick={() => setEditing('new')}>
@@ -128,7 +128,7 @@ export function LabelsPage() {
                   <LabelChip label={l} />
                 </span>
                 <span className="truncate text-fg-muted">{l.description}</span>
-                <Link to="/$repo/issues" params={{ repo }} search={{ labels: l.name }} className="text-[12px] text-fg-muted hover:text-accent">
+                <Link to="/$repo/issues" params={{ repo }} search={{ labels: l.name }} className="text-sm text-fg-muted hover:text-accent">
                   {l.open_issues ?? 0} open
                 </Link>
                 <span className="flex gap-1">

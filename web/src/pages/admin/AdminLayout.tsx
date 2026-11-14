@@ -22,7 +22,7 @@ export function AdminLayout() {
               <Link
                 key={t.to}
                 to={t.to}
-                className="rounded px-2 py-0.5 text-[13px] font-normal text-fg-muted hover:bg-bg-hover hover:text-fg data-[status=active]:bg-bg-hover data-[status=active]:text-fg"
+                className="rounded px-2 py-0.5 text-base font-normal text-fg-muted hover:bg-bg-hover hover:text-fg data-[status=active]:bg-bg-hover data-[status=active]:text-fg"
               >
                 {t.label}
               </Link>

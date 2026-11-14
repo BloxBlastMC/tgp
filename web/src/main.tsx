@@ -4,6 +4,8 @@ import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@ta
 import { RouterProvider } from '@tanstack/react-router'
 import { ApiRequestError } from './api/client'
 import { makeRouter } from './routes/router'
+import '@fontsource-variable/inter'
+import '@fontsource-variable/jetbrains-mono'
 import './index.css'
 
 // When the session expires or is revoked mid-use, send the user to the

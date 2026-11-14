@@ -10,7 +10,7 @@ import { cx, Input } from '../ui'
 
 export function LabelChip({ label, onClick, title }: { label: Pick<Label, 'name' | 'color'> & { description?: string }; onClick?: () => void; title?: string }) {
   const style = { backgroundColor: `#${label.color}`, color: labelTextColor(label.color) }
-  const cls = 'inline-flex h-[18px] max-w-48 items-center truncate rounded-full px-2 text-[11px] leading-none font-medium'
+  const cls = 'inline-flex h-[18px] max-w-48 items-center truncate rounded-full px-2 text-xs leading-none font-medium'
   if (onClick)
     return (
       <button type="button" onClick={onClick} className={cx(cls, 'hover:brightness-110')} style={style} title={title ?? label.description}>
@@ -27,14 +27,14 @@ export function LabelChip({ label, onClick, title }: { label: Pick<Label, 'name'
 export function IssueStateIcon({ issue, size = 15 }: { issue: Pick<IssueSummary, 'state' | 'state_reason'>; size?: number }) {
   if (issue.state === 'open') return <CircleDot size={size} className="shrink-0 text-success" aria-label="open" />
   if (issue.state_reason === 'not_planned') return <CircleSlash size={size} className="shrink-0 text-fg-faint" aria-label="closed as not planned" />
-  return <CheckCircle2 size={size} className="shrink-0 text-[#a371f7]" aria-label="closed as completed" />
+  return <CheckCircle2 size={size} className="shrink-0 text-done" aria-label="closed as completed" />
 }
 
 export function IssueStateBadge({ issue }: { issue: Pick<IssueSummary, 'state' | 'state_reason'> }) {
   const label = issue.state === 'open' ? 'Open' : issue.state_reason === 'not_planned' ? 'Closed as not planned' : 'Closed'
-  const tone = issue.state === 'open' ? 'bg-success/15 text-success' : issue.state_reason === 'not_planned' ? 'bg-bg-hover text-fg-muted' : 'bg-[#a371f7]/15 text-[#a371f7]'
+  const tone = issue.state === 'open' ? 'bg-success/15 text-success' : issue.state_reason === 'not_planned' ? 'bg-bg-hover text-fg-muted' : 'bg-done/15 text-done'
   return (
-    <span className={cx('inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-medium', tone)}>
+    <span className={cx('inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium', tone)}>
       <IssueStateIcon issue={issue} size={13} /> {label}
     </span>
   )
@@ -109,7 +109,7 @@ function Picker({
         }}
         className={
           trigger
-            ? 'inline-flex h-7 items-center gap-1 rounded border border-border-strong px-2 text-[12px] text-fg-muted hover:bg-bg-hover hover:text-fg'
+            ? 'inline-flex h-7 items-center gap-1 rounded border border-border-strong px-2 text-sm text-fg-muted hover:bg-bg-hover hover:text-fg'
             : 'rounded p-1 text-fg-muted hover:bg-bg-hover hover:text-fg disabled:opacity-40'
         }
         aria-label={trigger ? `Filter by ${title.toLowerCase()}` : `Edit ${title.toLowerCase()}`}
@@ -151,8 +151,8 @@ function Picker({
             })}
           </ul>
           <div className="flex items-center justify-between border-t border-border p-1.5">
-            <span className="px-1 text-[11px]">{footer}</span>
-            <button type="button" className="rounded px-2 py-1 text-[12px] text-accent hover:bg-bg-hover" onClick={close}>
+            <span className="px-1 text-xs">{footer}</span>
+            <button type="button" className="rounded px-2 py-1 text-sm text-accent hover:bg-bg-hover" onClick={close}>
               Done
             </button>
           </div>
@@ -186,7 +186,7 @@ export function LabelPicker({
         <span className="mt-0.5 size-3 shrink-0 rounded-full" style={{ backgroundColor: `#${l.color}` }} />
         <span className="min-w-0">
           <span className="block truncate">{l.name}</span>
-          {l.description && <span className="block truncate text-[11px] text-fg-faint">{l.description}</span>}
+          {l.description && <span className="block truncate text-xs text-fg-faint">{l.description}</span>}
         </span>
       </span>
     ),
@@ -221,7 +221,7 @@ export function AssigneePicker({ value, onChange, disabled }: { value: string[];
       <>
         <Avatar user={u} size={18} />
         <span className="flex-1 truncate">{u.display_name}</span>
-        <span className="text-[11px] text-fg-faint">{u.username}</span>
+        <span className="text-xs text-fg-faint">{u.username}</span>
       </>
     ),
   }))
@@ -238,7 +238,7 @@ export function MilestonePicker({ repo, value, onChange, disabled }: { repo: str
     render: (
       <span className="min-w-0 flex-1">
         <span className="block truncate">{m.title}</span>
-        {m.due_on && <span className="block text-[11px] text-fg-faint">Due {m.due_on}</span>}
+        {m.due_on && <span className="block text-xs text-fg-faint">Due {m.due_on}</span>}
       </span>
     ),
   }))
@@ -263,7 +263,7 @@ export function MilestonePicker({ repo, value, onChange, disabled }: { repo: str
 function Section({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
     <section className="border-b border-border pb-3">
-      <div className="mb-1.5 flex items-center justify-between text-[12px] font-medium text-fg-muted">
+      <div className="mb-1.5 flex items-center justify-between text-sm font-medium text-fg-muted">
         {title}
         {action}
       </div>
@@ -299,7 +299,7 @@ export function MetaSections({
     <>
       <Section title="Assignees" action={canEdit && <AssigneePicker value={assignees.map((u) => u.username)} onChange={(a) => onPatch({ assignees: a })} />}>
         {assignees.length === 0 ? (
-          <p className="text-[12px] text-fg-faint">
+          <p className="text-sm text-fg-faint">
             No one
             {canEdit && me && (
               <>
@@ -322,7 +322,7 @@ export function MetaSections({
       </Section>
       <Section title="Labels" action={canEdit && <LabelPicker repo={repo} value={labels.map((l) => l.name)} onChange={(l) => onPatch({ labels: l })} />}>
         {labels.length === 0 ? (
-          <p className="text-[12px] text-fg-faint">None yet</p>
+          <p className="text-sm text-fg-faint">None yet</p>
         ) : (
           <div className="flex flex-wrap gap-1" aria-label="Labels">
             {labels.map((l) => (
@@ -333,11 +333,11 @@ export function MetaSections({
       </Section>
       <Section title="Milestone" action={canEdit && <MilestonePicker repo={repo} value={milestone?.id} onChange={(id) => onPatch({ milestone: id ?? 0 })} />}>
         {milestone ? (
-          <p className="text-[12px] text-fg-muted">
+          <p className="text-sm text-fg-muted">
             <MilestoneLink repo={repo} milestone={milestone} />
           </p>
         ) : (
-          <p className="text-[12px] text-fg-faint">No milestone</p>
+          <p className="text-sm text-fg-faint">No milestone</p>
         )}
       </Section>
     </>

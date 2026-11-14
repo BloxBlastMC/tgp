@@ -38,7 +38,7 @@ export function Sidebar({ theme, toggleTheme, openPalette }: { theme: 'dark' | '
         >
           <Search size={13} />
           <span className="flex-1 text-left">Search…</span>
-          <kbd className="font-mono text-[10px]">⌘K</kbd>
+          <kbd className="font-mono text-2xs">⌘K</kbd>
         </button>
       </div>
       <nav className="flex flex-1 flex-col gap-0.5 p-2">
@@ -54,23 +54,23 @@ export function Sidebar({ theme, toggleTheme, openPalette }: { theme: 'dark' | '
               <Icon size={15} />
               <span className="flex-1">{label}</span>
               {!!badges[to] && (
-                <span className="rounded-full bg-accent-subtle px-1.5 text-[11px] font-medium text-accent" title={`${badges[to]} waiting for your review`} aria-label={`${badges[to]} waiting for your review`}>
+                <span className="rounded-full bg-accent-subtle px-1.5 text-xs font-medium text-accent" title={`${badges[to]} waiting for your review`} aria-label={`${badges[to]} waiting for your review`}>
                   {badges[to]}
                 </span>
               )}
-              <kbd className="hidden font-mono text-[10px] text-fg-faint group-hover:inline">{shortcut}</kbd>
+              <kbd className="hidden font-mono text-2xs text-fg-faint group-hover:inline">{shortcut}</kbd>
             </Link>
           ))}
       </nav>
       <div className="border-t border-border p-2">
         {user && (
           <div className="mb-1 flex items-center gap-2 px-2 py-1">
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-[11px] font-semibold text-accent uppercase">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-xs font-semibold text-accent uppercase">
               {user.display_name.slice(0, 1)}
             </span>
             <div className="min-w-0 flex-1 leading-tight">
               <div className="truncate font-medium">{user.display_name}</div>
-              <div className="truncate text-[11px] text-fg-faint">
+              <div className="truncate text-xs text-fg-faint">
                 {user.username} · {user.role}
               </div>
             </div>
@@ -96,7 +96,7 @@ export function Sidebar({ theme, toggleTheme, openPalette }: { theme: 'dark' | '
             <LogOut size={14} />
           </button>
         </div>
-        <div className="px-2 pt-1 text-[10px] text-fg-faint">tgp {meta.data?.version ?? ''}</div>
+        <div className="px-2 pt-1 text-2xs text-fg-faint">tgp {meta.data?.version ?? ''}</div>
       </div>
     </aside>
   )

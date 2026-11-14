@@ -20,14 +20,14 @@ export function CloneButton({ url, name }: { url: string; name: string }) {
       </Button>
       {open && (
         <div className="absolute top-8 right-0 z-30 w-96 rounded-md border border-border-strong bg-bg-elevated p-3 shadow-xl">
-          <p className="mb-1.5 text-[12px] font-medium text-fg-muted">Clone over HTTPS</p>
+          <p className="mb-1.5 text-sm font-medium text-fg-muted">Clone over HTTPS</p>
           <div className="flex items-center gap-1 rounded border border-border-strong bg-bg px-2 py-1">
-            <code className="min-w-0 flex-1 truncate font-mono text-[12px] select-all">{url}</code>
+            <code className="min-w-0 flex-1 truncate font-mono text-sm select-all">{url}</code>
             <button type="button" onClick={() => copy(url)} className="rounded p-1 text-fg-muted hover:bg-bg-hover hover:text-fg" aria-label="Copy clone URL">
               {copied ? <Check size={13} className="text-success" /> : <Copy size={13} />}
             </button>
           </div>
-          <p className="mt-2 text-[12px] text-fg-faint">
+          <p className="mt-2 text-sm text-fg-faint">
             Use your username and a{' '}
             <Link to="/settings" className="text-accent hover:underline">
               personal access token

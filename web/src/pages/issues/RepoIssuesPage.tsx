@@ -19,7 +19,7 @@ export function canTriage(permission: string): boolean {
 function FilterSelect({ label, value, onChange, width, children }: { label: string; value: string; onChange: (v: string) => void; width: string; children: ReactNode }) {
   return (
     <div className={cx('shrink-0', width)}>
-      <Select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} className="h-7 text-[12px]">
+      <Select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} className="h-7 text-sm">
         {children}
       </Select>
     </div>
@@ -60,7 +60,7 @@ export function RepoIssuesPage() {
               type="button"
               onClick={() => set({ state: s === 'open' ? undefined : s })}
               aria-pressed={state === s}
-              className={cx('flex h-7 items-center gap-1.5 px-2.5 text-[12px]', state === s ? 'bg-bg-hover text-fg' : 'text-fg-muted hover:text-fg')}
+              className={cx('flex h-7 items-center gap-1.5 px-2.5 text-sm', state === s ? 'bg-bg-hover text-fg' : 'text-fg-muted hover:text-fg')}
             >
               {s === 'open' ? <CircleDot size={13} /> : <CheckCircle2 size={13} />}
               {counts[s] ?? ''} {s === 'open' ? 'Open' : 'Closed'}
@@ -117,7 +117,7 @@ export function RepoIssuesPage() {
         {hasFilters(search) && (
           <button
             type="button"
-            className="flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg"
+            className="flex items-center gap-1 text-sm text-fg-muted hover:text-fg"
             onClick={() => {
               setQ('')
               void navigate({ to: '/$repo/issues', params: { repo: name }, search: { state: search.state } })
@@ -127,10 +127,10 @@ export function RepoIssuesPage() {
           </button>
         )}
         <div className="flex-1" />
-        <Link to="/$repo/labels" params={{ repo: name }} className="flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg">
+        <Link to="/$repo/labels" params={{ repo: name }} className="flex items-center gap-1 text-sm text-fg-muted hover:text-fg">
           <Tag size={12} /> Labels
         </Link>
-        <Link to="/$repo/milestones" params={{ repo: name }} className="flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg">
+        <Link to="/$repo/milestones" params={{ repo: name }} className="flex items-center gap-1 text-sm text-fg-muted hover:text-fg">
           <MilestoneIcon size={12} /> Milestones
         </Link>
         {canTriage(repo.permission) && (

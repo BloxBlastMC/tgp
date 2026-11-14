@@ -9,7 +9,7 @@ export function RepoAccessPicker({ selected, onChange }: { selected: string[]; o
   const [filter, setFilter] = useState('')
   const set = useMemo(() => new Set(selected.map((s) => s.toLowerCase())), [selected])
   const shown = (repos.data ?? []).filter((r) => r.name.toLowerCase().includes(filter.toLowerCase()))
-  if (repos.data?.length === 0) return <p className="text-[12px] text-fg-faint">No repositories exist yet.</p>
+  if (repos.data?.length === 0) return <p className="text-sm text-fg-faint">No repositories exist yet.</p>
   return (
     <div className="flex flex-col gap-1.5">
       <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter repositories" className="h-7" aria-label="Filter repositories" />
@@ -26,13 +26,13 @@ export function RepoAccessPicker({ selected, onChange }: { selected: string[]; o
                   className="size-3.5 accent-[var(--accent)]"
                 />
                 <span className="flex-1">{r.name}</span>
-                {r.archived && <span className="text-[11px] text-fg-faint">archived</span>}
+                {r.archived && <span className="text-xs text-fg-faint">archived</span>}
               </label>
             </li>
           )
         })}
       </ul>
-      <p className="text-[12px] text-fg-faint">{selected.length} selected</p>
+      <p className="text-sm text-fg-faint">{selected.length} selected</p>
     </div>
   )
 }

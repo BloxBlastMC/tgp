@@ -18,7 +18,7 @@ export function cx(...c: (string | false | null | undefined)[]) {
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-accent text-accent-fg hover:brightness-110 border-transparent',
+  primary: 'bg-accent-solid text-accent-fg hover:brightness-110 border-transparent',
   secondary: 'bg-bg-elevated text-fg border-border-strong hover:bg-bg-hover',
   ghost: 'bg-transparent text-fg-muted border-transparent hover:bg-bg-hover hover:text-fg',
   danger: 'bg-transparent text-danger border-danger/40 hover:bg-danger/10',
@@ -38,7 +38,7 @@ export function Button({
       {...rest}
       disabled={disabled || loading}
       className={cx(
-        'inline-flex h-7 items-center justify-center gap-1.5 rounded border px-2.5 text-[13px] font-medium whitespace-nowrap transition-[filter,background-color] disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex h-7 items-center justify-center gap-1.5 rounded border px-2.5 text-base font-medium whitespace-nowrap transition-[filter,background-color] disabled:cursor-not-allowed disabled:opacity-50',
         variants[variant],
         className,
       )}
@@ -54,7 +54,7 @@ export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputEleme
     <input
       {...rest}
       className={cx(
-        'h-8 w-full rounded border border-border-strong bg-bg px-2.5 text-[13px] text-fg placeholder:text-fg-faint focus:border-accent focus:outline-none',
+        'h-8 w-full rounded border border-border-strong bg-bg px-2.5 text-base text-fg placeholder:text-fg-faint focus:border-accent focus:outline-none',
         className,
       )}
     />
@@ -66,7 +66,7 @@ export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLText
     <textarea
       {...rest}
       className={cx(
-        'min-h-20 w-full rounded border border-border-strong bg-bg px-2.5 py-1.5 text-[13px] text-fg placeholder:text-fg-faint focus:border-accent focus:outline-none',
+        'min-h-20 w-full rounded border border-border-strong bg-bg px-2.5 py-1.5 text-base text-fg placeholder:text-fg-faint focus:border-accent focus:outline-none',
         className,
       )}
     />
@@ -78,7 +78,7 @@ export function Select({ className, children, ...rest }: SelectHTMLAttributes<HT
     <select
       {...rest}
       className={cx(
-        'h-8 w-full rounded border border-border-strong bg-bg px-2 text-[13px] text-fg focus:border-accent focus:outline-none',
+        'h-8 w-full rounded border border-border-strong bg-bg px-2 text-base text-fg focus:border-accent focus:outline-none',
         className,
       )}
     >
@@ -100,11 +100,11 @@ export function Field({
   const id = useId()
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-[12px] font-medium text-fg-muted">
+      <label htmlFor={id} className="text-sm font-medium text-fg-muted">
         {label}
       </label>
       {children(id)}
-      {hint && <p className="text-[12px] text-fg-faint">{hint}</p>}
+      {hint && <p className="text-sm text-fg-faint">{hint}</p>}
     </div>
   )
 }
@@ -132,7 +132,7 @@ export function Checkbox({
       />
       <label htmlFor={id} className="select-none">
         <span>{label}</span>
-        {hint && <span className="block text-[12px] text-fg-faint">{hint}</span>}
+        {hint && <span className="block text-sm text-fg-faint">{hint}</span>}
       </label>
     </div>
   )
@@ -148,7 +148,7 @@ const badgeTones = {
 
 export function Badge({ tone = 'neutral', children }: { tone?: keyof typeof badgeTones; children: ReactNode }) {
   return (
-    <span className={cx('inline-flex h-[18px] items-center rounded px-1.5 text-[11px] font-medium', badgeTones[tone])}>
+    <span className={cx('inline-flex h-[18px] items-center rounded px-1.5 text-xs font-medium', badgeTones[tone])}>
       {children}
     </span>
   )
@@ -162,7 +162,7 @@ export function Alert({ tone = 'danger', children }: { tone?: 'danger' | 'warnin
     success: 'border-success/30 bg-success/10 text-success',
   }
   return (
-    <div role={tone === 'danger' ? 'alert' : 'status'} className={cx('rounded border px-3 py-2 text-[13px]', tones[tone])}>
+    <div role={tone === 'danger' ? 'alert' : 'status'} className={cx('rounded border px-3 py-2 text-base', tones[tone])}>
       {children}
     </div>
   )
@@ -185,7 +185,7 @@ export function Section({
       <header className="flex items-start justify-between gap-4 border-b border-border px-4 py-3">
         <div>
           <h2 className="font-medium">{title}</h2>
-          {description && <p className="mt-0.5 text-[12px] text-fg-muted">{description}</p>}
+          {description && <p className="mt-0.5 text-sm text-fg-muted">{description}</p>}
         </div>
         {actions && <div className="flex shrink-0 gap-2">{actions}</div>}
       </header>
@@ -215,7 +215,7 @@ export function SecretValue({ value, label }: { value: string; label?: string })
   const [copied, copy] = useCopy()
   return (
     <div className="flex items-center gap-2 rounded border border-border-strong bg-bg px-2.5 py-1.5">
-      <code className="min-w-0 flex-1 font-mono text-[13px] break-all select-all" aria-label={label}>
+      <code className="min-w-0 flex-1 font-mono text-base break-all select-all" aria-label={label}>
         {value}
       </code>
       <button

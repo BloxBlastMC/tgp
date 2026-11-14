@@ -57,7 +57,7 @@ function StatusBanner({ h, refreshing, onRefresh }: { h: Health; refreshing: boo
       <span className={cx('size-2.5 shrink-0 rounded-full', dot[h.status])} />
       <div className="flex-1">
         <div className="font-medium">{b.text}</div>
-        <div className="text-[12px] text-fg-muted">
+        <div className="text-sm text-fg-muted">
           tgp {h.version} <span className="font-mono">{h.commit}</span> · up {formatUptime(h.uptime_seconds)} · checked <Time iso={h.generated_at} /> · refreshes every 30s
         </div>
       </div>
@@ -71,13 +71,13 @@ function StatusBanner({ h, refreshing, onRefresh }: { h: Health; refreshing: boo
 function Checks({ checks }: { checks: Health['checks'] }) {
   return (
     <section className="rounded-md border border-border bg-bg-subtle">
-      <h2 className="border-b border-border px-4 py-2 text-[11px] font-medium tracking-wide text-fg-faint uppercase">Checks</h2>
+      <h2 className="border-b border-border px-4 py-2 text-xs font-medium tracking-wide text-fg-faint uppercase">Checks</h2>
       <ul aria-label="Health checks">
         {sortChecks(checks).map((c) => (
           <li key={c.name} className="flex items-center gap-3 border-b border-border px-4 py-1.5 last:border-b-0" data-testid="health-check">
             <span className={cx('size-2 shrink-0 rounded-full', dot[c.status])} title={c.status} />
-            <span className="w-32 shrink-0 font-mono text-[12px]">{c.name}</span>
-            <span className="flex-1 text-[13px] text-fg-muted">{c.message}</span>
+            <span className="w-32 shrink-0 font-mono text-sm">{c.name}</span>
+            <span className="flex-1 text-base text-fg-muted">{c.message}</span>
             {c.status !== 'ok' && <Badge tone={badge[c.status]}>{c.status}</Badge>}
           </li>
         ))}
@@ -89,8 +89,8 @@ function Checks({ checks }: { checks: Health['checks'] }) {
 function Tile({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section aria-label={title} className="rounded-md border border-border bg-bg-subtle px-4 py-3">
-      <h2 className="mb-2 text-[11px] font-medium tracking-wide text-fg-faint uppercase">{title}</h2>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12px]">{children}</dl>
+      <h2 className="mb-2 text-xs font-medium tracking-wide text-fg-faint uppercase">{title}</h2>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">{children}</dl>
     </section>
   )
 }
@@ -118,7 +118,7 @@ function Tiles({ h }: { h: Health }) {
         <Row label="Latency">{db.latency_ms.toFixed(1)} ms</Row>
         <Row label="Size">{db.size_bytes == null ? '—' : formatBytes(db.size_bytes)}</Row>
         <Row label="Schema">
-          <span className="font-mono text-[11px]" title={db.schema_version}>
+          <span className="font-mono text-xs" title={db.schema_version}>
             {db.schema_version.slice(0, 14) || '—'}
           </span>
         </Row>
@@ -174,7 +174,7 @@ function Tiles({ h }: { h: Health }) {
 function Disks({ disks }: { disks: Health['disks'] }) {
   return (
     <section aria-label="Disks" className="rounded-md border border-border bg-bg-subtle">
-      <h2 className="border-b border-border px-4 py-2 text-[11px] font-medium tracking-wide text-fg-faint uppercase">Disks</h2>
+      <h2 className="border-b border-border px-4 py-2 text-xs font-medium tracking-wide text-fg-faint uppercase">Disks</h2>
       {disks.length === 0 && <p className="px-4 py-3 text-fg-muted">No local filesystems to report.</p>}
       {disks.map((d) => {
         const pct = usedPercent(d)
@@ -182,14 +182,14 @@ function Disks({ disks }: { disks: Health['disks'] }) {
         return (
           <div key={d.path} className="border-b border-border px-4 py-2.5 last:border-b-0" data-testid="disk-row">
             <div className="flex items-center gap-2">
-              <span className="truncate font-mono text-[12px]">{d.path}</span>
+              <span className="truncate font-mono text-sm">{d.path}</span>
               {d.uses.map((u) => (
-                <span key={u} className="rounded border border-border px-1 text-[11px] text-fg-muted">
+                <span key={u} className="rounded border border-border px-1 text-xs text-fg-muted">
                   {u}
                 </span>
               ))}
               <span className="flex-1" />
-              <span className={cx('text-[12px] tabular-nums', tone === 'ok' ? 'text-fg-muted' : tone === 'warn' ? 'text-warning' : 'text-danger')}>
+              <span className={cx('text-sm tabular-nums', tone === 'ok' ? 'text-fg-muted' : tone === 'warn' ? 'text-warning' : 'text-danger')}>
                 {formatBytes(d.free_bytes)} free
               </span>
             </div>
@@ -197,7 +197,7 @@ function Disks({ disks }: { disks: Health['disks'] }) {
               <div className="h-1.5 flex-1 overflow-hidden rounded bg-bg-hover" role="meter" aria-label={`${d.path} used`} aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
                 <div className={cx('h-full', bar[tone])} style={{ width: `${pct}%` }} />
               </div>
-              <span className="w-40 text-right text-[11px] text-fg-faint tabular-nums">
+              <span className="w-40 text-right text-xs text-fg-faint tabular-nums">
                 {formatBytes(d.used_bytes)} / {formatBytes(d.total_bytes)} ({pct.toFixed(0)}%)
               </span>
             </div>
@@ -219,7 +219,7 @@ function Storage({ s }: { s: Health['storage'] }) {
   const total = Math.max(1, s.total_bytes)
   return (
     <section aria-label="Blob storage" className="rounded-md border border-border bg-bg-subtle">
-      <h2 className="flex items-center gap-2 border-b border-border px-4 py-2 text-[11px] font-medium tracking-wide text-fg-faint uppercase">
+      <h2 className="flex items-center gap-2 border-b border-border px-4 py-2 text-xs font-medium tracking-wide text-fg-faint uppercase">
         Blob storage
         <span className="rounded border border-border px-1 font-mono normal-case">{s.type}</span>
         <span className="flex-1" />
@@ -231,7 +231,7 @@ function Storage({ s }: { s: Health['storage'] }) {
             <Alert>{s.error}</Alert>
           </div>
         )}
-        <div className="flex items-baseline justify-between text-[12px]">
+        <div className="flex items-baseline justify-between text-sm">
           <span className="text-fg-muted">Total</span>
           <span className="font-medium tabular-nums">{formatBytes(s.total_bytes)}</span>
         </div>
@@ -240,7 +240,7 @@ function Storage({ s }: { s: Health['storage'] }) {
             <div key={p.key} className={p.color} style={{ width: `${(s[p.key] / total) * 100}%` }} />
           ))}
         </div>
-        <dl className="mt-3 grid grid-cols-[auto_1fr_auto] gap-x-4 gap-y-1 text-[12px]">
+        <dl className="mt-3 grid grid-cols-[auto_1fr_auto] gap-x-4 gap-y-1 text-sm">
           {parts.map((p) => (
             <div key={p.key} className="contents">
               <dt className="flex items-center gap-2 text-fg-muted">
@@ -275,8 +275,8 @@ function Repos({ repos, measuring, onMeasure }: { repos: Health['repos']; measur
   return (
     <section aria-label="Repository usage" className="rounded-md border border-border bg-bg-subtle">
       <header className="flex items-center gap-3 border-b border-border px-4 py-2">
-        <h2 className="text-[11px] font-medium tracking-wide text-fg-faint uppercase">Repository usage</h2>
-        <span className="text-[12px] text-fg-muted">
+        <h2 className="text-xs font-medium tracking-wide text-fg-faint uppercase">Repository usage</h2>
+        <span className="text-sm text-fg-muted">
           {repos.count} repositories · {formatBytes(repos.git_bytes)} of git data · sizes measured <Time iso={repos.measured_at} />
         </span>
         <span className="flex-1" />
@@ -287,8 +287,8 @@ function Repos({ repos, measuring, onMeasure }: { repos: Health['repos']; measur
       {rows.length === 0 ? (
         <p className="px-4 py-3 text-fg-muted">No repositories yet.</p>
       ) : (
-        <table className="w-full text-left text-[12px]" aria-label="Repositories by storage">
-          <thead className="border-b border-border text-[11px] tracking-wide text-fg-faint uppercase">
+        <table className="w-full text-left text-sm" aria-label="Repositories by storage">
+          <thead className="border-b border-border text-xs tracking-wide text-fg-faint uppercase">
             <tr>
               {columns.map((c, i) => (
                 <th key={c.key} className={cx('py-1.5 font-medium', i === 0 ? 'px-4' : 'px-2 text-right', i === columns.length - 1 && 'pr-4')} aria-sort={sort.key === c.key ? (sort.desc ? 'descending' : 'ascending') : undefined}>

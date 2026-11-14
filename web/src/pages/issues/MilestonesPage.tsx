@@ -88,10 +88,10 @@ function MilestoneRow({ repo, m, canWrite, onEdit }: { repo: string; m: Mileston
   return (
     <li className="grid gap-3 border-b border-border px-4 py-3 md:grid-cols-[minmax(0,1fr)_280px]" data-testid="milestone-row">
       <div className="min-w-0">
-        <Link to="/$repo/issues" params={{ repo }} search={{ milestone: m.title, ...(m.state === 'closed' ? { state: 'closed' as const } : {}) }} className="text-[15px] font-semibold hover:text-accent">
+        <Link to="/$repo/issues" params={{ repo }} search={{ milestone: m.title, ...(m.state === 'closed' ? { state: 'closed' as const } : {}) }} className="text-lg font-semibold hover:text-accent">
           {m.title}
         </Link>
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[12px] text-fg-muted">
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-sm text-fg-muted">
           {m.state === 'closed' ? (
             <span>
               Closed <Time iso={m.closed_at} />
@@ -113,7 +113,7 @@ function MilestoneRow({ repo, m, canWrite, onEdit }: { repo: string; m: Mileston
         <div className="h-2 overflow-hidden rounded-full bg-bg-hover" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${m.title} progress`}>
           <div className="h-full rounded-full bg-success" style={{ width: `${pct}%` }} />
         </div>
-        <div className="flex gap-3 text-[12px] text-fg-muted">
+        <div className="flex gap-3 text-sm text-fg-muted">
           <span className="font-medium text-fg">{pct}%</span>
           <span>{m.open_issues} open</span>
           <span>{m.closed_issues} closed</span>
@@ -153,7 +153,7 @@ export function MilestonesPage() {
   return (
     <div className="flex flex-col">
       <div className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2">
-        <Link to="/$repo/issues" params={{ repo }} className="inline-flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg">
+        <Link to="/$repo/issues" params={{ repo }} className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg">
           <ArrowLeft size={12} /> Issues
         </Link>
         <h2 className="font-semibold">Milestones</h2>

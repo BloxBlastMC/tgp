@@ -38,7 +38,7 @@ export function RepoPullsPage() {
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search titles" className="h-7 pl-7" aria-label="Search pull requests" />
         </div>
         <div className="flex-1" />
-        {pulls.data && <span className="text-[12px] text-fg-faint">{pulls.data.total} total</span>}
+        {pulls.data && <span className="text-sm text-fg-faint">{pulls.data.total} total</span>}
         {canWrite && !repo.empty && (
           <Link to="/$repo/compare/$" params={{ repo: name, _splat: '' }}>
             <Button variant="primary">

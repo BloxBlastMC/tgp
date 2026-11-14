@@ -48,7 +48,7 @@ export function GlobalIssuesPage() {
         <Segmented label="Filter" value={filter} options={filters} onChange={(f) => set({ filter: f === 'assigned' ? undefined : f })} />
         <Segmented label="State" value={state} options={states} onChange={(s) => set({ state: s === 'open' ? undefined : s })} />
         <div className="flex-1" />
-        {issues.data && <span className="text-[12px] text-fg-faint">{issues.data.total} total</span>}
+        {issues.data && <span className="text-sm text-fg-faint">{issues.data.total} total</span>}
       </div>
       {issues.isPending ? (
         <Spinner />

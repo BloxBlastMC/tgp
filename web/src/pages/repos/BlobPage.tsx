@@ -49,7 +49,7 @@ export function BlobPage() {
         <Alert>{errorMessage(blob.error)}</Alert>
       ) : (
         <div className="overflow-hidden rounded-md border border-border">
-          <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-[12px] text-fg-muted">
+          <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-sm text-fg-muted">
             {!blob.data.binary && (
               <span>
                 {lineCount} lines ·{' '}
@@ -96,7 +96,7 @@ export function BlobPage() {
             md.data ? <div className="markdown px-6 py-5" dangerouslySetInnerHTML={{ __html: md.data.html }} /> : <Spinner />
           ) : (
             <>
-              {blob.data.truncated && <p className="border-b border-border px-3 py-1.5 text-[12px] text-warning">Showing the first 1 MiB. Use Raw for the whole file.</p>}
+              {blob.data.truncated && <p className="border-b border-border px-3 py-1.5 text-sm text-warning">Showing the first 1 MiB. Use Raw for the whole file.</p>}
               <CodeView code={blob.data.content} path={path} />
             </>
           )}

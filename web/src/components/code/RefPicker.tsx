@@ -37,7 +37,7 @@ export function RefPicker({ repo, current, onSelect }: { repo: string; current: 
         aria-expanded={open}
       >
         <GitBranch size={13} className="shrink-0 text-fg-muted" />
-        <span className="truncate font-mono text-[12px]">{short}</span>
+        <span className="truncate font-mono text-sm">{short}</span>
         <ChevronDown size={13} className="shrink-0 text-fg-muted" />
       </button>
       {open && (
@@ -45,7 +45,7 @@ export function RefPicker({ repo, current, onSelect }: { repo: string; current: 
           <div className="border-b border-border p-2">
             <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Find a branch or tag" autoFocus className="h-7" />
           </div>
-          <div className="flex border-b border-border text-[12px]">
+          <div className="flex border-b border-border text-sm">
             {(['branches', 'tags'] as const).map((t) => (
               <button
                 key={t}
@@ -73,8 +73,8 @@ export function RefPicker({ repo, current, onSelect }: { repo: string; current: 
                 >
                   <span className="w-3.5">{r.name === current && <Check size={13} />}</span>
                   {tab === 'tags' && <Tag size={12} className="text-fg-faint" />}
-                  <span className="flex-1 truncate font-mono text-[12px]">{r.name}</span>
-                  {r.is_default && <span className="text-[10px] text-fg-faint">default</span>}
+                  <span className="flex-1 truncate font-mono text-sm">{r.name}</span>
+                  {r.is_default && <span className="text-2xs text-fg-faint">default</span>}
                 </button>
               </li>
             ))}

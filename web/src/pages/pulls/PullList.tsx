@@ -31,7 +31,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
           type="button"
           onClick={() => onChange(o.value)}
           aria-pressed={value === o.value}
-          className={cx('h-7 px-2.5 text-[12px]', value === o.value ? 'bg-bg-hover text-fg' : 'text-fg-muted hover:text-fg')}
+          className={cx('h-7 px-2.5 text-sm', value === o.value ? 'bg-bg-hover text-fg' : 'text-fg-muted hover:text-fg')}
         >
           {o.label}
         </button>
@@ -60,7 +60,7 @@ export function PullRows({ pulls, showRepo }: { pulls: PullSummary[]; showRepo?:
                   <LabelChip key={l.id} label={l} />
                 ))}
               </div>
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-fg-faint">
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-fg-faint">
                 <span>#{p.number}</span>
                 <span>
                   {p.state === 'merged' ? (
@@ -90,7 +90,7 @@ export function PullRows({ pulls, showRepo }: { pulls: PullSummary[]; showRepo?:
               </div>
             </div>
             {p.comments > 0 && (
-              <span className="mt-0.5 flex shrink-0 items-center gap-1 text-[12px] text-fg-muted" title={`${p.comments} comments`}>
+              <span className="mt-0.5 flex shrink-0 items-center gap-1 text-sm text-fg-muted" title={`${p.comments} comments`}>
                 <MessageSquare size={13} /> {p.comments}
               </span>
             )}

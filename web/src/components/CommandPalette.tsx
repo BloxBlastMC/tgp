@@ -100,7 +100,7 @@ export function CommandPalette({
             }
           }}
           placeholder="Type a command or search…"
-          className="h-10 flex-1 bg-transparent text-[14px] outline-none placeholder:text-fg-faint focus-visible:outline-none"
+          className="h-10 flex-1 bg-transparent text-md outline-none placeholder:text-fg-faint focus-visible:outline-none"
           aria-label="Command"
         />
       </div>
@@ -115,9 +115,9 @@ export function CommandPalette({
             onClick={() => run(c)}
             className={cx('flex h-8 cursor-pointer items-center gap-2 rounded px-3', i === active && 'bg-bg-hover')}
           >
-            <span className="w-24 shrink-0 text-[11px] text-fg-faint">{c.group}</span>
+            <span className="w-24 shrink-0 text-xs text-fg-faint">{c.group}</span>
             <span className="flex-1">{c.label}</span>
-            {c.shortcut && <kbd className="font-mono text-[11px] text-fg-faint">{c.shortcut}</kbd>}
+            {c.shortcut && <kbd className="font-mono text-xs text-fg-faint">{c.shortcut}</kbd>}
           </li>
         ))}
       </ul>

@@ -79,7 +79,7 @@ export function RunRows({ runs, showRepo }: { runs: WorkflowRun[]; showRepo?: bo
                 {showRepo && <span className="text-fg-muted">{r.repo}</span>}
                 <span className="truncate font-medium">{r.title || r.workflow_name}</span>
               </div>
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 text-[12px] text-fg-faint">
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 text-sm text-fg-faint">
                 <span className="text-fg-muted">{r.workflow_name}</span>
                 <span>#{r.number}</span>
                 <span>{eventLabel[r.event] ?? r.event}</span>
@@ -93,7 +93,7 @@ export function RunRows({ runs, showRepo }: { runs: WorkflowRun[]; showRepo?: bo
                 {r.status_reason && <span className="max-w-80 truncate text-warning" title={r.status_reason}>{r.status_reason}</span>}
               </div>
             </div>
-            <div className="flex shrink-0 flex-col items-end gap-0.5 text-[12px] text-fg-faint">
+            <div className="flex shrink-0 flex-col items-end gap-0.5 text-sm text-fg-faint">
               <Time iso={r.created_at} />
               <Duration start={r.started_at} end={r.completed_at} />
             </div>
@@ -109,7 +109,7 @@ export function Pager({ page, total, perPage, onPage }: { page: number; total: n
   const pages = Math.max(1, Math.ceil(total / perPage))
   if (pages <= 1) return null
   return (
-    <div className="flex items-center justify-center gap-3 py-3 text-[12px] text-fg-muted">
+    <div className="flex items-center justify-center gap-3 py-3 text-sm text-fg-muted">
       <button type="button" disabled={page <= 1} onClick={() => onPage(page - 1)} className="rounded px-2 py-1 hover:bg-bg-hover disabled:opacity-40">
         ← Newer
       </button>

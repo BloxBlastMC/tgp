@@ -84,14 +84,14 @@ export function ReviewerPicker({
                     <span className="w-3.5">{on && <Check size={13} />}</span>
                     <Avatar user={u} size={18} />
                     <span className="flex-1 truncate">{u.display_name}</span>
-                    <span className="text-[11px] text-fg-faint">{u.role}</span>
+                    <span className="text-xs text-fg-faint">{u.role}</span>
                   </button>
                 </li>
               )
             })}
           </ul>
           <div className="flex justify-end border-t border-border p-1.5">
-            <button type="button" className="rounded px-2 py-1 text-[12px] text-accent hover:bg-bg-hover" onClick={close}>
+            <button type="button" className="rounded px-2 py-1 text-sm text-accent hover:bg-bg-hover" onClick={close}>
               Done
             </button>
           </div>

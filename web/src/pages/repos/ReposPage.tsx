@@ -70,7 +70,7 @@ export function ReposPage() {
                     </div>
                     {r.description && <p className="truncate text-fg-muted">{r.description}</p>}
                   </div>
-                  <span className="shrink-0 text-[12px] text-fg-faint">{r.pushed_at ? <>Pushed <Time iso={r.pushed_at} /></> : 'No pushes yet'}</span>
+                  <span className="shrink-0 text-sm text-fg-faint">{r.pushed_at ? <>Pushed <Time iso={r.pushed_at} /></> : 'No pushes yet'}</span>
                 </Link>
               </li>
             ))}
@@ -123,7 +123,7 @@ function CreateRepoDialog({ open, onClose }: { open: boolean; onClose: () => voi
           label="Initialize with a README"
           hint="Leave unchecked to push an existing repository."
         />
-        <p className="text-[12px] text-fg-faint">Maintainers and testers with access to all repositories see it immediately. Grant others access from Admin → Users.</p>
+        <p className="text-sm text-fg-faint">Maintainers and testers with access to all repositories see it immediately. Grant others access from Admin → Users.</p>
         {create.isError && <Alert>{errorMessage(create.error)}</Alert>}
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>

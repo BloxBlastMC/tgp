@@ -24,7 +24,7 @@ export function IssueRows({ issues, showRepo, onLabel }: { issues: IssueSummary[
                 <LabelChip key={l.id} label={l} onClick={onLabel ? () => onLabel(l.name) : undefined} title={onLabel ? `Filter by ${l.name}` : l.description} />
               ))}
             </div>
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-fg-faint">
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-fg-faint">
               <span>#{i.number}</span>
               <span>
                 {i.state === 'closed' ? (
@@ -48,7 +48,7 @@ export function IssueRows({ issues, showRepo, onLabel }: { issues: IssueSummary[
               ))}
             </span>
           )}
-          <span className="mt-0.5 flex w-10 shrink-0 items-center justify-end gap-1 text-[12px] text-fg-muted" title={`${i.comments} comments`}>
+          <span className="mt-0.5 flex w-10 shrink-0 items-center justify-end gap-1 text-sm text-fg-muted" title={`${i.comments} comments`}>
             {i.comments > 0 && (
               <>
                 <MessageSquare size={13} /> {i.comments}

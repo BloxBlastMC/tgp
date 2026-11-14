@@ -162,7 +162,7 @@ export function RequiredChecksEditor({ value, onChange }: { value: string[]; onC
           {value.length > 0 && (
             <ul className="flex flex-wrap gap-1" aria-label="Required checks">
               {value.map((c) => (
-                <li key={c} className="flex h-6 items-center gap-1 rounded border border-border-strong bg-bg px-2 font-mono text-[12px]">
+                <li key={c} className="flex h-6 items-center gap-1 rounded border border-border-strong bg-bg px-2 font-mono text-sm">
                   {c}
                   <button type="button" className="text-fg-faint hover:text-danger" aria-label={`Remove ${c}`} onClick={() => onChange(value.filter((v) => v !== c))}>
                     <X size={12} />

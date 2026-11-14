@@ -23,10 +23,10 @@ export function CommitPage() {
     <div className="mx-auto flex max-w-7xl flex-col gap-4 p-4">
       <div className="rounded-md border border-border">
         <div className="px-4 py-3">
-          <h2 className="text-[15px] font-semibold">{c.subject}</h2>
-          {c.body && <pre className="mt-2 font-sans text-[13px] whitespace-pre-wrap text-fg-muted">{c.body}</pre>}
+          <h2 className="text-lg font-semibold">{c.subject}</h2>
+          {c.body && <pre className="mt-2 font-sans text-base whitespace-pre-wrap text-fg-muted">{c.body}</pre>}
         </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border bg-bg-subtle px-4 py-2 text-[12px] text-fg-muted">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border bg-bg-subtle px-4 py-2 text-sm text-fg-muted">
           <span>
             <span className="font-medium text-fg">{c.author.name}</span> authored <Time iso={c.author.date} />
             {c.committer.name !== c.author.name && (

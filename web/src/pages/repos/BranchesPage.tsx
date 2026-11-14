@@ -12,7 +12,7 @@ type RefRowExtra = (r: Schemas['Ref']) => React.ReactNode
 function RefList({ title, icon, refs, repo, extra }: { title: string; icon: React.ReactNode; refs: Schemas['Ref'][]; repo: string; extra?: RefRowExtra }) {
   return (
     <section>
-      <h3 className="mb-1.5 flex items-center gap-1.5 text-[12px] font-medium text-fg-muted">
+      <h3 className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-fg-muted">
         {icon} {title} <span className="text-fg-faint">{refs.length}</span>
       </h3>
       {refs.length === 0 ? (
@@ -21,7 +21,7 @@ function RefList({ title, icon, refs, repo, extra }: { title: string; icon: Reac
         <ul className="overflow-hidden rounded-md border border-border">
           {refs.map((r) => (
             <li key={r.name} className="flex items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-bg-subtle">
-              <Link to="/$repo" params={{ repo }} search={{ ref: r.name }} className="font-mono text-[13px] font-medium hover:text-accent">
+              <Link to="/$repo" params={{ repo }} search={{ ref: r.name }} className="font-mono text-base font-medium hover:text-accent">
                 {r.name}
               </Link>
               {r.is_default && <Badge tone="accent">default</Badge>}
@@ -33,7 +33,7 @@ function RefList({ title, icon, refs, repo, extra }: { title: string; icon: Reac
               <Link to="/$repo/commit/$sha" params={{ repo, sha: r.commit }} className="min-w-0 flex-1 truncate text-fg-muted hover:text-accent">
                 {r.subject}
               </Link>
-              <span className="shrink-0 text-[12px] text-fg-faint">
+              <span className="shrink-0 text-sm text-fg-faint">
                 {r.author} · <Time iso={r.date} />
               </span>
               {extra?.(r)}
@@ -68,12 +68,12 @@ export function BranchesPage() {
     return (
       <span className="flex w-[120px] shrink-0 items-center justify-end gap-1">
         {pr ? (
-          <Link to="/$repo/pulls/$number" params={{ repo: name, number: String(pr.number) }} className="flex items-center gap-1 text-[12px] text-success hover:underline">
+          <Link to="/$repo/pulls/$number" params={{ repo: name, number: String(pr.number) }} className="flex items-center gap-1 text-sm text-success hover:underline">
             <GitPullRequest size={12} /> #{pr.number}
           </Link>
         ) : (
           canWrite && (
-            <Link to="/$repo/compare/$" params={{ repo: name, _splat: compareSplat(repo.default_branch, r.name) }} className="flex items-center gap-1 text-[12px] text-fg-muted hover:text-accent">
+            <Link to="/$repo/compare/$" params={{ repo: name, _splat: compareSplat(repo.default_branch, r.name) }} className="flex items-center gap-1 text-sm text-fg-muted hover:text-accent">
               <GitPullRequest size={12} /> New PR
             </Link>
           )

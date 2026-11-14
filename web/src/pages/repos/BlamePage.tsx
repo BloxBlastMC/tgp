@@ -19,7 +19,7 @@ export function BlamePage() {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-3 p-4">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="rounded bg-bg-hover px-2 py-0.5 font-mono text-[12px]">{ref}</span>
+        <span className="rounded bg-bg-hover px-2 py-0.5 font-mono text-sm">{ref}</span>
         <Breadcrumbs repo={repo.name} gitRef={ref} path={path} />
         <div className="flex-1" />
         <Link to="/$repo/blob" params={{ repo: name }} search={{ ref, path }}>
@@ -33,13 +33,13 @@ export function BlamePage() {
       ) : blame.isError ? (
         <Alert>{errorMessage(blame.error)}</Alert>
       ) : (
-        <div className="overflow-x-auto rounded-md border border-border font-mono text-[12.5px] leading-[20px]">
+        <div className="overflow-x-auto rounded-md border border-border font-mono text-code">
           <table className="w-full border-collapse">
             <tbody>
               {blame.data.ranges.map((r, ri) =>
                 r.lines.map((line, li) => (
                   <tr key={`${ri}-${li}`} className={li === 0 ? 'border-t border-border' : ''}>
-                    <td className="w-72 max-w-72 border-r border-border bg-bg-subtle px-2 align-top font-sans text-[12px]">
+                    <td className="w-72 max-w-72 border-r border-border bg-bg-subtle px-2 align-top font-sans text-sm">
                       {li === 0 && (
                         <div className="flex items-center gap-2 py-0.5">
                           <Link to="/$repo/commit/$sha" params={{ repo: name, sha: r.commit }} className="min-w-0 flex-1 truncate hover:text-accent" title={r.summary}>

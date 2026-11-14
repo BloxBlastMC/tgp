@@ -13,11 +13,11 @@ const statusDot: Record<Runner['status'], string> = {
 }
 
 function Meter({ label, value }: { label: string; value?: number | null }) {
-  if (value == null) return <span className="text-[11px] text-fg-faint">{label} —</span>
+  if (value == null) return <span className="text-xs text-fg-faint">{label} —</span>
   const v = Math.max(0, Math.min(100, value))
   const tone = v >= 90 ? 'bg-danger' : v >= 70 ? 'bg-warning' : 'bg-success'
   return (
-    <span className="flex items-center gap-1.5 text-[11px] text-fg-muted" title={`${label} ${value.toFixed(0)}%`}>
+    <span className="flex items-center gap-1.5 text-xs text-fg-muted" title={`${label} ${value.toFixed(0)}%`}>
       <span className="w-7">{label}</span>
       <span className="h-1.5 w-16 overflow-hidden rounded bg-bg-hover" role="meter" aria-label={label} aria-valuenow={Math.round(value)} aria-valuemin={0} aria-valuemax={100}>
         <span className={cx('block h-full', tone)} style={{ width: `${v}%` }} />
@@ -51,7 +51,7 @@ export function AdminRunnersPage() {
     <div className="flex flex-col">
       <div className="flex items-center gap-4 border-b border-border px-4 py-2">
         {runners.data && (
-          <div className="flex gap-4 text-[12px] text-fg-muted">
+          <div className="flex gap-4 text-sm text-fg-muted">
             <span>
               <span className="font-medium text-fg tabular-nums">{runners.data.running_jobs}</span> running
             </span>
@@ -86,7 +86,7 @@ export function AdminRunnersPage() {
         </div>
       ) : (
         <table className="w-full text-left" aria-label="Runners">
-          <thead className="border-b border-border text-[11px] tracking-wide text-fg-faint uppercase">
+          <thead className="border-b border-border text-xs tracking-wide text-fg-faint uppercase">
             <tr>
               <th className="px-4 py-2 font-medium">Runner</th>
               <th className="px-2 py-2 font-medium">Jobs</th>
@@ -105,7 +105,7 @@ export function AdminRunnersPage() {
                     <Badge tone={r.status === 'online' ? 'success' : r.status === 'disabled' ? 'warning' : 'neutral'}>{r.status}</Badge>
                     {r.overloaded && <Badge tone="danger">overloaded</Badge>}
                   </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-fg-faint">
+                  <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-fg-faint">
                     {r.labels.map((l) => (
                       <span key={l} className="rounded border border-border px-1 font-mono">
                         {l}
@@ -121,7 +121,7 @@ export function AdminRunnersPage() {
                     {r.busy} / {r.capacity}
                   </div>
                   {r.jobs.map((j) => (
-                    <Link key={j.id} to="/$repo/ci/runs/$number" params={{ repo: j.repo, number: String(j.run_number) }} search={{ job: j.id }} className="block max-w-56 truncate text-[12px] text-fg-muted hover:text-accent">
+                    <Link key={j.id} to="/$repo/ci/runs/$number" params={{ repo: j.repo, number: String(j.run_number) }} search={{ job: j.id }} className="block max-w-56 truncate text-sm text-fg-muted hover:text-accent">
                       {j.repo} #{j.run_number} · {j.name}
                     </Link>
                   ))}
@@ -132,7 +132,7 @@ export function AdminRunnersPage() {
                     <Meter label="Mem" value={r.memory_percent} />
                   </div>
                 </td>
-                <td className="px-2 py-2.5 text-[12px] text-fg-muted">
+                <td className="px-2 py-2.5 text-sm text-fg-muted">
                   <Time iso={r.last_seen_at} />
                 </td>
                 <td className="px-4 py-2.5">

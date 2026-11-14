@@ -116,7 +116,7 @@ function PullHeader({ repo, pr, tab, pendingCount, onReview }: { repo: string; p
             save.mutate()
           }}
         >
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} aria-label="Title" autoFocus className="text-[15px]" />
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} aria-label="Title" autoFocus className="text-lg" />
           <Button type="submit" variant="primary" loading={save.isPending} disabled={!title.trim()}>
             Save
           </Button>
@@ -126,7 +126,7 @@ function PullHeader({ repo, pr, tab, pendingCount, onReview }: { repo: string; p
         </form>
       ) : (
         <div className="flex items-start gap-2">
-          <h2 className="min-w-0 flex-1 text-[17px] font-semibold">
+          <h2 className="min-w-0 flex-1 text-xl font-semibold">
             {pr.title} <span className="font-normal text-fg-faint">#{pr.number}</span>
           </h2>
           {v.canEdit && (
@@ -161,7 +161,7 @@ function PullHeader({ repo, pr, tab, pendingCount, onReview }: { repo: string; p
             className={cx('flex h-8 items-center gap-1.5 border-b-2 px-2', tab === id ? 'border-accent text-fg' : 'border-transparent text-fg-muted hover:text-fg')}
             aria-current={tab === id ? 'page' : undefined}
           >
-            <Icon size={14} /> {label} <span className="rounded-full bg-bg-hover px-1.5 text-[11px]">{count}</span>
+            <Icon size={14} /> {label} <span className="rounded-full bg-bg-hover px-1.5 text-xs">{count}</span>
           </Link>
         ))}
         <div className="flex-1" />
@@ -224,7 +224,7 @@ function BodyCard({ repo, pr, canEdit }: { repo: string; pr: PullRequest; canEdi
   })
   return (
     <div className="rounded-md border border-border">
-      <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-[12px] text-fg-muted">
+      <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-sm text-fg-muted">
         <Avatar user={pr.author} size={18} />
         <span className="font-medium text-fg">{pr.author.display_name}</span> opened this <Time iso={pr.created_at} />
         <span className="flex-1" />
@@ -299,7 +299,7 @@ function ReviewCard({
   const border = review.dismissed ? 'border-border' : review.state === 'approved' ? 'border-success/40' : review.state === 'changes_requested' ? 'border-danger/40' : 'border-border'
   return (
     <div className={cx('rounded-md border', border)} data-testid="review">
-      <div className="flex flex-wrap items-center gap-2 bg-bg-subtle px-3 py-1.5 text-[12px] text-fg-muted">
+      <div className="flex flex-wrap items-center gap-2 bg-bg-subtle px-3 py-1.5 text-sm text-fg-muted">
         <ReviewStateIcon state={review.dismissed ? 'dismissed' : review.state} />
         <span className="font-medium text-fg">{review.author.display_name}</span> {reviewVerb[review.state]} <Time iso={review.created_at} />
         {review.stale && !review.dismissed && review.state !== 'commented' && <Badge tone="warning">outdated</Badge>}
@@ -314,7 +314,7 @@ function ReviewCard({
       {(review.body_html || review.comments.length > 0 || review.dismissed) && (
         <div className="flex flex-col gap-2 border-t border-border px-3 py-2">
           {review.dismissed && review.dismiss_message && (
-            <p className="text-[12px] text-fg-muted">
+            <p className="text-sm text-fg-muted">
               Dismissed by {review.dismissed_by?.display_name}: {review.dismiss_message}
             </p>
           )}
@@ -388,7 +388,7 @@ function CommentComposer({ repo, pr, canEdit }: { repo: string; pr: PullRequest;
 function SidebarSection({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
     <section className="border-b border-border pb-3">
-      <div className="mb-1.5 flex items-center justify-between text-[12px] font-medium text-fg-muted">
+      <div className="mb-1.5 flex items-center justify-between text-sm font-medium text-fg-muted">
         {title}
         {action}
       </div>
@@ -414,20 +414,20 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
     requested: 'Review requested',
   }
   return (
-    <aside className="flex flex-col gap-3 text-[13px]">
+    <aside className="flex flex-col gap-3 text-base">
       <SidebarSection
         title="Reviewers"
         action={pr.state === 'open' && viewer.canTriage && <ReviewerPicker value={requested} exclude={[pr.author.username]} onChange={(r) => patch.mutate({ reviewers: r })} />}
       >
         {pr.reviewers.length === 0 ? (
-          <p className="text-[12px] text-fg-faint">No reviews yet.</p>
+          <p className="text-sm text-fg-faint">No reviews yet.</p>
         ) : (
           <ul className="flex flex-col gap-1.5" aria-label="Reviewers">
             {pr.reviewers.map((r) => (
               <li key={r.user.id} className="flex items-center gap-2" title={stateLabel[r.state]}>
                 <Avatar user={r.user} size={18} />
                 <span className="min-w-0 flex-1 truncate">{r.user.display_name}</span>
-                {r.stale && r.state !== 'requested' && <span className="text-[10px] text-fg-faint">older commit</span>}
+                {r.stale && r.state !== 'requested' && <span className="text-2xs text-fg-faint">older commit</span>}
                 <ReviewStateIcon state={r.state} />
               </li>
             ))}
@@ -446,7 +446,7 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
       />
       {rule && (
         <SidebarSection title="Branch protection">
-          <ul className="flex flex-col gap-1 text-[12px] text-fg-muted">
+          <ul className="flex flex-col gap-1 text-sm text-fg-muted">
             <li className="flex items-center gap-1.5">
               <Shield size={12} /> <span className="font-mono">{rule.pattern}</span>
             </li>
@@ -468,14 +468,14 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
               <Check size={13} /> Ready for review
             </Button>
           ) : (
-            <button type="button" className="text-[12px] text-fg-muted hover:text-fg" onClick={() => patch.mutate({ draft: true })}>
+            <button type="button" className="text-sm text-fg-muted hover:text-fg" onClick={() => patch.mutate({ draft: true })}>
               Convert to draft
             </button>
           )}
         </SidebarSection>
       )}
       <SidebarSection title="Changes">
-        <p className="text-[12px] text-fg-muted">
+        <p className="text-sm text-fg-muted">
           {pr.changed_files} file{pr.changed_files === 1 ? '' : 's'} · <span className="text-success">+{pr.additions}</span> <span className="text-danger">−{pr.deletions}</span>
         </p>
       </SidebarSection>
@@ -537,7 +537,7 @@ function FilesTab({ repo, pr, pending, setPending }: { repo: string; pr: PullReq
           ))}
           {mine.map((p) => (
             <div key={p.body + p.line} className="rounded-md border border-warning/40 bg-bg px-3 py-2">
-              <div className="mb-1 flex items-center gap-2 text-[12px] text-fg-muted">
+              <div className="mb-1 flex items-center gap-2 text-sm text-fg-muted">
                 <Badge tone="warning">pending</Badge> Part of your review
                 <span className="flex-1" />
                 <button type="button" className="hover:text-danger" onClick={() => setPending(pending.filter((x) => x !== p))}>
@@ -580,7 +580,7 @@ function FilesTab({ repo, pr, pending, setPending }: { repo: string; pr: PullReq
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 p-4">
       {outdatedCount > 0 && (
-        <p className="text-[12px] text-fg-muted">
+        <p className="text-sm text-fg-muted">
           {outdatedCount} comment thread{outdatedCount === 1 ? ' is' : 's are'} on code that changed since; see the Conversation tab.
         </p>
       )}
@@ -661,14 +661,14 @@ function ReviewDialog({
             <span className="mt-0.5">{o.icon}</span>
             <span>
               <span className="font-medium">{o.label}</span>
-              <span className="block text-[12px] text-fg-faint">{o.hint}</span>
+              <span className="block text-sm text-fg-faint">{o.hint}</span>
             </span>
           </label>
         ))}
       </fieldset>
-      {v.isAuthor && <p className="text-[12px] text-fg-faint">You can't approve or request changes on your own pull request.</p>}
+      {v.isAuthor && <p className="text-sm text-fg-faint">You can't approve or request changes on your own pull request.</p>}
       {pending.length > 0 && (
-        <p className="text-[12px] text-fg-muted">
+        <p className="text-sm text-fg-muted">
           {pending.length} pending inline comment{pending.length === 1 ? '' : 's'} will be submitted with this review.
         </p>
       )}

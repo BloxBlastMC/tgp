@@ -99,7 +99,7 @@ export function LoginPage() {
           {step === 'password' ? 'Sign in' : 'Verify'}
         </Button>
         {step !== 'password' && (
-          <div className="flex justify-between text-[12px]">
+          <div className="flex justify-between text-sm">
             <button
               type="button"
               className="text-fg-muted hover:text-fg"
@@ -125,7 +125,7 @@ export function LoginPage() {
           </div>
         )}
       </form>
-      {step === 'password' && <p className="mt-4 text-[12px] text-fg-faint">New here? Use the temporary password your admin gave you.</p>}
+      {step === 'password' && <p className="mt-4 text-sm text-fg-faint">New here? Use the temporary password your admin gave you.</p>}
     </AuthCard>
   )
 }

@@ -58,7 +58,7 @@ export function AdminAuditPage() {
         <p className="p-8 text-center text-fg-muted">No matching entries.</p>
       ) : (
         <table className="w-full text-left">
-          <thead className="text-[11px] tracking-wide text-fg-faint uppercase">
+          <thead className="text-xs tracking-wide text-fg-faint uppercase">
             <tr className="border-b border-border">
               <th className="px-4 py-1.5 font-medium">When</th>
               <th className="px-2 py-1.5 font-medium">Actor</th>
@@ -74,15 +74,15 @@ export function AdminAuditPage() {
                 <td className="px-4 whitespace-nowrap text-fg-muted">
                   <Time iso={e.created_at} />
                 </td>
-                <td className="px-2 font-mono text-[12px]">{e.actor || <span className="text-fg-faint">anonymous</span>}</td>
+                <td className="px-2 font-mono text-sm">{e.actor || <span className="text-fg-faint">anonymous</span>}</td>
                 <td className="px-2">
                   <Badge tone={tone(e.action)}>{e.action}</Badge>
                 </td>
                 <td className="px-2">{e.target}</td>
-                <td className="max-w-xs truncate px-2 font-mono text-[11px] text-fg-faint" title={JSON.stringify(e.details)}>
+                <td className="max-w-xs truncate px-2 font-mono text-xs text-fg-faint" title={JSON.stringify(e.details)}>
                   {Object.keys(e.details).length ? JSON.stringify(e.details) : ''}
                 </td>
-                <td className="px-4 font-mono text-[12px] text-fg-faint">{e.ip}</td>
+                <td className="px-4 font-mono text-sm text-fg-faint">{e.ip}</td>
               </tr>
             ))}
           </tbody>

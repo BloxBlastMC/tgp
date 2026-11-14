@@ -15,7 +15,7 @@ const PER_PAGE = 30
 function FilterSelect({ label, value, onChange, width, children }: { label: string; value: string; onChange: (v: string) => void; width: string; children: ReactNode }) {
   return (
     <div className={cx('shrink-0', width)}>
-      <Select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} className="h-7 text-[12px]">
+      <Select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} className="h-7 text-sm">
         {children}
       </Select>
     </div>
@@ -56,7 +56,7 @@ export function RepoRunsPage() {
   return (
     <div className="flex min-h-full">
       <aside className="w-60 shrink-0 border-r border-border p-2" aria-label="Workflows">
-        <h2 className="px-2 py-1 text-[11px] font-semibold tracking-wide text-fg-faint uppercase">Workflows</h2>
+        <h2 className="px-2 py-1 text-xs font-semibold tracking-wide text-fg-faint uppercase">Workflows</h2>
         <button
           type="button"
           onClick={() => set({ workflow: undefined })}
@@ -67,9 +67,9 @@ export function RepoRunsPage() {
         {workflows.isPending ? (
           <Spinner />
         ) : workflows.isError ? (
-          <p className="px-2 py-1 text-[12px] text-danger">{errorMessage(workflows.error)}</p>
+          <p className="px-2 py-1 text-sm text-danger">{errorMessage(workflows.error)}</p>
         ) : workflows.data.length === 0 ? (
-          <p className="px-2 py-2 text-[12px] text-fg-faint">
+          <p className="px-2 py-2 text-sm text-fg-faint">
             No workflows. Add a YAML file under <code className="font-mono">.tgp/workflows/</code> on {repo.default_branch}.
           </p>
         ) : (
@@ -92,7 +92,7 @@ export function RepoRunsPage() {
             </div>
           ))
         )}
-        <h2 className="mt-3 px-2 py-1 text-[11px] font-semibold tracking-wide text-fg-faint uppercase">Management</h2>
+        <h2 className="mt-3 px-2 py-1 text-xs font-semibold tracking-wide text-fg-faint uppercase">Management</h2>
         <Link to="/$repo/ci/caches" params={{ repo: name }} search={{}} className="flex h-7 items-center gap-2 rounded px-2 text-fg-muted hover:bg-bg-hover hover:text-fg">
           <Database size={13} /> Caches
         </Link>
@@ -123,12 +123,12 @@ export function RepoRunsPage() {
             <option value="release">Release</option>
           </FilterSelect>
           {filtered && (
-            <button type="button" className="flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg" onClick={() => void navigate({ to: '/$repo/ci', params: { repo: name }, search: {} })}>
+            <button type="button" className="flex items-center gap-1 text-sm text-fg-muted hover:text-fg" onClick={() => void navigate({ to: '/$repo/ci', params: { repo: name }, search: {} })}>
               <X size={12} /> Clear filters
             </button>
           )}
           <div className="flex-1" />
-          {runs.data && <span className="text-[12px] text-fg-faint">{runs.data.total} runs</span>}
+          {runs.data && <span className="text-sm text-fg-faint">{runs.data.total} runs</span>}
           {selected && selected.valid && selected.triggers.includes('workflow_dispatch') && canWrite && (
             <Button variant="primary" onClick={() => setDispatch(selected)}>
               <Play size={13} /> Run workflow
@@ -170,10 +170,10 @@ export function RepoRunsPage() {
 export function WorkflowErrors({ workflow }: { workflow: Workflow }) {
   return (
     <div className="flex flex-col gap-1" role="alert" aria-label={`Errors in ${workflow.file}`}>
-      <p className="flex items-center gap-1.5 text-[13px] font-medium text-danger">
+      <p className="flex items-center gap-1.5 text-base font-medium text-danger">
         <AlertTriangle size={13} /> {workflow.path} is invalid and won't run
       </p>
-      <ul className="font-mono text-[12px]">
+      <ul className="font-mono text-sm">
         {workflow.errors.map((e, i) => (
           <li key={i} className="flex gap-2">
             {e.line ? (

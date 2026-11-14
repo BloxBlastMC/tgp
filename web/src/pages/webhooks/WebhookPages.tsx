@@ -7,7 +7,7 @@ import { HookLink, WebhookDetail, WebhookForm, WebhookList } from '../../compone
 import { useRepoName } from '../repos/RepoLayout'
 
 const tabClass =
-  'rounded px-2 py-1 text-[13px] text-fg-muted hover:bg-bg-hover hover:text-fg data-[status=active]:bg-bg-hover data-[status=active]:text-fg'
+  'rounded px-2 py-1 text-base text-fg-muted hover:bg-bg-hover hover:text-fg data-[status=active]:bg-bg-hover data-[status=active]:text-fg'
 
 /** Sub-navigation of a repository's settings. */
 export function RepoSettingsNav() {
@@ -89,7 +89,7 @@ export function AdminWebhooksPage() {
 export function AdminNewWebhookPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 p-6">
-      <HookLink scope={org} className="text-[12px] text-fg-muted hover:text-fg hover:underline">
+      <HookLink scope={org} className="text-sm text-fg-muted hover:text-fg hover:underline">
         ← Webhooks
       </HookLink>
       <Section title="Add organisation webhook" description="Gets events from every repository.">

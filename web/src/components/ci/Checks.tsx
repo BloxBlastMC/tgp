@@ -18,7 +18,7 @@ export function ChecksRow({ repo, checks, blocker }: { repo: string; checks: Che
         <span className="min-w-0 flex-1">
           {checksHeadline(checks)}
           {blocker && (
-            <span className="block text-[12px] text-fg-muted">
+            <span className="block text-sm text-fg-muted">
               {blocker.message}
               {blocker.bypassable && <span className="text-fg-faint"> (admins may bypass)</span>}
             </span>
@@ -36,10 +36,10 @@ export function ChecksRow({ repo, checks, blocker }: { repo: string; checks: Che
                 <span className="font-medium">{c.job_name}</span>
               </span>
               {c.required && <Badge tone="accent">Required</Badge>}
-              <span className="text-[11px] text-fg-faint">
+              <span className="text-xs text-fg-faint">
                 <Duration start={c.started_at} end={c.completed_at} />
               </span>
-              <Link to="/$repo/ci/runs/$number" params={{ repo, number: String(c.run_number) }} search={{ job: c.job_id }} className="text-[12px] text-accent hover:underline">
+              <Link to="/$repo/ci/runs/$number" params={{ repo, number: String(c.run_number) }} search={{ job: c.job_id }} className="text-sm text-accent hover:underline">
                 Details
               </Link>
             </li>
@@ -49,7 +49,7 @@ export function ChecksRow({ repo, checks, blocker }: { repo: string; checks: Che
               <CircleDashed size={14} className="shrink-0 text-warning" />
               <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
               <Badge tone="accent">Required</Badge>
-              <span className="text-[12px] text-fg-faint">Expected — waiting for status</span>
+              <span className="text-sm text-fg-faint">Expected — waiting for status</span>
             </li>
           ))}
         </ul>

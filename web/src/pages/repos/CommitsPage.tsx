@@ -49,7 +49,7 @@ export function CommitsPage() {
         <>
           {groupByDay(commits.data.commits).map((g) => (
             <section key={g.day}>
-              <h3 className="mb-1.5 text-[12px] font-medium text-fg-muted">Commits on {g.day}</h3>
+              <h3 className="mb-1.5 text-sm font-medium text-fg-muted">Commits on {g.day}</h3>
               <ul className="overflow-hidden rounded-md border border-border">
                 {g.commits.map((c) => (
                   <li key={c.sha} className="flex items-center gap-3 border-b border-border px-3 py-2 last:border-0 hover:bg-bg-subtle">
@@ -57,14 +57,14 @@ export function CommitsPage() {
                       <Link to="/$repo/commit/$sha" params={{ repo: name, sha: c.sha }} className="block truncate font-medium hover:text-accent">
                         {c.subject}
                       </Link>
-                      <div className="text-[12px] text-fg-faint">
+                      <div className="text-sm text-fg-faint">
                         {c.author.name} committed <Time iso={c.committer.date} />
                       </div>
                     </div>
-                    <Link to="/$repo/commit/$sha" params={{ repo: name, sha: c.sha }} className="rounded border border-border px-1.5 py-0.5 font-mono text-[12px] text-fg-muted hover:text-accent">
+                    <Link to="/$repo/commit/$sha" params={{ repo: name, sha: c.sha }} className="rounded border border-border px-1.5 py-0.5 font-mono text-sm text-fg-muted hover:text-accent">
                       {c.sha.slice(0, 7)}
                     </Link>
-                    <Link to="/$repo" params={{ repo: name }} search={{ ref: c.sha }} className="text-[12px] text-fg-faint hover:text-accent" title="Browse files at this commit">
+                    <Link to="/$repo" params={{ repo: name }} search={{ ref: c.sha }} className="text-sm text-fg-faint hover:text-accent" title="Browse files at this commit">
                       Browse
                     </Link>
                   </li>

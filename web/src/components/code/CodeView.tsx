@@ -37,7 +37,7 @@ export function CodeView({ code, path }: { code: string; path: string }) {
   }
 
   return (
-    <div className="overflow-x-auto font-mono text-[12.5px] leading-[20px]">
+    <div className="overflow-x-auto font-mono text-code">
       <table className="w-full border-collapse">
         <tbody>
           {lines.map((line, i) => {

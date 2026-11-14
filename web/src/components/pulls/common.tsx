@@ -22,7 +22,7 @@ export function Avatar({ user, size = 20 }: { user: Pick<UserSummary, 'display_n
 type StateLike = Pick<PullSummary, 'state' | 'draft'>
 
 export function PullStateIcon({ pr, size = 15 }: { pr: StateLike; size?: number }) {
-  if (pr.state === 'merged') return <GitMerge size={size} className="shrink-0 text-[#a371f7]" aria-label="merged" />
+  if (pr.state === 'merged') return <GitMerge size={size} className="shrink-0 text-done" aria-label="merged" />
   if (pr.state === 'closed') return <GitPullRequestClosed size={size} className="shrink-0 text-danger" aria-label="closed" />
   if (pr.draft) return <GitPullRequestDraft size={size} className="shrink-0 text-fg-faint" aria-label="draft" />
   return <CircleDot size={size} className="shrink-0 text-success" aria-label="open" />
@@ -32,14 +32,14 @@ export function PullStateBadge({ pr }: { pr: StateLike }) {
   const label = pr.state === 'open' && pr.draft ? 'Draft' : pr.state[0]!.toUpperCase() + pr.state.slice(1)
   const tone =
     pr.state === 'merged'
-      ? 'bg-[#a371f7]/15 text-[#a371f7]'
+      ? 'bg-done/15 text-done'
       : pr.state === 'closed'
         ? 'bg-danger/15 text-danger'
         : pr.draft
           ? 'bg-bg-hover text-fg-muted'
           : 'bg-success/15 text-success'
   return (
-    <span className={cx('inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-medium', tone)}>
+    <span className={cx('inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium', tone)}>
       <PullStateIcon pr={pr} size={13} /> {label}
     </span>
   )
@@ -52,7 +52,7 @@ export function DecisionBadge({ decision }: { decision: PullRequest['review_deci
 }
 
 export function BranchName({ children }: { children: ReactNode }) {
-  return <code className="rounded bg-accent-subtle px-1.5 py-0.5 font-mono text-[12px] text-accent">{children}</code>
+  return <code className="rounded bg-accent-subtle px-1.5 py-0.5 font-mono text-sm text-accent">{children}</code>
 }
 
 /** Textarea with Write / Preview tabs; preview is rendered by the server. */
@@ -84,7 +84,7 @@ export function MarkdownEditor({
   })
   return (
     <div className="overflow-hidden rounded border border-border-strong bg-bg focus-within:border-accent">
-      <div className="flex border-b border-border bg-bg-subtle text-[12px]">
+      <div className="flex border-b border-border bg-bg-subtle text-sm">
         {(['write', 'preview'] as const).map((t) => (
           <button
             key={t}
@@ -97,7 +97,7 @@ export function MarkdownEditor({
           </button>
         ))}
         <span className="flex-1" />
-        <span className="self-center px-2 text-[11px] text-fg-faint">Markdown</span>
+        <span className="self-center px-2 text-xs text-fg-faint">Markdown</span>
       </div>
       {tab === 'write' ? (
         <Textarea
@@ -214,7 +214,7 @@ export function CommentCard({ repo, number, comment, isRepoAdmin, compact }: { r
     <div className={cx('flex gap-2.5', compact ? '' : 'rounded-md border border-border bg-bg')} data-testid="comment">
       {compact && <Avatar user={comment.author} />}
       <div className="min-w-0 flex-1">
-        <div className={cx('flex items-center gap-2 text-[12px] text-fg-muted', !compact && 'border-b border-border bg-bg-subtle px-3 py-1.5')}>
+        <div className={cx('flex items-center gap-2 text-sm text-fg-muted', !compact && 'border-b border-border bg-bg-subtle px-3 py-1.5')}>
           {!compact && <Avatar user={comment.author} size={18} />}
           <span className="font-medium text-fg">{comment.author.display_name}</span>
           <span className="text-fg-faint">
@@ -251,7 +251,7 @@ export function CommentCard({ repo, number, comment, isRepoAdmin, compact }: { r
 export function DiffHunk({ hunk }: { hunk: string }) {
   const lines = hunk.split('\n')
   return (
-    <pre className="overflow-x-auto border-b border-border bg-bg font-mono text-[12px] leading-[18px]">
+    <pre className="overflow-x-auto border-b border-border bg-bg font-mono text-sm">
       {lines.map((l, i) => (
         <div
           key={i}
@@ -307,7 +307,7 @@ export function ThreadView({
   return (
     <div className="overflow-hidden rounded-md border border-border bg-bg" data-testid="thread">
       {showContext && (
-        <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-[12px]">
+        <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-sm">
           <span className="min-w-0 truncate font-mono">{root.path}</span>
           <span className="text-fg-faint">
             line {root.line}
@@ -325,7 +325,7 @@ export function ThreadView({
       )}
       {showContext && !collapsed && root.diff_hunk && <DiffHunk hunk={root.diff_hunk} />}
       {!showContext && root.resolved && (
-        <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1 text-[12px] text-fg-muted">
+        <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1 text-sm text-fg-muted">
           <CheckCircle2 size={12} className="text-success" /> Resolved by {root.resolved_by?.display_name ?? 'someone'}
           <span className="flex-1" />
           <button type="button" className="hover:text-fg" onClick={() => setCollapsed(!collapsed)}>

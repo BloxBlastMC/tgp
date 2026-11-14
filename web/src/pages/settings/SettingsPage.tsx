@@ -217,14 +217,14 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{t.name}</span>
-                  <code className="font-mono text-[12px] text-fg-faint">{t.prefix}…</code>
+                  <code className="font-mono text-sm text-fg-faint">{t.prefix}…</code>
                   {t.scopes.map((s) => (
                     <Badge key={s} tone={s === 'admin' ? 'warning' : 'neutral'}>
                       {s}
                     </Badge>
                   ))}
                 </div>
-                <div className="text-[12px] text-fg-faint">
+                <div className="text-sm text-fg-faint">
                   Created <Time iso={t.created_at} /> · last used <Time iso={t.last_used_at} /> ·{' '}
                   {t.expires_at ? (
                     <>
@@ -264,7 +264,7 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
           >
             <Field label="Name">{(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} placeholder="laptop CLI" autoFocus required />}</Field>
             <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-[12px] font-medium text-fg-muted">Scopes</legend>
+              <legend className="mb-1 text-sm font-medium text-fg-muted">Scopes</legend>
               <Checkbox checked={scopes.includes('read')} onChange={(v) => toggle('read', v)} label="read" hint="Clone and view everything you have access to." />
               <Checkbox checked={scopes.includes('write')} onChange={(v) => toggle('write', v)} label="write" hint="Push, open and merge PRs, comment, manage your account." />
               {isAdmin && <Checkbox checked={scopes.includes('admin')} onChange={(v) => toggle('admin', v)} label="admin" hint="Use admin endpoints (users, org, server settings)." />}

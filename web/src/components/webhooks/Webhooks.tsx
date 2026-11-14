@@ -95,9 +95,9 @@ export function DeliveryStatusIcon({ d, size = 14 }: { d: Pick<WebhookDelivery, 
 }
 
 function LastDelivery({ d }: { d?: WebhookDelivery | null }) {
-  if (!d) return <span className="text-[12px] text-fg-faint">No deliveries yet</span>
+  if (!d) return <span className="text-sm text-fg-faint">No deliveries yet</span>
   return (
-    <span className="flex items-center gap-1.5 text-[12px] text-fg-muted">
+    <span className="flex items-center gap-1.5 text-sm text-fg-muted">
       <DeliveryStatusIcon d={d} size={12} />
       <span className="font-mono">{d.response_status ?? '—'}</span>
       <span className="text-fg-faint">·</span>
@@ -119,7 +119,7 @@ export function WebhookList({ scope }: { scope: HookScope }) {
       title="Webhooks"
       description={description}
       actions={
-        <HookLink scope={scope} id="new" className="inline-flex h-7 items-center gap-1.5 rounded border border-transparent bg-accent px-2.5 text-[13px] font-medium text-accent-fg hover:brightness-110">
+        <HookLink scope={scope} id="new" className="inline-flex h-7 items-center gap-1.5 rounded border border-transparent bg-accent px-2.5 text-base font-medium text-accent-fg hover:brightness-110">
           <Plus size={13} /> Add webhook
         </HookLink>
       }
@@ -136,10 +136,10 @@ export function WebhookList({ scope }: { scope: HookScope }) {
             <li key={h.id} className="flex items-center gap-3 py-2">
               <WebhookIcon size={14} className={h.active ? 'text-fg-muted' : 'text-fg-faint'} />
               <div className="min-w-0 flex-1">
-                <HookLink scope={scope} id={h.id} className="block truncate font-mono text-[13px] hover:underline">
+                <HookLink scope={scope} id={h.id} className="block truncate font-mono text-base hover:underline">
                   {h.url}
                 </HookLink>
-                <div className="flex items-center gap-2 text-[12px] text-fg-faint">
+                <div className="flex items-center gap-2 text-sm text-fg-faint">
                   <span>{eventsSummary(h.events)}</span>
                   {h.has_secret && <span>· signed</span>}
                   {h.insecure_ssl && <span className="text-warning">· TLS not verified</span>}
@@ -251,7 +251,7 @@ export function WebhookForm({ scope, hook }: { scope: HookScope; hook?: Webhook 
         )}
       </Field>
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-[12px] font-medium text-fg-muted">Which events should trigger this webhook?</legend>
+        <legend className="mb-1 text-sm font-medium text-fg-muted">Which events should trigger this webhook?</legend>
         {(
           [
             ['push', 'Just the push event'],
@@ -281,7 +281,7 @@ export function WebhookForm({ scope, hook }: { scope: HookScope; hook?: Webhook 
             )}
           </div>
         )}
-        {touched && noEvents && <p className="text-[12px] text-danger">Pick at least one event.</p>}
+        {touched && noEvents && <p className="text-sm text-danger">Pick at least one event.</p>}
       </fieldset>
       <Checkbox checked={active} onChange={setActive} label="Active" hint="Inactive webhooks keep their settings but get no deliveries." />
       <Checkbox checked={insecure} onChange={setInsecure} label="Skip TLS certificate verification" hint="Only for receivers with self-signed certificates." />
@@ -293,7 +293,7 @@ export function WebhookForm({ scope, hook }: { scope: HookScope; hook?: Webhook 
           {hook ? 'Update webhook' : 'Add webhook'}
         </Button>
         {!hook && (
-          <HookLink scope={scope} className="inline-flex h-7 items-center rounded px-2.5 text-[13px] text-fg-muted hover:bg-bg-hover hover:text-fg">
+          <HookLink scope={scope} className="inline-flex h-7 items-center rounded px-2.5 text-base text-fg-muted hover:bg-bg-hover hover:text-fg">
             Cancel
           </HookLink>
         )}
@@ -316,10 +316,10 @@ function EventCheckbox({ name, description, checked, onChange }: { name: string;
         className="mt-0.5 size-3.5 accent-[var(--accent)]"
       />
       <div>
-        <label htmlFor={id} className="font-mono text-[13px] select-none">
+        <label htmlFor={id} className="font-mono text-base select-none">
           {name}
         </label>
-        <p id={id + '-d'} className="text-[12px] text-fg-faint">
+        <p id={id + '-d'} className="text-sm text-fg-faint">
           {description}
         </p>
       </div>
@@ -355,11 +355,11 @@ export function WebhookDetail({ scope, id }: { scope: HookScope; id: number }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <HookLink scope={scope} className="text-[12px] text-fg-muted hover:text-fg hover:underline">
+        <HookLink scope={scope} className="text-sm text-fg-muted hover:text-fg hover:underline">
           Webhooks
         </HookLink>
         <span className="text-fg-faint">/</span>
-        <span className="min-w-0 truncate font-mono text-[13px]">{h.url}</span>
+        <span className="min-w-0 truncate font-mono text-base">{h.url}</span>
         {!h.active && <Badge>inactive</Badge>}
         <div className="flex-1" />
         <Button onClick={() => ping.mutate()} loading={ping.isPending}>
@@ -445,14 +445,14 @@ function DeliveriesSection({ hookId }: { hookId: number }) {
               >
                 {open === d.id ? <ChevronDown size={13} className="text-fg-faint" /> : <ChevronRight size={13} className="text-fg-faint" />}
                 <DeliveryStatusIcon d={d} />
-                <span className="font-mono text-[13px]">{deliveryLabel(d)}</span>
-                <span className="font-mono text-[12px] text-fg-faint" title={d.guid}>
+                <span className="font-mono text-base">{deliveryLabel(d)}</span>
+                <span className="font-mono text-sm text-fg-faint" title={d.guid}>
                   {shortGuid(d.guid)}
                 </span>
                 {d.redelivery && <Badge>redelivery</Badge>}
                 <div className="flex-1" />
-                <span className={cx('truncate text-[12px]', d.status === 'failed' ? 'text-danger' : 'text-fg-muted')}>{deliveryResult(d)}</span>
-                <span className="w-24 shrink-0 text-right text-[12px] text-fg-faint">
+                <span className={cx('truncate text-sm', d.status === 'failed' ? 'text-danger' : 'text-fg-muted')}>{deliveryResult(d)}</span>
+                <span className="w-24 shrink-0 text-right text-sm text-fg-faint">
                   <Time iso={d.created_at} />
                 </span>
               </button>
@@ -462,7 +462,7 @@ function DeliveriesSection({ hookId }: { hookId: number }) {
         </ul>
       )}
       {total > 30 && (
-        <div className="mt-6 flex items-center justify-end gap-2 text-[12px] text-fg-muted">
+        <div className="mt-6 flex items-center justify-end gap-2 text-sm text-fg-muted">
           <span>
             Page {page} of {Math.ceil(total / 30)}
           </span>
@@ -479,9 +479,9 @@ function DeliveriesSection({ hookId }: { hookId: number }) {
 }
 
 function KV({ rows }: { rows: [string, string][] }) {
-  if (rows.length === 0) return <p className="text-[12px] text-fg-faint">None</p>
+  if (rows.length === 0) return <p className="text-sm text-fg-faint">None</p>
   return (
-    <dl className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5 font-mono text-[12px]">
+    <dl className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5 font-mono text-sm">
       {rows.map(([k, v]) => (
         <div key={k} className="contents">
           <dt className="text-fg-muted">{k}:</dt>
@@ -494,7 +494,7 @@ function KV({ rows }: { rows: [string, string][] }) {
 
 function Pre({ children, label }: { children: string; label: string }) {
   return (
-    <pre aria-label={label} className="max-h-96 overflow-auto rounded border border-border bg-bg p-3 font-mono text-[12px] leading-relaxed whitespace-pre-wrap">
+    <pre aria-label={label} className="max-h-96 overflow-auto rounded border border-border bg-bg p-3 font-mono text-sm leading-relaxed whitespace-pre-wrap">
       {children}
     </pre>
   )
@@ -516,7 +516,7 @@ function DeliveryDetailView({ hookId, deliveryId, onRedelivered }: { hookId: num
   const x = d.data
   return (
     <div className="flex flex-col gap-3 border-t border-border bg-bg-subtle px-4 py-3" aria-label="Delivery detail">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-fg-muted">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-fg-muted">
         <span>
           Delivery <span className="font-mono text-fg">{x.guid}</span>
         </span>
@@ -545,7 +545,7 @@ function DeliveryDetailView({ hookId, deliveryId, onRedelivered }: { hookId: num
             role="tab"
             aria-selected={tab === t}
             onClick={() => setTab(t)}
-            className={cx('-mb-px border-b-2 px-2 py-1 text-[12px] capitalize', tab === t ? 'border-accent text-fg' : 'border-transparent text-fg-muted hover:text-fg')}
+            className={cx('-mb-px border-b-2 px-2 py-1 text-sm capitalize', tab === t ? 'border-accent text-fg' : 'border-transparent text-fg-muted hover:text-fg')}
           >
             {t}
             {t === 'response' && x.response_status != null && <span className="ml-1 font-mono">{x.response_status}</span>}
@@ -554,7 +554,7 @@ function DeliveryDetailView({ hookId, deliveryId, onRedelivered }: { hookId: num
       </div>
       {tab === 'request' ? (
         <>
-          <p className="font-mono text-[12px]">
+          <p className="font-mono text-sm">
             <span className="text-fg-muted">POST</span> {x.request.url}
           </p>
           <KV rows={sortedHeaders(x.request.headers)} />
@@ -563,11 +563,11 @@ function DeliveryDetailView({ hookId, deliveryId, onRedelivered }: { hookId: num
       ) : x.response ? (
         <>
           <KV rows={sortedHeaders(x.response.headers)} />
-          {x.response.body ? <Pre label="Response body">{prettyBody(x.response.body)}</Pre> : <p className="text-[12px] text-fg-faint">Empty body</p>}
-          {x.response.truncated && <p className="text-[12px] text-fg-faint">The response body was truncated.</p>}
+          {x.response.body ? <Pre label="Response body">{prettyBody(x.response.body)}</Pre> : <p className="text-sm text-fg-faint">Empty body</p>}
+          {x.response.truncated && <p className="text-sm text-fg-faint">The response body was truncated.</p>}
         </>
       ) : (
-        <p className="text-[12px] text-fg-faint">No response{x.status === 'pending' ? ' yet' : ''}.</p>
+        <p className="text-sm text-fg-faint">No response{x.status === 'pending' ? ' yet' : ''}.</p>
       )}
     </div>
   )

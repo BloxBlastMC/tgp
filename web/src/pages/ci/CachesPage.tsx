@@ -48,18 +48,18 @@ export function CachesPage() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-3 p-4">
       <div>
-        <Link to="/$repo/ci" params={{ repo }} search={{}} className="inline-flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg">
+        <Link to="/$repo/ci" params={{ repo }} search={{}} className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg">
           <ArrowLeft size={12} /> CI
         </Link>
         <div className="mt-1 flex items-center justify-between gap-3">
-          <h2 className="text-[15px] font-semibold">Caches</h2>
+          <h2 className="text-lg font-semibold">Caches</h2>
           {canWrite && (q.data?.total ?? 0) > 0 && (
             <Button variant="danger" loading={delKey.isPending && delKey.variables === undefined} onClick={() => window.confirm(`Delete all ${q.data!.total} caches of ${repo}?`) && delKey.mutate(undefined)}>
               <Trash2 size={13} /> Delete all
             </Button>
           )}
         </div>
-        <p className="mt-0.5 text-[12px] text-fg-muted">
+        <p className="mt-0.5 text-sm text-fg-muted">
           Saved by the <code className="font-mono">cache</code> step. Runs read caches from their own branch first, then the base and default branches.
         </p>
       </div>
@@ -73,10 +73,10 @@ export function CachesPage() {
           }}
         >
           <Search size={13} className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-fg-faint" />
-          <Input value={key} onChange={(e) => setKey(e.target.value)} placeholder="Filter by key prefix" aria-label="Filter by key prefix" className="h-7 pl-7 font-mono text-[12px]" />
+          <Input value={key} onChange={(e) => setKey(e.target.value)} placeholder="Filter by key prefix" aria-label="Filter by key prefix" className="h-7 pl-7 font-mono text-sm" />
         </form>
         <div className="w-40 shrink-0">
-          <Select aria-label="Sort" value={search.sort ?? 'last_used'} onChange={(e) => set({ sort: e.target.value === 'last_used' ? undefined : (e.target.value as CacheFilters['sort']) })} className="h-7 text-[12px]">
+          <Select aria-label="Sort" value={search.sort ?? 'last_used'} onChange={(e) => set({ sort: e.target.value === 'last_used' ? undefined : (e.target.value as CacheFilters['sort']) })} className="h-7 text-sm">
             <option value="last_used">Recently used</option>
             <option value="created">Newest</option>
             <option value="size">Largest</option>
@@ -118,7 +118,7 @@ function Usage({ used, quota, count }: { used: number; quota: number; count: num
   const pct = usagePercent(used, quota)
   return (
     <div className="rounded-md border border-border bg-bg-subtle px-3 py-2.5">
-      <div className="flex items-center justify-between text-[12px]">
+      <div className="flex items-center justify-between text-sm">
         <span className="inline-flex items-center gap-1.5 text-fg-muted">
           <Database size={12} /> {count} {count === 1 ? 'cache' : 'caches'}
         </span>
@@ -140,10 +140,10 @@ function CacheRow({ c, canWrite, busy, onDelete, onDeleteKey, onFilter }: { c: C
   return (
     <li className="group flex items-center gap-3 px-3 py-2">
       <div className="min-w-0 flex-1">
-        <button type="button" onClick={onFilter} className="block max-w-full truncate text-left font-mono text-[13px] hover:underline" title={`Show caches with key ${c.key}`}>
+        <button type="button" onClick={onFilter} className="block max-w-full truncate text-left font-mono text-base hover:underline" title={`Show caches with key ${c.key}`}>
           {c.key}
         </button>
-        <div className="mt-0.5 flex flex-wrap gap-x-3 text-[12px] text-fg-faint">
+        <div className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-fg-faint">
           <span className="font-mono" title={c.ref}>
             {refLabel(c.ref)}
           </span>
@@ -158,10 +158,10 @@ function CacheRow({ c, canWrite, busy, onDelete, onDeleteKey, onFilter }: { c: C
           </span>
         </div>
       </div>
-      <span className="shrink-0 text-[12px] tabular-nums text-fg-muted">{formatBytes(c.size_bytes)}</span>
+      <span className="shrink-0 text-sm tabular-nums text-fg-muted">{formatBytes(c.size_bytes)}</span>
       {canWrite && (
         <div className="flex shrink-0 gap-1">
-          <button type="button" disabled={busy} onClick={onDeleteKey} className="hidden rounded px-1.5 py-0.5 text-[12px] text-fg-muted group-hover:block hover:bg-bg-hover hover:text-danger" title="Delete every cache with this key">
+          <button type="button" disabled={busy} onClick={onDeleteKey} className="hidden rounded px-1.5 py-0.5 text-sm text-fg-muted group-hover:block hover:bg-bg-hover hover:text-danger" title="Delete every cache with this key">
             Delete key
           </button>
           <button type="button" disabled={busy} onClick={onDelete} aria-label={`Delete cache ${c.key}`} className="rounded p-1 text-fg-muted hover:bg-bg-hover hover:text-danger">

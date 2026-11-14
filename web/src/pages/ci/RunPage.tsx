@@ -83,11 +83,11 @@ function RunHeader({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
         <KindIcon kind={kind} size={20} className="mt-0.5" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="truncate text-[15px] font-semibold">{run.title || run.workflow_name}</h1>
+            <h1 className="truncate text-lg font-semibold">{run.title || run.workflow_name}</h1>
             <span className="text-fg-faint">#{run.number}</span>
             <Badge tone={statusTone[kind]}>{statusLabel[kind]}</Badge>
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-fg-muted">
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-fg-muted">
             <Link to="/$repo/ci" params={{ repo }} search={{ workflow: run.workflow_path.split('/').pop() }} className="hover:text-fg" title={run.workflow_path}>
               {run.workflow_name}
             </Link>
@@ -150,12 +150,12 @@ function JobRow({ repo, run, job, selected, nested }: { repo: string; run: Workf
       params={{ repo, number: String(run.number) }}
       search={{ job: job.id }}
       replace
-      className={cx('flex h-8 items-center gap-2 rounded pr-2 text-[13px]', nested ? 'pl-6' : 'pl-2', selected ? 'bg-bg-hover text-fg' : 'text-fg-muted hover:bg-bg-hover hover:text-fg')}
+      className={cx('flex h-8 items-center gap-2 rounded pr-2 text-base', nested ? 'pl-6' : 'pl-2', selected ? 'bg-bg-hover text-fg' : 'text-fg-muted hover:bg-bg-hover hover:text-fg')}
       aria-current={selected ? 'page' : undefined}
     >
       <StatusIcon status={job.status} conclusion={job.conclusion} size={14} />
       <span className="min-w-0 flex-1 truncate">{nested && job.matrix ? matrixText(job) : job.name}</span>
-      <span className="shrink-0 text-[11px] text-fg-faint">
+      <span className="shrink-0 text-xs text-fg-faint">
         <Duration start={job.started_at} end={job.completed_at} />
       </span>
     </Link>
@@ -173,16 +173,16 @@ function JobList({ repo, run, selected }: { repo: string; run: WorkflowRunDetail
   const [closed, setClosed] = useState<Record<string, boolean>>({})
   return (
     <nav className="p-2" aria-label="Jobs">
-      <h2 className="px-2 py-1 text-[11px] font-semibold tracking-wide text-fg-faint uppercase">Jobs</h2>
+      <h2 className="px-2 py-1 text-xs font-semibold tracking-wide text-fg-faint uppercase">Jobs</h2>
       {groups.map((g) =>
         g.jobs.length === 1 && !g.jobs[0]!.matrix ? (
           <JobRow key={g.key} repo={repo} run={run} job={g.jobs[0]!} selected={g.jobs[0]!.id === selected} />
         ) : (
           <div key={g.key}>
-            <button type="button" onClick={() => setClosed((c) => ({ ...c, [g.key]: !c[g.key] }))} className="flex h-8 w-full items-center gap-2 rounded px-2 text-left text-[13px] text-fg-muted hover:bg-bg-hover hover:text-fg" aria-expanded={!closed[g.key]}>
+            <button type="button" onClick={() => setClosed((c) => ({ ...c, [g.key]: !c[g.key] }))} className="flex h-8 w-full items-center gap-2 rounded px-2 text-left text-base text-fg-muted hover:bg-bg-hover hover:text-fg" aria-expanded={!closed[g.key]}>
               <KindIcon kind={groupKind(g.jobs)} size={14} />
               <span className="min-w-0 flex-1 truncate font-medium">{g.key}</span>
-              <span className="text-[11px] text-fg-faint">{g.jobs.length}</span>
+              <span className="text-xs text-fg-faint">{g.jobs.length}</span>
               {closed[g.key] ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
             </button>
             {!closed[g.key] && g.jobs.map((j) => <JobRow key={j.id} repo={repo} run={run} job={j} selected={j.id === selected} nested />)}
@@ -240,7 +240,7 @@ function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; jo
         <div className="flex items-center gap-2">
           <KindIcon kind={kind} size={16} />
           <h2 className="min-w-0 flex-1 truncate font-medium">{job.name}</h2>
-          <span className="text-[12px] text-fg-faint">
+          <span className="text-sm text-fg-faint">
             <Duration start={job.started_at} end={job.completed_at} />
           </span>
           {logs.live && <Badge tone="accent">live</Badge>}
@@ -250,7 +250,7 @@ function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; jo
             </Button>
           )}
         </div>
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-fg-faint">
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-fg-faint">
           <span className="inline-flex items-center gap-1" title="Runner">
             <Server size={11} /> {job.runner?.name ?? 'no runner yet'}
           </span>
@@ -305,13 +305,13 @@ function StepSection({ step, lines, jobRunning }: { step: StepView; lines: { n: 
         {isOpen ? <ChevronDown size={13} className="text-fg-faint" /> : <ChevronRight size={13} className="text-fg-faint" />}
         <StatusIcon status={step.status} conclusion={step.conclusion ?? (step.number <= 0 && step.status === 'completed' ? 'success' : null)} size={14} />
         <span className="min-w-0 flex-1 truncate">{step.name}</span>
-        <span className="text-[11px] text-fg-faint">
+        <span className="text-xs text-fg-faint">
           <Duration start={step.started_at} end={step.completed_at} />
         </span>
       </button>
       {isOpen && (
         <div className="ml-2 border-l border-border py-1 pl-1">
-          {lines.length ? <StepLog lines={lines} /> : <p className="px-3 py-1 font-mono text-[12px] text-fg-faint">{step.status === 'pending' ? 'Not started.' : step.conclusion === 'skipped' ? 'Skipped.' : 'No output.'}</p>}
+          {lines.length ? <StepLog lines={lines} /> : <p className="px-3 py-1 font-mono text-sm text-fg-faint">{step.status === 'pending' ? 'Not started.' : step.conclusion === 'skipped' ? 'Skipped.' : 'No output.'}</p>}
         </div>
       )}
     </li>
@@ -332,7 +332,7 @@ function ArtifactList({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
   if (list.length === 0 && !q.isError) return null
   return (
     <section className="border-t border-border p-2" aria-label="Artifacts">
-      <h2 className="px-2 py-1 text-[11px] font-semibold tracking-wide text-fg-faint uppercase">
+      <h2 className="px-2 py-1 text-xs font-semibold tracking-wide text-fg-faint uppercase">
         Artifacts <span className="font-normal">{list.length}</span>
       </h2>
       {q.isError && <Alert>{errorMessage(q.error)}</Alert>}
@@ -341,10 +341,10 @@ function ArtifactList({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
         <div key={a.id} className="group flex items-center gap-1.5 rounded px-2 py-1 hover:bg-bg-hover">
           <Box size={13} className="shrink-0 text-fg-muted" />
           <div className="min-w-0 flex-1">
-            <a href={artifactZipUrl(repo, a.id)} download={`${a.name}.zip`} className="block truncate text-[13px] hover:underline" title={`${a.name} (from ${a.job_name}, attempt ${a.attempt})`}>
+            <a href={artifactZipUrl(repo, a.id)} download={`${a.name}.zip`} className="block truncate text-base hover:underline" title={`${a.name} (from ${a.job_name}, attempt ${a.attempt})`}>
               {a.name}
             </a>
-            <div className="text-[11px] text-fg-faint">
+            <div className="text-xs text-fg-faint">
               {formatBytes(a.size_bytes)} · {expiresText(a.expires_at)}
             </div>
           </div>

@@ -46,7 +46,7 @@ export function RepoLayout() {
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <Link to="/$repo" params={{ repo: r.name }} className="text-[15px] font-semibold hover:underline">
+              <Link to="/$repo" params={{ repo: r.name }} className="text-lg font-semibold hover:underline">
                 {r.name}
               </Link>
               {r.archived && (

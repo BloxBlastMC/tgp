@@ -47,7 +47,7 @@ export function TotpEnroll({ onDone, onCancel }: { onDone: () => void; onCancel?
       <div className="flex items-center gap-4">
         <div className="rounded bg-white p-1.5">{qr ? <img src={qr} alt="2FA QR code" className="size-[176px]" /> : <div className="size-[176px]" />}</div>
         <div className="min-w-0 flex-1">
-          <p className="mb-1 text-[12px] text-fg-muted">Can't scan? Enter this key manually:</p>
+          <p className="mb-1 text-sm text-fg-muted">Can't scan? Enter this key manually:</p>
           <SecretValue value={start.data.secret} label="TOTP secret" />
         </div>
       </div>
@@ -98,7 +98,7 @@ export function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () =
       <p className="text-fg-muted">
         Save these recovery codes somewhere safe. Each one logs you in once if you lose your authenticator. They won't be shown again.
       </p>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-1 rounded border border-border-strong bg-bg p-3 font-mono text-[13px]">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-1 rounded border border-border-strong bg-bg p-3 font-mono text-base">
         {codes.map((c) => (
           <span key={c}>{c}</span>
         ))}

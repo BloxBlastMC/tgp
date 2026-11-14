@@ -38,11 +38,11 @@ export function MergeBox({ repo, pr }: { repo: string; pr: PullRequest }) {
 
   if (pr.state === 'merged') {
     return (
-      <div className="flex items-center gap-3 rounded-md border border-[#a371f7]/40 bg-[#a371f7]/10 px-4 py-3">
-        <GitMerge size={18} className="shrink-0 text-[#a371f7]" />
+      <div className="flex items-center gap-3 rounded-md border border-done/40 bg-done/10 px-4 py-3">
+        <GitMerge size={18} className="shrink-0 text-done" />
         <div className="min-w-0 flex-1">
           <p className="font-medium">Merged</p>
-          <p className="text-[12px] text-fg-muted">
+          <p className="text-sm text-fg-muted">
             {pr.merged_by?.display_name ?? 'Someone'} merged this <Time iso={pr.merged_at} />
             {pr.merge_commit && (
               <>
@@ -59,7 +59,7 @@ export function MergeBox({ repo, pr }: { repo: string; pr: PullRequest }) {
             <GitBranch size={13} /> Delete branch
           </Button>
         )}
-        {!pr.head.exists && <span className="text-[12px] text-fg-faint">Branch {pr.head.branch} deleted</span>}
+        {!pr.head.exists && <span className="text-sm text-fg-faint">Branch {pr.head.branch} deleted</span>}
       </div>
     )
   }
@@ -118,8 +118,8 @@ function OpenMergeBox({ repo, pr, canWrite }: { repo: string; pr: PullRequest; c
         {pr.mergeable === 'conflict' && (
           <StatusRow>
             <p>This branch has conflicts that must be resolved.</p>
-            <p className="font-mono text-[12px] text-fg-muted">{pr.conflict_files.join(', ')}</p>
-            <p className="text-[12px] text-fg-faint">
+            <p className="font-mono text-sm text-fg-muted">{pr.conflict_files.join(', ')}</p>
+            <p className="text-sm text-fg-faint">
               Resolve locally: <code className="font-mono">git merge {pr.base.branch}</code> on {pr.head.branch}, then push.
             </p>
           </StatusRow>
@@ -160,7 +160,7 @@ function OpenMergeBox({ repo, pr, canWrite }: { repo: string; pr: PullRequest; c
         {ruleBlockers.map((b) => (
           <StatusRow key={b.code}>
             {b.message}
-            {b.bypassable && <span className="text-[12px] text-fg-faint"> (admins may bypass)</span>}
+            {b.bypassable && <span className="text-sm text-fg-faint"> (admins may bypass)</span>}
           </StatusRow>
         ))}
         {pr.blockers.some((b) => b.code === 'permission') && <StatusRow warn>Only maintainers and admins can merge.</StatusRow>}

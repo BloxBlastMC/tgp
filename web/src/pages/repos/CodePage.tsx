@@ -47,7 +47,7 @@ export function CodePage() {
       ) : (
         <div className="overflow-hidden rounded-md border border-border">
           {lastCommit && (
-            <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-2 text-[12px]">
+            <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-2 text-sm">
               <span className="font-medium">{lastCommit.author.name}</span>
               <Link to="/$repo/commit/$sha" params={{ repo: name, sha: lastCommit.sha }} className="min-w-0 flex-1 truncate text-fg-muted hover:text-accent">
                 {lastCommit.subject}
@@ -85,7 +85,7 @@ export function CodePage() {
                       </Link>
                     ) : e.type === 'submodule' ? (
                       <span className="flex items-center gap-2 text-fg-muted">
-                        <FolderGit size={14} className="shrink-0" /> {e.name} <span className="font-mono text-[11px] text-fg-faint">@ {e.sha.slice(0, 7)}</span>
+                        <FolderGit size={14} className="shrink-0" /> {e.name} <span className="font-mono text-xs text-fg-faint">@ {e.sha.slice(0, 7)}</span>
                       </span>
                     ) : (
                       <Link to="/$repo/blob" params={{ repo: name }} search={{ ref, path: e.path }} className="flex items-center gap-2 hover:text-accent hover:underline">
@@ -93,7 +93,7 @@ export function CodePage() {
                       </Link>
                     )}
                   </td>
-                  <td className="w-24 px-3 py-1.5 text-right text-[12px] text-fg-faint">{e.type === 'file' ? formatBytes(e.size) : ''}</td>
+                  <td className="w-24 px-3 py-1.5 text-right text-sm text-fg-faint">{e.type === 'file' ? formatBytes(e.size) : ''}</td>
                 </tr>
               ))}
             </tbody>
@@ -103,7 +103,7 @@ export function CodePage() {
 
       {readme.data && (
         <div className="overflow-hidden rounded-md border border-border">
-          <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-2 text-[12px] font-medium">
+          <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-2 text-sm font-medium">
             <BookOpen size={13} /> {readme.data.path.split('/').pop()}
           </div>
           <div className="markdown px-6 py-5" dangerouslySetInnerHTML={{ __html: readme.data.html }} />
@@ -123,7 +123,7 @@ function EmptyRepo({ cloneUrl, branch }: { cloneUrl: string; branch: string }) {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-6">
       <div>
-        <h2 className="text-[15px] font-semibold">This repository is empty</h2>
+        <h2 className="text-lg font-semibold">This repository is empty</h2>
         <p className="text-fg-muted">
           Push an existing repository, or clone it and add files. Authenticate with your username and a{' '}
           <Link to="/settings" className="text-accent hover:underline">
@@ -133,18 +133,18 @@ function EmptyRepo({ cloneUrl, branch }: { cloneUrl: string; branch: string }) {
         </p>
       </div>
       <div>
-        <p className="mb-1 text-[12px] font-medium text-fg-muted">Clone URL</p>
+        <p className="mb-1 text-sm font-medium text-fg-muted">Clone URL</p>
         <SecretValue value={cloneUrl} />
       </div>
       <div>
-        <p className="mb-1 text-[12px] font-medium text-fg-muted">Push an existing repository</p>
-        <pre className="rounded border border-border bg-bg-subtle p-3 font-mono text-[12px] leading-5">
+        <p className="mb-1 text-sm font-medium text-fg-muted">Push an existing repository</p>
+        <pre className="rounded border border-border bg-bg-subtle p-3 font-mono text-sm leading-5">
           {`git remote add origin ${cloneUrl}\ngit push -u origin ${branch}`}
         </pre>
       </div>
       <div>
-        <p className="mb-1 text-[12px] font-medium text-fg-muted">Start from scratch</p>
-        <pre className="rounded border border-border bg-bg-subtle p-3 font-mono text-[12px] leading-5">
+        <p className="mb-1 text-sm font-medium text-fg-muted">Start from scratch</p>
+        <pre className="rounded border border-border bg-bg-subtle p-3 font-mono text-sm leading-5">
           {`git clone ${cloneUrl}\ncd ${cloneUrl.split('/').pop()!.replace(/\.git$/, '')}\necho "# Hello" > README.md\ngit add README.md && git commit -m "Initial commit"\ngit push -u origin ${branch}`}
         </pre>
       </div>

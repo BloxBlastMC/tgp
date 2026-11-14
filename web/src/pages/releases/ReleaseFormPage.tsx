@@ -121,10 +121,10 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-4 p-4">
       <div>
-        <Link to="/$repo/releases" params={{ repo }} search={{}} className="inline-flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg">
+        <Link to="/$repo/releases" params={{ repo }} search={{}} className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg">
           <ArrowLeft size={12} /> Releases
         </Link>
-        <h2 className="mt-1 text-[15px] font-semibold">{release ? `Edit ${releaseTitle(release)}` : 'New release'}</h2>
+        <h2 className="mt-1 text-lg font-semibold">{release ? `Edit ${releaseTitle(release)}` : 'New release'}</h2>
       </div>
       <form
         aria-label={release ? 'Edit release' : 'New release'}
@@ -173,14 +173,14 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
             </Field>
           )}
         </div>
-        {tag.trim() && invalid && <p className="-mt-2 text-[12px] text-danger">{invalid}</p>}
+        {tag.trim() && invalid && <p className="-mt-2 text-sm text-danger">{invalid}</p>}
         <Field label="Title">{(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} placeholder={tag.trim() || 'Release title'} maxLength={200} />}</Field>
         <MarkdownEditor value={body} onChange={setBody} repo={repo} label="Release notes" placeholder="What changed in this release?" minRows={10} onSubmit={() => submit(release ? release.draft : false)} />
         <Checkbox checked={prerelease} onChange={setPrerelease} label="This is a pre-release" hint="Pre-releases are never marked Latest." />
 
         <section aria-label="Release files" className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-[12px] font-medium text-fg-muted">Files</h3>
+            <h3 className="text-sm font-medium text-fg-muted">Files</h3>
             <Button onClick={() => fileRef.current?.click()}>
               <Upload size={13} /> Attach files
             </Button>
@@ -194,15 +194,15 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
               addFiles(e.dataTransfer.files)
             }}
           >
-            {assets.length === 0 && files.length === 0 && <p className="py-3 text-center text-[12px] text-fg-faint">Drop files here or attach them. They're uploaded when you save.</p>}
+            {assets.length === 0 && files.length === 0 && <p className="py-3 text-center text-sm text-fg-faint">Drop files here or attach them. They're uploaded when you save.</p>}
             <ul className="divide-y divide-border">
               {assets.map((a) => (
-                <li key={a.id} className="flex h-8 items-center gap-2 px-2.5 text-[13px]">
+                <li key={a.id} className="flex h-8 items-center gap-2 px-2.5 text-base">
                   <FileArchive size={13} className="text-fg-muted" />
                   <a href={assetUrl(repo, release!.id, a.id)} className="min-w-0 flex-1 truncate hover:underline">
                     {a.name}
                   </a>
-                  <span className="text-[12px] text-fg-faint tabular-nums">{formatBytes(a.size_bytes)}</span>
+                  <span className="text-sm text-fg-faint tabular-nums">{formatBytes(a.size_bytes)}</span>
                   <button
                     type="button"
                     aria-label={`Delete ${a.name}`}
@@ -215,11 +215,11 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
                 </li>
               ))}
               {files.map((p, i) => (
-                <li key={p.file.name} className="flex flex-col gap-1 px-2.5 py-1.5 text-[13px]">
+                <li key={p.file.name} className="flex flex-col gap-1 px-2.5 py-1.5 text-base">
                   <div className="flex items-center gap-2">
                     <Upload size={13} className="text-accent" />
                     <span className="min-w-0 flex-1 truncate">{p.file.name}</span>
-                    <span className="text-[12px] text-fg-faint tabular-nums">{p.progress >= 1 && !p.error ? 'uploaded' : p.progress > 0 ? `${Math.round(p.progress * 100)}%` : formatBytes(p.file.size)}</span>
+                    <span className="text-sm text-fg-faint tabular-nums">{p.progress >= 1 && !p.error ? 'uploaded' : p.progress > 0 ? `${Math.round(p.progress * 100)}%` : formatBytes(p.file.size)}</span>
                     {!pending && (
                       <button type="button" aria-label={`Remove ${p.file.name}`} className="rounded p-1 text-fg-muted hover:bg-bg-hover hover:text-fg" onClick={() => setFiles((fs) => fs.filter((_, j) => j !== i))}>
                         <X size={13} />
@@ -231,7 +231,7 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
                       <div className="h-full bg-accent transition-[width]" style={{ width: `${p.progress * 100}%` }} />
                     </div>
                   )}
-                  {p.error && <p className="text-[12px] text-danger">{p.error}</p>}
+                  {p.error && <p className="text-sm text-danger">{p.error}</p>}
                 </li>
               ))}
             </ul>

@@ -33,7 +33,7 @@ export function ReleasesPage() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-3 p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[15px] font-semibold">Releases</h2>
+        <h2 className="text-lg font-semibold">Releases</h2>
         {canWrite && (
           <Link to="/$repo/releases/new" params={{ repo }}>
             <Button variant="primary">
@@ -69,7 +69,7 @@ export function ReleaseDetailPage() {
   const q = useQuery(releaseByTagQuery(repo, tag))
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-3 p-4">
-      <Link to="/$repo/releases" params={{ repo }} search={{}} className="inline-flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg">
+      <Link to="/$repo/releases" params={{ repo }} search={{}} className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg">
         <ArrowLeft size={12} /> Releases
       </Link>
       {q.isPending ? (
@@ -102,11 +102,11 @@ function ReleaseCard({ repo, release: rel, canWrite, linkTitle }: { repo: string
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {linkTitle ? (
-              <Link to="/$repo/releases/tag/$" params={{ repo, _splat: rel.tag }} className="truncate text-[15px] font-semibold hover:underline">
+              <Link to="/$repo/releases/tag/$" params={{ repo, _splat: rel.tag }} className="truncate text-lg font-semibold hover:underline">
                 {title}
               </Link>
             ) : (
-              <h1 className="truncate text-[15px] font-semibold">{title}</h1>
+              <h1 className="truncate text-lg font-semibold">{title}</h1>
             )}
             {releaseBadges(rel).map((b) => (
               <Badge key={b} tone={badgeTone[b]}>
@@ -114,7 +114,7 @@ function ReleaseCard({ repo, release: rel, canWrite, linkTitle }: { repo: string
               </Badge>
             ))}
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-fg-muted">
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-fg-muted">
             <span className="inline-flex items-center gap-1 font-mono">
               <Tag size={11} />
               {rel.tag}
@@ -167,16 +167,16 @@ function Assets({ repo, release: rel }: { repo: string; release: Release }) {
   const n = rel.assets.length + (rel.sha ? 2 : 0)
   return (
     <section className="border-t border-border px-4 py-3" aria-label="Assets">
-      <h3 className="mb-1.5 text-[11px] font-semibold tracking-wide text-fg-faint uppercase">Assets {n > 0 && <span className="font-normal">{n}</span>}</h3>
+      <h3 className="mb-1.5 text-xs font-semibold tracking-wide text-fg-faint uppercase">Assets {n > 0 && <span className="font-normal">{n}</span>}</h3>
       <ul className="divide-y divide-border rounded border border-border bg-bg">
         {rel.assets.map((a) => (
-          <li key={a.id} className="flex h-8 items-center gap-2 px-2.5 text-[13px]">
+          <li key={a.id} className="flex h-8 items-center gap-2 px-2.5 text-base">
             <FileArchive size={13} className="shrink-0 text-fg-muted" />
             <a href={assetUrl(repo, rel.id, a.id)} download={a.name} className="min-w-0 flex-1 truncate text-accent hover:underline" title={a.sha256 ? `sha256 ${a.sha256}` : undefined}>
               {a.label || a.name}
             </a>
-            <span className="shrink-0 text-[12px] text-fg-faint tabular-nums">{formatBytes(a.size_bytes)}</span>
-            <span className="inline-flex w-16 shrink-0 items-center justify-end gap-1 text-[12px] text-fg-faint tabular-nums" title="Downloads">
+            <span className="shrink-0 text-sm text-fg-faint tabular-nums">{formatBytes(a.size_bytes)}</span>
+            <span className="inline-flex w-16 shrink-0 items-center justify-end gap-1 text-sm text-fg-faint tabular-nums" title="Downloads">
               <Download size={11} />
               {a.download_count}
             </span>
@@ -184,14 +184,14 @@ function Assets({ repo, release: rel }: { repo: string; release: Release }) {
         ))}
         {rel.sha &&
           (['zip', 'tar.gz'] as const).map((f) => (
-            <li key={f} className="flex h-8 items-center gap-2 px-2.5 text-[13px]">
+            <li key={f} className="flex h-8 items-center gap-2 px-2.5 text-base">
               <FileArchive size={13} className="shrink-0 text-fg-faint" />
               <a href={archiveUrl(repo, rel.tag, f)} className="min-w-0 flex-1 truncate text-fg-muted hover:text-fg hover:underline">
                 Source code ({f})
               </a>
             </li>
           ))}
-        {n === 0 && <li className="px-2.5 py-2 text-[12px] text-fg-faint">No files yet.</li>}
+        {n === 0 && <li className="px-2.5 py-2 text-sm text-fg-faint">No files yet.</li>}
       </ul>
     </section>
   )

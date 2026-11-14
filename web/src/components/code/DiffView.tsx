@@ -31,7 +31,7 @@ const statusTone = { added: 'success', deleted: 'danger', renamed: 'accent', cop
 
 export function DiffStat({ additions, deletions }: { additions: number; deletions: number }) {
   return (
-    <span className="font-mono text-[12px]">
+    <span className="font-mono text-sm">
       <span className="text-success">+{additions}</span> <span className="text-danger">−{deletions}</span>
     </span>
   )
@@ -61,7 +61,7 @@ export function DiffView({ diff, annotations }: { diff: Diff; annotations?: Diff
               key={m}
               type="button"
               onClick={() => setMode(m)}
-              className={cx('flex h-6 items-center gap-1 px-2 text-[12px]', mode === m ? 'bg-bg-hover text-fg' : 'text-fg-muted hover:text-fg')}
+              className={cx('flex h-6 items-center gap-1 px-2 text-sm', mode === m ? 'bg-bg-hover text-fg' : 'text-fg-muted hover:text-fg')}
               aria-pressed={mode === m}
             >
               {m === 'unified' ? <Rows2 size={12} /> : <Columns2 size={12} />} {m === 'unified' ? 'Unified' : 'Split'}
@@ -70,7 +70,7 @@ export function DiffView({ diff, annotations }: { diff: Diff; annotations?: Diff
         </div>
       </div>
       {diff.truncated && (
-        <div className="rounded border border-warning/30 bg-warning/10 px-3 py-2 text-[12px] text-warning">
+        <div className="rounded border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning">
           This diff is large, so some files or lines are not shown. Use the CLI or git locally for the full diff.
         </div>
       )}
@@ -94,7 +94,7 @@ function CommentButton({ file, line }: { file: DiffFile; line: Line | null }) {
     <button
       type="button"
       onClick={() => ann.onComment!(pathFor(file, a.side), a.side, a.line)}
-      className="absolute top-0.5 -left-0.5 hidden size-4 items-center justify-center rounded bg-accent text-accent-fg group-hover:flex focus:flex"
+      className="absolute top-0.5 -left-0.5 hidden size-4 items-center justify-center rounded bg-accent-solid text-accent-fg group-hover:flex focus:flex"
       aria-label={`Comment on ${pathFor(file, a.side)} line ${a.line}`}
       title="Comment on this line"
     >
@@ -126,7 +126,7 @@ function ExtrasRow({ file, lines, cols }: { file: DiffFile; lines: (Line | null)
   if (!extras) return null
   return (
     <tr>
-      <td colSpan={cols} className="border-y border-border bg-bg-subtle px-3 py-2 font-sans text-[13px] leading-normal whitespace-normal">
+      <td colSpan={cols} className="border-y border-border bg-bg-subtle px-3 py-2 font-sans text-base leading-normal whitespace-normal">
         <div className="flex max-w-3xl flex-col gap-2">{extras}</div>
       </td>
     </tr>
@@ -145,10 +145,10 @@ function FileDiff({ file, mode }: { file: DiffFile; mode: Mode }) {
         className="sticky top-0 z-10 flex w-full items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-left"
       >
         {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        <span className="min-w-0 flex-1 truncate font-mono text-[12.5px]">{name}</span>
+        <span className="min-w-0 flex-1 truncate font-mono text-code">{name}</span>
         {file.status !== 'modified' && <Badge tone={statusTone[file.status]}>{file.status}</Badge>}
         {file.old_mode && file.new_mode && file.old_mode !== file.new_mode && (
-          <span className="font-mono text-[11px] text-fg-faint">
+          <span className="font-mono text-xs text-fg-faint">
             {file.old_mode} → {file.new_mode}
           </span>
         )}
@@ -160,12 +160,12 @@ function FileDiff({ file, mode }: { file: DiffFile; mode: Mode }) {
         ) : file.hunks.length === 0 ? (
           <p className="px-4 py-3 text-fg-muted">{file.status === 'renamed' ? 'File renamed without changes.' : 'No content changes.'}</p>
         ) : (
-          <div className="overflow-x-auto font-mono text-[12.5px] leading-[20px]">
+          <div className="overflow-x-auto font-mono text-code">
             {mode === 'unified' ? <Unified file={file} /> : <Split file={file} />}
-            {file.truncated && <p className="border-t border-border px-4 py-2 font-sans text-[12px] text-warning">Some lines of this file are not shown.</p>}
+            {file.truncated && <p className="border-t border-border px-4 py-2 font-sans text-sm text-warning">Some lines of this file are not shown.</p>}
           </div>
         ))}
-      {!open && big && <p className="px-4 py-2 text-[12px] text-fg-muted">Large diff hidden. Click the header to show it.</p>}
+      {!open && big && <p className="px-4 py-2 text-sm text-fg-muted">Large diff hidden. Click the header to show it.</p>}
     </div>
   )
 }
@@ -201,7 +201,7 @@ function Unified({ file }: { file: DiffFile }) {
                 <td className="pr-4 whitespace-pre">
                   <span className="select-none text-fg-faint">{sign[l.type]}</span>
                   {l.content}
-                  {l.no_newline && <span className="ml-2 text-[11px] text-fg-faint select-none">⏎ no newline at end of file</span>}
+                  {l.no_newline && <span className="ml-2 text-xs text-fg-faint select-none">⏎ no newline at end of file</span>}
                 </td>
               </tr>
               <ExtrasRow file={file} lines={[l]} cols={3} />
