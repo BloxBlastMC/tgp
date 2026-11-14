@@ -168,7 +168,7 @@ func newRunListCmd(a *app) *cobra.Command {
 	f := cmd.Flags()
 	f.StringVarP(&workflow, "workflow", "w", "", "workflow file, e.g. ci.yml")
 	f.StringVarP(&branch, "branch", "b", "", "branch")
-	f.StringVarP(&event, "event", "e", "", "push, pull_request or workflow_dispatch")
+	f.StringVarP(&event, "event", "e", "", "push, pull_request, workflow_dispatch or release")
 	f.StringVarP(&status, "status", "s", "", "active, queued, in_progress, completed, success, failure, cancelled, skipped or timed_out")
 	f.StringVarP(&actor, "user", "u", "", "who started the run (@me for you)")
 	f.StringVar(&sha, "commit", "", "commit SHA (prefix)")
@@ -1256,6 +1256,8 @@ var ciSettingKeys = map[string]string{
 	"default_cpus": "float", "max_cpus": "float", "default_memory_mb": "int", "max_memory_mb": "int",
 	"default_pids": "int", "max_pids": "int", "default_timeout_minutes": "int", "max_timeout_minutes": "int",
 	"max_log_mb": "int", "log_retention_days": "int", "cancel_superseded": "bool",
+	"artifact_max_mb": "int", "artifact_retention_days": "int", "cache_quota_mb": "int", "cache_retention_days": "int",
+	"release_asset_max_mb": "int",
 }
 
 func newAdminCICmd(a *app) *cobra.Command {
@@ -1366,6 +1368,11 @@ func printCISettings(a *app, w io.Writer, s *apigen.CISettings) error {
 		{"timeout_minutes (default/max)", fmt.Sprintf("%d / %d", s.DefaultTimeoutMinutes, s.MaxTimeoutMinutes)},
 		{"max_log_mb", strconv.Itoa(s.MaxLogMb)},
 		{"log_retention_days", lim(s.LogRetentionDays)},
+		{"artifact_max_mb", strconv.Itoa(s.ArtifactMaxMb)},
+		{"artifact_retention_days", strconv.Itoa(s.ArtifactRetentionDays)},
+		{"cache_quota_mb (per repo)", lim(s.CacheQuotaMb)},
+		{"cache_retention_days (unused)", strconv.Itoa(s.CacheRetentionDays)},
+		{"release_asset_max_mb", strconv.Itoa(s.ReleaseAssetMaxMb)},
 	})
 }
 

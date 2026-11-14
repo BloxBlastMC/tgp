@@ -1,15 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import { Ban, ChevronDown, ChevronRight, Cpu, GitCommit, HardDrive, RotateCw, Server, Timer, Box } from 'lucide-react'
+import { Ban, ChevronDown, Download, Trash2, ChevronRight, Cpu, GitCommit, HardDrive, RotateCw, Server, Timer, Box } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { api, ApiRequestError, errorMessage, unwrap, type Job, type WorkflowRunDetail } from '../../api/client'
-import { runQuery } from '../../api/queries'
-import { Duration, EventBadge, KindIcon, StatusIcon } from '../../components/ci/common'
+import { repoQuery, runArtifactsQuery, runQuery } from '../../api/queries'
+import { Duration, EventBadge, eventLabel, KindIcon, StatusIcon } from '../../components/ci/common'
 import { StepLog, useJobLogs } from '../../components/ci/logs'
 import { EmptyState } from '../../components/Page'
 import { Alert, Badge, Button, cx, Spinner, Time } from '../../components/ui'
 import { defaultJob, formatBytes, groupJobs, groupKind, isFailed, linesByStep, statusKind, statusLabel, statusTone, stepTitle } from '../../lib/ci'
 import { useRepoName } from '../repos/RepoLayout'
+import { artifactZipUrl, expiresText } from '../../lib/releases'
 
 export function RunPage() {
   const repo = useRepoName()
@@ -33,7 +34,10 @@ export function RunPage() {
     <div className="flex h-full min-h-0 flex-col">
       <RunHeader repo={repo} run={r} />
       <div className="flex min-h-0 flex-1">
-        <JobList repo={repo} run={r} selected={job?.id} />
+        <div className="flex w-64 shrink-0 flex-col overflow-auto border-r border-border">
+          <JobList repo={repo} run={r} selected={job?.id} />
+          <ArtifactList repo={repo} run={r} />
+        </div>
         <div className="min-w-0 flex-1">{job ? <JobPanel key={job.id} repo={repo} run={r} job={job} /> : <EmptyState title="No jobs">This run has no jobs.</EmptyState>}</div>
       </div>
     </div>
@@ -87,7 +91,7 @@ function RunHeader({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
             <Link to="/$repo/ci" params={{ repo }} search={{ workflow: run.workflow_path.split('/').pop() }} className="hover:text-fg" title={run.workflow_path}>
               {run.workflow_name}
             </Link>
-            <span>{run.event === 'workflow_dispatch' ? 'manual' : run.event === 'pull_request' ? 'pull request' : 'push'}</span>
+            <span>{eventLabel[run.event] ?? run.event}</span>
             {run.pull_number ? (
               <Link to="/$repo/pulls/$number" params={{ repo, number: String(run.pull_number) }} search={{}} className="hover:text-fg">
                 <EventBadge run={run} />
@@ -168,7 +172,7 @@ function JobList({ repo, run, selected }: { repo: string; run: WorkflowRunDetail
   const groups = groupJobs(run.jobs)
   const [closed, setClosed] = useState<Record<string, boolean>>({})
   return (
-    <nav className="w-64 shrink-0 overflow-auto border-r border-border p-2" aria-label="Jobs">
+    <nav className="p-2" aria-label="Jobs">
       <h2 className="px-2 py-1 text-[11px] font-semibold tracking-wide text-fg-faint uppercase">Jobs</h2>
       {groups.map((g) =>
         g.jobs.length === 1 && !g.jobs[0]!.matrix ? (
@@ -311,5 +315,55 @@ function StepSection({ step, lines, jobRunning }: { step: StepView; lines: { n: 
         </div>
       )}
     </li>
+  )
+}
+
+function ArtifactList({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
+  const qc = useQueryClient()
+  const perm = useQuery(repoQuery(repo)).data?.permission
+  const canWrite = perm === 'write' || perm === 'admin'
+  // Jobs upload artifacts while the run is going: poll until it's done.
+  const q = useQuery({ ...runArtifactsQuery(repo, run.number), refetchInterval: run.status !== 'completed' ? 5000 : false })
+  const del = useMutation({
+    mutationFn: (id: number) => unwrap(api.DELETE('/repos/{repo}/artifacts/{id}', { params: { path: { repo, id } } })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: runArtifactsQuery(repo, run.number).queryKey }),
+  })
+  const list = q.data ?? []
+  if (list.length === 0 && !q.isError) return null
+  return (
+    <section className="border-t border-border p-2" aria-label="Artifacts">
+      <h2 className="px-2 py-1 text-[11px] font-semibold tracking-wide text-fg-faint uppercase">
+        Artifacts <span className="font-normal">{list.length}</span>
+      </h2>
+      {q.isError && <Alert>{errorMessage(q.error)}</Alert>}
+      {del.isError && <Alert>{errorMessage(del.error)}</Alert>}
+      {list.map((a) => (
+        <div key={a.id} className="group flex items-center gap-1.5 rounded px-2 py-1 hover:bg-bg-hover">
+          <Box size={13} className="shrink-0 text-fg-muted" />
+          <div className="min-w-0 flex-1">
+            <a href={artifactZipUrl(repo, a.id)} download={`${a.name}.zip`} className="block truncate text-[13px] hover:underline" title={`${a.name} (from ${a.job_name}, attempt ${a.attempt})`}>
+              {a.name}
+            </a>
+            <div className="text-[11px] text-fg-faint">
+              {formatBytes(a.size_bytes)} · {expiresText(a.expires_at)}
+            </div>
+          </div>
+          <a href={artifactZipUrl(repo, a.id)} download={`${a.name}.zip`} aria-label={`Download ${a.name}`} className="rounded p-1 text-fg-muted hover:text-fg">
+            <Download size={13} />
+          </a>
+          {canWrite && (
+            <button
+              type="button"
+              aria-label={`Delete ${a.name}`}
+              className="rounded p-1 text-fg-muted opacity-0 group-hover:opacity-100 hover:text-danger focus:opacity-100"
+              disabled={del.isPending}
+              onClick={() => window.confirm(`Delete artifact ${a.name}?`) && del.mutate(a.id)}
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
+        </div>
+      ))}
+    </section>
   )
 }

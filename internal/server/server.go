@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -147,9 +148,16 @@ func (s *Server) Handler() http.Handler {
 	return r
 }
 
+var assetUploadRe = regexp.MustCompile(`^/api/v1/repos/[^/]+/releases/[0-9]+/assets$`)
+
+// isAssetUpload matches release asset uploads, which have their own limit.
+func isAssetUpload(r *http.Request) bool {
+	return r.Method == http.MethodPost && assetUploadRe.MatchString(r.URL.Path)
+}
+
 func (s *Server) apiV1() http.Handler {
 	r := chi.NewRouter()
-	r.Use(limitBody(2<<20), s.csrf, s.authenticate)
+	r.Use(limitBody(2<<20, isAssetUpload), s.csrf, s.authenticate)
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		apierr.Write(w, apierr.NotFound("no API route for %s %s", r.Method, r.URL.Path))
 	})

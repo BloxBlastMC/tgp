@@ -179,6 +179,15 @@ func (g *Git) ValidBranchName(ctx context.Context, name string) bool {
 	return err == nil
 }
 
+// ValidTagName checks a tag name with git's own rules.
+func (g *Git) ValidTagName(ctx context.Context, name string) bool {
+	if !ValidRefName(name) || strings.HasPrefix(name, "-") {
+		return false
+	}
+	_, err := g.run(ctx, "", "check-ref-format", "refs/tags/"+name)
+	return err == nil
+}
+
 // IsEmpty reports whether the repository has no refs at all.
 func (r *Repo) IsEmpty(ctx context.Context) (bool, error) {
 	out, err := r.run(ctx, "for-each-ref", "--count=1", "--format=%(refname)")

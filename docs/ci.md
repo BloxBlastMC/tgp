@@ -75,6 +75,11 @@ no limit.
 | `default_timeout_minutes` / `max_timeout_minutes` | 60 / 360 | Job timeout; the runner stops the job, and the server enforces it too. |
 | `max_log_mb` | 32 | Log size per job; later output is dropped with a notice. |
 | `log_retention_days` | 90 | Logs of jobs older than this are deleted. |
+| `artifact_max_mb` | 2048 | Largest artifact (zipped) a job may upload. A single cache can't be bigger either. |
+| `artifact_retention_days` | 90 | Artifacts are deleted this long after upload. Workflows may ask for less with `retention-days`. |
+| `cache_quota_mb` | 10240 | Cache space per repository. Above it, the least recently used caches are evicted. 0 = no limit. |
+| `cache_retention_days` | 7 | Caches nobody restored for this long are deleted. |
+| `release_asset_max_mb` | 2048 | Largest file that can be attached to a release. |
 
 A workflow that asks for more than a maximum fails straight away with a clear
 reason ("asks for 8 CPUs; this instance allows at most 4"). It isn't silently
@@ -99,6 +104,7 @@ or overloaded)". A job nobody picks up within 24 hours is cancelled.
 | `push` | `branches`, `branches-ignore`, `tags`, `tags-ignore`, `paths`, `paths-ignore` |
 | `pull_request` | `branches` / `branches-ignore` (the base branch), `paths`, `paths-ignore`, `types` (`opened`, `synchronize`, `reopened`, `ready_for_review`; default: the first three) |
 | `workflow_dispatch` | `inputs` (`string`, `boolean`, `number`, `choice` with `options`; `required`, `default`, `description`) |
+| `release` | `types`: `published` (any release is published, the default), `released` (a release that isn't a pre-release), `prereleased`. The run is for the release's tag; `github.event.release` has `tag_name`, `name`, `body`, `prerelease`, `target_commitish` and `html_url`. |
 
 - **Patterns.** `*` matches anything but `/`, and `**` matches anything.
   `?` and `+` repeat the previous character, `[…]` is a character class, and
@@ -109,7 +115,10 @@ or overloaded)". A job nobody picks up within 24 hours is cancelled.
   they compare against where it forked from the default branch; for a pull
   request, against the merge base.
 - **Skipping CI.** A commit message containing `[skip ci]`, `[ci skip]`,
-  `[no ci]` or `[skip actions]` starts nothing.
+  `[no ci]` or `[skip actions]` starts no push or pull request runs.
+- **Releases.** Unlike GitHub, `on: release` without `types` runs once per
+  published release, not once per activity type. Publishing a release
+  whose tag didn't exist also counts as a tag push for `on: push: tags`.
 - **Pull request commits.** Pull request runs use the head commit, with
   `github.ref` = `refs/pull/N/head`.
 
@@ -170,9 +179,9 @@ steps:
     continue-on-error: true
 ```
 
-- **Built-in steps.** `checkout` is the only built-in step in this version.
-  `upload-artifact`, `download-artifact` and `cache` come with artifacts.
-  Third-party actions aren't supported; use `run:`.
+- **Built-in steps.** `checkout`, `upload-artifact`, `download-artifact` and
+  `cache` (see below). `actions/…@vN` names are accepted. Third-party actions
+  aren't supported; use `run:`.
 - **Shells.** `bash` runs with `-eo pipefail`, so the first failing command
   fails the step. `sh` runs with `-e`.
 - **Step files.** Steps can write to:
@@ -183,6 +192,86 @@ steps:
 - **Log commands.** `::add-mask::value` hides a value in later output.
   `::group::title` … `::endgroup::` fold lines in the UI. `::error::` and
   `::warning::` lines are highlighted.
+
+### Artifacts
+
+Artifacts are files a job keeps after it ends: build output, test reports.
+They're zipped, kept for `artifact_retention_days` (90 by default) and can
+be downloaded from the run page, with `tgp artifact download`, or by later
+jobs of the same run.
+
+```yaml
+jobs:
+  build:
+    steps:
+      - uses: checkout
+      - run: make dist
+      - uses: upload-artifact            # or actions/upload-artifact@v4
+        with:
+          name: dist                     # default "artifact"
+          path: |                        # one pattern per line; ! excludes
+            dist/
+            !dist/**/*.map
+          retention-days: 7              # at most the admin's limit
+          if-no-files-found: error       # warn (default), error or ignore
+          # overwrite: true              # replace an artifact of the same name in this run
+          # include-hidden-files: true   # files and folders starting with . are left out by default
+          # compression-level: 0         # 0 (store) to 9; default 6
+  test:
+    needs: build                         # artifacts are visible once the uploading job finished
+    steps:
+      - uses: download-artifact
+        with: {name: dist, path: dist}   # without name: every artifact, each into path/<name>/
+      - run: ./dist/game --selftest
+```
+
+- **Paths.** Relative paths are relative to the workspace; `~` is the home
+  directory. `*` matches within a directory, `**` across directories, `?` one
+  character. Files are stored relative to the common directory of the
+  patterns (`dist/app` above becomes `app` in the zip).
+- **Symbolic links** aren't stored in artifacts.
+- **Re-runs.** A re-run sees artifacts uploaded by earlier attempts, and its
+  own uploads replace them for later jobs.
+- `download-artifact` also accepts `pattern` (a glob over artifact names) and
+  `merge-multiple: true` (download everything into `path` itself).
+
+### Caches
+
+A cache saves dependency directories between runs:
+
+```yaml
+- id: deps
+  uses: cache                            # or actions/cache@v4
+  with:
+    key: gradle-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
+    restore-keys: |                      # fall back to the newest cache with one of these prefixes
+      gradle-
+    path: |
+      ~/.gradle/caches
+      ~/.gradle/wrapper
+- run: ./gradlew build
+```
+
+- **Lookup.** The step restores the cache with exactly `key`. Failing that,
+  it restores the newest cache whose key starts with a `restore-keys` prefix.
+  The paths must match too: the same key with different paths is a different
+  cache.
+- **Saving.** If there was no exact hit, the cache is saved when the job
+  succeeds, after its last step (in "Complete job"). A key, once saved, isn't
+  overwritten: change the key (that's what `hashFiles` is for).
+- **Branches.** A run reads caches saved by its own branch first, then the
+  pull request's base branch, then the default branch. It only saves to its
+  own branch, so a pull request can't change what `main` restores.
+- **Outputs.** `steps.<id>.outputs.cache-hit` is `true` for an exact hit;
+  `cache-matched-key` is the restored key.
+- **Options.** `lookup-only: true` checks without downloading;
+  `fail-on-cache-miss: true` fails the step when nothing matches.
+- **Limits.** Each repository has `cache_quota_mb` (10 GiB by default);
+  saving above it evicts the least recently used caches. Caches unused for
+  `cache_retention_days` (7) are deleted. Maintainers can delete caches
+  under **CI → Caches** or with `tgp cache delete`.
+- **When the cache service fails**, the step warns and the job continues
+  without the cache.
 
 ### Expressions
 
@@ -202,8 +291,9 @@ steps:
 - **Operators:** `== != < <= > >= && || !`, with `.prop`, `['prop']` and
   `.*.prop`.
 - **Functions:** `contains`, `startsWith`, `endsWith`, `format`, `join`,
-  `toJSON`, `fromJSON`, `success`, `failure`, `cancelled`, `always`.
-  `hashFiles` isn't available.
+  `toJSON`, `fromJSON`, `hashFiles`, `success`, `failure`, `cancelled`,
+  `always`. `hashFiles('**/go.sum', …)` hashes the matching workspace files
+  (`''` if none match) and works in steps.
 
 Steps also get `CI=true` and `TGP_*` / `GITHUB_*` variables (`SHA`, `REF`,
 `REF_NAME`, `REPOSITORY`, `RUN_ID`, `RUN_NUMBER`, `RUN_ATTEMPT`, `ACTOR`,
@@ -316,6 +406,10 @@ tgp secret set DEPLOY_KEY < key.pem
 tgp admin runner list|view|token|edit|delete
 tgp admin ci view
 tgp admin ci set max_jobs_per_repo=2 max_concurrent_jobs=8
+tgp artifact list --run 34               # a run's artifacts
+tgp artifact download 34 -n dist -D out  # download and unpack
+tgp cache list                           # usage against the quota
+tgp cache delete --key gradle-abc123
 ```
 
 ## Runner protocol
@@ -331,13 +425,15 @@ in `internal/ci/runnerapi`.
   that job fails at once, without waiting for the offline timeout.
 - **Job tokens.** Each job gets a token that can clone its own repository
   (read-only) only while the job is running.
+- **Artifacts and caches** move as raw request bodies under
+  `/jobs/{id}/artifacts` and `/jobs/{id}/caches`, only while the job runs.
+  The runner builds zips and cache archives itself (with `docker cp`), so job
+  images don't need `zip` or `tar`.
 
 ## Not yet supported
 
-- Artifacts, caches and the related built-in steps (next milestone).
 - Scheduled (cron) workflows.
 - Reusable workflows.
 - Third-party actions.
-- `hashFiles`.
 - Job-level `concurrency`.
 - `if: always()` steps after a cancellation (cancelling stops the job).

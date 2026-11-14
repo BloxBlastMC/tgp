@@ -98,7 +98,7 @@ func (s *Server) appendLogs(ctx context.Context, j *model.Job, req *runnerapi.Lo
 	}
 	seq := chunks + 1
 	size := int64(buf.Len())
-	if err := s.store.Put(ctx, logChunkKey(j.ID, seq), &buf); err != nil {
+	if err := s.store.Put(ctx, logChunkKey(j.ID, seq), &buf, int64(buf.Len())); err != nil {
 		return nil, err
 	}
 	err = s.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {

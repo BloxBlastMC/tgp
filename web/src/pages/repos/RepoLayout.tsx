@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useParams } from '@tanstack/react-router'
-import { Archive, CircleDot, Code2, GitBranch, GitPullRequest, History, Play, Settings } from 'lucide-react'
+import { Archive, CircleDot, Code2, GitBranch, GitPullRequest, History, Package, Play, Settings } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { ApiRequestError, errorMessage } from '../../api/client'
 import { repoQuery } from '../../api/queries'
@@ -15,6 +15,7 @@ const tabs: Tab[] = [
   { to: '/$repo/issues', label: 'Issues', icon: CircleDot },
   { to: '/$repo/pulls', label: 'Pull requests', icon: GitPullRequest },
   { to: '/$repo/ci', label: 'CI', icon: Play },
+  { to: '/$repo/releases', label: 'Releases', icon: Package },
   { to: '/$repo/commits', label: 'Commits', icon: History },
   { to: '/$repo/branches', label: 'Branches', icon: GitBranch },
   { to: '/$repo/settings', label: 'Settings', icon: Settings, minPerm: 'write' },

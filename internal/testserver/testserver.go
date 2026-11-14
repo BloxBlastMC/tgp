@@ -144,6 +144,30 @@ func (c *Client) Raw(method, path string, body any) (int, []byte) {
 	return resp.StatusCode, data
 }
 
+// Send sends a request with a raw body (nil for none) and content type and
+// returns the response; the caller closes its body.
+func (c *Client) Send(method, path string, body io.Reader, contentType string) *http.Response {
+	c.s.t.Helper()
+	req, _ := http.NewRequest(method, c.s.URL+"/api/v1"+path, body)
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+	if c.bearer != "" {
+		req.Header.Set("Authorization", "Bearer "+c.bearer)
+	} else if c.hc.Jar != nil {
+		for _, ck := range c.hc.Jar.Cookies(req.URL) {
+			if ck.Name == "tgp_csrf" {
+				req.Header.Set("X-CSRF-Token", ck.Value)
+			}
+		}
+	}
+	resp, err := c.hc.Do(req)
+	if err != nil {
+		c.s.t.Fatal(err)
+	}
+	return resp
+}
+
 func (s *Server) browser() *Client {
 	jar, _ := cookiejar.New(nil)
 	c := &Client{s: s, hc: &http.Client{Jar: jar}}

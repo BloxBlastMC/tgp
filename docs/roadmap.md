@@ -9,7 +9,7 @@ Each milestone ships as its own pull request.
 5. **Pull requests & reviews**: PR lifecycle, diffs, inline comments, reviews, merge/squash/rebase, branch protection, `tgp pr`. ✅ See [pull-requests.md](pull-requests.md).
 6. **Issues, labels, milestones**: plus assignees, closing keywords, `#N` links, `tgp issue/label/milestone`. ✅ See [issues.md](issues.md).
 7. **CI core**: workflow YAML, triggers, resource-limited scheduler, runner protocol, Docker executor, live logs, secrets, required checks, `tgp run/workflow/secret`. ✅ See [ci.md](ci.md).
-8. **Artifacts, cache, releases**: local/S3 storage, retention.
+8. **Artifacts, cache, releases**: `upload-artifact`/`download-artifact`/`cache` built-ins, `hashFiles`, releases with assets and source archives, `on: release`, local/S3 storage, retention and quotas, `tgp release/artifact/cache`. ✅ See [releases.md](releases.md) and [ci.md](ci.md#artifacts).
 9. **Webhooks**: signed deliveries, retries, delivery log.
 10. **Admin & ops**: server health, CI limits UI, deployment docs, backup/restore.
 

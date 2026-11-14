@@ -99,6 +99,14 @@ written anywhere.
 | `tgp run rerun N [--failed\|-j job]` / `cancel N` | Re-run (testers can) or cancel |
 | `tgp workflow list [--ref r]` / `run FILE [-f key=value] [--ref r]` | Workflow files with errors and inputs; start a manual run |
 | `tgp secret list\|set NAME [-b value\|stdin]\|delete NAME [--org]` | CI secrets (values are never shown) |
+| `tgp artifact list [--run N] [-n name]` / `download [RUN] [-n name] [-D dir]` / `delete ID` | CI artifacts: download unpacks the zips |
+| `tgp cache list [-k prefix] [--ref r] [-S size]` / `delete ID\|--key k\|--all` | CI caches and the repository's usage |
+| `tgp release list\|view [TAG]` | Releases (view defaults to the latest) |
+| `tgp release create TAG [FILE[#label]...] [-t title] [-n notes\|-F file] [--target branch] [-d] [-p]` | Create a release, tagging `--target` if the tag is new, and upload files |
+| `tgp release edit TAG [--draft=false] [--prerelease] [-t] [-n\|-F] [--tag] [--target]` | Edit or publish |
+| `tgp release upload TAG FILE... [--clobber]` / `delete-asset TAG NAME` | Release files |
+| `tgp release download [TAG] [-p glob] [-D dir] [--archive zip\|tar.gz] [--clobber]` | Download files or the source code |
+| `tgp release delete TAG [--cleanup-tag] [--yes]` | Delete a release (and the tag) |
 | `tgp admin user list\|view\|create\|edit\|reset-password\|reset-2fa\|access` | Users (admins) |
 | `tgp admin runner list\|view\|token\|edit\|delete` | CI runners (admins) |
 | `tgp admin ci view\|set KEY=VALUE...` | CI limits and defaults (admins) |
@@ -111,7 +119,8 @@ written anywhere.
 left out, it's the pull request for the current git branch.
 
 Run `tgp <command> --help` for flags and examples. CI is described in
-[ci.md](ci.md). Later milestones add `release` and more.
+[ci.md](ci.md). Releases are described in
+[releases.md](releases.md).
 
 ### A typical agent loop
 

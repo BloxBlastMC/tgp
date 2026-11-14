@@ -206,13 +206,11 @@ func runServe(parent context.Context, o *rootOpts) error {
 		return fmt.Errorf("install git hooks: %w", err)
 	}
 
-	if cfg.Storage.Type != "local" {
-		return fmt.Errorf("storage.type %q isn't supported yet; use \"local\"", cfg.Storage.Type)
-	}
-	store, err := storage.NewLocal(cfg.Storage.Local.Path)
+	store, err := openStorage(ctx, cfg)
 	if err != nil {
 		return fmt.Errorf("storage: %w", err)
 	}
+	log.Info("blob storage", "type", cfg.Storage.Type)
 	srv := server.New(server.Options{
 		Config:   cfg,
 		DB:       d,
@@ -262,4 +260,24 @@ func printSetupBanner(cfg *config.Config, tok string) {
   └──────────────────────────────────────────────────────────────┘
 
 `, url+"/setup", tok)
+}
+
+// openStorage opens the configured blob store. S3 is checked at startup so
+// a wrong bucket or key fails fast instead of on the first upload.
+func openStorage(ctx context.Context, cfg *config.Config) (storage.Store, error) {
+	switch cfg.Storage.Type {
+	case "s3":
+		c := cfg.Storage.S3
+		st, err := storage.NewS3(storage.S3Config{Endpoint: c.Endpoint, Region: c.Region, Bucket: c.Bucket, Prefix: c.Prefix,
+			AccessKey: c.AccessKey, SecretKey: c.SecretKey, PathStyle: c.UsePathStyle, Insecure: c.Insecure})
+		if err != nil {
+			return nil, err
+		}
+		if err := st.Check(ctx); err != nil {
+			return nil, fmt.Errorf("can't reach bucket %q: %w", c.Bucket, err)
+		}
+		return st, nil
+	default:
+		return storage.NewLocal(cfg.Storage.Local.Path)
+	}
 }

@@ -336,8 +336,22 @@ func (s *Server) ciJanitor(ctx context.Context) error {
 			return err
 		}
 	}
-	_, err = s.db.NewDelete().Model((*model.RunnerToken)(nil)).Where("expires_at < ? AND used_at IS NULL", now.Add(-24*time.Hour)).Exec(ctx)
-	return err
+	if _, err := s.db.NewDelete().Model((*model.RunnerToken)(nil)).Where("expires_at < ? AND used_at IS NULL", now.Add(-24*time.Hour)).Exec(ctx); err != nil {
+		return err
+	}
+	// Storage retention: expired artifacts, unused caches, cache quotas.
+	// Blob deletes may be slow (S3), so this runs at most once a minute.
+	if last := s.ci.lastRetention.Load(); last != 0 && now.Sub(time.Unix(0, last)) < time.Minute {
+		return nil
+	}
+	s.ci.lastRetention.Store(now.UnixNano())
+	if err := s.expireArtifacts(ctx); err != nil {
+		return fmt.Errorf("artifact retention: %w", err)
+	}
+	if err := s.expireCaches(ctx, cs); err != nil {
+		return fmt.Errorf("cache retention: %w", err)
+	}
+	return nil
 }
 
 // RunCIJanitor runs one janitor pass (tests).

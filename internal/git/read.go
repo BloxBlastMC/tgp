@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os/exec"
 	"strconv"
@@ -187,6 +188,25 @@ func IsBinary(b []byte) bool {
 // StreamBlob streams a blob by object id. The caller must Close it.
 func (r *Repo) StreamBlob(ctx context.Context, sha string) (io.ReadCloser, error) {
 	cmd := exec.CommandContext(ctx, r.g.Binary, "cat-file", "blob", "--end-of-options", sha)
+	cmd.Dir = r.Path
+	cmd.Env = r.g.baseEnv()
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+	return &cmdReader{ReadCloser: stdout, cmd: cmd}, nil
+}
+
+// Archive streams `git archive` of commit in format (zip or tar.gz) with
+// every path under prefix. The caller must Close it.
+func (r *Repo) Archive(ctx context.Context, commit, format, prefix string) (io.ReadCloser, error) {
+	if format != "zip" && format != "tar.gz" {
+		return nil, fmt.Errorf("unsupported archive format %q", format)
+	}
+	cmd := exec.CommandContext(ctx, r.g.Binary, "archive", "--format="+format, "--prefix="+prefix, "--end-of-options", commit)
 	cmd.Dir = r.Path
 	cmd.Env = r.g.baseEnv()
 	stdout, err := cmd.StdoutPipe()

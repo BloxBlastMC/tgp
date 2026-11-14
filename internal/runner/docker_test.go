@@ -3,6 +3,8 @@ package runner
 import (
 	"bytes"
 	"context"
+	"errors"
+	"io/fs"
 	"os"
 	"strings"
 	"testing"
@@ -75,6 +77,27 @@ func TestDockerExecutor(t *testing.T) {
 	}
 	if _, out := run("cat sub/README", nil); out != "hi" {
 		t.Fatalf("copy: %q", out)
+	}
+	// Tar streams out and in (artifacts and caches), including absolute
+	// paths outside the workspace and a missing path.
+	run("mkdir -p /root/.cache/x && echo c > /root/.cache/x/f && ln -s f /root/.cache/x/l", nil)
+	rc, err := env.CopyOut(ctx, "/root/.cache")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var tarball bytes.Buffer
+	if _, err := tarball.ReadFrom(rc); err != nil {
+		t.Fatalf("copy out: %v", err)
+	}
+	rc.Close()
+	if err := env.CopyInTar(ctx, "/restore", &tarball); err != nil {
+		t.Fatal(err)
+	}
+	if _, out := run("cat /restore/.cache/x/f && readlink /restore/.cache/x/l", nil); out != "c\nf\n" {
+		t.Fatalf("tar round trip: %q", out)
+	}
+	if _, err := env.CopyOut(ctx, "/nope"); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("missing path: %v", err)
 	}
 	// Cancelling stops a running command when the environment closes.
 	cctx, ccancel := context.WithTimeout(ctx, time.Second)

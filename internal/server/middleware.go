@@ -51,11 +51,16 @@ func securityHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// limitBody caps request bodies so a client can't stream unbounded JSON.
-func limitBody(n int64) func(http.Handler) http.Handler {
+// limitBody caps request bodies at n bytes, except for requests unlimited
+// matches (uploads, which enforce their own limits).
+func limitBody(n int64, unlimited ...func(*http.Request) bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Body != nil {
+			skip := false
+			for _, f := range unlimited {
+				skip = skip || f(r)
+			}
+			if r.Body != nil && !skip {
 				r.Body = http.MaxBytesReader(w, r.Body, n)
 			}
 			next.ServeHTTP(w, r)

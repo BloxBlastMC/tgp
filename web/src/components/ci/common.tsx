@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Ban, CheckCircle2, CircleDashed, CircleDot, Clock, GitBranch, GitCommit, GitPullRequest, Hourglass, Loader2, MinusCircle, Play, Tag, Timer, XCircle } from 'lucide-react'
+import { Ban, CheckCircle2, CircleDashed, CircleDot, Clock, GitBranch, GitCommit, GitPullRequest, Hourglass, Loader2, MinusCircle, Package, Play, Tag, Timer, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { WorkflowRun } from '../../api/client'
 import { durationText, refLabel, statusKind, statusLabel, type StatusKind } from '../../lib/ci'
@@ -54,10 +54,10 @@ export function Duration({ start, end }: { start?: string | null; end?: string |
   )
 }
 
-const eventLabel: Record<string, string> = { push: 'push', pull_request: 'pull request', workflow_dispatch: 'manual' }
+export const eventLabel: Record<string, string> = { push: 'push', pull_request: 'pull request', workflow_dispatch: 'manual', release: 'release' }
 
 export function EventBadge({ run }: { run: WorkflowRun }) {
-  const Icon = run.event === 'pull_request' ? GitPullRequest : run.event === 'workflow_dispatch' ? Play : run.ref.startsWith('refs/tags/') ? Tag : GitBranch
+  const Icon = run.event === 'pull_request' ? GitPullRequest : run.event === 'workflow_dispatch' ? Play : run.event === 'release' ? Package : run.ref.startsWith('refs/tags/') ? Tag : GitBranch
   return (
     <span className="inline-flex items-center gap-1" title={`${eventLabel[run.event] ?? run.event} · ${run.ref}`}>
       <Icon size={11} />

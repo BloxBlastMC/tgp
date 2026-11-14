@@ -46,6 +46,13 @@ type ciEvent struct {
 	// workflow_dispatch.
 	Inputs   map[string]string
 	OnlyPath string
+
+	// release: the activities (published plus released or prereleased)
+	// and the github.event.release payload.
+	Actions []string
+	Release map[string]any
+	// Title overrides the run title (default: the commit subject).
+	Title string
 }
 
 func isZeroSHA(s string) bool { return s == "" || strings.Trim(s, "0") == "" }
@@ -108,6 +115,29 @@ func (s *Server) ciOnPull(ctx context.Context, repo *model.Repo, actor *model.Us
 	}
 }
 
+// ciOnRelease starts release workflows when a release is published. The
+// run is for the release's tag.
+func (s *Server) ciOnRelease(ctx context.Context, repo *model.Repo, actor *model.User, rel *model.Release, sha string) {
+	kind := "released"
+	if rel.Prerelease {
+		kind = "prereleased"
+	}
+	title := rel.Name
+	if title == "" {
+		title = rel.Tag
+	}
+	ev := &ciEvent{Name: "release", Ref: "refs/tags/" + rel.Tag, SHA: sha, Actor: actor, Action: "published",
+		Actions: []string{"published", kind}, Title: "Release " + title,
+		Release: map[string]any{
+			"id": float64(rel.ID), "tag_name": rel.Tag, "name": rel.Name, "body": rel.Body, "draft": rel.Draft,
+			"prerelease": rel.Prerelease, "target_commitish": rel.Target,
+			"html_url": s.publicBaseURL(ctx) + "/" + repo.Name + "/releases/tag/" + rel.Tag,
+		}}
+	if _, err := s.triggerRuns(ctx, repo, ev); err != nil {
+		s.log.Error("ci: release trigger failed", "repo", repo.Name, "tag", rel.Tag, "err", err)
+	}
+}
+
 // triggerRuns creates a run for every workflow the event matches.
 func (s *Server) triggerRuns(ctx context.Context, repo *model.Repo, ev *ciEvent) ([]*model.WorkflowRun, error) {
 	g := s.repos.Open(repo)
@@ -115,7 +145,7 @@ func (s *Server) triggerRuns(ctx context.Context, repo *model.Repo, ev *ciEvent)
 	if err != nil {
 		return nil, err
 	}
-	if ev.Name != "workflow_dispatch" && skipCIRe.MatchString(commit.Subject+"\n"+commit.Body) {
+	if (ev.Name == "push" || ev.Name == "pull_request") && skipCIRe.MatchString(commit.Subject+"\n"+commit.Body) {
 		return nil, nil
 	}
 	files, err := s.workflowFiles(ctx, g, ev.SHA)
@@ -150,6 +180,9 @@ func (s *Server) triggerRuns(ctx context.Context, repo *model.Repo, ev *ciEvent)
 	if ev.PullTitle != "" {
 		title = ev.PullTitle
 	}
+	if ev.Title != "" {
+		title = ev.Title
+	}
 	var runs []*model.WorkflowRun
 	for _, f := range files {
 		if ev.OnlyPath != "" && f.Path != ev.OnlyPath {
@@ -167,7 +200,7 @@ func (s *Server) triggerRuns(ctx context.Context, repo *model.Repo, ev *ciEvent)
 			runs = append(runs, run)
 			continue
 		}
-		wev := &workflow.Event{Name: ev.Name, Ref: ev.Ref, BaseBranch: ev.BaseBranch, Action: ev.Action, Changed: changedFn}
+		wev := &workflow.Event{Name: ev.Name, Ref: ev.Ref, BaseBranch: ev.BaseBranch, Action: ev.Action, Actions: ev.Actions, Changed: changedFn}
 		ok, err := w.Matches(wev)
 		if err != nil {
 			s.log.Warn("ci: changed files", "repo", repo.Name, "err", err)
@@ -300,6 +333,9 @@ func githubContext(oi orgInfo, repo *model.Repo, run *model.WorkflowRun, ev *ciE
 			"head": map[string]any{"ref": ev.HeadBranch, "sha": ev.SHA},
 			"base": map[string]any{"ref": ev.BaseBranch, "sha": ev.BaseSHA},
 		}
+	case "release":
+		event["action"] = ev.Action
+		event["release"] = ev.Release
 	case "workflow_dispatch":
 		inputs := map[string]any{}
 		for k, v := range ev.Inputs {

@@ -22,6 +22,9 @@ import (
 type Context struct {
 	Contexts map[string]any
 	Status   func(fn string) bool
+	// HashFiles implements hashFiles(patterns...): a hash of the matching
+	// files, or "" when none match. Nil (outside a job) means "".
+	HashFiles func(patterns []string) string
 }
 
 // Error is a parse or evaluation error.
@@ -883,6 +886,16 @@ func init() {
 		"failure":   statusFn("failure"),
 		"cancelled": statusFn("cancelled"),
 		"always":    statusFn("always"),
+		"hashfiles": {1, -1, func(c *Context, a []any) any {
+			if c == nil || c.HashFiles == nil {
+				return ""
+			}
+			pats := make([]string, len(a))
+			for i, v := range a {
+				pats[i] = String(v)
+			}
+			return c.HashFiles(pats)
+		}},
 		"contains": {2, 2, func(_ *Context, a []any) any {
 			if arr, ok := a[0].([]any); ok {
 				for _, e := range arr {

@@ -20,6 +20,9 @@ type Event struct {
 	BaseBranch string
 	// Action is the pull request activity (opened, synchronize, ...).
 	Action string
+	// Actions are the release activities (published, released or
+	// prereleased); a workflow matches if it listens for any of them.
+	Actions []string
 	// Changed lists changed paths. It's called at most once, only when a
 	// workflow filters on paths. Nil means unknown: path filters pass.
 	Changed func() ([]string, error)
@@ -73,6 +76,20 @@ func (w *Workflow) Matches(ev *Event) (bool, error) {
 		return pathFilter(ev, t.Paths, t.PathsIgnore)
 	case "workflow_dispatch":
 		return w.On.Dispatch != nil, nil
+	case "release":
+		t := w.On.Release
+		if t == nil {
+			return false, nil
+		}
+		types := t.Types
+		if types == nil {
+			types = DefaultReleaseTypes
+		}
+		for _, a := range ev.Actions {
+			if contains(types, a) {
+				return true, nil
+			}
+		}
 	}
 	return false, nil
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"sort"
@@ -42,6 +43,12 @@ type Env interface {
 	// CopyIn copies the contents of a host directory to dir in the
 	// environment (created if needed).
 	CopyIn(ctx context.Context, hostDir, dir string) error
+	// CopyOut streams a tar of a file or directory in the environment,
+	// with entries named from its base name (like `docker cp SRC -`). It
+	// returns an error wrapping fs.ErrNotExist if path doesn't exist.
+	CopyOut(ctx context.Context, path string) (io.ReadCloser, error)
+	// CopyInTar extracts a tar stream into dir (created if needed).
+	CopyInTar(ctx context.Context, dir string, r io.Reader) error
 	// Workspace is the checkout directory; TempDir holds tgp's files.
 	Workspace() string
 	TempDir() string
@@ -267,6 +274,68 @@ func (e *dockerEnv) CopyIn(ctx context.Context, hostDir, dir string) error {
 		return err
 	}
 	return e.d.run(ctx, nil, nil, "cp", hostDir+"/.", e.name+":"+dir)
+}
+
+func (e *dockerEnv) CopyOut(ctx context.Context, p string) (io.ReadCloser, error) {
+	c := e.d.cmd(ctx, nil, "exec", e.name, "test", "-e", p)
+	if err := c.Run(); err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			return nil, fmt.Errorf("%s: %w", p, fs.ErrNotExist)
+		}
+		return nil, err
+	}
+	cp := e.d.cmd(ctx, nil, "cp", e.name+":"+p, "-")
+	var stderr bytes.Buffer
+	cp.Stderr = &stderr
+	out, err := cp.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	if err := cp.Start(); err != nil {
+		return nil, err
+	}
+	return &dockerCpReader{ReadCloser: out, cmd: cp, stderr: &stderr}, nil
+}
+
+// dockerCpReader waits for `docker cp` and reports its failure at EOF.
+type dockerCpReader struct {
+	io.ReadCloser
+	cmd    *exec.Cmd
+	stderr *bytes.Buffer
+	done   bool
+}
+
+func (r *dockerCpReader) Read(p []byte) (int, error) {
+	n, err := r.ReadCloser.Read(p)
+	if err == io.EOF && !r.done {
+		r.done = true
+		if werr := r.cmd.Wait(); werr != nil {
+			return n, fmt.Errorf("docker cp: %w: %s", werr, strings.TrimSpace(r.stderr.String()))
+		}
+	}
+	return n, err
+}
+
+func (r *dockerCpReader) Close() error {
+	_ = r.ReadCloser.Close()
+	if !r.done {
+		r.done = true
+		_ = r.cmd.Process.Kill()
+		_ = r.cmd.Wait()
+	}
+	return nil
+}
+
+func (e *dockerEnv) CopyInTar(ctx context.Context, dir string, r io.Reader) error {
+	if err := e.d.run(ctx, nil, nil, "exec", e.name, "mkdir", "-p", dir); err != nil {
+		return err
+	}
+	c := e.d.cmd(ctx, nil, "cp", "-", e.name+":"+dir)
+	c.Stdin = r
+	if out, err := c.CombinedOutput(); err != nil {
+		return fmt.Errorf("docker cp: %w: %s", err, strings.TrimSpace(string(out)))
+	}
+	return nil
 }
 
 // Close removes the containers, network and volume. It uses a fresh

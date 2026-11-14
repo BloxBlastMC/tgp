@@ -1702,6 +1702,303 @@ export interface paths {
         patch: operations["updateCISettings"];
         trace?: never;
     };
+    "/repos/{repo}/runs/{number}/artifacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["RunNumber"];
+            };
+            cookie?: never;
+        };
+        /**
+         * List a run's artifacts
+         * @description Artifacts uploaded by every attempt of the run that haven't expired, newest first.
+         */
+        get: operations["listRunArtifacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/artifacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List a repository's artifacts */
+        get: operations["listArtifacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/artifacts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ArtifactID"];
+            };
+            cookie?: never;
+        };
+        /** Get an artifact */
+        get: operations["getArtifact"];
+        put?: never;
+        post?: never;
+        /** Delete an artifact (write access) */
+        delete: operations["deleteArtifact"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/artifacts/{id}/zip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ArtifactID"];
+            };
+            cookie?: never;
+        };
+        /** Download an artifact as a zip file */
+        get: operations["downloadArtifact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/caches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List a repository's CI caches */
+        get: operations["listCaches"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete caches by key (write access)
+         * @description Deletes every cache with exactly this key (optionally only for one ref). Without key, deletes all of the repository's caches.
+         */
+        delete: operations["deleteCaches"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/caches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete one cache (write access) */
+        delete: operations["deleteCache"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** Download the source code at a ref as an archive */
+        get: operations["getArchive"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /**
+         * List releases, newest first
+         * @description Drafts are only listed for users with write access.
+         */
+        get: operations["listReleases"];
+        put?: never;
+        /**
+         * Create a release (write access)
+         * @description If the tag doesn't exist it's created at `target` (a branch or commit; default the default branch) when the release is published. Drafts don't create tags.
+         */
+        post: operations["createRelease"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/releases/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** The newest published release that isn't a prerelease */
+        get: operations["getLatestRelease"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/releases/tags/{tag}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                /** @description Tag name (URL-encode `/`). */
+                tag: string;
+            };
+            cookie?: never;
+        };
+        /** Get a release by its tag */
+        get: operations["getReleaseByTag"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/releases/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ReleaseID"];
+            };
+            cookie?: never;
+        };
+        /** Get a release */
+        get: operations["getRelease"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a release and its assets (write access)
+         * @description The tag stays unless `delete_tag` is set.
+         */
+        delete: operations["deleteRelease"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit or publish a release (write access)
+         * @description Setting `draft` to false publishes the release, creating its tag if needed.
+         */
+        patch: operations["updateRelease"];
+        trace?: never;
+    };
+    "/repos/{repo}/releases/{id}/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ReleaseID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a file to a release (write access)
+         * @description The request body is the raw file. The size limit is the admin's `release_asset_max_mb` setting.
+         */
+        post: operations["uploadReleaseAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/releases/{id}/assets/{asset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ReleaseID"];
+                asset_id: number;
+            };
+            cookie?: never;
+        };
+        /** Download a release asset */
+        get: operations["downloadReleaseAsset"];
+        put?: never;
+        post?: never;
+        /** Delete a release asset (write access) */
+        delete: operations["deleteReleaseAsset"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2615,7 +2912,7 @@ export interface components {
             milestone?: number;
         };
         /** @enum {string} */
-        RunEvent: "push" | "pull_request" | "workflow_dispatch";
+        RunEvent: "push" | "pull_request" | "workflow_dispatch" | "release";
         /**
          * @description `waiting`: held back by a concurrency group. `queued`: jobs waiting for a runner.
          * @enum {string}
@@ -2906,6 +3203,16 @@ export interface components {
             log_retention_days: number;
             /** @description A new push to a branch or pull request cancels its older runs (not on the default branch or tags). */
             cancel_superseded: boolean;
+            /** @description Largest artifact a job may upload (zipped). */
+            artifact_max_mb: number;
+            /** @description Artifacts are deleted this long after upload; workflows may ask for less with retention-days. */
+            artifact_retention_days: number;
+            /** @description CI cache space per repository; the least recently used caches are evicted above it. 0 = no limit. */
+            cache_quota_mb: number;
+            /** @description Caches not used for this long are deleted. */
+            cache_retention_days: number;
+            /** @description Largest file that can be attached to a release. */
+            release_asset_max_mb: number;
         };
         CISettingsPatch: {
             max_concurrent_jobs?: number;
@@ -2925,6 +3232,133 @@ export interface components {
             max_log_mb?: number;
             log_retention_days?: number;
             cancel_superseded?: boolean;
+            artifact_max_mb?: number;
+            artifact_retention_days?: number;
+            cache_quota_mb?: number;
+            cache_retention_days?: number;
+            release_asset_max_mb?: number;
+        };
+        Artifact: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /**
+             * Format: int64
+             * @description Size of the zip file.
+             */
+            size_bytes: number;
+            /** @description SHA-256 of the zip file. */
+            sha256: string;
+            /** Format: int64 */
+            run_number: number;
+            attempt: number;
+            /** Format: int64 */
+            job_id?: number | null;
+            job_name: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        ArtifactPage: {
+            artifacts: components["schemas"]["Artifact"][];
+            total: number;
+            /**
+             * Format: int64
+             * @description Size of all the repository's artifacts.
+             */
+            total_bytes: number;
+        };
+        CacheEntry: {
+            /** Format: int64 */
+            id: number;
+            key: string;
+            /** @description Hash of the cached paths; a cache only restores into a step with the same paths. */
+            version: string;
+            /** @description Ref of the run that saved it; runs read caches from their own ref */
+            ref: string;
+            /** Format: int64 */
+            size_bytes: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            last_used_at: string;
+        };
+        CachePage: {
+            caches: components["schemas"]["CacheEntry"][];
+            total: number;
+            /** Format: int64 */
+            total_bytes: number;
+            /**
+             * Format: int64
+             * @description The repository's cache quota; least recently used caches are evicted above it. 0 = no limit.
+             */
+            quota_bytes: number;
+        };
+        DeletedCount: {
+            deleted: number;
+        };
+        ReleaseAsset: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            label: string;
+            content_type: string;
+            /** Format: int64 */
+            size_bytes: number;
+            sha256: string;
+            /** Format: int64 */
+            download_count: number;
+            uploader?: components["schemas"]["UserSummary"] | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        Release: {
+            /** Format: int64 */
+            id: number;
+            tag: string;
+            /** @description Title; empty means the tag is shown. */
+            name: string;
+            /** @description Release notes (Markdown). */
+            body: string;
+            body_html: string;
+            draft: boolean;
+            prerelease: boolean;
+            /** @description The newest published release that isn't a prerelease. */
+            latest: boolean;
+            /** @description Branch or commit the tag is created at if it doesn't exist. */
+            target: string;
+            /** @description Commit the tag points to (null for drafts whose tag doesn't exist yet). */
+            sha?: string | null;
+            author?: components["schemas"]["UserSummary"] | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            published_at?: string | null;
+            assets: components["schemas"]["ReleaseAsset"][];
+        };
+        ReleasePage: {
+            releases: components["schemas"]["Release"][];
+            total: number;
+        };
+        CreateRelease: {
+            tag: string;
+            /** @description Branch or commit for a new tag (default the default branch). */
+            target?: string;
+            name?: string;
+            body?: string;
+            /** @default false */
+            draft: boolean;
+            /** @default false */
+            prerelease: boolean;
+        };
+        UpdateRelease: {
+            tag?: string;
+            target?: string;
+            name?: string;
+            body?: string;
+            draft?: boolean;
+            prerelease?: boolean;
         };
     };
     responses: {
@@ -2939,6 +3373,8 @@ export interface components {
         };
     };
     parameters: {
+        ArtifactID: number;
+        ReleaseID: number;
         /** @description Repository name (case-insensitive). */
         RepoName: string;
         /** @description Branch, tag or commit. Defaults to the default branch. */
@@ -5780,6 +6216,513 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CISettings"];
                 };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listRunArtifacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["RunNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Artifacts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Artifact"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listArtifacts: {
+        parameters: {
+            query?: {
+                /** @description Only artifacts with this name. */
+                name?: string;
+                page?: components["parameters"]["Page"];
+                per_page?: components["parameters"]["PerPage"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Artifacts, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtifactPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ArtifactID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Artifact */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Artifact"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ArtifactID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    downloadArtifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ArtifactID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Zip archive of the artifact's files */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listCaches: {
+        parameters: {
+            query?: {
+                /** @description Only caches whose key starts with this. */
+                key?: string;
+                /** @description Only caches saved from this ref (e.g. `refs/heads/main`). */
+                ref?: string;
+                sort?: "last_used" | "created" | "size";
+                page?: components["parameters"]["Page"];
+                per_page?: components["parameters"]["PerPage"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Caches */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CachePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteCaches: {
+        parameters: {
+            query?: {
+                key?: string;
+                ref?: string;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Number deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletedCount"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteCache: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getArchive: {
+        parameters: {
+            query: {
+                /** @description Branch */
+                ref: string;
+                format?: "zip" | "tar.gz";
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archive with every file under a `<repo>-<ref>/` directory */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listReleases: {
+        parameters: {
+            query?: {
+                page?: components["parameters"]["Page"];
+                per_page?: components["parameters"]["PerPage"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Releases */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReleasePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createRelease: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRelease"];
+            };
+        };
+        responses: {
+            /** @description Release */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Release"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getLatestRelease: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Release */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Release"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getReleaseByTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                /** @description Tag name (URL-encode `/`). */
+                tag: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Release */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Release"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRelease: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ReleaseID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Release */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Release"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteRelease: {
+        parameters: {
+            query?: {
+                delete_tag?: boolean;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ReleaseID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateRelease: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ReleaseID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRelease"];
+            };
+        };
+        responses: {
+            /** @description Release */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Release"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    uploadReleaseAsset: {
+        parameters: {
+            query: {
+                /** @description File name shown on the release. */
+                name: string;
+                /** @description Optional display label. */
+                label?: string;
+                /** @description Replace an existing asset with the same name. */
+                overwrite?: boolean;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ReleaseID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description Asset */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReleaseAsset"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    downloadReleaseAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ReleaseID"];
+                asset_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteReleaseAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["ReleaseID"];
+                asset_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             default: components["responses"]["Error"];
         };

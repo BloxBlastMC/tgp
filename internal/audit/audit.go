@@ -40,6 +40,7 @@ const (
 	RunnerRegister     = "runner.register"
 	RunnerUpdate       = "runner.update"
 	RunnerDelete       = "runner.delete"
+	ReleaseDelete      = "release.delete"
 )
 
 // Entry is one audit record.
