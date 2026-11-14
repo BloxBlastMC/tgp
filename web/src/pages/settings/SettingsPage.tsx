@@ -1,74 +1,168 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { KeyRound, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { KeyRound, Lock, Monitor, Moon, Palette, Plus, Settings as SettingsIcon, ShieldCheck, ShieldOff, Sun, Trash2, User } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { api, errorMessage, unwrap, type Schemas } from '../../api/client'
 import { sessionQuery, tokensQuery } from '../../api/queries'
-import { Page } from '../../components/Page'
+import { Page, SideNav, TwoColumn } from '../../components/Page'
 import { RecoveryCodes, TotpEnroll } from '../../components/TotpEnroll'
-import { Alert, Badge, Button, Checkbox, Dialog, Field, Input, SecretValue, Section, Select, Spinner, Time } from '../../components/ui'
+import {
+  Alert,
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  DescriptionList,
+  Dialog,
+  EmptyState,
+  Field,
+  IconButton,
+  Input,
+  PageSkeleton,
+  SecretValue,
+  Section,
+  SegmentedControl,
+  Select,
+  SkeletonRows,
+  Time,
+  useConfirm,
+  useToast,
+} from '../../components/ui'
+import { useTheme } from '../../lib/theme'
 
 export function SettingsPage() {
   const session = useQuery(sessionQuery)
   const user = session.data?.user
-  if (!user) return <Spinner />
+  useEffect(() => {
+    const id = window.location.hash.slice(1)
+    if (id && user) document.getElementById(id)?.scrollIntoView({ block: 'start' })
+  }, [user])
+  if (!user) return <PageSkeleton rows={3} />
   return (
-    <Page title="Settings">
-      <div className="mx-auto flex max-w-3xl flex-col gap-5 p-6">
-        <Section title="Profile" description="Your name, email and role are managed by an admin.">
-          <dl className="grid grid-cols-[120px_1fr] gap-y-1.5">
-            <dt className="text-fg-muted">Username</dt>
-            <dd className="font-mono">{user.username}</dd>
-            <dt className="text-fg-muted">Display name</dt>
-            <dd>{user.display_name}</dd>
-            <dt className="text-fg-muted">Email</dt>
-            <dd>{user.email || <span className="text-fg-faint">none</span>}</dd>
-            <dt className="text-fg-muted">Role</dt>
-            <dd>
-              <Badge tone="accent">{user.role}</Badge>
-              <span className="ml-2 text-fg-muted">{user.all_repos ? 'all repositories' : 'selected repositories'}</span>
-            </dd>
-          </dl>
-        </Section>
-        <PasswordSection />
-        <TwoFactorSection enabled={user.totp_enabled} />
-        <TokensSection isAdmin={user.role === 'admin'} />
-      </div>
+    <Page title="Settings" icon={SettingsIcon}>
+      <TwoColumn
+        className="max-w-5xl"
+        nav={
+          <SideNav
+            label="Account sections"
+            groups={[
+              {
+                items: [
+                  { to: '/settings', label: 'Profile', icon: User },
+                  { to: '/settings', label: 'Appearance', icon: Palette, hash: 'appearance' },
+                  { to: '/settings', label: 'Password', icon: Lock, hash: 'password' },
+                  { to: '/settings', label: 'Two-factor', icon: ShieldCheck, hash: 'two-factor' },
+                  { to: '/settings', label: 'Access tokens', icon: KeyRound, hash: 'tokens' },
+                ],
+              },
+            ]}
+          />
+        }
+      >
+        <div className="flex flex-col gap-6">
+          <Card id="profile" title="Profile" description="Your name, email and role are managed by an admin.">
+            <div className="flex items-center gap-4">
+              <Avatar user={user} size={56} />
+              <DescriptionList
+                className="flex-1"
+                termWidth="sm:grid-cols-[120px_minmax(0,1fr)]"
+                items={[
+                  { term: 'Username', detail: <span className="font-mono">{user.username}</span> },
+                  { term: 'Display name', detail: user.display_name },
+                  { term: 'Email', detail: user.email || <span className="text-fg-faint">none</span> },
+                  {
+                    term: 'Role',
+                    detail: (
+                      <span className="flex items-center gap-2">
+                        <Badge tone="accent">{user.role}</Badge>
+                        <span className="text-fg-muted">{user.role === 'admin' || user.all_repos ? 'all repositories' : 'selected repositories'}</span>
+                      </span>
+                    ),
+                  },
+                ]}
+              />
+            </div>
+          </Card>
+          <AppearanceSection />
+          <PasswordSection />
+          <TwoFactorSection enabled={user.totp_enabled} />
+          <TokensSection isAdmin={user.role === 'admin'} />
+        </div>
+      </TwoColumn>
     </Page>
   )
 }
 
+function AppearanceSection() {
+  const { pref, setPref } = useTheme()
+  return (
+    <Card id="appearance" title="Appearance" description="Saved in this browser.">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-medium">Theme</p>
+          <p className="text-sm text-fg-muted">System follows your operating system's setting.</p>
+        </div>
+        <SegmentedControl
+          label="Theme"
+          value={pref}
+          onChange={setPref}
+          options={[
+            { value: 'system', label: 'System', icon: <Monitor size={12} /> },
+            { value: 'light', label: 'Light', icon: <Sun size={12} /> },
+            { value: 'dark', label: 'Dark', icon: <Moon size={12} /> },
+          ]}
+        />
+      </div>
+    </Card>
+  )
+}
+
 function PasswordSection() {
+  const toast = useToast()
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
+  const [again, setAgain] = useState('')
+  const mismatch = again !== '' && next !== again
   const change = useMutation({
     mutationFn: () => unwrap(api.POST('/account/password', { body: { current_password: current, new_password: next } })),
     onSuccess: () => {
       setCurrent('')
       setNext('')
+      setAgain('')
+      toast.success('Password changed', { description: 'Your other sessions were signed out.' })
     },
   })
   return (
-    <Section title="Password" description="Changing your password signs you out of your other sessions.">
-      <form
-        className="flex max-w-sm flex-col gap-3"
-        onSubmit={(e) => {
-          e.preventDefault()
-          change.mutate()
-        }}
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (!mismatch) change.mutate()
+      }}
+    >
+      <Card
+        id="password"
+        title="Password"
+        description="Changing your password signs you out of your other sessions."
+        footer={
+          <Button type="submit" variant="primary" loading={change.isPending} disabled={!current || next.length < 10 || next !== again}>
+            Change password
+          </Button>
+        }
       >
-        <Field label="Current password">
-          {(id) => <Input id={id} type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" required />}
-        </Field>
-        <Field label="New password" hint="At least 10 characters.">
-          {(id) => <Input id={id} type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" minLength={10} required />}
-        </Field>
-        {change.isError && <Alert>{errorMessage(change.error)}</Alert>}
-        {change.isSuccess && <Alert tone="success">Password changed.</Alert>}
-        <Button type="submit" className="self-start" loading={change.isPending}>
-          Change password
-        </Button>
-      </form>
-    </Section>
+        <div className="flex max-w-sm flex-col gap-4">
+          <Field label="Current password">
+            {(id) => <Input id={id} type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" required />}
+          </Field>
+          <Field label="New password" hint="At least 10 characters." error={next && next.length < 10 ? `${10 - next.length} more character${next.length === 9 ? '' : 's'} needed.` : undefined}>
+            {(id) => <Input id={id} type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" minLength={10} required />}
+          </Field>
+          <Field label="Confirm new password" error={mismatch ? "The passwords don't match." : undefined}>
+            {(id) => <Input id={id} type="password" value={again} onChange={(e) => setAgain(e.target.value)} autoComplete="new-password" required aria-invalid={mismatch || undefined} />}
+          </Field>
+          {change.isError && <Alert>{errorMessage(change.error)}</Alert>}
+        </div>
+      </Card>
+    </form>
   )
 }
 
@@ -97,11 +191,16 @@ function TwoFactorSection({ enabled }: { enabled: boolean }) {
   })
 
   return (
-    <Section
-      title="Two-factor authentication"
-      description="Require a code from an authenticator app when you sign in."
-      actions={
-        enabled ? (
+    <Section id="two-factor" title="Two-factor authentication" description="Require a code from an authenticator app when you sign in.">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className={enabled ? 'flex size-9 items-center justify-center rounded-full bg-success/12 text-success' : 'flex size-9 items-center justify-center rounded-full bg-bg-hover text-fg-faint'}>
+          {enabled ? <ShieldCheck size={17} /> : <ShieldOff size={17} />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">{enabled ? 'Enabled' : 'Not enabled'}</p>
+          <p className="text-sm text-fg-muted">{enabled ? 'Sign-ins need a code from your authenticator app or a recovery code.' : 'Your account is protected by your password only.'}</p>
+        </div>
+        {enabled ? (
           <>
             <Button onClick={() => setMode('regenerate')}>New recovery codes</Button>
             <Button variant="danger" onClick={() => setMode('disable')}>
@@ -112,10 +211,8 @@ function TwoFactorSection({ enabled }: { enabled: boolean }) {
           <Button variant="primary" onClick={() => setMode('enroll')}>
             Set up
           </Button>
-        )
-      }
-    >
-      {enabled ? <Badge tone="success">Enabled</Badge> : <Badge>Off</Badge>}
+        )}
+      </div>
 
       <Dialog open={mode === 'enroll'} onClose={close} title="Set up two-factor authentication" width="max-w-lg">
         <TotpEnroll onDone={close} onCancel={close} />
@@ -159,6 +256,8 @@ type Scope = Schemas['TokenScope']
 
 function TokensSection({ isAdmin }: { isAdmin: boolean }) {
   const qc = useQueryClient()
+  const confirm = useConfirm()
+  const toast = useToast()
   const tokens = useQuery(tokensQuery)
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -180,7 +279,10 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
   })
   const revoke = useMutation({
     mutationFn: (id: number) => unwrap(api.DELETE('/account/tokens/{id}', { params: { path: { id } } })),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: tokensQuery.queryKey }),
+    onSuccess: () => {
+      toast.success('Token revoked')
+      void qc.invalidateQueries({ queryKey: tokensQuery.queryKey })
+    },
   })
   const close = () => {
     setOpen(false)
@@ -192,6 +294,8 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <Section
+      id="tokens"
+      flush
       title="Personal access tokens"
       description={
         <>
@@ -200,31 +304,35 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
         </>
       }
       actions={
-        <Button onClick={() => setOpen(true)}>
-          <Plus size={14} /> New token
+        <Button icon={<Plus size={14} />} onClick={() => setOpen(true)}>
+          New token
         </Button>
       }
     >
       {tokens.isPending ? (
-        <Spinner />
+        <SkeletonRows rows={2} />
       ) : tokens.data?.length === 0 ? (
-        <p className="text-fg-muted">No tokens yet.</p>
+        <EmptyState size="inline" icon={<KeyRound size={18} />} title="No tokens yet">
+          Create one for the CLI or for git over HTTPS.
+        </EmptyState>
       ) : (
-        <ul className="-my-2 divide-y divide-border">
+        <ul>
           {tokens.data?.map((t) => (
-            <li key={t.id} className="flex items-center gap-3 py-2">
-              <KeyRound size={14} className="shrink-0 text-fg-faint" />
+            <li key={t.id} className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-bg-subtle text-fg-muted">
+                <KeyRound size={14} />
+              </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{t.name}</span>
-                  <code className="font-mono text-[12px] text-fg-faint">{t.prefix}…</code>
+                  <code className="font-mono text-sm text-fg-faint">{t.prefix}…</code>
                   {t.scopes.map((s) => (
                     <Badge key={s} tone={s === 'admin' ? 'warning' : 'neutral'}>
                       {s}
                     </Badge>
                   ))}
                 </div>
-                <div className="text-[12px] text-fg-faint">
+                <div className="text-sm text-fg-faint">
                   Created <Time iso={t.created_at} /> · last used <Time iso={t.last_used_at} /> ·{' '}
                   {t.expires_at ? (
                     <>
@@ -235,9 +343,18 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
                   )}
                 </div>
               </div>
-              <Button variant="ghost" aria-label={`Revoke ${t.name}`} onClick={() => revoke.mutate(t.id)}>
+              <IconButton
+                label={`Revoke ${t.name}`}
+                size="sm"
+                className="hover:bg-danger/10 hover:text-danger"
+                loading={revoke.isPending && revoke.variables === t.id}
+                onClick={async () => {
+                  const ok = await confirm({ title: `Revoke ${t.name}?`, description: 'Anything using this token stops working immediately.', confirmLabel: 'Revoke token' })
+                  if (ok) revoke.mutate(t.id)
+                }}
+              >
                 <Trash2 size={14} />
-              </Button>
+              </IconButton>
             </li>
           ))}
         </ul>
@@ -264,7 +381,7 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
           >
             <Field label="Name">{(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} placeholder="laptop CLI" autoFocus required />}</Field>
             <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-[12px] font-medium text-fg-muted">Scopes</legend>
+              <legend className="mb-1 text-sm font-medium text-fg-muted">Scopes</legend>
               <Checkbox checked={scopes.includes('read')} onChange={(v) => toggle('read', v)} label="read" hint="Clone and view everything you have access to." />
               <Checkbox checked={scopes.includes('write')} onChange={(v) => toggle('write', v)} label="write" hint="Push, open and merge PRs, comment, manage your account." />
               {isAdmin && <Checkbox checked={scopes.includes('admin')} onChange={(v) => toggle('admin', v)} label="admin" hint="Use admin endpoints (users, org, server settings)." />}

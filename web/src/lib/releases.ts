@@ -1,4 +1,5 @@
-import { readCookie, type Release } from '../api/client'
+import { sendFile } from './upload'
+import type { Release } from '../api/client'
 
 const enc = encodeURIComponent
 
@@ -62,27 +63,6 @@ export function tagError(tag: string): string | null {
  * upload progress, so this uses XMLHttpRequest).
  */
 export function uploadAsset(repo: string, releaseId: number, file: File, onProgress?: (fraction: number) => void, overwrite = false): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    const q = `name=${enc(file.name)}${overwrite ? '&overwrite=true' : ''}`
-    xhr.open('POST', `/api/v1/repos/${enc(repo)}/releases/${releaseId}/assets?${q}`)
-    xhr.withCredentials = true
-    xhr.setRequestHeader('Content-Type', 'application/octet-stream')
-    xhr.setRequestHeader('X-CSRF-Token', readCookie('tgp_csrf'))
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onProgress?.(e.loaded / e.total)
-    }
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) return resolve()
-      let msg = xhr.statusText || 'Upload failed'
-      try {
-        msg = (JSON.parse(xhr.responseText) as { error?: { message?: string } }).error?.message ?? msg
-      } catch {
-        /* not JSON */
-      }
-      reject(new Error(`${file.name}: ${msg}`))
-    }
-    xhr.onerror = () => reject(new Error(`${file.name}: network error`))
-    xhr.send(file)
-  })
+  const q = `name=${enc(file.name)}${overwrite ? '&overwrite=true' : ''}`
+  return sendFile(`/api/v1/repos/${enc(repo)}/releases/${releaseId}/assets?${q}`, file, { method: 'POST', onProgress, name: file.name })
 }

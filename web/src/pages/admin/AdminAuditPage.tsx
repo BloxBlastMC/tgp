@@ -1,7 +1,9 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useState } from 'react'
-import { api, errorMessage, unwrap } from '../../api/client'
-import { Alert, Badge, Button, Input, Select, Spinner, Time } from '../../components/ui'
+import { ChevronDown, ChevronRight, Filter, History } from 'lucide-react'
+import { Fragment, useState } from 'react'
+import { SubHeader } from '../../components/Page'
+import { api, unwrap } from '../../api/client'
+import { Badge, Button, cx, DescriptionList, EmptyState, ErrorState, FilterBar, FilterMenu, SearchInput, SkeletonRows, Table, TD, TH, THead, Time, TR } from '../../components/ui'
 
 const actionGroups = [
   ['', 'All actions'],
@@ -23,6 +25,7 @@ function tone(action: string) {
 export function AdminAuditPage() {
   const [action, setAction] = useState('')
   const [actor, setActor] = useState('')
+  const [open, setOpen] = useState<number | null>(null)
   const q = useInfiniteQuery({
     queryKey: ['admin', 'audit', action, actor],
     queryFn: ({ pageParam }) =>
@@ -33,65 +36,90 @@ export function AdminAuditPage() {
       ),
     initialPageParam: 0,
     getNextPageParam: (last) => last.next_before ?? undefined,
+    placeholderData: (prev) => prev,
   })
   const entries = q.data?.pages.flatMap((p) => p.entries) ?? []
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center gap-2 border-b border-border px-4 py-2">
-        <Select value={action} onChange={(e) => setAction(e.target.value)} className="h-7 w-48" aria-label="Filter by action">
-          {actionGroups.map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </Select>
-        <Input value={actor} onChange={(e) => setActor(e.target.value.trim())} placeholder="Actor username" className="h-7 w-48" aria-label="Filter by actor" />
+      <div className="px-5 pt-6">
+        <SubHeader title="Audit log" as="h2" description="Security-relevant events: sign-ins, user and token changes, organization settings." className="mb-4" />
       </div>
+      <FilterBar className="border-t px-5" end={entries.length > 0 && <span className="text-sm text-fg-faint tabular-nums">{entries.length} shown</span>}>
+        <FilterMenu label="Action" icon={<Filter size={12} />} value={action} onChange={setAction} options={actionGroups.map(([value, label]) => ({ value, label }))} />
+        <SearchInput value={actor} onChange={(v) => setActor(v.trim())} debounce={300} placeholder="Actor username…" label="Filter by actor" className="max-w-56" />
+      </FilterBar>
       {q.isPending ? (
-        <Spinner />
+        <SkeletonRows rows={8} />
       ) : q.isError ? (
-        <div className="p-4">
-          <Alert>{errorMessage(q.error)}</Alert>
-        </div>
+        <ErrorState error={q.error} />
       ) : entries.length === 0 ? (
-        <p className="p-8 text-center text-fg-muted">No matching entries.</p>
+        <EmptyState icon={<History size={20} />} title="No matching entries">
+          Try a different action or actor.
+        </EmptyState>
       ) : (
-        <table className="w-full text-left">
-          <thead className="text-[11px] tracking-wide text-fg-faint uppercase">
-            <tr className="border-b border-border">
-              <th className="px-4 py-1.5 font-medium">When</th>
-              <th className="px-2 py-1.5 font-medium">Actor</th>
-              <th className="px-2 py-1.5 font-medium">Action</th>
-              <th className="px-2 py-1.5 font-medium">Target</th>
-              <th className="px-2 py-1.5 font-medium">Details</th>
-              <th className="px-4 py-1.5 font-medium">IP</th>
+        <Table aria-label="Audit log">
+          <THead>
+            <tr>
+              <TH className="w-8">
+                <span className="sr-only">Expand</span>
+              </TH>
+              <TH>When</TH>
+              <TH>Actor</TH>
+              <TH>Action</TH>
+              <TH>Target</TH>
+              <TH>IP</TH>
             </tr>
-          </thead>
+          </THead>
           <tbody>
-            {entries.map((e) => (
-              <tr key={e.id} className="h-9 border-b border-border align-middle hover:bg-bg-subtle">
-                <td className="px-4 whitespace-nowrap text-fg-muted">
-                  <Time iso={e.created_at} />
-                </td>
-                <td className="px-2 font-mono text-[12px]">{e.actor || <span className="text-fg-faint">anonymous</span>}</td>
-                <td className="px-2">
-                  <Badge tone={tone(e.action)}>{e.action}</Badge>
-                </td>
-                <td className="px-2">{e.target}</td>
-                <td className="max-w-xs truncate px-2 font-mono text-[11px] text-fg-faint" title={JSON.stringify(e.details)}>
-                  {Object.keys(e.details).length ? JSON.stringify(e.details) : ''}
-                </td>
-                <td className="px-4 font-mono text-[12px] text-fg-faint">{e.ip}</td>
-              </tr>
-            ))}
+            {entries.map((e) => {
+              const hasDetails = Object.keys(e.details).length > 0
+              const isOpen = open === e.id
+              return (
+                <Fragment key={e.id}>
+                  <TR className={cx(hasDetails && 'cursor-pointer', isOpen && 'bg-bg-hover/60')} onClick={() => hasDetails && setOpen(isOpen ? null : e.id)}>
+                    <TD className="w-8 pr-0">
+                      {hasDetails && (
+                        <button type="button" aria-expanded={isOpen} aria-label={isOpen ? 'Hide details' : 'Show details'} className="rounded p-0.5 text-fg-faint hover:text-fg">
+                          {isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                        </button>
+                      )}
+                    </TD>
+                    <TD className="whitespace-nowrap text-fg-muted">
+                      <Time iso={e.created_at} />
+                    </TD>
+                    <TD className="font-mono text-sm">{e.actor || <span className="text-fg-faint">anonymous</span>}</TD>
+                    <TD>
+                      <Badge tone={tone(e.action)}>{e.action}</Badge>
+                    </TD>
+                    <TD>{e.target}</TD>
+                    <TD className="font-mono text-sm text-fg-faint">{e.ip}</TD>
+                  </TR>
+                  {isOpen && (
+                    <tr className="border-b border-border bg-bg-subtle">
+                      <td />
+                      <td colSpan={5} className="px-3 py-3">
+                        <DescriptionList
+                          className="text-sm"
+                          items={Object.entries(e.details).map(([k, v]) => ({
+                            key: k,
+                            term: <span className="font-mono">{k}</span>,
+                            detail: <code className="font-mono break-all">{typeof v === 'string' ? v : JSON.stringify(v)}</code>,
+                          }))}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              )
+            })}
           </tbody>
-        </table>
+        </Table>
       )}
       {q.hasNextPage && (
-        <div className="flex justify-center p-3">
+        <div className="flex justify-center p-4">
           <Button onClick={() => void q.fetchNextPage()} loading={q.isFetchingNextPage}>
-            Load more
+            Load older entries
           </Button>
         </div>
       )}

@@ -3,7 +3,7 @@ import { Ban, CheckCircle2, CircleDashed, CircleDot, Clock, GitBranch, GitCommit
 import { useEffect, useState } from 'react'
 import type { WorkflowRun } from '../../api/client'
 import { durationText, refLabel, statusKind, statusLabel, type StatusKind } from '../../lib/ci'
-import { cx, Time } from '../ui'
+import { cx, Pagination, Time } from '../ui'
 
 const icons: Record<StatusKind, { icon: typeof CheckCircle2; className: string }> = {
   waiting: { icon: Hourglass, className: 'text-warning' },
@@ -71,29 +71,33 @@ export function RunRows({ runs, showRepo }: { runs: WorkflowRun[]; showRepo?: bo
   return (
     <ul>
       {runs.map((r) => (
-        <li key={r.id} className="border-b border-border hover:bg-bg-subtle" data-testid="run-row">
-          <Link to="/$repo/ci/runs/$number" params={{ repo: r.repo, number: String(r.number) }} search={{}} className="flex items-start gap-3 px-4 py-2.5">
+        <li key={r.id} className="border-b border-border transition-colors hover:bg-bg-hover/50" data-testid="run-row">
+          <Link to="/$repo/ci/runs/$number" params={{ repo: r.repo, number: String(r.number) }} search={{}} className="flex items-start gap-3 px-5 py-3">
             <StatusIcon status={r.status} conclusion={r.conclusion} className="mt-0.5" />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-2">
                 {showRepo && <span className="text-fg-muted">{r.repo}</span>}
-                <span className="truncate font-medium">{r.title || r.workflow_name}</span>
+                <span className="truncate font-semibold">{r.title || r.workflow_name}</span>
               </div>
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 text-[12px] text-fg-faint">
-                <span className="text-fg-muted">{r.workflow_name}</span>
-                <span>#{r.number}</span>
-                <span>{eventLabel[r.event] ?? r.event}</span>
+              <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-sm text-fg-muted">
+                <span className="font-medium text-fg-muted">{r.workflow_name}</span>
+                <span className="text-fg-faint tabular-nums">#{r.number}</span>
+                <span className="text-fg-faint">{eventLabel[r.event] ?? r.event}</span>
                 <EventBadge run={r} />
-                <span className="inline-flex items-center gap-1 font-mono">
+                <span className="inline-flex items-center gap-1 font-mono text-fg-faint">
                   <GitCommit size={11} />
                   {r.head_sha.slice(0, 7)}
                 </span>
-                {r.actor && <span>by {r.actor.display_name}</span>}
-                {r.attempt > 1 && <span>attempt {r.attempt}</span>}
-                {r.status_reason && <span className="max-w-80 truncate text-warning" title={r.status_reason}>{r.status_reason}</span>}
+                {r.actor && <span className="text-fg-faint">by {r.actor.display_name}</span>}
+                {r.attempt > 1 && <span className="text-fg-faint">attempt {r.attempt}</span>}
+                {r.status_reason && (
+                  <span className="max-w-80 truncate text-warning" title={r.status_reason}>
+                    {r.status_reason}
+                  </span>
+                )}
               </div>
             </div>
-            <div className="flex shrink-0 flex-col items-end gap-0.5 text-[12px] text-fg-faint">
+            <div className="flex shrink-0 flex-col items-end gap-0.5 text-sm text-fg-faint">
               <Time iso={r.created_at} />
               <Duration start={r.started_at} end={r.completed_at} />
             </div>
@@ -104,21 +108,7 @@ export function RunRows({ runs, showRepo }: { runs: WorkflowRun[]; showRepo?: bo
   )
 }
 
-/** Simple previous/next pagination from a total. */
+/** Previous/next pagination from a total (newest first). */
 export function Pager({ page, total, perPage, onPage }: { page: number; total: number; perPage: number; onPage: (p: number) => void }) {
-  const pages = Math.max(1, Math.ceil(total / perPage))
-  if (pages <= 1) return null
-  return (
-    <div className="flex items-center justify-center gap-3 py-3 text-[12px] text-fg-muted">
-      <button type="button" disabled={page <= 1} onClick={() => onPage(page - 1)} className="rounded px-2 py-1 hover:bg-bg-hover disabled:opacity-40">
-        ← Newer
-      </button>
-      <span>
-        Page {page} of {pages}
-      </span>
-      <button type="button" disabled={page >= pages} onClick={() => onPage(page + 1)} className="rounded px-2 py-1 hover:bg-bg-hover disabled:opacity-40">
-        Older →
-      </button>
-    </div>
-  )
+  return <Pagination page={page} total={total} perPage={perPage} onPage={onPage} prevLabel="Newer" nextLabel="Older" />
 }

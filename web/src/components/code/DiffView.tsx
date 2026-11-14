@@ -1,8 +1,9 @@
-import { ChevronDown, ChevronRight, Columns2, Plus, Rows2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Columns2, FileDiff as FileDiffIcon, ListTree, Plus, Rows2 } from 'lucide-react'
 import { createContext, Fragment, useContext, useMemo, useState, type ReactNode } from 'react'
 import type { Diff, DiffFile, Schemas } from '../../api/client'
+import { plural } from '../../lib/format'
 import { commentAnchor } from '../../lib/pulls'
-import { Badge, cx } from '../ui'
+import { Alert, Badge, Button, CopyButton, cx, IconButton, Menu, MenuItem, MenuLabel, SegmentedControl } from '../ui'
 
 type Line = Schemas['DiffLine']
 type Mode = 'unified' | 'split'
@@ -29,17 +30,32 @@ function loadMode(): Mode {
 
 const statusTone = { added: 'success', deleted: 'danger', renamed: 'accent', copied: 'accent', modified: 'neutral' } as const
 
-export function DiffStat({ additions, deletions }: { additions: number; deletions: number }) {
+/** +12 −3 plus a five-block bar. */
+export function DiffStat({ additions, deletions, bar }: { additions: number; deletions: number; bar?: boolean }) {
+  const total = additions + deletions
+  const adds = total === 0 ? 0 : Math.round((additions / total) * 5)
   return (
-    <span className="font-mono text-[12px]">
-      <span className="text-success">+{additions}</span> <span className="text-danger">−{deletions}</span>
+    <span className="inline-flex items-center gap-1.5 font-mono text-sm tabular-nums">
+      <span className="text-success">+{additions}</span>
+      <span className="text-danger">−{deletions}</span>
+      {bar && (
+        <span className="flex gap-px" aria-hidden>
+          {Array.from({ length: 5 }, (_, i) => (
+            <span key={i} className={cx('size-2 rounded-[2px]', total === 0 ? 'bg-bg-active' : i < adds ? 'bg-success' : 'bg-danger')} />
+          ))}
+        </span>
+      )}
     </span>
   )
 }
 
+const fileId = (f: DiffFile) => `diff-${encodeURIComponent(f.new_path || f.old_path)}`
+
 /** A whole diff: summary bar, file list and one card per file. */
 export function DiffView({ diff, annotations }: { diff: Diff; annotations?: DiffAnnotations }) {
   const [mode, setModeState] = useState<Mode>(loadMode)
+  // Bumped to collapse or expand every file at once.
+  const [allOpen, setAllOpen] = useState<{ open: boolean; n: number } | null>(null)
   const setMode = (m: Mode) => {
     setModeState(m)
     try {
@@ -50,34 +66,59 @@ export function DiffView({ diff, annotations }: { diff: Diff; annotations?: Diff
   }
   return (
     <AnnotationsContext.Provider value={annotations}>
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <div className="text-fg-muted">
-          {diff.files.length} {diff.files.length === 1 ? 'file' : 'files'} changed · <DiffStat additions={diff.additions} deletions={diff.deletions} />
-        </div>
-        <div className="flex rounded border border-border-strong">
-          {(['unified', 'split'] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMode(m)}
-              className={cx('flex h-6 items-center gap-1 px-2 text-[12px]', mode === m ? 'bg-bg-hover text-fg' : 'text-fg-muted hover:text-fg')}
-              aria-pressed={mode === m}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 text-fg-muted">
+            <FileDiffIcon size={14} className="text-fg-faint" />
+            <span>{plural(diff.files.length, 'file')} changed</span>
+            <DiffStat additions={diff.additions} deletions={diff.deletions} bar />
+          </div>
+          <div className="flex-1" />
+          {diff.files.length > 1 && (
+            <Menu
+              placement="bottom-end"
+              label="Files"
+              className="max-h-80 w-96 max-w-[calc(100vw-16px)] overflow-auto"
+              trigger={(t) => (
+                <Button {...t} size="sm" icon={<ListTree size={13} />} iconRight={<ChevronDown size={12} className="text-fg-faint" />}>
+                  Jump to file
+                </Button>
+              )}
             >
-              {m === 'unified' ? <Rows2 size={12} /> : <Columns2 size={12} />} {m === 'unified' ? 'Unified' : 'Split'}
-            </button>
-          ))}
+              <MenuLabel>{plural(diff.files.length, 'file')}</MenuLabel>
+              {diff.files.map((f, i) => (
+                <MenuItem
+                  key={`${f.new_path}-${i}`}
+                  onSelect={() => document.getElementById(fileId(f))?.scrollIntoView({ block: 'start', behavior: 'smooth' })}
+                  shortcut={<DiffStat additions={f.additions} deletions={f.deletions} />}
+                >
+                  <span className="font-mono text-sm">{f.new_path || f.old_path}</span>
+                </MenuItem>
+              ))}
+            </Menu>
+          )}
+          <IconButton label="Collapse all files" size="sm" onClick={() => setAllOpen((a) => ({ open: false, n: (a?.n ?? 0) + 1 }))}>
+            <ChevronsDownUp size={13} />
+          </IconButton>
+          <IconButton label="Expand all files" size="sm" onClick={() => setAllOpen((a) => ({ open: true, n: (a?.n ?? 0) + 1 }))}>
+            <ChevronsUpDown size={13} />
+          </IconButton>
+          <SegmentedControl
+            size="sm"
+            label="Diff layout"
+            value={mode}
+            onChange={setMode}
+            options={[
+              { value: 'unified', label: 'Unified', icon: <Rows2 size={12} /> },
+              { value: 'split', label: 'Split', icon: <Columns2 size={12} /> },
+            ]}
+          />
         </div>
+        {diff.truncated && <Alert tone="warning">This diff is large, so some files or lines are not shown. Use the CLI or git locally for the full diff.</Alert>}
+        {diff.files.map((f, i) => (
+          <FileDiff key={`${f.old_path}->${f.new_path}-${i}-${allOpen?.n ?? 0}`} file={f} mode={mode} forceOpen={allOpen?.open} />
+        ))}
       </div>
-      {diff.truncated && (
-        <div className="rounded border border-warning/30 bg-warning/10 px-3 py-2 text-[12px] text-warning">
-          This diff is large, so some files or lines are not shown. Use the CLI or git locally for the full diff.
-        </div>
-      )}
-      {diff.files.map((f, i) => (
-        <FileDiff key={`${f.old_path}->${f.new_path}-${i}`} file={f} mode={mode} />
-      ))}
-    </div>
     </AnnotationsContext.Provider>
   )
 }
@@ -94,9 +135,8 @@ function CommentButton({ file, line }: { file: DiffFile; line: Line | null }) {
     <button
       type="button"
       onClick={() => ann.onComment!(pathFor(file, a.side), a.side, a.line)}
-      className="absolute top-0.5 -left-0.5 hidden size-4 items-center justify-center rounded bg-accent text-accent-fg group-hover:flex focus:flex"
+      className="absolute top-0.5 -left-0.5 hidden size-4 items-center justify-center rounded bg-accent-solid text-accent-fg shadow group-hover:flex focus:flex"
       aria-label={`Comment on ${pathFor(file, a.side)} line ${a.line}`}
-      title="Comment on this line"
     >
       <Plus size={11} />
     </button>
@@ -126,57 +166,60 @@ function ExtrasRow({ file, lines, cols }: { file: DiffFile; lines: (Line | null)
   if (!extras) return null
   return (
     <tr>
-      <td colSpan={cols} className="border-y border-border bg-bg-subtle px-3 py-2 font-sans text-[13px] leading-normal whitespace-normal">
+      <td colSpan={cols} className="border-y border-border bg-bg-subtle px-3 py-2 font-sans text-base leading-normal whitespace-normal">
         <div className="flex max-w-3xl flex-col gap-2">{extras}</div>
       </td>
     </tr>
   )
 }
 
-function FileDiff({ file, mode }: { file: DiffFile; mode: Mode }) {
+function FileDiff({ file, mode, forceOpen }: { file: DiffFile; mode: Mode; forceOpen?: boolean }) {
   const big = file.additions + file.deletions > 800
-  const [open, setOpen] = useState(!big && file.status !== 'deleted')
-  const name = file.status === 'renamed' ? `${file.old_path} → ${file.new_path}` : file.new_path || file.old_path
+  const [open, setOpen] = useState(forceOpen ?? (!big && file.status !== 'deleted'))
+  const path = file.new_path || file.old_path
+  const name = file.status === 'renamed' ? `${file.old_path} → ${file.new_path}` : path
   return (
-    <div className="overflow-hidden rounded-md border border-border" id={`diff-${encodeURIComponent(file.new_path)}`}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="sticky top-0 z-10 flex w-full items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-left"
-      >
-        {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        <span className="min-w-0 flex-1 truncate font-mono text-[12.5px]">{name}</span>
+    <div className="scroll-mt-4 overflow-clip rounded-lg border border-border bg-surface-1 shadow-card" id={fileId(file)}>
+      <div className={cx('sticky top-0 z-10 flex items-center gap-2 bg-bg-subtle px-2 py-1', open && 'border-b border-border')}>
+        <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1 text-left hover:bg-bg-hover">
+          {open ? <ChevronDown size={14} className="shrink-0 text-fg-muted" /> : <ChevronRight size={14} className="shrink-0 text-fg-muted" />}
+          <span className="min-w-0 truncate font-mono text-code">{name}</span>
+        </button>
+        <CopyButton value={path} label="Copy path" size="xs" />
         {file.status !== 'modified' && <Badge tone={statusTone[file.status]}>{file.status}</Badge>}
         {file.old_mode && file.new_mode && file.old_mode !== file.new_mode && (
-          <span className="font-mono text-[11px] text-fg-faint">
+          <span className="font-mono text-xs text-fg-faint">
             {file.old_mode} → {file.new_mode}
           </span>
         )}
-        <DiffStat additions={file.additions} deletions={file.deletions} />
-      </button>
+        <span className="px-1">
+          <DiffStat additions={file.additions} deletions={file.deletions} bar />
+        </span>
+      </div>
       {open &&
         (file.binary ? (
           <p className="px-4 py-3 text-fg-muted">Binary file not shown.</p>
         ) : file.hunks.length === 0 ? (
           <p className="px-4 py-3 text-fg-muted">{file.status === 'renamed' ? 'File renamed without changes.' : 'No content changes.'}</p>
         ) : (
-          <div className="overflow-x-auto font-mono text-[12.5px] leading-[20px]">
+          <div className="overflow-x-auto font-mono text-code">
             {mode === 'unified' ? <Unified file={file} /> : <Split file={file} />}
-            {file.truncated && <p className="border-t border-border px-4 py-2 font-sans text-[12px] text-warning">Some lines of this file are not shown.</p>}
+            {file.truncated && <p className="border-t border-border px-4 py-2 font-sans text-sm text-warning">Some lines of this file are not shown.</p>}
           </div>
         ))}
-      {!open && big && <p className="px-4 py-2 text-[12px] text-fg-muted">Large diff hidden. Click the header to show it.</p>}
+      {!open && big && <p className="border-t border-border px-4 py-2 text-sm text-fg-muted">Large diff hidden. Expand the file to show it.</p>}
     </div>
   )
 }
 
 const rowTone = { add: 'bg-success/10', del: 'bg-danger/10', context: '' }
+const numTone = { add: 'bg-success/15', del: 'bg-danger/15', context: '' }
 const sign = { add: '+', del: '-', context: ' ' }
 
 function HunkHeader({ header, cols }: { header: string; cols: number }) {
   return (
     <tr className="bg-accent-subtle text-fg-muted">
-      <td colSpan={cols} className="px-3 py-0.5">
+      <td colSpan={cols} className="px-3 py-1 text-sm">
         {header}
       </td>
     </tr>
@@ -193,15 +236,15 @@ function Unified({ file }: { file: DiffFile }) {
             {h.lines.map((l, li) => (
               <Fragment key={li}>
               <tr className={cx('group', rowTone[l.type])}>
-                <td className="relative w-1 px-2 text-right text-fg-faint select-none">
+                <td className={cx('relative w-1 px-2 text-right text-fg-faint tabular-nums select-none', numTone[l.type])}>
                   <CommentButton file={file} line={l} />
                   {l.old_line ?? ''}
                 </td>
-                <td className="w-1 px-2 text-right text-fg-faint select-none">{l.new_line ?? ''}</td>
+                <td className={cx('w-1 px-2 text-right text-fg-faint tabular-nums select-none', numTone[l.type])}>{l.new_line ?? ''}</td>
                 <td className="pr-4 whitespace-pre">
                   <span className="select-none text-fg-faint">{sign[l.type]}</span>
                   {l.content}
-                  {l.no_newline && <span className="ml-2 text-[11px] text-fg-faint select-none">⏎ no newline at end of file</span>}
+                  {l.no_newline && <span className="ml-2 text-xs text-fg-faint select-none">⏎ no newline at end of file</span>}
                 </td>
               </tr>
               <ExtrasRow file={file} lines={[l]} cols={3} />

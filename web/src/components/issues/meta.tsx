@@ -1,16 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { Check, CheckCircle2, CircleDot, CircleSlash, Milestone as MilestoneIcon, Settings2 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { CheckCircle2, ChevronDown, CircleDot, CircleSlash, Milestone as MilestoneIcon, Settings2 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { IssueSummary, Label, MilestoneRef, UserSummary } from '../../api/client'
 import { labelsQuery, milestonesQuery, usersQuery } from '../../api/queries'
+import { dueLabel } from '../../lib/format'
 import { labelTextColor } from '../../lib/issues'
-import { Avatar } from '../pulls/common'
-import { cx, Input } from '../ui'
+import { issueState } from '../../lib/states'
+import { Avatar, Button, cx, IconButton, MetaSection, Picker as UiPicker, Pill, type SelectItem } from '../ui'
 
 export function LabelChip({ label, onClick, title }: { label: Pick<Label, 'name' | 'color'> & { description?: string }; onClick?: () => void; title?: string }) {
   const style = { backgroundColor: `#${label.color}`, color: labelTextColor(label.color) }
-  const cls = 'inline-flex h-[18px] max-w-48 items-center truncate rounded-full px-2 text-[11px] leading-none font-medium'
+  const cls = 'inline-flex h-[18px] max-w-48 items-center truncate rounded-full px-2 text-xs leading-none font-medium'
   if (onClick)
     return (
       <button type="button" onClick={onClick} className={cx(cls, 'hover:brightness-110')} style={style} title={title ?? label.description}>
@@ -27,16 +28,16 @@ export function LabelChip({ label, onClick, title }: { label: Pick<Label, 'name'
 export function IssueStateIcon({ issue, size = 15 }: { issue: Pick<IssueSummary, 'state' | 'state_reason'>; size?: number }) {
   if (issue.state === 'open') return <CircleDot size={size} className="shrink-0 text-success" aria-label="open" />
   if (issue.state_reason === 'not_planned') return <CircleSlash size={size} className="shrink-0 text-fg-faint" aria-label="closed as not planned" />
-  return <CheckCircle2 size={size} className="shrink-0 text-[#a371f7]" aria-label="closed as completed" />
+  return <CheckCircle2 size={size} className="shrink-0 text-done" aria-label="closed as completed" />
 }
 
 export function IssueStateBadge({ issue }: { issue: Pick<IssueSummary, 'state' | 'state_reason'> }) {
-  const label = issue.state === 'open' ? 'Open' : issue.state_reason === 'not_planned' ? 'Closed as not planned' : 'Closed'
-  const tone = issue.state === 'open' ? 'bg-success/15 text-success' : issue.state_reason === 'not_planned' ? 'bg-bg-hover text-fg-muted' : 'bg-[#a371f7]/15 text-[#a371f7]'
+  const st = issueState(issue)
+  const Icon = st.key === 'open' ? CircleDot : st.key === 'not_planned' ? CircleSlash : CheckCircle2
   return (
-    <span className={cx('inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-medium', tone)}>
-      <IssueStateIcon issue={issue} size={13} /> {label}
-    </span>
+    <Pill tone={st.tone} icon={<Icon size={13} />}>
+      {st.label}
+    </Pill>
   )
 }
 
@@ -48,11 +49,12 @@ export function MilestoneLink({ repo, milestone }: { repo: string; milestone: Mi
   )
 }
 
-type Item = { key: string; label: string; render: ReactNode; search: string }
+type Item = SelectItem
 
 /**
  * Popover list with search. Multi-select calls onChange when it closes;
- * single-select calls it on pick.
+ * single-select calls it on pick. Without `trigger` it's a small gear
+ * button labelled "Edit <title>"; with one, a filter button.
  */
 function Picker({
   title,
@@ -75,90 +77,28 @@ function Picker({
   emptyText: string
   footer?: ReactNode
 }) {
-  const [open, setOpen] = useState(false)
-  const [filter, setFilter] = useState('')
-  const [draft, setDraft] = useState<string[]>(value)
-  const ref = useRef<HTMLDivElement>(null)
-  const draftRef = useRef(draft)
-  draftRef.current = draft
-  const close = () => {
-    setOpen(false)
-    setFilter('')
-    if (!multi) return
-    const next = draftRef.current
-    if (next.length !== value.length || next.some((k) => !value.includes(k))) onChange(next)
-  }
-  useEffect(() => {
-    if (!open) return
-    const onDoc = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && close()
-    document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  })
-  const list = useMemo(() => items.filter((i) => i.search.toLowerCase().includes(filter.toLowerCase())), [items, filter])
   return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => {
-          if (open) close()
-          else {
-            setDraft(value)
-            setOpen(true)
-          }
-        }}
-        className={
-          trigger
-            ? 'inline-flex h-7 items-center gap-1 rounded border border-border-strong px-2 text-[12px] text-fg-muted hover:bg-bg-hover hover:text-fg'
-            : 'rounded p-1 text-fg-muted hover:bg-bg-hover hover:text-fg disabled:opacity-40'
-        }
-        aria-label={trigger ? `Filter by ${title.toLowerCase()}` : `Edit ${title.toLowerCase()}`}
-        title={trigger ? undefined : `Edit ${title.toLowerCase()}`}
-      >
-        {trigger ?? <Settings2 size={14} />}
-      </button>
-      {open && (
-        <div className="absolute top-7 right-0 z-30 w-64 rounded-md border border-border-strong bg-bg-elevated shadow-xl" onKeyDown={(e) => e.key === 'Escape' && close()}>
-          <div className="border-b border-border p-2">
-            <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter" autoFocus className="h-7" aria-label={`Filter ${title.toLowerCase()}`} />
-          </div>
-          <ul className="max-h-64 overflow-auto p-1" role="listbox" aria-label={title} aria-multiselectable={multi}>
-            {list.length === 0 && <li className="px-3 py-3 text-center text-fg-faint">{emptyText}</li>}
-            {list.map((it) => {
-              const on = draft.includes(it.key)
-              return (
-                <li key={it.key}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={on}
-                    aria-label={it.label}
-                    onClick={() => {
-                      if (multi) setDraft(on ? draft.filter((x) => x !== it.key) : [...draft, it.key])
-                      else {
-                        setOpen(false)
-                        setFilter('')
-                        onChange(on ? [] : [it.key])
-                      }
-                    }}
-                    className="flex min-h-8 w-full items-center gap-2 rounded px-2 py-1 text-left hover:bg-bg-hover"
-                  >
-                    <span className="w-3.5 shrink-0">{on && <Check size={13} />}</span>
-                    {it.render}
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-          <div className="flex items-center justify-between border-t border-border p-1.5">
-            <span className="px-1 text-[11px]">{footer}</span>
-            <button type="button" className="rounded px-2 py-1 text-[12px] text-accent hover:bg-bg-hover" onClick={close}>
-              Done
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+    <UiPicker
+      title={title}
+      items={items}
+      value={value}
+      multi={multi}
+      onChange={onChange}
+      emptyText={emptyText}
+      footer={footer}
+      placement={trigger ? 'bottom-start' : 'bottom-end'}
+      trigger={(t) =>
+        trigger ? (
+          <Button {...t} size="sm" disabled={disabled} aria-label={`Filter by ${title.toLowerCase()}`} iconRight={<ChevronDown size={12} className="text-fg-faint" />}>
+            {trigger}
+          </Button>
+        ) : (
+          <IconButton {...t} size="xs" disabled={disabled} label={`Edit ${title.toLowerCase()}`}>
+            <Settings2 size={13} />
+          </IconButton>
+        )
+      }
+    />
   )
 }
 
@@ -186,7 +126,7 @@ export function LabelPicker({
         <span className="mt-0.5 size-3 shrink-0 rounded-full" style={{ backgroundColor: `#${l.color}` }} />
         <span className="min-w-0">
           <span className="block truncate">{l.name}</span>
-          {l.description && <span className="block truncate text-[11px] text-fg-faint">{l.description}</span>}
+          {l.description && <span className="block truncate text-xs text-fg-faint">{l.description}</span>}
         </span>
       </span>
     ),
@@ -218,11 +158,11 @@ export function AssigneePicker({ value, onChange, disabled }: { value: string[];
     label: u.display_name,
     search: u.username + ' ' + u.display_name,
     render: (
-      <>
+      <span className="flex min-w-0 flex-1 items-center gap-2">
         <Avatar user={u} size={18} />
         <span className="flex-1 truncate">{u.display_name}</span>
-        <span className="text-[11px] text-fg-faint">{u.username}</span>
-      </>
+        <span className="text-xs text-fg-faint">{u.username}</span>
+      </span>
     ),
   }))
   return <Picker title="Assignees" items={items} value={value} multi onChange={onChange} disabled={disabled} emptyText="Nobody found" />
@@ -238,7 +178,7 @@ export function MilestonePicker({ repo, value, onChange, disabled }: { repo: str
     render: (
       <span className="min-w-0 flex-1">
         <span className="block truncate">{m.title}</span>
-        {m.due_on && <span className="block text-[11px] text-fg-faint">Due {m.due_on}</span>}
+        {m.due_on && <span className="block text-xs text-fg-faint">{dueLabel(m.due_on, m.state)?.text}</span>}
       </span>
     ),
   }))
@@ -260,17 +200,7 @@ export function MilestonePicker({ repo, value, onChange, disabled }: { repo: str
   )
 }
 
-function Section({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
-  return (
-    <section className="border-b border-border pb-3">
-      <div className="mb-1.5 flex items-center justify-between text-[12px] font-medium text-fg-muted">
-        {title}
-        {action}
-      </div>
-      {children}
-    </section>
-  )
-}
+const Section = MetaSection
 
 export type MetaPatch = { labels?: string[]; assignees?: string[]; milestone?: number }
 
@@ -299,7 +229,7 @@ export function MetaSections({
     <>
       <Section title="Assignees" action={canEdit && <AssigneePicker value={assignees.map((u) => u.username)} onChange={(a) => onPatch({ assignees: a })} />}>
         {assignees.length === 0 ? (
-          <p className="text-[12px] text-fg-faint">
+          <p className="text-sm text-fg-faint">
             No one
             {canEdit && me && (
               <>
@@ -311,10 +241,10 @@ export function MetaSections({
             )}
           </p>
         ) : (
-          <ul className="flex flex-col gap-1.5" aria-label="Assignees">
+          <ul className="flex flex-col gap-2" aria-label="Assignees">
             {assignees.map((u) => (
               <li key={u.id} className="flex items-center gap-2">
-                <Avatar user={u} size={18} /> <span className="truncate">{u.display_name}</span>
+                <Avatar user={u} size={20} /> <span className="truncate">{u.display_name}</span>
               </li>
             ))}
           </ul>
@@ -322,7 +252,7 @@ export function MetaSections({
       </Section>
       <Section title="Labels" action={canEdit && <LabelPicker repo={repo} value={labels.map((l) => l.name)} onChange={(l) => onPatch({ labels: l })} />}>
         {labels.length === 0 ? (
-          <p className="text-[12px] text-fg-faint">None yet</p>
+          <p className="text-sm text-fg-faint">None yet</p>
         ) : (
           <div className="flex flex-wrap gap-1" aria-label="Labels">
             {labels.map((l) => (
@@ -333,11 +263,11 @@ export function MetaSections({
       </Section>
       <Section title="Milestone" action={canEdit && <MilestonePicker repo={repo} value={milestone?.id} onChange={(id) => onPatch({ milestone: id ?? 0 })} />}>
         {milestone ? (
-          <p className="text-[12px] text-fg-muted">
+          <p className="text-sm text-fg-muted">
             <MilestoneLink repo={repo} milestone={milestone} />
           </p>
         ) : (
-          <p className="text-[12px] text-fg-faint">No milestone</p>
+          <p className="text-sm text-fg-faint">No milestone</p>
         )}
       </Section>
     </>

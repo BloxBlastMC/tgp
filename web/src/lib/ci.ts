@@ -85,12 +85,7 @@ export function durationText(start?: string | null, end?: string | null, now = D
   return ms == null ? '' : formatDuration(ms)
 }
 
-export function formatBytes(n: number): string {
-  if (n >= 1 << 30) return `${+(n / 2 ** 30).toFixed(1)} GiB`
-  if (n >= 1 << 20) return `${+(n / 2 ** 20).toFixed(0)} MiB`
-  if (n >= 1 << 10) return `${+(n / 1024).toFixed(0)} KiB`
-  return `${n} B`
-}
+export { formatBytes } from './format'
 
 /** "main", "#12" or "v1.0" for a ref. */
 export function refLabel(ref: string, pull?: number | null): string {
@@ -332,3 +327,23 @@ export function checksHeadline(c: Schemas['CheckSummary']): string {
   return `${lead} · ${parts.join(', ')}`
 }
 
+
+// ---- log search and export ----
+
+/** Line numbers whose text (without ANSI escapes) contains `q`, case-insensitively. */
+export function findMatches(lines: LogLine[], q: string): number[] {
+  const needle = q.trim().toLowerCase()
+  if (!needle) return []
+  return lines.filter((l) => stripAnsi(l.text).toLowerCase().includes(needle)).map((l) => l.n)
+}
+
+/** The next match index after moving `delta` from `current`, wrapping around. */
+export function stepMatch(current: number, delta: number, count: number): number {
+  if (count === 0) return -1
+  return (((current + delta) % count) + count) % count
+}
+
+/** Plain-text log for download: one line per entry, optional timestamps. */
+export function logText(lines: LogLine[], timestamps = true): string {
+  return lines.map((l) => (timestamps ? `${l.t} ${stripAnsi(l.text)}` : stripAnsi(l.text))).join('\n') + (lines.length ? '\n' : '')
+}

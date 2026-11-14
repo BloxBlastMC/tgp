@@ -36,7 +36,7 @@ async function loginAs(browser: Browser, username: string, password: string): Pr
   await page.getByLabel('Username or email').fill(username)
   await page.getByLabel('Password').fill(password)
   await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page.getByRole('heading', { name: 'Repositories' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
   return page
 }
 
@@ -160,8 +160,8 @@ test('a pushed workflow queues a run that can be cancelled; invalid workflows sh
   await expect(mia.getByRole('navigation', { name: 'Jobs' }).getByText('test')).toBeVisible()
   await expect(mia.getByText(/Waiting/).first()).toBeVisible()
   await shot(mia, 'ci-run-queued.png')
-  mia.on('dialog', (d) => void d.accept())
   await mia.getByRole('button', { name: 'Cancel run' }).click()
+  await mia.getByRole('dialog').getByRole('button', { name: 'Cancel run' }).click()
   await expect(mia.getByText('Cancelled').first()).toBeVisible()
   await expect(mia.getByRole('button', { name: 'Cancel run' })).toHaveCount(0)
   await expect(mia.getByRole('button', { name: 'Re-run all jobs' })).toBeVisible()

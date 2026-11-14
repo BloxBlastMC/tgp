@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import { memo, useEffect, useRef, useState } from 'react'
+import { createContext, memo, useContext, useEffect, useRef, useState } from 'react'
 import { api, unwrap, type Job, type LogLine } from '../../api/client'
 import { ansiColors, appendLines, buildLogItems, lineLevel, parseAnsi } from '../../lib/ci'
 import { cx } from '../ui'
@@ -112,6 +112,11 @@ export function useJobLogs(repo: string, job: Job, onJob?: (j: Job) => void): Lo
   return state
 }
 
+/** Display options shared by every line of a job's log. */
+export type LogView = { wrap: boolean; timestamps: boolean; gutter: number; matches: Set<number>; active: number | null }
+
+export const LogViewContext = createContext<LogView>({ wrap: true, timestamps: false, gutter: 4, matches: new Set(), active: null })
+
 /** A line of log text with ANSI colours. */
 export const AnsiText = memo(function AnsiText({ text }: { text: string }) {
   const segs = parseAnsi(text)
@@ -123,7 +128,10 @@ export const AnsiText = memo(function AnsiText({ text }: { text: string }) {
         ) : (
           <span
             key={i}
-            style={{ color: s.fg !== undefined ? ansiColors[s.fg] : undefined, backgroundColor: s.bg !== undefined ? ansiColors[s.bg] + '55' : undefined }}
+            style={{
+              color: s.fg !== undefined ? ansiColors[s.fg] : undefined,
+              backgroundColor: s.bg !== undefined ? `color-mix(in srgb, ${ansiColors[s.bg]} 33%, transparent)` : undefined,
+            }}
             className={s.bold ? 'font-bold' : undefined}
           >
             {s.text}
@@ -141,13 +149,26 @@ const levelClass = {
   command: 'text-accent',
 }
 
+function clock(t: string) {
+  const d = new Date(t)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString(undefined, { hour12: false })
+}
+
 function Line({ line, level, text, indent }: { line: LogLine; level?: keyof typeof levelClass; text?: string; indent?: boolean }) {
+  const v = useContext(LogViewContext)
+  const match = v.matches.has(line.n)
+  const active = v.active === line.n
   return (
-    <div className={cx('flex hover:bg-bg-hover/60', level && levelClass[level])} data-line={line.n}>
-      <a href={`#L${line.n}`} id={`L${line.n}`} className="w-12 shrink-0 pr-3 text-right text-fg-faint select-none hover:text-fg-muted">
+    <div
+      className={cx('flex', level && levelClass[level], match ? (active ? 'bg-warning/30 ring-1 ring-warning/60 ring-inset' : 'bg-warning/12') : 'hover:bg-bg-hover/60')}
+      data-line={line.n}
+      data-active-match={active || undefined}
+    >
+      <a href={`#L${line.n}`} id={`L${line.n}`} className="shrink-0 pr-3 pl-2 text-right text-fg-faint tabular-nums select-none hover:text-fg-muted" style={{ width: `${v.gutter + 2.5}ch` }}>
         {line.n}
       </a>
-      <span className={cx('min-w-0 flex-1 break-all whitespace-pre-wrap', indent && 'pl-4')}>
+      {v.timestamps && <span className="shrink-0 pr-3 text-fg-faint tabular-nums select-none">{clock(line.t)}</span>}
+      <span className={cx('min-w-0 flex-1 pr-3', v.wrap ? 'break-all whitespace-pre-wrap' : 'whitespace-pre', indent && 'pl-4')}>
         {level === 'error' && <span className="font-semibold">Error: </span>}
         {level === 'warning' && <span className="font-semibold">Warning: </span>}
         <AnsiText text={text ?? line.text} />
@@ -157,17 +178,22 @@ function Line({ line, level, text, indent }: { line: LogLine; level?: keyof type
 }
 
 function Group({ title, header, children }: { title: string; header: LogLine; children: LogLine[] }) {
+  const v = useContext(LogViewContext)
   const [open, setOpen] = useState(false)
+  const hasMatch = v.matches.size > 0 && children.some((c) => v.matches.has(c.n))
+  const isOpen = open || hasMatch
   return (
     <div>
-      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full text-left hover:bg-bg-hover/60" aria-expanded={open}>
-        <span className="w-12 shrink-0 pr-3 text-right text-fg-faint select-none">{header.n}</span>
+      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full text-left hover:bg-bg-hover/60" aria-expanded={isOpen}>
+        <span className="shrink-0 pr-3 pl-2 text-right text-fg-faint tabular-nums select-none" style={{ width: `${v.gutter + 2.5}ch` }}>
+          {header.n}
+        </span>
         <span className="flex items-center gap-1 font-medium">
-          {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          {isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
           <AnsiText text={title} />
         </span>
       </button>
-      {open &&
+      {isOpen &&
         children.map((l) => {
           const { text, level } = lineLevel(l)
           return <Line key={l.n} line={l} text={text} level={level} indent />
@@ -180,7 +206,7 @@ function Group({ title, header, children }: { title: string; header: LogLine; ch
 export function StepLog({ lines }: { lines: LogLine[] }) {
   const items = buildLogItems(lines)
   return (
-    <div className="font-mono text-[12px] leading-[18px]">
+    <div className="font-mono text-sm">
       {items.map((it) =>
         it.kind === 'group' ? (
           <Group key={it.line.n} title={it.title} header={it.line} children={it.children} />

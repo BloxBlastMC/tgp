@@ -1,14 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { ArrowLeft, Calendar, Plus } from 'lucide-react'
+import { Calendar, CheckCircle2, Milestone as MilestoneIcon, MoreHorizontal, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { api, errorMessage, unwrap, type Milestone } from '../../api/client'
 import { milestonesQuery, repoQuery } from '../../api/queries'
-import { EmptyState } from '../../components/Page'
-import { Alert, Button, cx, Field, Input, Spinner, Time } from '../../components/ui'
+import { EmptyState, SubHeader } from '../../components/Page'
 import { MarkdownEditor } from '../../components/pulls/common'
-import { isOverdue, milestoneProgress } from '../../lib/issues'
-import { Segmented } from '../pulls/PullList'
+import { Alert, Button, cx, Dialog, ErrorState, Field, IconButton, Input, List, Menu, MenuItem, MenuSeparator, Meter, SegmentedControl, SkeletonRows, Time, useConfirm, useToast } from '../../components/ui'
+import { dueLabel } from '../../lib/format'
+import { milestoneProgress } from '../../lib/issues'
+import { canWrite as canWritePerm } from '../../lib/permissions'
 import { useRepoName } from '../repos/RepoLayout'
 
 export type MilestonesSearch = { state?: 'closed' }
@@ -27,8 +28,9 @@ function useInvalidateMilestones(repo: string) {
   }
 }
 
-function MilestoneForm({ repo, milestone, onDone }: { repo: string; milestone?: Milestone; onDone: () => void }) {
+function MilestoneDialog({ repo, milestone, onDone }: { repo: string; milestone?: Milestone; onDone: () => void }) {
   const invalidate = useInvalidateMilestones(repo)
+  const toast = useToast()
   const [title, setTitle] = useState(milestone?.title ?? '')
   const [due, setDue] = useState(milestone?.due_on ?? '')
   const [description, setDescription] = useState(milestone?.description ?? '')
@@ -44,61 +46,80 @@ function MilestoneForm({ repo, milestone, onDone }: { repo: string; milestone?: 
         : unwrap(api.POST('/repos/{repo}/milestones', { params: { path: { repo } }, body: { title, description, due_on: due || undefined } })),
     onSuccess: () => {
       invalidate()
+      toast.success(milestone ? 'Milestone updated' : 'Milestone created')
       onDone()
     },
   })
   return (
-    <form
-      className="flex flex-col gap-3 border-b border-border bg-bg-subtle px-4 py-3"
-      onSubmit={(e) => {
-        e.preventDefault()
-        save.mutate()
-      }}
-    >
-      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
-        <Field label="Title">{(id) => <Input id={id} value={title} onChange={(e) => setTitle(e.target.value)} autoFocus maxLength={100} />}</Field>
-        <Field label="Due date (optional)">{(id) => <Input id={id} type="date" value={due} onChange={(e) => setDue(e.target.value)} />}</Field>
-      </div>
-      <MarkdownEditor value={description} onChange={setDescription} repo={repo} label="Milestone description" placeholder="What's in this milestone?" minRows={3} />
-      {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={onDone}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="primary" loading={save.isPending} disabled={!title.trim()}>
-          {milestone ? 'Save' : 'Create milestone'}
-        </Button>
-      </div>
-    </form>
+    <Dialog open onClose={onDone} title={milestone ? 'Edit milestone' : 'New milestone'} width="max-w-xl">
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={(e) => {
+          e.preventDefault()
+          save.mutate()
+        }}
+      >
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_180px]">
+          <Field label="Title">{(id) => <Input id={id} value={title} onChange={(e) => setTitle(e.target.value)} autoFocus maxLength={100} placeholder="v1.5" />}</Field>
+          <Field label="Due date (optional)">{(id) => <Input id={id} type="date" value={due} onChange={(e) => setDue(e.target.value)} />}</Field>
+        </div>
+        <MarkdownEditor value={description} onChange={setDescription} repo={repo} label="Milestone description" placeholder="What's in this milestone?" minRows={4} />
+        {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
+        <div className="flex justify-end gap-2 pt-1">
+          <Button variant="ghost" onClick={onDone}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="primary" loading={save.isPending} disabled={!title.trim()}>
+            {milestone ? 'Save' : 'Create milestone'}
+          </Button>
+        </div>
+      </form>
+    </Dialog>
   )
 }
 
 function MilestoneRow({ repo, m, canWrite, onEdit }: { repo: string; m: Milestone; canWrite: boolean; onEdit: () => void }) {
   const invalidate = useInvalidateMilestones(repo)
+  const confirm = useConfirm()
+  const toast = useToast()
   const setState = useMutation({
     mutationFn: (state: 'open' | 'closed') => unwrap(api.PATCH('/repos/{repo}/milestones/{id}', { params: { path: { repo, id: m.id } }, body: { state } })),
-    onSuccess: invalidate,
+    onSuccess: (_, state) => {
+      toast.success(state === 'closed' ? `Closed ${m.title}` : `Reopened ${m.title}`)
+      invalidate()
+    },
   })
   const del = useMutation({
     mutationFn: () => unwrap(api.DELETE('/repos/{repo}/milestones/{id}', { params: { path: { repo, id: m.id } } })),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success(`Deleted ${m.title}`)
+      invalidate()
+    },
   })
   const pct = milestoneProgress(m)
-  const overdue = isOverdue(m.due_on, m.state)
+  const due = dueLabel(m.due_on, m.state)
   return (
-    <li className="grid gap-3 border-b border-border px-4 py-3 md:grid-cols-[minmax(0,1fr)_280px]" data-testid="milestone-row">
+    <li className="grid gap-4 border-b border-border px-5 py-4 last:border-0 md:grid-cols-[minmax(0,1fr)_300px]" data-testid="milestone-row">
       <div className="min-w-0">
-        <Link to="/$repo/issues" params={{ repo }} search={{ milestone: m.title, ...(m.state === 'closed' ? { state: 'closed' as const } : {}) }} className="text-[15px] font-semibold hover:text-accent">
-          {m.title}
-        </Link>
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[12px] text-fg-muted">
+        <div className="flex items-center gap-2">
+          {m.state === 'closed' ? <CheckCircle2 size={16} className="shrink-0 text-done" /> : <MilestoneIcon size={16} className="shrink-0 text-fg-muted" />}
+          <Link
+            to="/$repo/issues"
+            params={{ repo }}
+            search={{ milestone: m.title, ...(m.state === 'closed' ? { state: 'closed' as const } : {}) }}
+            className="text-lg font-semibold tracking-tight hover:text-accent"
+          >
+            {m.title}
+          </Link>
+        </div>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-fg-muted">
           {m.state === 'closed' ? (
             <span>
               Closed <Time iso={m.closed_at} />
             </span>
-          ) : m.due_on ? (
-            <span className={cx('flex items-center gap-1', overdue && 'text-danger')}>
-              <Calendar size={12} /> {overdue ? 'Past due by' : 'Due'} {m.due_on}
+          ) : due ? (
+            <span className={cx('flex items-center gap-1', due.overdue && 'font-medium text-danger')} title={m.due_on ?? undefined}>
+              <Calendar size={12} /> {due.text}
             </span>
           ) : (
             <span className="text-fg-faint">No due date</span>
@@ -107,34 +128,50 @@ function MilestoneRow({ repo, m, canWrite, onEdit }: { repo: string; m: Mileston
             Updated <Time iso={m.updated_at} />
           </span>
         </div>
-        {m.description_html && <div className="markdown mt-1.5 text-fg-muted" dangerouslySetInnerHTML={{ __html: m.description_html }} />}
+        {m.description_html && <div className="markdown mt-2 text-sm text-fg-muted" dangerouslySetInnerHTML={{ __html: m.description_html }} />}
       </div>
-      <div className="flex flex-col gap-1.5">
-        <div className="h-2 overflow-hidden rounded-full bg-bg-hover" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${m.title} progress`}>
-          <div className="h-full rounded-full bg-success" style={{ width: `${pct}%` }} />
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
+          <Meter value={pct} label={`${m.title} progress`} tone={pct === 100 ? 'success' : 'accent'} className="flex-1" />
+          {canWrite && (
+            <Menu
+              placement="bottom-end"
+              label={`${m.title} actions`}
+              trigger={(t) => (
+                <IconButton {...t} label={`Actions for ${m.title}`} size="sm" loading={setState.isPending || del.isPending}>
+                  <MoreHorizontal size={14} />
+                </IconButton>
+              )}
+            >
+              <MenuItem icon={<Pencil size={13} />} onSelect={onEdit}>
+                Edit
+              </MenuItem>
+              <MenuItem icon={m.state === 'open' ? <CheckCircle2 size={13} /> : <RefreshCw size={13} />} onSelect={() => setState.mutate(m.state === 'open' ? 'closed' : 'open')}>
+                {m.state === 'open' ? 'Close milestone' : 'Reopen milestone'}
+              </MenuItem>
+              <MenuSeparator />
+              <MenuItem
+                icon={<Trash2 size={13} />}
+                tone="danger"
+                onSelect={async () => {
+                  const ok = await confirm({
+                    title: `Delete the milestone “${m.title}”?`,
+                    description: 'Its issues and pull requests stay, without a milestone.',
+                    confirmLabel: 'Delete milestone',
+                  })
+                  if (ok) del.mutate()
+                }}
+              >
+                Delete
+              </MenuItem>
+            </Menu>
+          )}
         </div>
-        <div className="flex gap-3 text-[12px] text-fg-muted">
-          <span className="font-medium text-fg">{pct}%</span>
+        <div className="flex gap-3 text-sm text-fg-muted tabular-nums">
+          <span className="font-semibold text-fg">{pct}% complete</span>
           <span>{m.open_issues} open</span>
           <span>{m.closed_issues} closed</span>
         </div>
-        {canWrite && (
-          <div className="flex gap-1">
-            <Button variant="ghost" onClick={onEdit}>
-              Edit
-            </Button>
-            <Button variant="ghost" loading={setState.isPending} onClick={() => setState.mutate(m.state === 'open' ? 'closed' : 'open')}>
-              {m.state === 'open' ? 'Close' : 'Reopen'}
-            </Button>
-            <Button
-              variant="ghost"
-              className="hover:text-danger"
-              onClick={() => window.confirm(`Delete the milestone “${m.title}”? Its issues and pull requests stay, without a milestone.`) && del.mutate()}
-            >
-              Delete
-            </Button>
-          </div>
-        )}
         {(setState.isError || del.isError) && <Alert>{errorMessage(setState.error ?? del.error)}</Alert>}
       </div>
     </li>
@@ -148,16 +185,24 @@ export function MilestonesPage() {
   const navigate = useNavigate()
   const state = search.state ?? 'open'
   const ms = useQuery(milestonesQuery(repo, state))
-  const canWrite = r.permission === 'write' || r.permission === 'admin'
-  const [editing, setEditing] = useState<number | 'new' | null>(null)
+  const canWrite = canWritePerm(r.permission)
+  const [editing, setEditing] = useState<Milestone | 'new' | null>(null)
   return (
-    <div className="flex flex-col">
-      <div className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2">
-        <Link to="/$repo/issues" params={{ repo }} className="inline-flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg">
-          <ArrowLeft size={12} /> Issues
-        </Link>
-        <h2 className="font-semibold">Milestones</h2>
-        <Segmented
+    <div className="mx-auto flex max-w-5xl flex-col px-6 py-5">
+      <SubHeader
+        back={{ to: '/$repo/issues', params: { repo }, label: 'Issues' }}
+        title="Milestones"
+        description="Group issues and pull requests into a release or sprint and track progress."
+        actions={
+          canWrite && (
+            <Button variant="primary" icon={<Plus size={14} />} onClick={() => setEditing('new')}>
+              New milestone
+            </Button>
+          )
+        }
+      />
+      <div className="mb-3">
+        <SegmentedControl
           label="State"
           value={state}
           options={[
@@ -166,35 +211,25 @@ export function MilestonesPage() {
           ]}
           onChange={(s) => void navigate({ to: '/$repo/milestones', params: { repo }, search: s === 'closed' ? { state: 'closed' } : {} })}
         />
-        <div className="flex-1" />
-        {canWrite && editing !== 'new' && (
-          <Button variant="primary" onClick={() => setEditing('new')}>
-            <Plus size={14} /> New milestone
-          </Button>
-        )}
       </div>
-      {editing === 'new' && <MilestoneForm repo={repo} onDone={() => setEditing(null)} />}
       {ms.isPending ? (
-        <Spinner />
+        <List>
+          <SkeletonRows rows={3} />
+        </List>
       ) : ms.isError ? (
-        <div className="p-4">
-          <Alert>{errorMessage(ms.error)}</Alert>
-        </div>
+        <ErrorState error={ms.error} className="p-0" />
       ) : ms.data.length === 0 ? (
-        <EmptyState title={`No ${state} milestones`}>{state === 'open' && canWrite && 'Group issues and pull requests into a release or sprint.'}</EmptyState>
+        <EmptyState size="inline" icon={<MilestoneIcon size={18} />} title={`No ${state} milestones`} action={state === 'open' && canWrite && <Button onClick={() => setEditing('new')}>Create a milestone</Button>}>
+          {state === 'open' && 'Group issues and pull requests into a release or sprint.'}
+        </EmptyState>
       ) : (
-        <ul>
-          {ms.data.map((m) =>
-            editing === m.id ? (
-              <li key={m.id}>
-                <MilestoneForm repo={repo} milestone={m} onDone={() => setEditing(null)} />
-              </li>
-            ) : (
-              <MilestoneRow key={m.id} repo={repo} m={m} canWrite={canWrite} onEdit={() => setEditing(m.id)} />
-            ),
-          )}
-        </ul>
+        <List>
+          {ms.data.map((m) => (
+            <MilestoneRow key={m.id} repo={repo} m={m} canWrite={canWrite} onEdit={() => setEditing(m)} />
+          ))}
+        </List>
       )}
+      {editing && <MilestoneDialog key={editing === 'new' ? 'new' : editing.id} repo={repo} milestone={editing === 'new' ? undefined : editing} onDone={() => setEditing(null)} />}
     </div>
   )
 }

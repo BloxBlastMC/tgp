@@ -32,6 +32,12 @@ make generate   # regenerate code from api/openapi.yaml after editing it
 make e2e        # browser tests (set CHROMIUM_PATH to use a system Chromium)
 ```
 
+To review the web UI, `cd web && TGP_SHOTS=/tmp/shots pnpm e2e tour` seeds a
+server with sample data and screenshots every page in the dark and light
+themes (run `make web build` first). In the UI, press <kbd>?</kbd> for
+keyboard shortcuts and <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>K</kbd> for the
+command palette.
+
 ## Running
 
 ```sh

@@ -50,6 +50,7 @@ export function LoginPage() {
 
   return (
     <AuthCard
+      aside={step === 'password' ? 'New here? Use the temporary password your admin gave you.' : undefined}
       title={step === 'password' ? 'Sign in' : 'Two-factor authentication'}
       subtitle={
         step === 'totp'
@@ -69,11 +70,11 @@ export function LoginPage() {
         {step === 'password' ? (
           <>
             <Field label="Username or email">
-              {(id) => <Input id={id} value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" autoFocus required />}
+              {(id) => <Input id={id} size="lg" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" autoFocus required />}
             </Field>
             <Field label="Password">
               {(id) => (
-                <Input id={id} type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+                <Input id={id} type="password" size="lg" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
               )}
             </Field>
           </>
@@ -87,7 +88,8 @@ export function LoginPage() {
                 autoComplete="one-time-code"
                 inputMode={step === 'totp' ? 'numeric' : 'text'}
                 placeholder={step === 'totp' ? '123456' : 'xxxx-xxxx-xxxx'}
-                className="font-mono tracking-wider"
+                size="lg"
+                className="text-center font-mono text-lg tracking-[0.3em]"
                 autoFocus
                 required
               />
@@ -95,14 +97,14 @@ export function LoginPage() {
           </Field>
         )}
         {showError && <Alert>{errorMessage(login.error)}</Alert>}
-        <Button type="submit" variant="primary" loading={login.isPending} className="h-8">
+        <Button type="submit" variant="primary" size="lg" loading={login.isPending} className="mt-1 w-full">
           {step === 'password' ? 'Sign in' : 'Verify'}
         </Button>
         {step !== 'password' && (
-          <div className="flex justify-between text-[12px]">
+          <div className="flex justify-between text-sm">
             <button
               type="button"
-              className="text-fg-muted hover:text-fg"
+              className="font-medium text-accent hover:underline"
               onClick={() => {
                 setStep(step === 'totp' ? 'recovery' : 'totp')
                 setCode('')
@@ -125,7 +127,6 @@ export function LoginPage() {
           </div>
         )}
       </form>
-      {step === 'password' && <p className="mt-4 text-[12px] text-fg-faint">New here? Use the temporary password your admin gave you.</p>}
     </AuthCard>
   )
 }

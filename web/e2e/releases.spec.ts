@@ -27,7 +27,7 @@ async function loginAs(browser: Browser, username: string, password: string): Pr
   await page.getByLabel('Username or email').fill(username)
   await page.getByLabel('Password').fill(password)
   await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page.getByRole('heading', { name: 'Repositories' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
   return page
 }
 
@@ -67,7 +67,7 @@ test('maintainer publishes a release with a file; a tester can download but not 
   const mia = await loginAs(browser, 'mia', 'mias-password-1')
   await mia.goto(server.url + '/game/releases')
   await expect(mia.getByText('No releases yet')).toBeVisible()
-  await mia.getByRole('button', { name: 'New release' }).click()
+  await mia.getByRole('link', { name: 'New release' }).click()
 
   const form = mia.getByRole('form', { name: 'New release' })
   await form.getByLabel('Tag').fill('v1.0.0')
@@ -102,7 +102,7 @@ test('maintainer publishes a release with a file; a tester can download but not 
   await tom.goto(server.url + '/game/releases')
   const tcard = tom.getByRole('article', { name: 'Release First playable' })
   await expect(tcard).toBeVisible()
-  await expect(tom.getByRole('button', { name: 'New release' })).toHaveCount(0)
+  await expect(tom.getByRole('link', { name: 'New release' })).toHaveCount(0)
   await expect(tcard.getByRole('button', { name: 'Edit release' })).toHaveCount(0)
   await expect(tcard.getByRole('button', { name: 'Delete release' })).toHaveCount(0)
   const [download] = await Promise.all([tom.waitForEvent('download'), tcard.getByRole('link', { name: 'game-linux-amd64.tar.gz' }).click()])

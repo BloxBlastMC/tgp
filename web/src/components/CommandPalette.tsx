@@ -1,29 +1,66 @@
-import { Search } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Command } from '../lib/commands'
-import { cx } from './ui'
+import {
+  Archive,
+  CircleDot,
+  CornerDownLeft,
+  FolderGit2,
+  Home,
+  Keyboard,
+  LogOut,
+  Milestone,
+  Package,
+  Palette,
+  Play,
+  Plus,
+  Search,
+  Settings,
+  Shield,
+  Tag,
+  Webhook,
+  GitPullRequest,
+} from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
+import { groupOrder, type Command, type CommandIcon } from '../lib/commands'
 import { filterCommands } from '../lib/palette'
+import { cx, isTypingTarget, Kbd } from './ui'
 
-function isTyping(e: KeyboardEvent) {
-  const t = e.target as HTMLElement | null
-  return !!t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))
+const icons: Record<CommandIcon, ComponentType<{ size?: number; className?: string }>> = {
+  home: Home,
+  repo: FolderGit2,
+  pull: GitPullRequest,
+  issue: CircleDot,
+  ci: Play,
+  settings: Settings,
+  logout: LogOut,
+  theme: Palette,
+  admin: Shield,
+  release: Package,
+  label: Tag,
+  milestone: Milestone,
+  webhook: Webhook,
+  cache: Archive,
+  plus: Plus,
+  keyboard: Keyboard,
 }
 
 /**
- * ⌘K / Ctrl+K command palette plus two-key "g x" navigation shortcuts.
+ * ⌘K / Ctrl+K command palette plus two-key "g x" navigation shortcuts and
+ * "?" for the shortcuts dialog.
  */
 export function CommandPalette({
   commands,
   open,
   setOpen,
+  onHelp,
 }: {
   commands: Command[]
   open: boolean
   setOpen: (v: boolean | ((o: boolean) => boolean)) => void
+  onHelp: () => void
 }) {
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const dialog = useRef<HTMLDialogElement>(null)
+  const list = useRef<HTMLUListElement>(null)
 
   useEffect(() => {
     let pendingG = 0
@@ -33,7 +70,12 @@ export function CommandPalette({
         setOpen((o) => !o)
         return
       }
-      if (isTyping(e) || e.metaKey || e.ctrlKey || e.altKey || dialog.current?.open) return
+      if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey || document.querySelector('dialog[open]')) return
+      if (e.key === '?') {
+        e.preventDefault()
+        onHelp()
+        return
+      }
       if (e.key === 'g') {
         pendingG = window.setTimeout(() => (pendingG = 0), 800)
         return
@@ -50,7 +92,7 @@ export function CommandPalette({
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [commands, setOpen])
+  }, [commands, setOpen, onHelp])
 
   useEffect(() => {
     const d = dialog.current
@@ -62,7 +104,16 @@ export function CommandPalette({
     } else if (!open && d.open) d.close()
   }, [open])
 
-  const filtered = useMemo(() => filterCommands(commands, query), [commands, query])
+  // No query: grouped in a fixed order. With a query: best match first.
+  const filtered = useMemo(() => {
+    if (query.trim()) return filterCommands(commands, query)
+    return groupOrder.flatMap((g) => commands.filter((c) => c.group === g).slice(0, g === 'Repositories' ? 8 : undefined))
+  }, [commands, query])
+  const grouped = !query.trim()
+
+  useEffect(() => {
+    list.current?.querySelector(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' })
+  }, [active])
 
   const run = (c: Command | undefined) => {
     if (!c) return
@@ -70,16 +121,17 @@ export function CommandPalette({
     c.run()
   }
 
+  let lastGroup = ''
   return (
     <dialog
       ref={dialog}
       onClose={() => setOpen(false)}
       onClick={(e) => e.target === dialog.current && setOpen(false)}
-      className="mx-auto mt-[15vh] w-[calc(100%-32px)] max-w-lg rounded-lg border border-border-strong bg-bg-elevated p-0 text-fg shadow-2xl backdrop:bg-black/50"
+      className="mx-auto mt-[12vh] w-[calc(100%-32px)] max-w-xl overflow-hidden rounded-xl border border-border-strong bg-surface-2 p-0 text-fg shadow-dialog open:animate-pop-in"
       aria-label="Command palette"
     >
-      <div className="flex items-center gap-2 border-b border-border px-3">
-        <Search size={14} className="text-fg-faint" />
+      <div className="flex items-center gap-2.5 border-b border-border px-4">
+        <Search size={15} className="text-fg-faint" />
         <input
           autoFocus
           value={query}
@@ -99,28 +151,85 @@ export function CommandPalette({
               run(filtered[active])
             }
           }}
-          placeholder="Type a command or search…"
-          className="h-10 flex-1 bg-transparent text-[14px] outline-none placeholder:text-fg-faint focus-visible:outline-none"
+          placeholder="Search pages, repositories and actions…"
+          className="h-12 flex-1 bg-transparent text-md outline-none placeholder:text-fg-faint focus-visible:outline-none"
           aria-label="Command"
         />
+        <Kbd>Esc</Kbd>
       </div>
-      <ul className="max-h-80 overflow-auto p-1" role="listbox">
-        {filtered.length === 0 && <li className="px-3 py-6 text-center text-fg-faint">No commands</li>}
-        {filtered.map((c, i) => (
-          <li
-            key={c.id}
-            role="option"
-            aria-selected={i === active}
-            onMouseMove={() => setActive(i)}
-            onClick={() => run(c)}
-            className={cx('flex h-8 cursor-pointer items-center gap-2 rounded px-3', i === active && 'bg-bg-hover')}
-          >
-            <span className="w-24 shrink-0 text-[11px] text-fg-faint">{c.group}</span>
-            <span className="flex-1">{c.label}</span>
-            {c.shortcut && <kbd className="font-mono text-[11px] text-fg-faint">{c.shortcut}</kbd>}
-          </li>
-        ))}
+      <ul ref={list} className="max-h-[min(420px,60vh)] overflow-auto p-1.5" role="listbox" aria-label="Commands">
+        {filtered.length === 0 && <li className="px-3 py-10 text-center text-fg-faint">No results for “{query}”</li>}
+        {filtered.map((c, i) => {
+          const Icon = icons[c.icon ?? 'repo']
+          const header = grouped && c.group !== lastGroup ? c.group : null
+          lastGroup = c.group
+          return (
+            <li key={c.id} role="presentation">
+              {header && <div className="px-2.5 pt-2.5 pb-1 text-xs font-medium text-fg-faint">{header}</div>}
+              <div
+                role="option"
+                data-index={i}
+                aria-selected={i === active}
+                onMouseMove={() => setActive(i)}
+                onClick={() => run(c)}
+                className={cx('flex h-9 cursor-pointer items-center gap-2.5 rounded-lg px-2.5', i === active && 'bg-bg-hover')}
+              >
+                <Icon size={15} className={i === active ? 'text-fg' : 'text-fg-faint'} />
+                <span className="flex-1 truncate">{c.label}</span>
+                {!grouped && <span className="text-xs text-fg-faint">{c.group}</span>}
+                {c.shortcut && (
+                  <span className="flex gap-0.5">
+                    {c.shortcut.split(' ').map((k) => (
+                      <Kbd key={k}>{k.toUpperCase()}</Kbd>
+                    ))}
+                  </span>
+                )}
+                {i === active && !c.shortcut && <CornerDownLeft size={13} className="text-fg-faint" />}
+              </div>
+            </li>
+          )
+        })}
       </ul>
+      <div className="flex items-center gap-4 border-t border-border bg-bg-subtle px-4 py-2 text-xs text-fg-faint">
+        <span className="flex items-center gap-1">
+          <Kbd>↑</Kbd>
+          <Kbd>↓</Kbd> to navigate
+        </span>
+        <span className="flex items-center gap-1">
+          <Kbd>↵</Kbd> to open
+        </span>
+        <span className="flex-1" />
+        <span className="flex items-center gap-1">
+          <Kbd>?</Kbd> shortcuts
+        </span>
+      </div>
     </dialog>
   )
 }
+
+export const shortcutGroups: { title: string; items: { keys: string[]; label: string }[] }[] = [
+  {
+    title: 'General',
+    items: [
+      { keys: ['Ctrl', 'K'], label: 'Open the command palette' },
+      { keys: ['?'], label: 'Show keyboard shortcuts' },
+      { keys: ['/'], label: 'Focus the search field' },
+      { keys: ['Esc'], label: 'Close a dialog or menu' },
+    ],
+  },
+  {
+    title: 'Go to',
+    items: [
+      { keys: ['G', 'H'], label: 'Home' },
+      { keys: ['G', 'R'], label: 'Repositories' },
+      { keys: ['G', 'P'], label: 'Pull requests' },
+      { keys: ['G', 'I'], label: 'Issues' },
+      { keys: ['G', 'C'], label: 'CI runs' },
+      { keys: ['G', 'S'], label: 'Settings' },
+    ],
+  },
+  {
+    title: 'Writing',
+    items: [{ keys: ['Ctrl', 'Enter'], label: 'Submit a comment' }],
+  },
+]

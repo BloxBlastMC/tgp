@@ -1,86 +1,83 @@
 import { useQuery } from '@tanstack/react-query'
-import { Check, ChevronDown, GitBranch, Tag } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronDown, GitBranch, Tag } from 'lucide-react'
+import { useState } from 'react'
 import { branchesQuery, tagsQuery } from '../../api/queries'
-import { cx, Input } from '../ui'
+import { refDisplay } from '../../lib/repoUrls'
+import { Badge, FloatingPanel, SegmentedControl, SelectList, usePopover, type SelectItem } from '../ui'
 
-/** Dropdown to switch between branches and tags. */
-export function RefPicker({ repo, current, onSelect }: { repo: string; current: string; onSelect: (ref: string) => void }) {
-  const [open, setOpen] = useState(false)
+/** Dropdown to switch between branches and tags, with search and keyboard support. */
+export function RefPicker({
+  repo,
+  current,
+  onSelect,
+  label = 'Switch branch or tag',
+  prefix,
+}: {
+  repo: string
+  current: string
+  onSelect: (ref: string) => void
+  label?: string
+  /** Text before the ref on the trigger, e.g. "base:". */
+  prefix?: string
+}) {
+  const p = usePopover()
   const [tab, setTab] = useState<'branches' | 'tags'>('branches')
-  const [filter, setFilter] = useState('')
-  const branches = useQuery({ ...branchesQuery(repo), enabled: open })
-  const tags = useQuery({ ...tagsQuery(repo), enabled: open })
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const onDoc = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false)
-    document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [open])
-
-  const items = useMemo(() => {
-    const list = (tab === 'branches' ? branches.data : tags.data) ?? []
-    const f = filter.toLowerCase()
-    return list.filter((r) => r.name.toLowerCase().includes(f))
-  }, [tab, branches.data, tags.data, filter])
-
-  const short = /^[0-9a-f]{40}$/.test(current) ? current.slice(0, 7) : current
+  const branches = useQuery({ ...branchesQuery(repo), enabled: p.open })
+  const tags = useQuery({ ...tagsQuery(repo), enabled: p.open })
+  const list = (tab === 'branches' ? branches.data : tags.data) ?? []
+  const items: SelectItem[] = list.map((r) => ({
+    key: r.name,
+    label: r.name,
+    render: (
+      <span className="flex min-w-0 flex-1 items-center gap-2">
+        {tab === 'tags' ? <Tag size={12} className="shrink-0 text-fg-faint" /> : <GitBranch size={12} className="shrink-0 text-fg-faint" />}
+        <span className="min-w-0 flex-1 truncate font-mono text-sm">{r.name}</span>
+        {'is_default' in r && r.is_default && <Badge>default</Badge>}
+      </span>
+    ),
+  }))
+  const pending = tab === 'branches' ? branches.isPending : tags.isPending
   return (
-    <div className="relative" ref={ref}>
+    <>
       <button
         type="button"
-        onClick={() => setOpen(!open)}
-        className="flex h-7 max-w-56 items-center gap-1.5 rounded border border-border-strong bg-bg-elevated px-2 hover:bg-bg-hover"
-        aria-haspopup="listbox"
-        aria-expanded={open}
+        {...p.triggerProps('listbox')}
+        aria-label={`${label}: ${current}`}
+        className="flex h-7 max-w-64 shrink-0 items-center gap-1.5 rounded-md border border-border-strong bg-surface-2 px-2 shadow-card transition-colors hover:bg-bg-hover"
       >
         <GitBranch size={13} className="shrink-0 text-fg-muted" />
-        <span className="truncate font-mono text-[12px]">{short}</span>
-        <ChevronDown size={13} className="shrink-0 text-fg-muted" />
+        {prefix && <span className="text-sm text-fg-faint">{prefix}</span>}
+        {current ? <span className="truncate font-mono text-sm">{refDisplay(current)}</span> : <span className="truncate text-sm text-fg-faint">Choose a branch…</span>}
+        <ChevronDown size={13} className="shrink-0 text-fg-faint" />
       </button>
-      {open && (
-        <div className="absolute top-8 left-0 z-30 w-72 rounded-md border border-border-strong bg-bg-elevated shadow-xl">
-          <div className="border-b border-border p-2">
-            <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Find a branch or tag" autoFocus className="h-7" />
-          </div>
-          <div className="flex border-b border-border text-[12px]">
-            {(['branches', 'tags'] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTab(t)}
-                className={cx('flex-1 py-1.5 capitalize', tab === t ? 'border-b-2 border-accent text-fg' : 'text-fg-muted hover:text-fg')}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-          <ul className="max-h-72 overflow-auto p-1" role="listbox">
-            {items.length === 0 && <li className="px-3 py-4 text-center text-fg-faint">Nothing found</li>}
-            {items.map((r) => (
-              <li key={r.name}>
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={r.name === current}
-                  onClick={() => {
-                    setOpen(false)
-                    onSelect(r.name)
-                  }}
-                  className="flex h-7 w-full items-center gap-2 rounded px-2 text-left hover:bg-bg-hover"
-                >
-                  <span className="w-3.5">{r.name === current && <Check size={13} />}</span>
-                  {tab === 'tags' && <Tag size={12} className="text-fg-faint" />}
-                  <span className="flex-1 truncate font-mono text-[12px]">{r.name}</span>
-                  {r.is_default && <span className="text-[10px] text-fg-faint">default</span>}
-                </button>
-              </li>
-            ))}
-          </ul>
+      <FloatingPanel open={p.open} onClose={p.close} anchor={p.anchor} id={p.id} className="w-80 max-w-[calc(100vw-16px)] overflow-hidden">
+        <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+          <span className="text-sm font-semibold">{label}</span>
+          <SegmentedControl
+            size="sm"
+            label="Ref type"
+            value={tab}
+            onChange={setTab}
+            options={[
+              { value: 'branches', label: 'Branches' },
+              { value: 'tags', label: 'Tags' },
+            ]}
+          />
         </div>
-      )}
-    </div>
+        <SelectList
+          key={tab}
+          items={items}
+          selected={[current]}
+          label={tab === 'branches' ? 'Branches' : 'Tags'}
+          placeholder={tab === 'branches' ? 'Find a branch…' : 'Find a tag…'}
+          emptyText={pending ? 'Loading…' : tab === 'branches' ? 'No branches found' : 'No tags yet'}
+          onPick={(ref) => {
+            p.setOpen(false)
+            p.anchor.current?.focus()
+            onSelect(ref)
+          }}
+        />
+      </FloatingPanel>
+    </>
   )
 }

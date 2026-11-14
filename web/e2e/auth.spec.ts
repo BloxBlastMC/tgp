@@ -10,7 +10,8 @@ test.afterAll(async () => {
 })
 
 async function signOut(page: Page) {
-  await page.getByRole('button', { name: 'Sign out' }).click()
+  await page.getByRole('button', { name: 'Account menu' }).click()
+  await page.getByRole('menuitem', { name: 'Sign out' }).click()
   await expect(page).toHaveURL(/\/login/)
 }
 
@@ -79,7 +80,7 @@ test('setup wizard → temp password → forced change → 2FA → admin panel',
   await page.getByRole('button', { name: "I've saved them" }).click()
 
   // Alice is a tester: no admin link, and /admin bounces.
-  await expect(page.getByRole('heading', { name: 'Repositories' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: /Admin/ })).toHaveCount(0)
   await page.goto(server.url + '/admin/users')
   await expect(page).toHaveURL(server.url + '/')
@@ -91,7 +92,7 @@ test('setup wizard → temp password → forced change → 2FA → admin panel',
   await page.getByRole('button', { name: 'Sign in' }).click()
   await page.getByLabel('Authentication code').fill(totp(secret, Date.now() + 30_000))
   await page.getByRole('button', { name: 'Verify' }).click()
-  await expect(page.getByRole('heading', { name: 'Repositories' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
   await signOut(page)
 
   // Admin creates another user from the admin panel.

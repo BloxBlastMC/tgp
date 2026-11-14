@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Shield, X } from 'lucide-react'
+import { Pencil, Plus, Shield, ShieldCheck, X } from 'lucide-react'
 import { useState } from 'react'
 import { api, errorMessage, unwrap, type BranchProtection } from '../../api/client'
 import { protectionsQuery } from '../../api/queries'
-import { Alert, Badge, Button, Checkbox, Dialog, Field, Input, Section, Spinner } from '../../components/ui'
+import { Alert, Button, Checkbox, Dialog, EmptyState, Eyebrow, Field, IconButton, Input, Section, SkeletonRows, useConfirm, useToast } from '../../components/ui'
 
 type RuleForm = Omit<BranchProtection, 'id' | 'created_at' | 'updated_at'>
 
@@ -43,37 +43,40 @@ export function ProtectionSection({ repo, isAdmin }: { repo: string; isAdmin: bo
   }
   return (
     <Section
+      flush
       title="Branch protection"
       description={isAdmin ? 'Rules for branches matching a name or glob such as release/*. The most specific rule applies.' : 'Rules for protected branches. Admins manage them.'}
       actions={
         isAdmin && (
-          <Button onClick={() => setEditing('new')}>
-            <Plus size={13} /> Add rule
+          <Button icon={<Plus size={13} />} onClick={() => setEditing('new')}>
+            Add rule
           </Button>
         )
       }
     >
       {rules.isPending ? (
-        <Spinner />
+        <SkeletonRows rows={2} />
       ) : rules.isError ? (
-        <Alert>{errorMessage(rules.error)}</Alert>
+        <div className="p-4">
+          <Alert>{errorMessage(rules.error)}</Alert>
+        </div>
       ) : rules.data.length === 0 ? (
-        <p className="text-fg-faint">No branches are protected.</p>
+        <EmptyState size="inline" icon={<Shield size={18} />} title="No branches are protected">
+          Protect your default branch to require reviews and passing checks before merging.
+        </EmptyState>
       ) : (
-        <ul className="-my-2 divide-y divide-border" aria-label="Protection rules">
+        <ul aria-label="Protection rules">
           {rules.data.map((r) => (
-            <li key={r.id} className="flex items-center gap-3 py-2">
-              <Shield size={14} className="shrink-0 text-fg-faint" />
-              <span className="font-mono font-medium">{r.pattern}</span>
-              <span className="flex min-w-0 flex-1 flex-wrap gap-1">
-                {summary(r).map((s) => (
-                  <Badge key={s}>{s}</Badge>
-                ))}
-              </span>
+            <li key={r.id} className="flex items-start gap-3 border-b border-border px-4 py-3 last:border-0">
+              <ShieldCheck size={16} className="mt-0.5 shrink-0 text-success" />
+              <div className="min-w-0 flex-1">
+                <span className="font-mono font-semibold">{r.pattern}</span>
+                <p className="mt-0.5 text-sm text-fg-muted first-letter:uppercase">{summary(r).join(' · ')}</p>
+              </div>
               {isAdmin && (
-                <Button variant="ghost" onClick={() => setEditing(r)} aria-label={`Edit rule ${r.pattern}`}>
-                  Edit
-                </Button>
+                <IconButton label={`Edit rule ${r.pattern}`} size="sm" onClick={() => setEditing(r)}>
+                  <Pencil size={13} />
+                </IconButton>
               )}
             </li>
           ))}
@@ -86,6 +89,8 @@ export function ProtectionSection({ repo, isAdmin }: { repo: string; isAdmin: bo
 
 function RuleDialog({ repo, rule, onClose, onSaved }: { repo: string; rule: BranchProtection | null; onClose: () => void; onSaved: () => void }) {
   const [f, setF] = useState<RuleForm>(rule ? { ...rule, required_checks: rule.required_checks ?? [] } : defaults)
+  const confirm = useConfirm()
+  const toast = useToast()
   const set = <K extends keyof RuleForm>(k: K, v: RuleForm[K]) => setF((x) => ({ ...x, [k]: v }))
   const save = useMutation({
     mutationFn: () =>
@@ -93,6 +98,7 @@ function RuleDialog({ repo, rule, onClose, onSaved }: { repo: string; rule: Bran
         ? unwrap(api.PATCH('/repos/{repo}/protections/{id}', { params: { path: { repo, id: rule.id } }, body: f }))
         : unwrap(api.POST('/repos/{repo}/protections', { params: { path: { repo } }, body: f })),
     onSuccess: () => {
+      toast.success(rule ? `Updated the rule for ${f.pattern}` : `Protected ${f.pattern}`)
       onSaved()
       onClose()
     },
@@ -113,7 +119,7 @@ function RuleDialog({ repo, rule, onClose, onSaved }: { repo: string; rule: Bran
       footer={
         <>
           {rule && (
-            <Button variant="danger" className="mr-auto" loading={del.isPending} onClick={() => window.confirm(`Remove the rule for ${rule.pattern}?`) && del.mutate()}>
+            <Button variant="danger" className="mr-auto" loading={del.isPending} onClick={async () => (await confirm({ title: `Remove the rule for ${rule.pattern}?`, description: 'Matching branches lose these protections immediately.', confirmLabel: 'Delete rule' })) && del.mutate()}>
               Delete rule
             </Button>
           )}
@@ -129,17 +135,20 @@ function RuleDialog({ repo, rule, onClose, onSaved }: { repo: string; rule: Bran
       <Field label="Branch name or pattern" hint="e.g. main, release/*">
         {(id) => <Input id={id} value={f.pattern} onChange={(e) => set('pattern', e.target.value)} autoFocus className="font-mono" />}
       </Field>
+      <Eyebrow className="mt-2">Merging</Eyebrow>
       <Checkbox checked={f.require_pull_request} onChange={(v) => set('require_pull_request', v)} label="Require a pull request" hint="Block direct pushes; changes land by merging pull requests." />
-      <Field label="Required approvals" hint="Approvals needed from anyone except the author (testers count). 0 = none.">
+      <Field label="Required approvals" hint="Approvals needed from anyone except the author (testers count). 0 = none, maximum 10.">
         {(id) => (
           <Input id={id} type="number" min={0} max={10} value={f.required_approvals} onChange={(e) => set('required_approvals', Math.max(0, Math.min(10, Number(e.target.value) || 0)))} className="w-24" />
         )}
       </Field>
       <Checkbox checked={f.dismiss_stale_approvals} onChange={(v) => set('dismiss_stale_approvals', v)} label="Dismiss stale approvals" hint="Approvals of an older head commit stop counting when new commits are pushed." />
       <Checkbox checked={f.require_up_to_date} onChange={(v) => set('require_up_to_date', v)} label="Require branches to be up to date" hint="The head must contain the latest base commit before merging." />
+      <RequiredChecksEditor value={f.required_checks} onChange={(v) => set('required_checks', v)} />
+      <Eyebrow className="mt-2 border-t border-border pt-4">Branch</Eyebrow>
       <Checkbox checked={f.block_force_push} onChange={(v) => set('block_force_push', v)} label="Block force pushes" hint="Rewriting the branch's history is rejected." />
       <Checkbox checked={f.allow_deletion} onChange={(v) => set('allow_deletion', v)} label="Allow deletion" hint="Let people with write access delete matching branches." />
-      <RequiredChecksEditor value={f.required_checks} onChange={(v) => set('required_checks', v)} />
+      <Eyebrow className="mt-2 border-t border-border pt-4">Bypass</Eyebrow>
       <Checkbox checked={f.admins_bypass} onChange={(v) => set('admins_bypass', v)} label="Admins may bypass" hint="Admins can push directly and merge without meeting the requirements (audited)." />
       {(save.isError || del.isError) && <Alert>{errorMessage(save.error ?? del.error)}</Alert>}
     </Dialog>
@@ -162,7 +171,7 @@ export function RequiredChecksEditor({ value, onChange }: { value: string[]; onC
           {value.length > 0 && (
             <ul className="flex flex-wrap gap-1" aria-label="Required checks">
               {value.map((c) => (
-                <li key={c} className="flex h-6 items-center gap-1 rounded border border-border-strong bg-bg px-2 font-mono text-[12px]">
+                <li key={c} className="flex h-6 items-center gap-1 rounded-md border border-border-strong bg-bg-subtle px-2 font-mono text-sm">
                   {c}
                   <button type="button" className="text-fg-faint hover:text-danger" aria-label={`Remove ${c}`} onClick={() => onChange(value.filter((v) => v !== c))}>
                     <X size={12} />

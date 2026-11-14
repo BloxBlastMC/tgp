@@ -36,7 +36,7 @@ async function loginAs(browser: Browser, username: string, password: string): Pr
   await page.getByLabel('Username or email').fill(username)
   await page.getByLabel('Password').fill(password)
   await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page.getByRole('heading', { name: 'Repositories' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
   return page
 }
 
@@ -77,7 +77,7 @@ test('file, triage, filter, close and link issues', async ({ browser }) => {
   const tom = await loginAs(browser, 'tom', 'toms-password-1')
   await tom.goto(server.url + '/game/issues')
   await expect(tom.getByText('No open issues')).toBeVisible()
-  await tom.getByRole('button', { name: 'New issue' }).click()
+  await tom.getByRole('link', { name: 'New issue' }).click()
   await tom.getByLabel('Title').fill('Crash when joining the lobby')
   await tom.getByLabel('Description').fill('Happens every time on 1.20.')
   await tom.getByRole('button', { name: 'Edit labels' }).click()
