@@ -639,6 +639,7 @@ func (a *api) CreateIssue(ctx context.Context, req apigen.CreateIssueRequestObje
 	if err != nil {
 		return nil, err
 	}
+	a.s.hooksOpened(ctx, repo, user, issue.Number, out, false)
 	return apigen.CreateIssue201JSONResponse(out), nil
 }
 
@@ -667,6 +668,9 @@ func (a *api) UpdateIssue(ctx context.Context, req apigen.UpdateIssueRequestObje
 	}
 	b := req.Body
 	user := mustPrincipal(ctx).User
+	ctx = hookScope(ctx)
+	mark := a.s.eventMark(ctx)
+	oldBody := ic.issue.Body
 	if (b.Title != nil || b.Body != nil) && !canEditIssue(ic, user) {
 		return nil, apierr.Forbidden("only the author or someone with write access can edit the title and description")
 	}
@@ -728,6 +732,11 @@ func (a *api) UpdateIssue(ctx context.Context, req apigen.UpdateIssueRequestObje
 	if err != nil {
 		return nil, err
 	}
+	var edited []int64
+	if ic.issue.Body != oldBody {
+		edited = append(edited, ic.issue.ID)
+	}
+	a.s.hooksFromEvents(ctx, ic.repo, user, mark, edited...)
 	return apigen.UpdateIssue200JSONResponse(out), nil
 }
 
@@ -800,6 +809,7 @@ func (a *api) CreateIssueComment(ctx context.Context, req apigen.CreateIssueComm
 	if err != nil {
 		return nil, err
 	}
+	a.s.hooksComment(ctx, ic.repo, mustPrincipal(ctx).User, ic.issue, "created", out)
 	return apigen.CreateIssueComment201JSONResponse(out), nil
 }
 

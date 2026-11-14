@@ -46,6 +46,14 @@ import { AdminCIPage } from '../pages/admin/AdminCIPage'
 import { CachesPage, validateCaches } from '../pages/ci/CachesPage'
 import { ReleaseDetailPage, ReleasesPage, validateReleases } from '../pages/releases/ReleasesPage'
 import { EditReleasePage, NewReleasePage } from '../pages/releases/ReleaseFormPage'
+import {
+  AdminNewWebhookPage,
+  AdminWebhookPage,
+  AdminWebhooksPage,
+  RepoNewWebhookPage,
+  RepoWebhookPage,
+  RepoWebhooksPage,
+} from '../pages/webhooks/WebhookPages'
 
 type RouterContext = { queryClient: QueryClient }
 
@@ -168,6 +176,9 @@ const repoRoutes = [
   createRoute({ getParentRoute: () => repoRoute, path: '/releases/edit/$id', component: EditReleasePage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/releases/tag/$', component: ReleaseDetailPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/settings', component: RepoSettingsPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/settings/webhooks', component: RepoWebhooksPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/settings/webhooks/new', component: RepoNewWebhookPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/settings/webhooks/$id', component: RepoWebhookPage }),
 ]
 
 const routeTree = rootRoute.addChildren([
@@ -187,6 +198,9 @@ const routeTree = rootRoute.addChildren([
       createRoute({ getParentRoute: () => adminRoute, path: '/org', component: AdminOrgPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/runners', component: AdminRunnersPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/ci', component: AdminCIPage }),
+      createRoute({ getParentRoute: () => adminRoute, path: '/webhooks', component: AdminWebhooksPage }),
+      createRoute({ getParentRoute: () => adminRoute, path: '/webhooks/new', component: AdminNewWebhookPage }),
+      createRoute({ getParentRoute: () => adminRoute, path: '/webhooks/$id', component: AdminWebhookPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/audit', component: AdminAuditPage }),
     ]),
   ]),

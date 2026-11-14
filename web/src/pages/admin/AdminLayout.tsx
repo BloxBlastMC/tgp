@@ -6,6 +6,7 @@ const tabs = [
   { to: '/admin/org', label: 'Organization' },
   { to: '/admin/runners', label: 'Runners' },
   { to: '/admin/ci', label: 'CI settings' },
+  { to: '/admin/webhooks', label: 'Webhooks' },
   { to: '/admin/audit', label: 'Audit log' },
 ] as const
 

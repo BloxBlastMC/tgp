@@ -61,6 +61,8 @@ var operationAccess = map[string]access{
 	"CreateRunnerToken":  accessAdmin,
 	"GetCISettings":      accessAdmin,
 	"UpdateCISettings":   accessAdmin,
+	"ListOrgWebhooks":    accessAdmin,
+	"CreateOrgWebhook":   accessAdmin,
 }
 
 // allowedBeforeSetup lists operations that work while setup is pending.

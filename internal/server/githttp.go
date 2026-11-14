@@ -310,6 +310,8 @@ func (s *Server) preReceive(ctx context.Context, repo *model.Repo, user *model.U
 
 // postReceive records the push. CI triggers and webhooks plug in here.
 func (s *Server) postReceive(ctx context.Context, repo *model.Repo, user *model.User, updates []githook.Update) (githook.Response, error) {
+	ctx = hookScope(actorCtx(ctx, user))
+	mark := s.eventMark(ctx)
 	now := time.Now().UTC()
 	repo.PushedAt = &now
 	cols := []string{"pushed_at"}
@@ -344,5 +346,7 @@ func (s *Server) postReceive(ctx context.Context, repo *model.Repo, user *model.
 		}
 	}
 	s.ciOnPush(context.WithoutCancel(ctx), repo, user, updates)
+	s.hooksOnPush(context.WithoutCancel(ctx), repo, user, updates)
+	s.hooksFromEvents(context.WithoutCancel(ctx), repo, user, mark)
 	return githook.Response{Allowed: true, Messages: s.pushHints(ctx, repo, updates)}, nil
 }

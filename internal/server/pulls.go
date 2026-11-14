@@ -855,6 +855,8 @@ func (s *Server) mergePull(ctx context.Context, pc *pullCtx, user *model.User, o
 // afterServerPush runs the post-push bookkeeping for ref updates the server
 // made itself (merges, branch updates, deletions), which skip git hooks.
 func (s *Server) afterServerPush(ctx context.Context, repo *model.Repo, user *model.User, updates []githook.Update) error {
+	ctx = hookScope(ctx)
+	mark := s.eventMark(ctx)
 	now := time.Now().UTC()
 	repo.PushedAt = &now
 	if _, err := s.db.NewUpdate().Model(repo).Column("pushed_at").WherePK().Exec(ctx); err != nil {
@@ -864,6 +866,8 @@ func (s *Server) afterServerPush(ctx context.Context, repo *model.Repo, user *mo
 		return err
 	}
 	s.ciOnPush(context.WithoutCancel(ctx), repo, user, updates)
+	s.hooksOnPush(context.WithoutCancel(ctx), repo, user, updates)
+	s.hooksFromEvents(context.WithoutCancel(ctx), repo, user, mark)
 	return nil
 }
 
@@ -916,7 +920,12 @@ func (s *Server) deleteBranch(ctx context.Context, repo *model.Repo, perm authz.
 		}
 		return err
 	}
-	return s.syncPulls(ctx, repo, user, []githook.Update{{Ref: branchRef(branch), Old: tip, New: git.ZeroID}})
+	up := []githook.Update{{Ref: branchRef(branch), Old: tip, New: git.ZeroID}}
+	if err := s.syncPulls(ctx, repo, user, up); err != nil {
+		return err
+	}
+	s.hooksOnPush(context.WithoutCancel(ctx), repo, user, up)
+	return nil
 }
 
 func short(sha string) string {

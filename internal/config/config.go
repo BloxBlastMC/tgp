@@ -26,7 +26,20 @@ type Config struct {
 	Repos    ReposConfig    `toml:"repos"`
 	Storage  StorageConfig  `toml:"storage"`
 	Security SecurityConfig `toml:"security"`
+	Webhooks WebhooksConfig `toml:"webhooks"`
 	Log      LogConfig      `toml:"log"`
+}
+
+// WebhooksConfig controls outgoing webhook deliveries.
+type WebhooksConfig struct {
+	// BlockPrivateNetworks refuses deliveries to loopback and private
+	// addresses (RFC 1918, ULA). Link-local addresses (cloud metadata
+	// services) are always refused.
+	BlockPrivateNetworks bool `toml:"block_private_networks"`
+	// Timeout per delivery attempt. Default 10s.
+	Timeout Duration `toml:"timeout"`
+	// Workers is how many deliveries run at once per server. Default 4.
+	Workers int `toml:"workers"`
 }
 
 type ServerConfig struct {
@@ -125,6 +138,7 @@ func Default() *Config {
 		Database: DatabaseConfig{Driver: "sqlite"},
 		Repos:    ReposConfig{GitBinary: "git", MaxPushBytes: 2 << 30},
 		Storage:  StorageConfig{Type: "local"},
+		Webhooks: WebhooksConfig{Timeout: Duration{10 * time.Second}, Workers: 4},
 		Log:      LogConfig{Level: "info", Format: "text"},
 	}
 }
@@ -266,6 +280,7 @@ var envBindings = []envBinding{
 	{"TGP_S3_ACCESS_KEY", str(func(c *Config) *string { return &c.Storage.S3.AccessKey })},
 	{"TGP_S3_SECRET_KEY", str(func(c *Config) *string { return &c.Storage.S3.SecretKey })},
 	{"TGP_MASTER_KEY_FILE", str(func(c *Config) *string { return &c.Security.MasterKeyFile })},
+	{"TGP_WEBHOOKS_BLOCK_PRIVATE", boolean(func(c *Config) *bool { return &c.Webhooks.BlockPrivateNetworks })},
 	{"TGP_LOG_LEVEL", str(func(c *Config) *string { return &c.Log.Level })},
 	{"TGP_LOG_FORMAT", str(func(c *Config) *string { return &c.Log.Format })},
 }

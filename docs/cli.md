@@ -107,6 +107,10 @@ written anywhere.
 | `tgp release upload TAG FILE... [--clobber]` / `delete-asset TAG NAME` | Release files |
 | `tgp release download [TAG] [-p glob] [-D dir] [--archive zip\|tar.gz] [--clobber]` | Download files or the source code |
 | `tgp release delete TAG [--cleanup-tag] [--yes]` | Delete a release (and the tag) |
+| `tgp webhook list\|create URL [-e event...] [--secret-stdin] [--org]` | Webhooks of a repository, or organisation-wide (admins) |
+| `tgp webhook view\|edit\|delete\|ping ID` | Show, change, delete or test one (`ping` exits 1 if it failed) |
+| `tgp webhook deliveries ID [-s failed]` / `delivery ID DELIVERY` / `redeliver ID DELIVERY` | The delivery log: results, request and response, re-sending |
+| `tgp webhook events` | Events and their actions |
 | `tgp admin user list\|view\|create\|edit\|reset-password\|reset-2fa\|access` | Users (admins) |
 | `tgp admin runner list\|view\|token\|edit\|delete` | CI runners (admins) |
 | `tgp admin ci view\|set KEY=VALUE...` | CI limits and defaults (admins) |

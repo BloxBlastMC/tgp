@@ -562,3 +562,54 @@ type ReleaseAsset struct {
 	UploaderID  *int64    `bun:"uploader_id"`
 	CreatedAt   time.Time `bun:"created_at"`
 }
+
+// Webhook sends events of one repository (RepoID set) or of every
+// repository (organisation webhook) to a URL.
+type Webhook struct {
+	bun.BaseModel `bun:"table:webhooks,alias:wh"`
+
+	ID          int64     `bun:"id,pk,autoincrement"`
+	RepoID      *int64    `bun:"repo_id"`
+	URL         string    `bun:"url"`
+	Secret      string    `bun:"secret"` // sealed with the master key; "" = unsigned
+	Events      string    `bun:"events"` // JSON list; ["*"] = all
+	Active      bool      `bun:"active"`
+	InsecureSSL bool      `bun:"insecure_ssl"`
+	CreatedByID *int64    `bun:"created_by_id"`
+	CreatedAt   time.Time `bun:"created_at"`
+	UpdatedAt   time.Time `bun:"updated_at"`
+}
+
+// Webhook delivery statuses.
+const (
+	DeliveryPending = "pending"
+	DeliverySuccess = "success"
+	DeliveryFailed  = "failed"
+)
+
+// WebhookDelivery is one event sent (or to be sent) to a webhook.
+type WebhookDelivery struct {
+	bun.BaseModel `bun:"table:webhook_deliveries,alias:wd"`
+
+	ID              int64      `bun:"id,pk,autoincrement"`
+	WebhookID       int64      `bun:"webhook_id"`
+	GUID            string     `bun:"guid"`
+	Event           string     `bun:"event"`
+	Action          string     `bun:"action"`
+	Payload         string     `bun:"payload"`
+	Redelivery      bool       `bun:"redelivery"`
+	Status          string     `bun:"status"`
+	Attempts        int        `bun:"attempts"`
+	NextAttemptAt   *time.Time `bun:"next_attempt_at"`
+	ClaimedUntil    *time.Time `bun:"claimed_until"`
+	RequestURL      string     `bun:"request_url"`
+	RequestHeaders  string     `bun:"request_headers"` // JSON
+	ResponseStatus  *int       `bun:"response_status"`
+	ResponseHeaders string     `bun:"response_headers"` // JSON
+	ResponseBody    string     `bun:"response_body"`
+	ResponseTrunc   bool       `bun:"response_truncated"`
+	DurationMS      *int       `bun:"duration_ms"`
+	Error           string     `bun:"error"`
+	CreatedAt       time.Time  `bun:"created_at"`
+	DeliveredAt     *time.Time `bun:"delivered_at"`
+}

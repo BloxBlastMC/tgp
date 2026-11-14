@@ -41,6 +41,9 @@ const (
 	RunnerUpdate       = "runner.update"
 	RunnerDelete       = "runner.delete"
 	ReleaseDelete      = "release.delete"
+	WebhookCreate      = "webhook.create"
+	WebhookUpdate      = "webhook.update"
+	WebhookDelete      = "webhook.delete"
 )
 
 // Entry is one audit record.

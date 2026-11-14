@@ -51,11 +51,14 @@ export function useCommands(session: Session | null | undefined, toggleTheme: ()
         { id: 'admin-org', label: 'Admin: Organization', group: 'Navigate', run: go('/admin/org') },
         { id: 'admin-runners', label: 'Admin: Runners', group: 'Navigate', run: go('/admin/runners') },
         { id: 'admin-ci', label: 'Admin: CI settings', group: 'Navigate', run: go('/admin/ci') },
+        { id: 'admin-webhooks', label: 'Admin: Webhooks', group: 'Navigate', run: go('/admin/webhooks') },
         { id: 'admin-audit', label: 'Admin: Audit log', group: 'Navigate', run: go('/admin/audit') },
       )
     }
     if (current) {
       const repo = current.name
+      if (current.permission === 'write' || current.permission === 'admin')
+        cmds.unshift({ id: 'repo-webhooks', label: `${repo}: Webhooks`, group: 'Repository', run: () => void navigate({ to: '/$repo/settings/webhooks', params: { repo } }) })
       cmds.unshift({ id: 'repo-caches', label: `${repo}: CI caches`, group: 'Repository', run: () => void navigate({ to: '/$repo/ci/caches', params: { repo } }) })
       cmds.unshift({ id: 'repo-releases', label: `${repo}: Releases`, group: 'Repository', run: () => void navigate({ to: '/$repo/releases', params: { repo } }) })
       cmds.unshift({ id: 'repo-ci', label: `${repo}: CI runs`, group: 'Repository', run: () => void navigate({ to: '/$repo/ci', params: { repo } }) })

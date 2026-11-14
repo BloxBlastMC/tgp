@@ -286,8 +286,12 @@ func (s *Server) createInvalidRun(ctx context.Context, repo *model.Repo, ev *ciE
 			return err
 		}
 		run.Number = n
-		_, err = tx.NewInsert().Model(run).Exec(ctx)
-		return err
+		if _, err = tx.NewInsert().Model(run).Exec(ctx); err != nil {
+			return err
+		}
+		s.hooksRun(ctx, tx, run, "requested")
+		s.hooksRun(ctx, tx, run, "completed")
+		return nil
 	})
 }
 
@@ -407,6 +411,7 @@ func (s *Server) createRun(ctx context.Context, repo *model.Repo, ev *ciEvent, f
 		if _, err := tx.NewUpdate().Model(run).Column("github_context", "concurrency_group", "cancel_in_progress").WherePK().Exec(ctx); err != nil {
 			return err
 		}
+		s.hooksRun(ctx, tx, run, "requested")
 		jobs, err := buildJobs(run, w, settings, ec)
 		if err != nil {
 			return s.failRun(ctx, tx, run, "Invalid workflow: "+err.Error())
@@ -431,8 +436,11 @@ func (s *Server) createRun(ctx context.Context, repo *model.Repo, ev *ciEvent, f
 func (s *Server) failRun(ctx context.Context, tx bun.IDB, run *model.WorkflowRun, reason string) error {
 	now := s.now()
 	run.Status, run.Conclusion, run.StatusReason, run.CompletedAt, run.UpdatedAt = model.RunCompleted, model.ConclusionFailure, reason, &now, now
-	_, err := tx.NewUpdate().Model(run).Column("status", "conclusion", "status_reason", "completed_at", "updated_at").WherePK().Exec(ctx)
-	return err
+	if _, err := tx.NewUpdate().Model(run).Column("status", "conclusion", "status_reason", "completed_at", "updated_at").WherePK().Exec(ctx); err != nil {
+		return err
+	}
+	s.hooksRun(ctx, tx, run, "completed")
+	return nil
 }
 
 type builtJob struct {

@@ -215,6 +215,7 @@ func (s *Server) finishRun(ctx context.Context, tx bun.IDB, run *model.WorkflowR
 	if _, err := tx.NewUpdate().Model(run).Column("status", "conclusion", "completed_at", "updated_at").WherePK().Exec(ctx); err != nil {
 		return err
 	}
+	s.hooksRun(ctx, tx, run, "completed")
 	return s.releaseConcurrency(ctx, tx, run)
 }
 
@@ -419,6 +420,7 @@ func (s *Server) rerunRun(ctx context.Context, tx bun.IDB, run *model.WorkflowRu
 		WherePK().Exec(ctx); err != nil {
 		return err
 	}
+	s.hooksRun(ctx, tx, run, "requested")
 	for _, o := range old {
 		j := *o
 		j.ID, j.Attempt, j.CreatedAt, j.RunnerID, j.TokenHash, j.CancelRequested, j.HeartbeatAt, j.CancelledAt = 0, run.Attempt, now, nil, nil, false, nil, nil
