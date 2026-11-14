@@ -7,7 +7,7 @@ issues, CI with strict resource limits, and an agent-friendly CLI.
 
 > **Status:** early development: setup, users, authentication, repositories,
 > git over HTTPS, code browsing, the `tgp` CLI, pull requests with reviews and
-> branch protection work; issues come next.
+> branch protection, and issues with labels and milestones work; CI comes next.
 > See [docs/roadmap.md](docs/roadmap.md).
 
 ## Components

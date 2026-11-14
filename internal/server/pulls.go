@@ -144,12 +144,15 @@ func (s *Server) loadPull(ctx context.Context, repoName string, number int64, ne
 
 func (s *Server) loadPullIn(ctx context.Context, db bun.IDB, repo *model.Repo, perm authz.Perm, number int64) (*pullCtx, error) {
 	issue := new(model.Issue)
-	err := db.NewSelect().Model(issue).Where("repo_id = ? AND number = ? AND is_pull", repo.ID, number).Scan(ctx)
+	err := db.NewSelect().Model(issue).Where("repo_id = ? AND number = ?", repo.ID, number).Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, apierr.NotFound("pull request #%d not found in %s", number, repo.Name)
 	}
 	if err != nil {
 		return nil, err
+	}
+	if !issue.IsPull {
+		return nil, apierr.NotFound("#%d is an issue, not a pull request", number).WithDetails(map[string]any{"is_issue": true})
 	}
 	pr := new(model.PullRequest)
 	if err := db.NewSelect().Model(pr).Where("issue_id = ?", issue.ID).Scan(ctx); err != nil {
@@ -469,6 +472,11 @@ func (s *Server) toAPIPull(ctx context.Context, pc *pullCtx, uc *userCache) (api
 	for _, id := range reqIDs {
 		out.RequestedReviewers = append(out.RequestedReviewers, uc.summary(ctx, id))
 	}
+	meta, err := s.loadIssueMeta(ctx, []*model.Issue{pc.issue})
+	if err != nil {
+		return out, err
+	}
+	out.Labels, out.Assignees, out.Milestone = meta.labelsOf(pc.issue.ID), meta.assigneesOf(ctx, uc, pc.issue.ID), meta.milestoneOf(pc.issue)
 	if rule != nil {
 		p := toAPIProtection(rule)
 		out.Protection = &p
@@ -785,6 +793,17 @@ func (s *Server) mergePull(ctx context.Context, pc *pullCtx, user *model.User, o
 	}
 	if err := s.markMerged(ctx, s.db, pc.pr, user, newTip, mi.mergeBase, string(o.method)); err != nil {
 		return err
+	}
+	if pc.pr.BaseBranch == pc.repo.DefaultBranch {
+		text := pc.issue.Title + "\n" + pc.issue.Body
+		if commits, err := pc.g.LogRange(ctx, mi.baseSHA, pc.pr.HeadSHA, maxPullCommitsList); err == nil {
+			for _, c := range commits {
+				text += "\n" + c.Subject + "\n" + c.Body
+			}
+		}
+		if err := s.closeReferencedIssues(ctx, pc.repo, user, text, map[string]any{"pull": pc.issue.Number, "commit": newTip}); err != nil {
+			return err
+		}
 	}
 	if len(bypassed) > 0 {
 		codes := make([]string, len(bypassed))

@@ -37,3 +37,31 @@ func TestNoRepoContextLeavesLinks(t *testing.T) {
 		t.Fatal(html)
 	}
 }
+
+func TestIssueRefs(t *testing.T) {
+	rc := RepoContext{Repo: "game", Ref: "main"}
+	cases := map[string][]string{
+		"Fixes #12 and #3.":           {`<a href="/game/issues/12" rel="nofollow">#12</a>`, `<a href="/game/issues/3" rel="nofollow">#3</a>`},
+		"#7 at start":                 {`<a href="/game/issues/7" rel="nofollow">#7</a> at start`},
+		"`#5` in code":                {`<code>#5</code>`},
+		"[see #9](https://x.test/)":   {`>see #9</a>`},
+		"a#4 and &#39; and x/#2 here": {`a#4`},
+	}
+	for in, wants := range cases {
+		out, err := Render([]byte(in), rc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, w := range wants {
+			if !strings.Contains(out, w) {
+				t.Errorf("Render(%q) = %q, want %q", in, out, w)
+			}
+		}
+	}
+	if out, _ := Render([]byte("`#5` and [#9](https://x.test/) and a#4"), rc); strings.Contains(out, "/issues/") {
+		t.Errorf("refs linked in code/links/words: %s", out)
+	}
+	if out, _ := Render([]byte("#3"), RepoContext{}); strings.Contains(out, "<a") {
+		t.Error("linked without a repo")
+	}
+}

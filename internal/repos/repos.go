@@ -115,6 +115,10 @@ func (s *Store) Create(ctx context.Context, p CreateParams) (*model.Repo, error)
 		}
 		return nil, err
 	}
+	if err := SeedLabels(ctx, s.DB, r.ID); err != nil {
+		_, _ = s.DB.NewDelete().Model(r).WherePK().Exec(context.WithoutCancel(ctx))
+		return nil, err
+	}
 	path := s.Path(r)
 	cleanup := func() {
 		_, _ = s.DB.NewDelete().Model(r).WherePK().Exec(context.WithoutCancel(ctx))
@@ -152,6 +156,30 @@ func (s *Store) Create(ctx context.Context, p CreateParams) (*model.Repo, error)
 		_, _ = s.DB.NewUpdate().Model(r).Column("pushed_at").WherePK().Exec(ctx)
 	}
 	return r, nil
+}
+
+// DefaultLabels are created in every new repository.
+var DefaultLabels = []model.Label{
+	{Name: "bug", Color: "d73a4a", Description: "Something isn't working"},
+	{Name: "enhancement", Color: "a2eeef", Description: "New feature or request"},
+	{Name: "documentation", Color: "0075ca", Description: "Improvements or additions to documentation"},
+	{Name: "question", Color: "d876e3", Description: "Further information is requested"},
+	{Name: "needs testing", Color: "fbca04", Description: "Ready for a tester to verify"},
+	{Name: "duplicate", Color: "cfd3d7", Description: "This issue or pull request already exists"},
+	{Name: "wontfix", Color: "ffffff", Description: "This will not be worked on"},
+}
+
+// SeedLabels creates the default labels in a repository.
+func SeedLabels(ctx context.Context, db bun.IDB, repoID int64) error {
+	now := time.Now().UTC()
+	for _, d := range DefaultLabels {
+		l := d
+		l.RepoID, l.LowerName, l.CreatedAt = repoID, strings.ToLower(l.Name), now
+		if _, err := db.NewInsert().Model(&l).Exec(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Rename changes a repository's name and moves its storage.

@@ -295,5 +295,12 @@ func (s *Server) postReceive(ctx context.Context, repo *model.Repo, user *model.
 	if err := s.syncPulls(ctx, repo, user, updates); err != nil {
 		return githook.Response{Allowed: true}, err
 	}
+	for _, u := range updates {
+		if u.Ref == branchRef(repo.DefaultBranch) && !u.IsCreate() && !u.IsDelete() && !u.Forced {
+			if err := s.closeIssuesFromPush(ctx, repo, user, u.Old, u.New); err != nil {
+				return githook.Response{Allowed: true}, err
+			}
+		}
+	}
 	return githook.Response{Allowed: true, Messages: s.pushHints(ctx, repo, updates)}, nil
 }

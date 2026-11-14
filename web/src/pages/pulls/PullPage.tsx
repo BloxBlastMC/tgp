@@ -1,24 +1,19 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { Link, Navigate, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import {
   Check,
   CheckCircle2,
   Eye,
   FileDiff,
-  GitBranch,
-  GitCommitHorizontal,
-  GitMerge,
   GitPullRequestClosed,
   History,
   MessageSquare,
   Pencil,
-  RefreshCw,
   Shield,
-  Tag,
   XCircle,
 } from 'lucide-react'
 import { useMemo, useState, type ComponentType, type ReactNode } from 'react'
-import { api, ApiRequestError, errorMessage, unwrap, type Comment, type PullEvent, type PullRequest, type Review } from '../../api/client'
+import { api, ApiRequestError, errorMessage, unwrap, type Comment, type PullRequest, type Review } from '../../api/client'
 import { pullCommentsQuery, pullCommitsQuery, pullFilesQuery, pullQuery, pullTimelineQuery, sessionQuery } from '../../api/queries'
 import { DiffView, type DiffAnnotations } from '../../components/code/DiffView'
 import { EmptyState } from '../../components/Page'
@@ -34,7 +29,9 @@ import {
 } from '../../components/pulls/common'
 import { ReviewerPicker } from '../../components/pulls/ReviewerPicker'
 import { Alert, Badge, Button, cx, Dialog, Input, Spinner, Time } from '../../components/ui'
-import { anchorThreads, eventText, groupThreads, lineKey, type Thread } from '../../lib/pulls'
+import { anchorThreads, groupThreads, lineKey, type Thread } from '../../lib/pulls'
+import { EventLine } from '../../components/issues/EventLine'
+import { MetaSections, type MetaPatch } from '../../components/issues/meta'
 import { useRepoName } from '../repos/RepoLayout'
 import { CommitList } from './ComparePage'
 import { MergeBox } from './MergeBox'
@@ -62,6 +59,8 @@ export function PullPage() {
   if (!Number.isInteger(number) || number <= 0) return <EmptyState title="Pull request not found" />
   if (pr.isPending) return <Spinner />
   if (pr.isError) {
+    if (pr.error instanceof ApiRequestError && pr.error.status === 404 && pr.error.details?.is_issue)
+      return <Navigate to="/$repo/issues/$number" params={{ repo, number: String(number) }} replace />
     if (pr.error instanceof ApiRequestError && pr.error.status === 404) return <EmptyState title="Pull request not found">#{number} doesn't exist in {repo}.</EmptyState>
     return (
       <div className="p-4">
@@ -195,7 +194,7 @@ function Conversation({ repo, pr }: { repo: string; pr: PullRequest }) {
           <Alert>{errorMessage(timeline.error)}</Alert>
         ) : (
           timeline.data.map((it, i) => {
-            if (it.kind === 'event' && it.event) return <EventLine key={`e${it.event.id}`} event={it.event} />
+            if (it.kind === 'event' && it.event) return <EventLine key={`e${it.event.id}`} repo={repo} event={it.event} />
             if (it.kind === 'review' && it.review)
               return <ReviewCard key={`r${it.review.id}`} repo={repo} pr={pr} review={it.review} threadOf={threadOf} viewer={v} />
             if (it.kind === 'inline_comment' && it.comment)
@@ -263,40 +262,6 @@ function BodyCard({ repo, pr, canEdit }: { repo: string; pr: PullRequest; canEdi
           <p className="text-fg-faint italic">No description.</p>
         )}
       </div>
-    </div>
-  )
-}
-
-const eventIcons: Partial<Record<PullEvent['type'], ComponentType<{ size?: number; className?: string }>>> = {
-  pushed: GitCommitHorizontal,
-  merged: GitMerge,
-  closed: GitPullRequestClosed,
-  reopened: RefreshCw,
-  base_changed: GitBranch,
-  title_changed: Pencil,
-  head_deleted: GitBranch,
-  head_restored: GitBranch,
-  branch_deleted: GitBranch,
-  branch_updated: RefreshCw,
-  review_requested: Eye,
-  review_request_removed: Eye,
-  review_dismissed: XCircle,
-  ready_for_review: Eye,
-  converted_to_draft: Tag,
-}
-
-function EventLine({ event }: { event: PullEvent }) {
-  const Icon = eventIcons[event.type] ?? History
-  const tone = event.type === 'merged' ? 'text-[#a371f7]' : event.type === 'closed' ? 'text-danger' : 'text-fg-faint'
-  return (
-    <div className="flex items-center gap-2 px-3 text-[12px] text-fg-muted" data-testid="event">
-      <Icon size={14} className={cx('shrink-0', tone)} />
-      <span className="min-w-0">
-        <span className="font-medium text-fg">{event.actor?.display_name ?? 'Someone'}</span> {eventText(event)}{' '}
-        <span className="text-fg-faint">
-          <Time iso={event.created_at} />
-        </span>
-      </span>
     </div>
   )
 }
@@ -435,7 +400,7 @@ function SidebarSection({ title, action, children }: { title: string; action?: R
 function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; viewer: ReturnType<typeof useViewer> }) {
   const invalidate = useInvalidatePull(repo, pr.number)
   const patch = useMutation({
-    mutationFn: (body: { reviewers?: string[]; draft?: boolean }) =>
+    mutationFn: (body: { reviewers?: string[]; draft?: boolean } & MetaPatch) =>
       unwrap(api.PATCH('/repos/{repo}/pulls/{number}', { params: { path: { repo, number: pr.number } }, body })),
     onSuccess: invalidate,
   })
@@ -470,6 +435,15 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
         )}
         {patch.isError && <Alert>{errorMessage(patch.error)}</Alert>}
       </SidebarSection>
+      <MetaSections
+        repo={repo}
+        labels={pr.labels}
+        assignees={pr.assignees}
+        milestone={pr.milestone}
+        canEdit={viewer.canTriage}
+        onPatch={(p) => patch.mutate(p)}
+        me={viewer.me.username}
+      />
       {rule && (
         <SidebarSection title="Branch protection">
           <ul className="flex flex-col gap-1 text-[12px] text-fg-muted">

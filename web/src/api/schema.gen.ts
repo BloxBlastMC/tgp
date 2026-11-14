@@ -1103,6 +1103,203 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Issues across all repositories you can access */
+        get: operations["listMyIssues"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List issues (not pull requests) */
+        get: operations["listIssues"];
+        put?: never;
+        /** Open an issue (triage access, so testers can file bugs) */
+        post: operations["createIssue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/issues/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["IssueNumber"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get an issue
+         * @description For a pull request's number this fails with `not_found` and `details.is_pull = true`.
+         */
+        get: operations["getIssue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Edit, close or reopen an issue, or change its labels, assignees and milestone
+         * @description Title and body: the author or write access. Everything else: triage access.
+         *     `labels`/`assignees` replace the lists; `add_*`/`remove_*` change them.
+         */
+        patch: operations["updateIssue"];
+        trace?: never;
+    };
+    "/repos/{repo}/issues/{number}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["IssueNumber"];
+            };
+            cookie?: never;
+        };
+        /** Comments and events, oldest first */
+        get: operations["getIssueTimeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/issues/{number}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["IssueNumber"];
+            };
+            cookie?: never;
+        };
+        /** Comments, oldest first */
+        get: operations["listIssueComments"];
+        put?: never;
+        /** Comment on an issue (triage access) */
+        post: operations["createIssueComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/labels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List labels, by name */
+        get: operations["listLabels"];
+        put?: never;
+        /** Create a label (write access) */
+        post: operations["createLabel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/labels/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a label, removing it from issues and pull requests (write access) */
+        delete: operations["deleteLabel"];
+        options?: never;
+        head?: never;
+        /** Rename or recolour a label (write access) */
+        patch: operations["updateLabel"];
+        trace?: never;
+    };
+    "/repos/{repo}/milestones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List milestones (open ones by due date, then closed) */
+        get: operations["listMilestones"];
+        put?: never;
+        /** Create a milestone (write access) */
+        post: operations["createMilestone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/milestones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        /** Get a milestone */
+        get: operations["getMilestone"];
+        put?: never;
+        post?: never;
+        /** Delete a milestone; its issues and pull requests keep existing without it (write access) */
+        delete: operations["deleteMilestone"];
+        options?: never;
+        head?: never;
+        /** Edit, close or reopen a milestone (write access) */
+        patch: operations["updateMilestone"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1525,6 +1722,9 @@ export interface components {
             comments: number;
             review_decision: components["schemas"]["ReviewDecision"];
             requested_reviewers: components["schemas"]["UserSummary"][];
+            labels: components["schemas"]["Label"][];
+            assignees: components["schemas"]["UserSummary"][];
+            milestone?: components["schemas"]["MilestoneRef"] | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -1593,6 +1793,9 @@ export interface components {
             /** @description Each reviewer's latest review state, plus requested reviewers who haven't reviewed. */
             reviewers: components["schemas"]["ReviewerState"][];
             requested_reviewers: components["schemas"]["UserSummary"][];
+            labels: components["schemas"]["Label"][];
+            assignees: components["schemas"]["UserSummary"][];
+            milestone?: components["schemas"]["MilestoneRef"] | null;
             /** @description The protection rule applying to the base branch, if any. */
             protection?: components["schemas"]["BranchProtection"] | null;
             /** @description Why you can't merge right now; empty when you can. */
@@ -1624,6 +1827,15 @@ export interface components {
             draft: boolean;
             /** @description Usernames to request reviews from. */
             reviewers?: string[];
+            /** @description Label names. */
+            labels?: string[];
+            /** @description Usernames. */
+            assignees?: string[];
+            /**
+             * Format: int64
+             * @description Milestone id.
+             */
+            milestone?: number;
         };
         UpdatePullRequest: {
             title?: string;
@@ -1639,6 +1851,19 @@ export interface components {
             draft?: boolean;
             /** @description Replaces the requested reviewers. */
             reviewers?: string[];
+            /** @description Replaces the labels. */
+            labels?: string[];
+            add_labels?: string[];
+            remove_labels?: string[];
+            /** @description Replaces the assignees. */
+            assignees?: string[];
+            add_assignees?: string[];
+            remove_assignees?: string[];
+            /**
+             * Format: int64
+             * @description Milestone id; 0 removes the milestone.
+             */
+            milestone?: number;
         };
         MergePullRequest: {
             method?: components["schemas"]["MergeMethod"];
@@ -1746,13 +1971,17 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            type: "closed" | "reopened" | "merged" | "pushed" | "base_changed" | "title_changed" | "ready_for_review" | "converted_to_draft" | "review_requested" | "review_request_removed" | "review_dismissed" | "head_deleted" | "head_restored" | "branch_deleted" | "branch_updated";
+            type: "closed" | "reopened" | "merged" | "pushed" | "base_changed" | "title_changed" | "ready_for_review" | "converted_to_draft" | "review_requested" | "review_request_removed" | "review_dismissed" | "head_deleted" | "head_restored" | "branch_deleted" | "branch_updated" | "labeled" | "unlabeled" | "milestoned" | "demilestoned" | "assigned" | "unassigned";
             actor?: components["schemas"]["UserSummary"] | null;
             /**
              * @description Type-specific: `pushed` {before, after, commits, forced}; `base_changed`
              *     and `title_changed` {from, to}; `merged` {commit, method}; `review_requested`
              *     and `review_request_removed` {reviewer}; `review_dismissed` {reviewer, message};
-             *     `branch_deleted` {branch}; `branch_updated` {commit}.
+             *     `branch_deleted` {branch}; `branch_updated` {commit}; `labeled`/`unlabeled`
+             *     {label, color}; `milestoned`/`demilestoned` {milestone}; `assigned`/`unassigned`
+             *     {assignee}; `closed` on issues {reason, and pull + commit when closed by a
+             *     merged pull request ("Fixes #12")}.
+             *     Used for both pull requests and issues.
              */
             data: {
                 [key: string]: unknown;
@@ -1838,6 +2067,146 @@ export interface components {
             allow_deletion?: boolean;
             admins_bypass?: boolean;
         };
+        Label: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /**
+             * @description Six hex digits without #, e.g. d73a4a.
+             * @example d73a4a
+             */
+            color: string;
+            description: string;
+            /** @description Open issues and pull requests with this label (in label lists only). */
+            open_issues?: number;
+        };
+        LabelInput: {
+            name: string;
+            color: string;
+            description?: string;
+        };
+        LabelPatch: {
+            name?: string;
+            color?: string;
+            description?: string;
+        };
+        MilestoneRef: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            /** @enum {string} */
+            state: "open" | "closed";
+            /** Format: date */
+            due_on?: string | null;
+        };
+        Milestone: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            description: string;
+            description_html: string;
+            /** @enum {string} */
+            state: "open" | "closed";
+            /** Format: date */
+            due_on?: string | null;
+            /** @description Open issues and pull requests in the milestone. */
+            open_issues: number;
+            /** @description Closed (and merged) issues and pull requests in the milestone. */
+            closed_issues: number;
+            /** Format: date-time */
+            closed_at?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        MilestoneInput: {
+            title: string;
+            description?: string;
+            /** Format: date */
+            due_on?: string;
+        };
+        MilestonePatch: {
+            title?: string;
+            description?: string;
+            /**
+             * Format: date
+             * @description Empty string clears it.
+             */
+            due_on?: string;
+            /** @description Remove the due date. */
+            clear_due_on?: boolean;
+            /** @enum {string} */
+            state?: "open" | "closed";
+        };
+        /**
+         * @description Why a closed issue was closed.
+         * @enum {string}
+         */
+        IssueStateReason: "completed" | "not_planned";
+        IssueSummary: {
+            /** Format: int64 */
+            number: number;
+            repo: string;
+            title: string;
+            /** @enum {string} */
+            state: "open" | "closed";
+            state_reason?: components["schemas"]["IssueStateReason"] | null;
+            author: components["schemas"]["UserSummary"];
+            labels: components["schemas"]["Label"][];
+            assignees: components["schemas"]["UserSummary"][];
+            milestone?: components["schemas"]["MilestoneRef"] | null;
+            comments: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: date-time */
+            closed_at?: string | null;
+        };
+        Issue: components["schemas"]["IssueSummary"] & {
+            body: string;
+            body_html: string;
+            closed_by?: components["schemas"]["UserSummary"] | null;
+            viewer_permission: components["schemas"]["Permission"];
+            /** @description You can edit the title and body. */
+            can_edit: boolean;
+        };
+        IssuePage: {
+            issues: components["schemas"]["IssueSummary"][];
+            total: number;
+        };
+        CreateIssue: {
+            title: string;
+            body?: string;
+            /** @description Label names. */
+            labels?: string[];
+            /** @description Usernames. */
+            assignees?: string[];
+            /**
+             * Format: int64
+             * @description Milestone id.
+             */
+            milestone?: number;
+        };
+        UpdateIssue: {
+            title?: string;
+            body?: string;
+            /** @enum {string} */
+            state?: "open" | "closed";
+            state_reason?: components["schemas"]["IssueStateReason"];
+            labels?: string[];
+            add_labels?: string[];
+            remove_labels?: string[];
+            assignees?: string[];
+            add_assignees?: string[];
+            remove_assignees?: string[];
+            /**
+             * Format: int64
+             * @description Milestone id; 0 removes the milestone.
+             */
+            milestone?: number;
+        };
     };
     responses: {
         /** @description Error response */
@@ -1863,6 +2232,8 @@ export interface components {
         PullStateParam: "open" | "closed" | "merged" | "all";
         Page: number;
         PerPage: number;
+        IssueNumber: number;
+        IssueStateParam: "open" | "closed" | "all";
     };
     requestBodies: never;
     headers: never;
@@ -3156,6 +3527,8 @@ export interface operations {
                 head?: string;
                 /** @description Case-insensitive substring of the title. */
                 q?: string;
+                /** @description Comma-separated label names; pull requests must have all of them. */
+                labels?: string;
                 page?: components["parameters"]["Page"];
                 per_page?: components["parameters"]["PerPage"];
             };
@@ -3589,6 +3962,470 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PullRequest"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listMyIssues: {
+        parameters: {
+            query?: {
+                /** @description `assigned`: assigned to you. `created`: opened by you. `all`: every issue you can see. */
+                filter?: "assigned" | "created" | "all";
+                state?: components["parameters"]["IssueStateParam"];
+                page?: components["parameters"]["Page"];
+                per_page?: components["parameters"]["PerPage"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Issues, most recently updated first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listIssues: {
+        parameters: {
+            query?: {
+                state?: components["parameters"]["IssueStateParam"];
+                /** @description Comma-separated label names; issues must have all of them. */
+                labels?: string;
+                /** @description Milestone title, `none` (no milestone) or `*` (any milestone). */
+                milestone?: string;
+                /** @description Username, `none` or `*`. */
+                assignee?: string;
+                /** @description Username of the author. */
+                author?: string;
+                /** @description Case-insensitive substring of the title. */
+                q?: string;
+                sort?: "updated" | "created" | "comments";
+                page?: components["parameters"]["Page"];
+                per_page?: components["parameters"]["PerPage"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Issues */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuePage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createIssue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateIssue"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Issue"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getIssue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["IssueNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Issue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Issue"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateIssue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["IssueNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateIssue"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Issue"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getIssueTimeline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["IssueNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Timeline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineItem"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listIssueComments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["IssueNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Comments */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createIssueComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["IssueNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listLabels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Labels */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Label"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createLabel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabelInput"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Label"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteLabel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateLabel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabelPatch"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Label"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listMilestones: {
+        parameters: {
+            query?: {
+                state?: "open" | "closed" | "all";
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Milestones */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Milestone"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createMilestone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MilestoneInput"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Milestone"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMilestone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Milestone */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Milestone"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteMilestone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateMilestone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MilestonePatch"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Milestone"];
                 };
             };
             default: components["responses"]["Error"];

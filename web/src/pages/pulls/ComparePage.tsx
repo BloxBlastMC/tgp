@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { ArrowLeft, CheckCircle2, GitCommitHorizontal, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { api, ApiRequestError, errorMessage, unwrap } from '../../api/client'
-import { branchesQuery, compareQuery, repoQuery, sessionQuery, usersQuery } from '../../api/queries'
+import { branchesQuery, compareQuery, labelsQuery, milestonesQuery, repoQuery, sessionQuery, usersQuery } from '../../api/queries'
+import { MetaSections, type MetaPatch } from '../../components/issues/meta'
 import { DiffView } from '../../components/code/DiffView'
 import { Avatar, MarkdownEditor, useInvalidatePull } from '../../components/pulls/common'
 import { ReviewerPicker } from '../../components/pulls/ReviewerPicker'
@@ -147,9 +148,14 @@ function NewPullForm({ repo, base, head, commits, me }: { repo: string; base: st
   const [body, setBody] = useState(first?.body ?? '')
   const [reviewers, setReviewers] = useState<string[]>([])
   const [draft, setDraft] = useState(false)
+  const [meta, setMeta] = useState<{ labels: string[]; assignees: string[]; milestone: number }>({ labels: [], assignees: [], milestone: 0 })
+  const labels = useQuery(labelsQuery(repo))
+  const milestones = useQuery(milestonesQuery(repo, 'open'))
+  const ms = (milestones.data ?? []).find((m) => m.id === meta.milestone)
+  const patchMeta = (p: MetaPatch) => setMeta((m) => ({ labels: p.labels ?? m.labels, assignees: p.assignees ?? m.assignees, milestone: p.milestone ?? m.milestone }))
   const invalidate = useInvalidatePull(repo, 0)
   const create = useMutation({
-    mutationFn: () => unwrap(api.POST('/repos/{repo}/pulls', { params: { path: { repo } }, body: { title, body, head, base, draft, reviewers } })),
+    mutationFn: () => unwrap(api.POST('/repos/{repo}/pulls', { params: { path: { repo } }, body: { title, body, head, base, draft, reviewers, labels: meta.labels, assignees: meta.assignees, milestone: meta.milestone || undefined } })),
     onSuccess: (pr) => {
       invalidate()
       void navigate({ to: '/$repo/pulls/$number', params: { repo, number: String(pr.number) } })
@@ -192,6 +198,17 @@ function NewPullForm({ repo, base, head, commits, me }: { repo: string; base: st
             ))}
           </ul>
         )}
+        <div className="mt-2 flex flex-col gap-3">
+          <MetaSections
+            repo={repo}
+            canEdit
+            me={me}
+            labels={(labels.data ?? []).filter((l) => meta.labels.includes(l.name))}
+            assignees={(users.data ?? []).filter((u) => meta.assignees.includes(u.username))}
+            milestone={ms ? { id: ms.id, title: ms.title, state: ms.state, due_on: ms.due_on } : null}
+            onPatch={patchMeta}
+          />
+        </div>
       </aside>
     </form>
   )

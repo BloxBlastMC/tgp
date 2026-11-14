@@ -21,6 +21,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // Defines values for BlobEncoding.
@@ -182,6 +183,60 @@ func (e InlineCommentInputSide) Valid() bool {
 	}
 }
 
+// Defines values for IssueState.
+const (
+	IssueStateClosed IssueState = "closed"
+	IssueStateOpen   IssueState = "open"
+)
+
+// Valid indicates whether the value is a known member of the IssueState enum.
+func (e IssueState) Valid() bool {
+	switch e {
+	case IssueStateClosed:
+		return true
+	case IssueStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for IssueStateReason.
+const (
+	Completed  IssueStateReason = "completed"
+	NotPlanned IssueStateReason = "not_planned"
+)
+
+// Valid indicates whether the value is a known member of the IssueStateReason enum.
+func (e IssueStateReason) Valid() bool {
+	switch e {
+	case Completed:
+		return true
+	case NotPlanned:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for IssueSummaryState.
+const (
+	IssueSummaryStateClosed IssueSummaryState = "closed"
+	IssueSummaryStateOpen   IssueSummaryState = "open"
+)
+
+// Valid indicates whether the value is a known member of the IssueSummaryState enum.
+func (e IssueSummaryState) Valid() bool {
+	switch e {
+	case IssueSummaryStateClosed:
+		return true
+	case IssueSummaryStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MergeBlockerCode.
 const (
 	MergeBlockerCodeApprovals        MergeBlockerCode = "approvals"
@@ -245,6 +300,60 @@ func (e MergeMethod) Valid() bool {
 	}
 }
 
+// Defines values for MilestoneState.
+const (
+	MilestoneStateClosed MilestoneState = "closed"
+	MilestoneStateOpen   MilestoneState = "open"
+)
+
+// Valid indicates whether the value is a known member of the MilestoneState enum.
+func (e MilestoneState) Valid() bool {
+	switch e {
+	case MilestoneStateClosed:
+		return true
+	case MilestoneStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MilestonePatchState.
+const (
+	MilestonePatchStateClosed MilestonePatchState = "closed"
+	MilestonePatchStateOpen   MilestonePatchState = "open"
+)
+
+// Valid indicates whether the value is a known member of the MilestonePatchState enum.
+func (e MilestonePatchState) Valid() bool {
+	switch e {
+	case MilestonePatchStateClosed:
+		return true
+	case MilestonePatchStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MilestoneRefState.
+const (
+	MilestoneRefStateClosed MilestoneRefState = "closed"
+	MilestoneRefStateOpen   MilestoneRefState = "open"
+)
+
+// Valid indicates whether the value is a known member of the MilestoneRefState enum.
+func (e MilestoneRefState) Valid() bool {
+	switch e {
+	case MilestoneRefStateClosed:
+		return true
+	case MilestoneRefStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for Permission.
 const (
 	PermissionAdmin  Permission = "admin"
@@ -274,14 +383,18 @@ func (e Permission) Valid() bool {
 
 // Defines values for PullEventType.
 const (
+	PullEventTypeAssigned             PullEventType = "assigned"
 	PullEventTypeBaseChanged          PullEventType = "base_changed"
 	PullEventTypeBranchDeleted        PullEventType = "branch_deleted"
 	PullEventTypeBranchUpdated        PullEventType = "branch_updated"
 	PullEventTypeClosed               PullEventType = "closed"
 	PullEventTypeConvertedToDraft     PullEventType = "converted_to_draft"
+	PullEventTypeDemilestoned         PullEventType = "demilestoned"
 	PullEventTypeHeadDeleted          PullEventType = "head_deleted"
 	PullEventTypeHeadRestored         PullEventType = "head_restored"
+	PullEventTypeLabeled              PullEventType = "labeled"
 	PullEventTypeMerged               PullEventType = "merged"
+	PullEventTypeMilestoned           PullEventType = "milestoned"
 	PullEventTypePushed               PullEventType = "pushed"
 	PullEventTypeReadyForReview       PullEventType = "ready_for_review"
 	PullEventTypeReopened             PullEventType = "reopened"
@@ -289,11 +402,15 @@ const (
 	PullEventTypeReviewRequestRemoved PullEventType = "review_request_removed"
 	PullEventTypeReviewRequested      PullEventType = "review_requested"
 	PullEventTypeTitleChanged         PullEventType = "title_changed"
+	PullEventTypeUnassigned           PullEventType = "unassigned"
+	PullEventTypeUnlabeled            PullEventType = "unlabeled"
 )
 
 // Valid indicates whether the value is a known member of the PullEventType enum.
 func (e PullEventType) Valid() bool {
 	switch e {
+	case PullEventTypeAssigned:
+		return true
 	case PullEventTypeBaseChanged:
 		return true
 	case PullEventTypeBranchDeleted:
@@ -304,11 +421,17 @@ func (e PullEventType) Valid() bool {
 		return true
 	case PullEventTypeConvertedToDraft:
 		return true
+	case PullEventTypeDemilestoned:
+		return true
 	case PullEventTypeHeadDeleted:
 		return true
 	case PullEventTypeHeadRestored:
 		return true
+	case PullEventTypeLabeled:
+		return true
 	case PullEventTypeMerged:
+		return true
+	case PullEventTypeMilestoned:
 		return true
 	case PullEventTypePushed:
 		return true
@@ -323,6 +446,10 @@ func (e PullEventType) Valid() bool {
 	case PullEventTypeReviewRequested:
 		return true
 	case PullEventTypeTitleChanged:
+		return true
+	case PullEventTypeUnassigned:
+		return true
+	case PullEventTypeUnlabeled:
 		return true
 	default:
 		return false
@@ -572,6 +699,24 @@ func (e TreeEntryType) Valid() bool {
 	}
 }
 
+// Defines values for UpdateIssueState.
+const (
+	UpdateIssueStateClosed UpdateIssueState = "closed"
+	UpdateIssueStateOpen   UpdateIssueState = "open"
+)
+
+// Valid indicates whether the value is a known member of the UpdateIssueState enum.
+func (e UpdateIssueState) Valid() bool {
+	switch e {
+	case UpdateIssueStateClosed:
+		return true
+	case UpdateIssueStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UpdatePullRequestState.
 const (
 	UpdatePullRequestStateClosed UpdatePullRequestState = "closed"
@@ -584,6 +729,27 @@ func (e UpdatePullRequestState) Valid() bool {
 	case UpdatePullRequestStateClosed:
 		return true
 	case UpdatePullRequestStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for IssueStateParam.
+const (
+	IssueStateParamAll    IssueStateParam = "all"
+	IssueStateParamClosed IssueStateParam = "closed"
+	IssueStateParamOpen   IssueStateParam = "open"
+)
+
+// Valid indicates whether the value is a known member of the IssueStateParam enum.
+func (e IssueStateParam) Valid() bool {
+	switch e {
+	case IssueStateParamAll:
+		return true
+	case IssueStateParamClosed:
+		return true
+	case IssueStateParamOpen:
 		return true
 	default:
 		return false
@@ -608,6 +774,48 @@ func (e PullStateParam) Valid() bool {
 	case PullStateParamMerged:
 		return true
 	case PullStateParamOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListMyIssuesParamsFilter.
+const (
+	ListMyIssuesParamsFilterAll      ListMyIssuesParamsFilter = "all"
+	ListMyIssuesParamsFilterAssigned ListMyIssuesParamsFilter = "assigned"
+	ListMyIssuesParamsFilterCreated  ListMyIssuesParamsFilter = "created"
+)
+
+// Valid indicates whether the value is a known member of the ListMyIssuesParamsFilter enum.
+func (e ListMyIssuesParamsFilter) Valid() bool {
+	switch e {
+	case ListMyIssuesParamsFilterAll:
+		return true
+	case ListMyIssuesParamsFilterAssigned:
+		return true
+	case ListMyIssuesParamsFilterCreated:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListMyIssuesParamsState.
+const (
+	ListMyIssuesParamsStateAll    ListMyIssuesParamsState = "all"
+	ListMyIssuesParamsStateClosed ListMyIssuesParamsState = "closed"
+	ListMyIssuesParamsStateOpen   ListMyIssuesParamsState = "open"
+)
+
+// Valid indicates whether the value is a known member of the ListMyIssuesParamsState enum.
+func (e ListMyIssuesParamsState) Valid() bool {
+	switch e {
+	case ListMyIssuesParamsStateAll:
+		return true
+	case ListMyIssuesParamsStateClosed:
+		return true
+	case ListMyIssuesParamsStateOpen:
 		return true
 	default:
 		return false
@@ -653,6 +861,69 @@ func (e ListMyPullsParamsState) Valid() bool {
 	case ListMyPullsParamsStateMerged:
 		return true
 	case ListMyPullsParamsStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListIssuesParamsState.
+const (
+	ListIssuesParamsStateAll    ListIssuesParamsState = "all"
+	ListIssuesParamsStateClosed ListIssuesParamsState = "closed"
+	ListIssuesParamsStateOpen   ListIssuesParamsState = "open"
+)
+
+// Valid indicates whether the value is a known member of the ListIssuesParamsState enum.
+func (e ListIssuesParamsState) Valid() bool {
+	switch e {
+	case ListIssuesParamsStateAll:
+		return true
+	case ListIssuesParamsStateClosed:
+		return true
+	case ListIssuesParamsStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListIssuesParamsSort.
+const (
+	ListIssuesParamsSortComments ListIssuesParamsSort = "comments"
+	ListIssuesParamsSortCreated  ListIssuesParamsSort = "created"
+	ListIssuesParamsSortUpdated  ListIssuesParamsSort = "updated"
+)
+
+// Valid indicates whether the value is a known member of the ListIssuesParamsSort enum.
+func (e ListIssuesParamsSort) Valid() bool {
+	switch e {
+	case ListIssuesParamsSortComments:
+		return true
+	case ListIssuesParamsSortCreated:
+		return true
+	case ListIssuesParamsSortUpdated:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListMilestonesParamsState.
+const (
+	ListMilestonesParamsStateAll    ListMilestonesParamsState = "all"
+	ListMilestonesParamsStateClosed ListMilestonesParamsState = "closed"
+	ListMilestonesParamsStateOpen   ListMilestonesParamsState = "open"
+)
+
+// Valid indicates whether the value is a known member of the ListMilestonesParamsState enum.
+func (e ListMilestonesParamsState) Valid() bool {
+	switch e {
+	case ListMilestonesParamsStateAll:
+		return true
+	case ListMilestonesParamsStateClosed:
+		return true
+	case ListMilestonesParamsStateOpen:
 		return true
 	default:
 		return false
@@ -909,8 +1180,25 @@ type CreateComment struct {
 // CreateCommentSide defines model for CreateComment.Side.
 type CreateCommentSide string
 
+// CreateIssue defines model for CreateIssue.
+type CreateIssue struct {
+	// Assignees Usernames.
+	Assignees *[]string `json:"assignees,omitempty"`
+	Body      *string   `json:"body,omitempty"`
+
+	// Labels Label names.
+	Labels *[]string `json:"labels,omitempty"`
+
+	// Milestone Milestone id.
+	Milestone *int64 `json:"milestone,omitempty"`
+	Title     string `json:"title"`
+}
+
 // CreatePullRequest defines model for CreatePullRequest.
 type CreatePullRequest struct {
+	// Assignees Usernames.
+	Assignees *[]string `json:"assignees,omitempty"`
+
 	// Base Branch to merge into; defaults to the default branch.
 	Base  *string `json:"base,omitempty"`
 	Body  *string `json:"body,omitempty"`
@@ -918,6 +1206,12 @@ type CreatePullRequest struct {
 
 	// Head Branch with the changes.
 	Head string `json:"head"`
+
+	// Labels Label names.
+	Labels *[]string `json:"labels,omitempty"`
+
+	// Milestone Milestone id.
+	Milestone *int64 `json:"milestone,omitempty"`
 
 	// Reviewers Usernames to request reviews from.
 	Reviewers *[]string `json:"reviewers,omitempty"`
@@ -1062,6 +1356,93 @@ type InlineCommentInput struct {
 // InlineCommentInputSide defines model for InlineCommentInput.Side.
 type InlineCommentInputSide string
 
+// Issue defines model for Issue.
+type Issue struct {
+	Assignees []UserSummary `json:"assignees"`
+	Author    UserSummary   `json:"author"`
+	Body      string        `json:"body"`
+	BodyHtml  string        `json:"body_html"`
+
+	// CanEdit You can edit the title and body.
+	CanEdit     bool              `json:"can_edit"`
+	ClosedAt    *time.Time        `json:"closed_at,omitempty"`
+	ClosedBy    *UserSummary      `json:"closed_by,omitempty"`
+	Comments    int               `json:"comments"`
+	CreatedAt   time.Time         `json:"created_at"`
+	Labels      []Label           `json:"labels"`
+	Milestone   *MilestoneRef     `json:"milestone,omitempty"`
+	Number      int64             `json:"number"`
+	Repo        string            `json:"repo"`
+	State       IssueState        `json:"state"`
+	StateReason *IssueStateReason `json:"state_reason,omitempty"`
+	Title       string            `json:"title"`
+	UpdatedAt   time.Time         `json:"updated_at"`
+
+	// ViewerPermission `read`: clone and browse. `triage` (testers): plus issues, comments, reviews, CI re-runs.
+	// `write` (maintainers): plus push and merge. `admin`: plus rename, archive, delete, access.
+	ViewerPermission Permission `json:"viewer_permission"`
+}
+
+// IssueState defines model for Issue.State.
+type IssueState string
+
+// IssuePage defines model for IssuePage.
+type IssuePage struct {
+	Issues []IssueSummary `json:"issues"`
+	Total  int            `json:"total"`
+}
+
+// IssueStateReason Why a closed issue was closed.
+type IssueStateReason string
+
+// IssueSummary defines model for IssueSummary.
+type IssueSummary struct {
+	Assignees   []UserSummary     `json:"assignees"`
+	Author      UserSummary       `json:"author"`
+	ClosedAt    *time.Time        `json:"closed_at,omitempty"`
+	Comments    int               `json:"comments"`
+	CreatedAt   time.Time         `json:"created_at"`
+	Labels      []Label           `json:"labels"`
+	Milestone   *MilestoneRef     `json:"milestone,omitempty"`
+	Number      int64             `json:"number"`
+	Repo        string            `json:"repo"`
+	State       IssueSummaryState `json:"state"`
+	StateReason *IssueStateReason `json:"state_reason,omitempty"`
+	Title       string            `json:"title"`
+	UpdatedAt   time.Time         `json:"updated_at"`
+}
+
+// IssueSummaryState defines model for IssueSummary.State.
+type IssueSummaryState string
+
+// Label defines model for Label.
+type Label struct {
+	// Color Six hex digits without #, e.g. d73a4a.
+	//
+	// Example: d73a4a
+	Color       string `json:"color"`
+	Description string `json:"description"`
+	Id          int64  `json:"id"`
+	Name        string `json:"name"`
+
+	// OpenIssues Open issues and pull requests with this label (in label lists only).
+	OpenIssues *int `json:"open_issues,omitempty"`
+}
+
+// LabelInput defines model for LabelInput.
+type LabelInput struct {
+	Color       string  `json:"color"`
+	Description *string `json:"description,omitempty"`
+	Name        string  `json:"name"`
+}
+
+// LabelPatch defines model for LabelPatch.
+type LabelPatch struct {
+	Color       *string `json:"color,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Name        *string `json:"name,omitempty"`
+}
+
 // LoginRequest defines model for LoginRequest.
 type LoginRequest struct {
 	Password     string  `json:"password"`
@@ -1124,6 +1505,61 @@ type Meta struct {
 	Version string `json:"version"`
 }
 
+// Milestone defines model for Milestone.
+type Milestone struct {
+	ClosedAt *time.Time `json:"closed_at,omitempty"`
+
+	// ClosedIssues Closed (and merged) issues and pull requests in the milestone.
+	ClosedIssues    int                 `json:"closed_issues"`
+	CreatedAt       time.Time           `json:"created_at"`
+	Description     string              `json:"description"`
+	DescriptionHtml string              `json:"description_html"`
+	DueOn           *openapi_types.Date `json:"due_on,omitempty"`
+	Id              int64               `json:"id"`
+
+	// OpenIssues Open issues and pull requests in the milestone.
+	OpenIssues int            `json:"open_issues"`
+	State      MilestoneState `json:"state"`
+	Title      string         `json:"title"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+}
+
+// MilestoneState defines model for Milestone.State.
+type MilestoneState string
+
+// MilestoneInput defines model for MilestoneInput.
+type MilestoneInput struct {
+	Description *string             `json:"description,omitempty"`
+	DueOn       *openapi_types.Date `json:"due_on,omitempty"`
+	Title       string              `json:"title"`
+}
+
+// MilestonePatch defines model for MilestonePatch.
+type MilestonePatch struct {
+	// ClearDueOn Remove the due date.
+	ClearDueOn  *bool   `json:"clear_due_on,omitempty"`
+	Description *string `json:"description,omitempty"`
+
+	// DueOn Empty string clears it.
+	DueOn *openapi_types.Date  `json:"due_on,omitempty"`
+	State *MilestonePatchState `json:"state,omitempty"`
+	Title *string              `json:"title,omitempty"`
+}
+
+// MilestonePatchState defines model for MilestonePatch.State.
+type MilestonePatchState string
+
+// MilestoneRef defines model for MilestoneRef.
+type MilestoneRef struct {
+	DueOn *openapi_types.Date `json:"due_on,omitempty"`
+	Id    int64               `json:"id"`
+	State MilestoneRefState   `json:"state"`
+	Title string              `json:"title"`
+}
+
+// MilestoneRefState defines model for MilestoneRef.State.
+type MilestoneRefState string
+
 // Org defines model for Org.
 type Org struct {
 	// BaseUrl Public URL of this server, used in clone URLs and webhooks.
@@ -1161,7 +1597,11 @@ type PullEvent struct {
 	// Data Type-specific: `pushed` {before, after, commits, forced}; `base_changed`
 	// and `title_changed` {from, to}; `merged` {commit, method}; `review_requested`
 	// and `review_request_removed` {reviewer}; `review_dismissed` {reviewer, message};
-	// `branch_deleted` {branch}; `branch_updated` {commit}.
+	// `branch_deleted` {branch}; `branch_updated` {commit}; `labeled`/`unlabeled`
+	// {label, color}; `milestoned`/`demilestoned` {milestone}; `assigned`/`unassigned`
+	// {assignee}; `closed` on issues {reason, and pull + commit when closed by a
+	// merged pull request ("Fixes #12")}.
+	// Used for both pull requests and issues.
 	Data map[string]interface{} `json:"data"`
 	Id   int64                  `json:"id"`
 	Type PullEventType          `json:"type"`
@@ -1180,9 +1620,10 @@ type PullPage struct {
 
 // PullRequest defines model for PullRequest.
 type PullRequest struct {
-	Additions int         `json:"additions"`
-	Author    UserSummary `json:"author"`
-	Base      PullBranch  `json:"base"`
+	Additions int           `json:"additions"`
+	Assignees []UserSummary `json:"assignees"`
+	Author    UserSummary   `json:"author"`
+	Base      PullBranch    `json:"base"`
 
 	// BehindBy Base commits not in head.
 	BehindBy *int `json:"behind_by,omitempty"`
@@ -1205,6 +1646,7 @@ type PullRequest struct {
 	Deletions     int        `json:"deletions"`
 	Draft         bool       `json:"draft"`
 	Head          PullBranch `json:"head"`
+	Labels        []Label    `json:"labels"`
 
 	// MergeBase Common ancestor of base and head.
 	MergeBase   string  `json:"merge_base"`
@@ -1217,6 +1659,7 @@ type PullRequest struct {
 	Mergeable PullRequestMergeable `json:"mergeable"`
 	MergedAt  *time.Time           `json:"merged_at,omitempty"`
 	MergedBy  *UserSummary         `json:"merged_by,omitempty"`
+	Milestone *MilestoneRef        `json:"milestone,omitempty"`
 	Number    int64                `json:"number"`
 
 	// Protection The protection rule applying to the base branch, if any.
@@ -1248,15 +1691,18 @@ type PullState string
 
 // PullSummary defines model for PullSummary.
 type PullSummary struct {
-	Author     UserSummary `json:"author"`
-	BaseBranch string      `json:"base_branch"`
-	ClosedAt   *time.Time  `json:"closed_at,omitempty"`
-	Comments   int         `json:"comments"`
-	CreatedAt  time.Time   `json:"created_at"`
-	Draft      bool        `json:"draft"`
-	HeadBranch string      `json:"head_branch"`
-	MergedAt   *time.Time  `json:"merged_at,omitempty"`
-	Number     int64       `json:"number"`
+	Assignees  []UserSummary `json:"assignees"`
+	Author     UserSummary   `json:"author"`
+	BaseBranch string        `json:"base_branch"`
+	ClosedAt   *time.Time    `json:"closed_at,omitempty"`
+	Comments   int           `json:"comments"`
+	CreatedAt  time.Time     `json:"created_at"`
+	Draft      bool          `json:"draft"`
+	HeadBranch string        `json:"head_branch"`
+	Labels     []Label       `json:"labels"`
+	MergedAt   *time.Time    `json:"merged_at,omitempty"`
+	Milestone  *MilestoneRef `json:"milestone,omitempty"`
+	Number     int64         `json:"number"`
 
 	// Repo Repository name.
 	Repo               string        `json:"repo"`
@@ -1476,6 +1922,28 @@ type TreeEntry struct {
 // TreeEntryType defines model for TreeEntry.Type.
 type TreeEntryType string
 
+// UpdateIssue defines model for UpdateIssue.
+type UpdateIssue struct {
+	AddAssignees *[]string `json:"add_assignees,omitempty"`
+	AddLabels    *[]string `json:"add_labels,omitempty"`
+	Assignees    *[]string `json:"assignees,omitempty"`
+	Body         *string   `json:"body,omitempty"`
+	Labels       *[]string `json:"labels,omitempty"`
+
+	// Milestone Milestone id; 0 removes the milestone.
+	Milestone       *int64            `json:"milestone,omitempty"`
+	RemoveAssignees *[]string         `json:"remove_assignees,omitempty"`
+	RemoveLabels    *[]string         `json:"remove_labels,omitempty"`
+	State           *UpdateIssueState `json:"state,omitempty"`
+
+	// StateReason Why a closed issue was closed.
+	StateReason *IssueStateReason `json:"state_reason,omitempty"`
+	Title       *string           `json:"title,omitempty"`
+}
+
+// UpdateIssueState defines model for UpdateIssue.State.
+type UpdateIssueState string
+
 // UpdateOrgRequest defines model for UpdateOrgRequest.
 type UpdateOrgRequest struct {
 	BaseUrl     *string `json:"base_url,omitempty"`
@@ -1485,12 +1953,26 @@ type UpdateOrgRequest struct {
 
 // UpdatePullRequest defines model for UpdatePullRequest.
 type UpdatePullRequest struct {
+	AddAssignees *[]string `json:"add_assignees,omitempty"`
+	AddLabels    *[]string `json:"add_labels,omitempty"`
+
+	// Assignees Replaces the assignees.
+	Assignees *[]string `json:"assignees,omitempty"`
+
 	// Base Change the base branch.
 	Base *string `json:"base,omitempty"`
 	Body *string `json:"body,omitempty"`
 
 	// Draft false marks the pull request ready for review.
 	Draft *bool `json:"draft,omitempty"`
+
+	// Labels Replaces the labels.
+	Labels *[]string `json:"labels,omitempty"`
+
+	// Milestone Milestone id; 0 removes the milestone.
+	Milestone       *int64    `json:"milestone,omitempty"`
+	RemoveAssignees *[]string `json:"remove_assignees,omitempty"`
+	RemoveLabels    *[]string `json:"remove_labels,omitempty"`
 
 	// Reviewers Replaces the requested reviewers.
 	Reviewers *[]string `json:"reviewers,omitempty"`
@@ -1580,6 +2062,12 @@ type UserWithTempPassword struct {
 	User                  User      `json:"user"`
 }
 
+// IssueNumber defines model for IssueNumber.
+type IssueNumber = int64
+
+// IssueStateParam defines model for IssueStateParam.
+type IssueStateParam string
+
 // Page defines model for Page.
 type Page = int
 
@@ -1631,6 +2119,21 @@ type AdminSetUserReposJSONBody struct {
 	// Repos Repository names. Kept even when all_repos is true
 	Repos []string `json:"repos"`
 }
+
+// ListMyIssuesParams defines parameters for ListMyIssues.
+type ListMyIssuesParams struct {
+	// Filter `assigned`: assigned to you. `created`: opened by you. `all`: every issue you can see.
+	Filter  *ListMyIssuesParamsFilter `form:"filter,omitempty" json:"filter,omitempty"`
+	State   *ListMyIssuesParamsState  `form:"state,omitempty" json:"state,omitempty"`
+	Page    *Page                     `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPage                  `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListMyIssuesParamsFilter defines parameters for ListMyIssues.
+type ListMyIssuesParamsFilter string
+
+// ListMyIssuesParamsState defines parameters for ListMyIssues.
+type ListMyIssuesParamsState string
 
 // RenderMarkdownJSONBody defines parameters for RenderMarkdown.
 type RenderMarkdownJSONBody struct {
@@ -1713,6 +2216,48 @@ type CompareRefsParams struct {
 	Head string `form:"head" json:"head"`
 }
 
+// ListIssuesParams defines parameters for ListIssues.
+type ListIssuesParams struct {
+	State *ListIssuesParamsState `form:"state,omitempty" json:"state,omitempty"`
+
+	// Labels Comma-separated label names; issues must have all of them.
+	Labels *string `form:"labels,omitempty" json:"labels,omitempty"`
+
+	// Milestone Milestone title, `none` (no milestone) or `*` (any milestone).
+	Milestone *string `form:"milestone,omitempty" json:"milestone,omitempty"`
+
+	// Assignee Username, `none` or `*`.
+	Assignee *string `form:"assignee,omitempty" json:"assignee,omitempty"`
+
+	// Author Username of the author.
+	Author *string `form:"author,omitempty" json:"author,omitempty"`
+
+	// Q Case-insensitive substring of the title.
+	Q       *string               `form:"q,omitempty" json:"q,omitempty"`
+	Sort    *ListIssuesParamsSort `form:"sort,omitempty" json:"sort,omitempty"`
+	Page    *Page                 `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPage              `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListIssuesParamsState defines parameters for ListIssues.
+type ListIssuesParamsState string
+
+// ListIssuesParamsSort defines parameters for ListIssues.
+type ListIssuesParamsSort string
+
+// CreateIssueCommentJSONBody defines parameters for CreateIssueComment.
+type CreateIssueCommentJSONBody struct {
+	Body string `json:"body"`
+}
+
+// ListMilestonesParams defines parameters for ListMilestones.
+type ListMilestonesParams struct {
+	State *ListMilestonesParamsState `form:"state,omitempty" json:"state,omitempty"`
+}
+
+// ListMilestonesParamsState defines parameters for ListMilestones.
+type ListMilestonesParamsState string
+
 // ListPullsParams defines parameters for ListPulls.
 type ListPullsParams struct {
 	State *ListPullsParamsState `form:"state,omitempty" json:"state,omitempty"`
@@ -1727,7 +2272,10 @@ type ListPullsParams struct {
 	Head *string `form:"head,omitempty" json:"head,omitempty"`
 
 	// Q Case-insensitive substring of the title.
-	Q       *string  `form:"q,omitempty" json:"q,omitempty"`
+	Q *string `form:"q,omitempty" json:"q,omitempty"`
+
+	// Labels Comma-separated label names; pull requests must have all of them.
+	Labels  *string  `form:"labels,omitempty" json:"labels,omitempty"`
 	Page    *Page    `form:"page,omitempty" json:"page,omitempty"`
 	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
@@ -1817,6 +2365,27 @@ type DeleteBranchJSONRequestBody DeleteBranchJSONBody
 
 // UpdateCommentJSONRequestBody defines body for UpdateComment for application/json ContentType.
 type UpdateCommentJSONRequestBody UpdateCommentJSONBody
+
+// CreateIssueJSONRequestBody defines body for CreateIssue for application/json ContentType.
+type CreateIssueJSONRequestBody = CreateIssue
+
+// UpdateIssueJSONRequestBody defines body for UpdateIssue for application/json ContentType.
+type UpdateIssueJSONRequestBody = UpdateIssue
+
+// CreateIssueCommentJSONRequestBody defines body for CreateIssueComment for application/json ContentType.
+type CreateIssueCommentJSONRequestBody CreateIssueCommentJSONBody
+
+// CreateLabelJSONRequestBody defines body for CreateLabel for application/json ContentType.
+type CreateLabelJSONRequestBody = LabelInput
+
+// UpdateLabelJSONRequestBody defines body for UpdateLabel for application/json ContentType.
+type UpdateLabelJSONRequestBody = LabelPatch
+
+// CreateMilestoneJSONRequestBody defines body for CreateMilestone for application/json ContentType.
+type CreateMilestoneJSONRequestBody = MilestoneInput
+
+// UpdateMilestoneJSONRequestBody defines body for UpdateMilestone for application/json ContentType.
+type UpdateMilestoneJSONRequestBody = MilestonePatch
 
 // CreateProtectionJSONRequestBody defines body for CreateProtection for application/json ContentType.
 type CreateProtectionJSONRequestBody = BranchProtectionInput
@@ -2155,6 +2724,11 @@ type ClientInterface interface {
 	// Corresponds with GET /auth/session (the `GetSession` operationId).
 	GetSession(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListMyIssues Issues across all repositories you can access
+	//
+	// Corresponds with GET /issues (the `ListMyIssues` operationId).
+	ListMyIssues(ctx context.Context, params *ListMyIssuesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// RenderMarkdownWithBody Render markdown to sanitised HTML
 	//
 	// Takes any type of body and a specified content type.
@@ -2313,6 +2887,157 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /repos/{repo}/compare (the `CompareRefs` operationId).
 	CompareRefs(ctx context.Context, repo RepoName, params *CompareRefsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListIssues List issues (not pull requests)
+	//
+	// Corresponds with GET /repos/{repo}/issues (the `ListIssues` operationId).
+	ListIssues(ctx context.Context, repo RepoName, params *ListIssuesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateIssueWithBody Open an issue (triage access, so testers can file bugs)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/issues (the `CreateIssue` operationId).
+	CreateIssueWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateIssue Open an issue (triage access, so testers can file bugs)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/issues (the `CreateIssue` operationId).
+	CreateIssue(ctx context.Context, repo RepoName, body CreateIssueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetIssue Get an issue
+	//
+	// For a pull request's number this fails with `not_found` and `details.is_pull = true`.
+	//
+	// Corresponds with GET /repos/{repo}/issues/{number} (the `GetIssue` operationId).
+	GetIssue(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateIssueWithBody Edit, close or reopen an issue, or change its labels, assignees and milestone
+	//
+	// Title and body: the author or write access. Everything else: triage access.
+	// `labels`/`assignees` replace the lists; `add_*`/`remove_*` change them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/issues/{number} (the `UpdateIssue` operationId).
+	UpdateIssueWithBody(ctx context.Context, repo RepoName, number IssueNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateIssue Edit, close or reopen an issue, or change its labels, assignees and milestone
+	//
+	// Title and body: the author or write access. Everything else: triage access.
+	// `labels`/`assignees` replace the lists; `add_*`/`remove_*` change them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/issues/{number} (the `UpdateIssue` operationId).
+	UpdateIssue(ctx context.Context, repo RepoName, number IssueNumber, body UpdateIssueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListIssueComments Comments, oldest first
+	//
+	// Corresponds with GET /repos/{repo}/issues/{number}/comments (the `ListIssueComments` operationId).
+	ListIssueComments(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateIssueCommentWithBody Comment on an issue (triage access)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/issues/{number}/comments (the `CreateIssueComment` operationId).
+	CreateIssueCommentWithBody(ctx context.Context, repo RepoName, number IssueNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateIssueComment Comment on an issue (triage access)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/issues/{number}/comments (the `CreateIssueComment` operationId).
+	CreateIssueComment(ctx context.Context, repo RepoName, number IssueNumber, body CreateIssueCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetIssueTimeline Comments and events, oldest first
+	//
+	// Corresponds with GET /repos/{repo}/issues/{number}/timeline (the `GetIssueTimeline` operationId).
+	GetIssueTimeline(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListLabels List labels, by name
+	//
+	// Corresponds with GET /repos/{repo}/labels (the `ListLabels` operationId).
+	ListLabels(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateLabelWithBody Create a label (write access)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/labels (the `CreateLabel` operationId).
+	CreateLabelWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateLabel Create a label (write access)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/labels (the `CreateLabel` operationId).
+	CreateLabel(ctx context.Context, repo RepoName, body CreateLabelJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteLabel Delete a label, removing it from issues and pull requests (write access)
+	//
+	// Corresponds with DELETE /repos/{repo}/labels/{id} (the `DeleteLabel` operationId).
+	DeleteLabel(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateLabelWithBody Rename or recolour a label (write access)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/labels/{id} (the `UpdateLabel` operationId).
+	UpdateLabelWithBody(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateLabel Rename or recolour a label (write access)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/labels/{id} (the `UpdateLabel` operationId).
+	UpdateLabel(ctx context.Context, repo RepoName, id int64, body UpdateLabelJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListMilestones List milestones (open ones by due date, then closed)
+	//
+	// Corresponds with GET /repos/{repo}/milestones (the `ListMilestones` operationId).
+	ListMilestones(ctx context.Context, repo RepoName, params *ListMilestonesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateMilestoneWithBody Create a milestone (write access)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/milestones (the `CreateMilestone` operationId).
+	CreateMilestoneWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateMilestone Create a milestone (write access)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/milestones (the `CreateMilestone` operationId).
+	CreateMilestone(ctx context.Context, repo RepoName, body CreateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteMilestone Delete a milestone; its issues and pull requests keep existing without it (write access)
+	//
+	// Corresponds with DELETE /repos/{repo}/milestones/{id} (the `DeleteMilestone` operationId).
+	DeleteMilestone(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMilestone Get a milestone
+	//
+	// Corresponds with GET /repos/{repo}/milestones/{id} (the `GetMilestone` operationId).
+	GetMilestone(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateMilestoneWithBody Edit, close or reopen a milestone (write access)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/milestones/{id} (the `UpdateMilestone` operationId).
+	UpdateMilestoneWithBody(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateMilestone Edit, close or reopen a milestone (write access)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/milestones/{id} (the `UpdateMilestone` operationId).
+	UpdateMilestone(ctx context.Context, repo RepoName, id int64, body UpdateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListProtections List branch protection rules
 	//
@@ -3128,6 +3853,21 @@ func (c *Client) GetSession(ctx context.Context, reqEditors ...RequestEditorFn) 
 	return c.Client.Do(req)
 }
 
+// ListMyIssues Issues across all repositories you can access
+//
+// Corresponds with GET /issues (the `ListMyIssues` operationId).
+func (c *Client) ListMyIssues(ctx context.Context, params *ListMyIssuesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListMyIssuesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // RenderMarkdownWithBody Render markdown to sanitised HTML
 //
 // Takes any type of body and a specified content type.
@@ -3527,6 +4267,387 @@ func (c *Client) GetCommit(ctx context.Context, repo RepoName, sha string, reqEd
 // Corresponds with GET /repos/{repo}/compare (the `CompareRefs` operationId).
 func (c *Client) CompareRefs(ctx context.Context, repo RepoName, params *CompareRefsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCompareRefsRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListIssues List issues (not pull requests)
+//
+// Corresponds with GET /repos/{repo}/issues (the `ListIssues` operationId).
+func (c *Client) ListIssues(ctx context.Context, repo RepoName, params *ListIssuesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListIssuesRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateIssueWithBody Open an issue (triage access, so testers can file bugs)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/issues (the `CreateIssue` operationId).
+func (c *Client) CreateIssueWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateIssueRequestWithBody(c.Server, repo, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateIssue Open an issue (triage access, so testers can file bugs)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/issues (the `CreateIssue` operationId).
+func (c *Client) CreateIssue(ctx context.Context, repo RepoName, body CreateIssueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateIssueRequest(c.Server, repo, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetIssue Get an issue
+//
+// For a pull request's number this fails with `not_found` and `details.is_pull = true`.
+//
+// Corresponds with GET /repos/{repo}/issues/{number} (the `GetIssue` operationId).
+func (c *Client) GetIssue(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetIssueRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateIssueWithBody Edit, close or reopen an issue, or change its labels, assignees and milestone
+//
+// Title and body: the author or write access. Everything else: triage access.
+// `labels`/`assignees` replace the lists; `add_*`/`remove_*` change them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /repos/{repo}/issues/{number} (the `UpdateIssue` operationId).
+func (c *Client) UpdateIssueWithBody(ctx context.Context, repo RepoName, number IssueNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateIssueRequestWithBody(c.Server, repo, number, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateIssue Edit, close or reopen an issue, or change its labels, assignees and milestone
+//
+// Title and body: the author or write access. Everything else: triage access.
+// `labels`/`assignees` replace the lists; `add_*`/`remove_*` change them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /repos/{repo}/issues/{number} (the `UpdateIssue` operationId).
+func (c *Client) UpdateIssue(ctx context.Context, repo RepoName, number IssueNumber, body UpdateIssueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateIssueRequest(c.Server, repo, number, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListIssueComments Comments, oldest first
+//
+// Corresponds with GET /repos/{repo}/issues/{number}/comments (the `ListIssueComments` operationId).
+func (c *Client) ListIssueComments(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListIssueCommentsRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateIssueCommentWithBody Comment on an issue (triage access)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/issues/{number}/comments (the `CreateIssueComment` operationId).
+func (c *Client) CreateIssueCommentWithBody(ctx context.Context, repo RepoName, number IssueNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateIssueCommentRequestWithBody(c.Server, repo, number, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateIssueComment Comment on an issue (triage access)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/issues/{number}/comments (the `CreateIssueComment` operationId).
+func (c *Client) CreateIssueComment(ctx context.Context, repo RepoName, number IssueNumber, body CreateIssueCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateIssueCommentRequest(c.Server, repo, number, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetIssueTimeline Comments and events, oldest first
+//
+// Corresponds with GET /repos/{repo}/issues/{number}/timeline (the `GetIssueTimeline` operationId).
+func (c *Client) GetIssueTimeline(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetIssueTimelineRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListLabels List labels, by name
+//
+// Corresponds with GET /repos/{repo}/labels (the `ListLabels` operationId).
+func (c *Client) ListLabels(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListLabelsRequest(c.Server, repo)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateLabelWithBody Create a label (write access)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/labels (the `CreateLabel` operationId).
+func (c *Client) CreateLabelWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateLabelRequestWithBody(c.Server, repo, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateLabel Create a label (write access)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/labels (the `CreateLabel` operationId).
+func (c *Client) CreateLabel(ctx context.Context, repo RepoName, body CreateLabelJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateLabelRequest(c.Server, repo, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteLabel Delete a label, removing it from issues and pull requests (write access)
+//
+// Corresponds with DELETE /repos/{repo}/labels/{id} (the `DeleteLabel` operationId).
+func (c *Client) DeleteLabel(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteLabelRequest(c.Server, repo, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateLabelWithBody Rename or recolour a label (write access)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /repos/{repo}/labels/{id} (the `UpdateLabel` operationId).
+func (c *Client) UpdateLabelWithBody(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateLabelRequestWithBody(c.Server, repo, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateLabel Rename or recolour a label (write access)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /repos/{repo}/labels/{id} (the `UpdateLabel` operationId).
+func (c *Client) UpdateLabel(ctx context.Context, repo RepoName, id int64, body UpdateLabelJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateLabelRequest(c.Server, repo, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListMilestones List milestones (open ones by due date, then closed)
+//
+// Corresponds with GET /repos/{repo}/milestones (the `ListMilestones` operationId).
+func (c *Client) ListMilestones(ctx context.Context, repo RepoName, params *ListMilestonesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListMilestonesRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateMilestoneWithBody Create a milestone (write access)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/milestones (the `CreateMilestone` operationId).
+func (c *Client) CreateMilestoneWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateMilestoneRequestWithBody(c.Server, repo, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateMilestone Create a milestone (write access)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/milestones (the `CreateMilestone` operationId).
+func (c *Client) CreateMilestone(ctx context.Context, repo RepoName, body CreateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateMilestoneRequest(c.Server, repo, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteMilestone Delete a milestone; its issues and pull requests keep existing without it (write access)
+//
+// Corresponds with DELETE /repos/{repo}/milestones/{id} (the `DeleteMilestone` operationId).
+func (c *Client) DeleteMilestone(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteMilestoneRequest(c.Server, repo, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMilestone Get a milestone
+//
+// Corresponds with GET /repos/{repo}/milestones/{id} (the `GetMilestone` operationId).
+func (c *Client) GetMilestone(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMilestoneRequest(c.Server, repo, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateMilestoneWithBody Edit, close or reopen a milestone (write access)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /repos/{repo}/milestones/{id} (the `UpdateMilestone` operationId).
+func (c *Client) UpdateMilestoneWithBody(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateMilestoneRequestWithBody(c.Server, repo, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateMilestone Edit, close or reopen a milestone (write access)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /repos/{repo}/milestones/{id} (the `UpdateMilestone` operationId).
+func (c *Client) UpdateMilestone(ctx context.Context, repo RepoName, id int64, body UpdateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateMilestoneRequest(c.Server, repo, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4992,6 +6113,96 @@ func NewGetSessionRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewListMyIssuesRequest constructs an http.Request for the ListMyIssues method
+func NewListMyIssuesRequest(server string, params *ListMyIssuesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/issues")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Filter != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "filter", *params.Filter, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.State != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "state", *params.State, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewRenderMarkdownRequest calls the generic RenderMarkdown builder with application/json body
 func NewRenderMarkdownRequest(server string, body RenderMarkdownJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -5963,6 +7174,861 @@ func NewCompareRefsRequest(server string, repo RepoName, params *CompareRefsPara
 	return req, nil
 }
 
+// NewListIssuesRequest constructs an http.Request for the ListIssues method
+func NewListIssuesRequest(server string, repo RepoName, params *ListIssuesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/issues", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.State != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "state", *params.State, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Labels != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "labels", *params.Labels, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Milestone != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "milestone", *params.Milestone, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Assignee != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "assignee", *params.Assignee, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Author != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "author", *params.Author, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "q", *params.Q, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort", *params.Sort, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateIssueRequest calls the generic CreateIssue builder with application/json body
+func NewCreateIssueRequest(server string, repo RepoName, body CreateIssueJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateIssueRequestWithBody(server, repo, "application/json", bodyReader)
+}
+
+// NewCreateIssueRequestWithBody constructs an http.Request for the CreateIssue method, with any body, and a specified content type
+func NewCreateIssueRequestWithBody(server string, repo RepoName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/issues", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetIssueRequest constructs an http.Request for the GetIssue method
+func NewGetIssueRequest(server string, repo RepoName, number IssueNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/issues/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateIssueRequest calls the generic UpdateIssue builder with application/json body
+func NewUpdateIssueRequest(server string, repo RepoName, number IssueNumber, body UpdateIssueJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateIssueRequestWithBody(server, repo, number, "application/json", bodyReader)
+}
+
+// NewUpdateIssueRequestWithBody constructs an http.Request for the UpdateIssue method, with any body, and a specified content type
+func NewUpdateIssueRequestWithBody(server string, repo RepoName, number IssueNumber, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/issues/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListIssueCommentsRequest constructs an http.Request for the ListIssueComments method
+func NewListIssueCommentsRequest(server string, repo RepoName, number IssueNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/issues/%s/comments", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateIssueCommentRequest calls the generic CreateIssueComment builder with application/json body
+func NewCreateIssueCommentRequest(server string, repo RepoName, number IssueNumber, body CreateIssueCommentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateIssueCommentRequestWithBody(server, repo, number, "application/json", bodyReader)
+}
+
+// NewCreateIssueCommentRequestWithBody constructs an http.Request for the CreateIssueComment method, with any body, and a specified content type
+func NewCreateIssueCommentRequestWithBody(server string, repo RepoName, number IssueNumber, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/issues/%s/comments", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetIssueTimelineRequest constructs an http.Request for the GetIssueTimeline method
+func NewGetIssueTimelineRequest(server string, repo RepoName, number IssueNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/issues/%s/timeline", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListLabelsRequest constructs an http.Request for the ListLabels method
+func NewListLabelsRequest(server string, repo RepoName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/labels", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateLabelRequest calls the generic CreateLabel builder with application/json body
+func NewCreateLabelRequest(server string, repo RepoName, body CreateLabelJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateLabelRequestWithBody(server, repo, "application/json", bodyReader)
+}
+
+// NewCreateLabelRequestWithBody constructs an http.Request for the CreateLabel method, with any body, and a specified content type
+func NewCreateLabelRequestWithBody(server string, repo RepoName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/labels", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteLabelRequest constructs an http.Request for the DeleteLabel method
+func NewDeleteLabelRequest(server string, repo RepoName, id int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/labels/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateLabelRequest calls the generic UpdateLabel builder with application/json body
+func NewUpdateLabelRequest(server string, repo RepoName, id int64, body UpdateLabelJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateLabelRequestWithBody(server, repo, id, "application/json", bodyReader)
+}
+
+// NewUpdateLabelRequestWithBody constructs an http.Request for the UpdateLabel method, with any body, and a specified content type
+func NewUpdateLabelRequestWithBody(server string, repo RepoName, id int64, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/labels/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListMilestonesRequest constructs an http.Request for the ListMilestones method
+func NewListMilestonesRequest(server string, repo RepoName, params *ListMilestonesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/milestones", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.State != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "state", *params.State, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateMilestoneRequest calls the generic CreateMilestone builder with application/json body
+func NewCreateMilestoneRequest(server string, repo RepoName, body CreateMilestoneJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateMilestoneRequestWithBody(server, repo, "application/json", bodyReader)
+}
+
+// NewCreateMilestoneRequestWithBody constructs an http.Request for the CreateMilestone method, with any body, and a specified content type
+func NewCreateMilestoneRequestWithBody(server string, repo RepoName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/milestones", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteMilestoneRequest constructs an http.Request for the DeleteMilestone method
+func NewDeleteMilestoneRequest(server string, repo RepoName, id int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/milestones/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetMilestoneRequest constructs an http.Request for the GetMilestone method
+func NewGetMilestoneRequest(server string, repo RepoName, id int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/milestones/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateMilestoneRequest calls the generic UpdateMilestone builder with application/json body
+func NewUpdateMilestoneRequest(server string, repo RepoName, id int64, body UpdateMilestoneJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateMilestoneRequestWithBody(server, repo, id, "application/json", bodyReader)
+}
+
+// NewUpdateMilestoneRequestWithBody constructs an http.Request for the UpdateMilestone method, with any body, and a specified content type
+func NewUpdateMilestoneRequestWithBody(server string, repo RepoName, id int64, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/milestones/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListProtectionsRequest constructs an http.Request for the ListProtections method
 func NewListProtectionsRequest(server string, repo RepoName) (*http.Request, error) {
 	var err error
@@ -6225,6 +8291,18 @@ func NewListPullsRequest(server string, repo RepoName, params *ListPullsParams) 
 		if params.Q != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "q", *params.Q, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Labels != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "labels", *params.Labels, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -7513,6 +9591,13 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /auth/session (the `GetSession` operationId).
 	GetSessionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSessionResponse, error)
 
+	// ListMyIssuesWithResponse Issues across all repositories you can access
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /issues (the `ListMyIssues` operationId).
+	ListMyIssuesWithResponse(ctx context.Context, params *ListMyIssuesParams, reqEditors ...RequestEditorFn) (*ListMyIssuesResponse, error)
+
 	// RenderMarkdownWithBodyWithResponse Render markdown to sanitised HTML
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -7701,6 +9786,175 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /repos/{repo}/compare (the `CompareRefs` operationId).
 	CompareRefsWithResponse(ctx context.Context, repo RepoName, params *CompareRefsParams, reqEditors ...RequestEditorFn) (*CompareRefsResponse, error)
+
+	// ListIssuesWithResponse List issues (not pull requests)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/issues (the `ListIssues` operationId).
+	ListIssuesWithResponse(ctx context.Context, repo RepoName, params *ListIssuesParams, reqEditors ...RequestEditorFn) (*ListIssuesResponse, error)
+
+	// CreateIssueWithBodyWithResponse Open an issue (triage access, so testers can file bugs)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/issues (the `CreateIssue` operationId).
+	CreateIssueWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateIssueResponse, error)
+
+	// CreateIssueWithResponse Open an issue (triage access, so testers can file bugs)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/issues (the `CreateIssue` operationId).
+	CreateIssueWithResponse(ctx context.Context, repo RepoName, body CreateIssueJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateIssueResponse, error)
+
+	// GetIssueWithResponse Get an issue
+	//
+	// For a pull request's number this fails with `not_found` and `details.is_pull = true`.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/issues/{number} (the `GetIssue` operationId).
+	GetIssueWithResponse(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*GetIssueResponse, error)
+
+	// UpdateIssueWithBodyWithResponse Edit, close or reopen an issue, or change its labels, assignees and milestone
+	//
+	// Title and body: the author or write access. Everything else: triage access.
+	// `labels`/`assignees` replace the lists; `add_*`/`remove_*` change them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/issues/{number} (the `UpdateIssue` operationId).
+	UpdateIssueWithBodyWithResponse(ctx context.Context, repo RepoName, number IssueNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateIssueResponse, error)
+
+	// UpdateIssueWithResponse Edit, close or reopen an issue, or change its labels, assignees and milestone
+	//
+	// Title and body: the author or write access. Everything else: triage access.
+	// `labels`/`assignees` replace the lists; `add_*`/`remove_*` change them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/issues/{number} (the `UpdateIssue` operationId).
+	UpdateIssueWithResponse(ctx context.Context, repo RepoName, number IssueNumber, body UpdateIssueJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateIssueResponse, error)
+
+	// ListIssueCommentsWithResponse Comments, oldest first
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/issues/{number}/comments (the `ListIssueComments` operationId).
+	ListIssueCommentsWithResponse(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*ListIssueCommentsResponse, error)
+
+	// CreateIssueCommentWithBodyWithResponse Comment on an issue (triage access)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/issues/{number}/comments (the `CreateIssueComment` operationId).
+	CreateIssueCommentWithBodyWithResponse(ctx context.Context, repo RepoName, number IssueNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateIssueCommentResponse, error)
+
+	// CreateIssueCommentWithResponse Comment on an issue (triage access)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/issues/{number}/comments (the `CreateIssueComment` operationId).
+	CreateIssueCommentWithResponse(ctx context.Context, repo RepoName, number IssueNumber, body CreateIssueCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateIssueCommentResponse, error)
+
+	// GetIssueTimelineWithResponse Comments and events, oldest first
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/issues/{number}/timeline (the `GetIssueTimeline` operationId).
+	GetIssueTimelineWithResponse(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*GetIssueTimelineResponse, error)
+
+	// ListLabelsWithResponse List labels, by name
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/labels (the `ListLabels` operationId).
+	ListLabelsWithResponse(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*ListLabelsResponse, error)
+
+	// CreateLabelWithBodyWithResponse Create a label (write access)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/labels (the `CreateLabel` operationId).
+	CreateLabelWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateLabelResponse, error)
+
+	// CreateLabelWithResponse Create a label (write access)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/labels (the `CreateLabel` operationId).
+	CreateLabelWithResponse(ctx context.Context, repo RepoName, body CreateLabelJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateLabelResponse, error)
+
+	// DeleteLabelWithResponse Delete a label, removing it from issues and pull requests (write access)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /repos/{repo}/labels/{id} (the `DeleteLabel` operationId).
+	DeleteLabelWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*DeleteLabelResponse, error)
+
+	// UpdateLabelWithBodyWithResponse Rename or recolour a label (write access)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/labels/{id} (the `UpdateLabel` operationId).
+	UpdateLabelWithBodyWithResponse(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateLabelResponse, error)
+
+	// UpdateLabelWithResponse Rename or recolour a label (write access)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/labels/{id} (the `UpdateLabel` operationId).
+	UpdateLabelWithResponse(ctx context.Context, repo RepoName, id int64, body UpdateLabelJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateLabelResponse, error)
+
+	// ListMilestonesWithResponse List milestones (open ones by due date, then closed)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/milestones (the `ListMilestones` operationId).
+	ListMilestonesWithResponse(ctx context.Context, repo RepoName, params *ListMilestonesParams, reqEditors ...RequestEditorFn) (*ListMilestonesResponse, error)
+
+	// CreateMilestoneWithBodyWithResponse Create a milestone (write access)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/milestones (the `CreateMilestone` operationId).
+	CreateMilestoneWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateMilestoneResponse, error)
+
+	// CreateMilestoneWithResponse Create a milestone (write access)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/milestones (the `CreateMilestone` operationId).
+	CreateMilestoneWithResponse(ctx context.Context, repo RepoName, body CreateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateMilestoneResponse, error)
+
+	// DeleteMilestoneWithResponse Delete a milestone; its issues and pull requests keep existing without it (write access)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /repos/{repo}/milestones/{id} (the `DeleteMilestone` operationId).
+	DeleteMilestoneWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*DeleteMilestoneResponse, error)
+
+	// GetMilestoneWithResponse Get a milestone
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/milestones/{id} (the `GetMilestone` operationId).
+	GetMilestoneWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*GetMilestoneResponse, error)
+
+	// UpdateMilestoneWithBodyWithResponse Edit, close or reopen a milestone (write access)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/milestones/{id} (the `UpdateMilestone` operationId).
+	UpdateMilestoneWithBodyWithResponse(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateMilestoneResponse, error)
+
+	// UpdateMilestoneWithResponse Edit, close or reopen a milestone (write access)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/milestones/{id} (the `UpdateMilestone` operationId).
+	UpdateMilestoneWithResponse(ctx context.Context, repo RepoName, id int64, body UpdateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateMilestoneResponse, error)
 
 	// ListProtectionsWithResponse List branch protection rules
 	//
@@ -9057,6 +11311,54 @@ func (r GetSessionResponse) ContentType() string {
 	return ""
 }
 
+type ListMyIssuesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *IssuePage
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListMyIssuesResponse) GetJSON200() *IssuePage {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListMyIssuesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListMyIssuesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListMyIssuesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListMyIssuesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListMyIssuesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type RenderMarkdownResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -9987,6 +12289,760 @@ func (r CompareRefsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r CompareRefsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListIssuesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *IssuePage
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListIssuesResponse) GetJSON200() *IssuePage {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListIssuesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListIssuesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListIssuesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListIssuesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListIssuesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateIssueResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *Issue
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateIssueResponse) GetJSON201() *Issue {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CreateIssueResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateIssueResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateIssueResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateIssueResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateIssueResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetIssueResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Issue
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetIssueResponse) GetJSON200() *Issue {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetIssueResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetIssueResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetIssueResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetIssueResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetIssueResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateIssueResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Issue
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateIssueResponse) GetJSON200() *Issue {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdateIssueResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateIssueResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateIssueResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateIssueResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateIssueResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListIssueCommentsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]Comment
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListIssueCommentsResponse) GetJSON200() *[]Comment {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListIssueCommentsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListIssueCommentsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListIssueCommentsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListIssueCommentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListIssueCommentsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateIssueCommentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *Comment
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateIssueCommentResponse) GetJSON201() *Comment {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CreateIssueCommentResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateIssueCommentResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateIssueCommentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateIssueCommentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateIssueCommentResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetIssueTimelineResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]TimelineItem
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetIssueTimelineResponse) GetJSON200() *[]TimelineItem {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetIssueTimelineResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetIssueTimelineResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetIssueTimelineResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetIssueTimelineResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetIssueTimelineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListLabelsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]Label
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListLabelsResponse) GetJSON200() *[]Label {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListLabelsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListLabelsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListLabelsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListLabelsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListLabelsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateLabelResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *Label
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateLabelResponse) GetJSON201() *Label {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CreateLabelResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateLabelResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateLabelResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateLabelResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateLabelResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteLabelResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteLabelResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteLabelResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteLabelResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteLabelResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteLabelResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateLabelResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Label
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateLabelResponse) GetJSON200() *Label {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdateLabelResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateLabelResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateLabelResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateLabelResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateLabelResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListMilestonesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]Milestone
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListMilestonesResponse) GetJSON200() *[]Milestone {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListMilestonesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListMilestonesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListMilestonesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListMilestonesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListMilestonesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateMilestoneResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *Milestone
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateMilestoneResponse) GetJSON201() *Milestone {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CreateMilestoneResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateMilestoneResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateMilestoneResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateMilestoneResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateMilestoneResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteMilestoneResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteMilestoneResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteMilestoneResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteMilestoneResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteMilestoneResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteMilestoneResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMilestoneResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Milestone
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMilestoneResponse) GetJSON200() *Milestone {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetMilestoneResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMilestoneResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMilestoneResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMilestoneResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMilestoneResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateMilestoneResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Milestone
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateMilestoneResponse) GetJSON200() *Milestone {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdateMilestoneResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateMilestoneResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateMilestoneResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateMilestoneResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateMilestoneResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -11586,6 +14642,19 @@ func (c *ClientWithResponses) GetSessionWithResponse(ctx context.Context, reqEdi
 	return ParseGetSessionResponse(rsp)
 }
 
+// ListMyIssuesWithResponse Issues across all repositories you can access
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /issues (the `ListMyIssues` operationId).
+func (c *ClientWithResponses) ListMyIssuesWithResponse(ctx context.Context, params *ListMyIssuesParams, reqEditors ...RequestEditorFn) (*ListMyIssuesResponse, error) {
+	rsp, err := c.ListMyIssues(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListMyIssuesResponse(rsp)
+}
+
 // RenderMarkdownWithBodyWithResponse Render markdown to sanitised HTML
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -11923,6 +14992,313 @@ func (c *ClientWithResponses) CompareRefsWithResponse(ctx context.Context, repo 
 		return nil, err
 	}
 	return ParseCompareRefsResponse(rsp)
+}
+
+// ListIssuesWithResponse List issues (not pull requests)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/issues (the `ListIssues` operationId).
+func (c *ClientWithResponses) ListIssuesWithResponse(ctx context.Context, repo RepoName, params *ListIssuesParams, reqEditors ...RequestEditorFn) (*ListIssuesResponse, error) {
+	rsp, err := c.ListIssues(ctx, repo, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListIssuesResponse(rsp)
+}
+
+// CreateIssueWithBodyWithResponse Open an issue (triage access, so testers can file bugs)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/issues (the `CreateIssue` operationId).
+func (c *ClientWithResponses) CreateIssueWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateIssueResponse, error) {
+	rsp, err := c.CreateIssueWithBody(ctx, repo, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateIssueResponse(rsp)
+}
+
+// CreateIssueWithResponse Open an issue (triage access, so testers can file bugs)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/issues (the `CreateIssue` operationId).
+func (c *ClientWithResponses) CreateIssueWithResponse(ctx context.Context, repo RepoName, body CreateIssueJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateIssueResponse, error) {
+	rsp, err := c.CreateIssue(ctx, repo, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateIssueResponse(rsp)
+}
+
+// GetIssueWithResponse Get an issue
+//
+// For a pull request's number this fails with `not_found` and `details.is_pull = true`.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/issues/{number} (the `GetIssue` operationId).
+func (c *ClientWithResponses) GetIssueWithResponse(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*GetIssueResponse, error) {
+	rsp, err := c.GetIssue(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetIssueResponse(rsp)
+}
+
+// UpdateIssueWithBodyWithResponse Edit, close or reopen an issue, or change its labels, assignees and milestone
+//
+// Title and body: the author or write access. Everything else: triage access.
+// `labels`/`assignees` replace the lists; `add_*`/`remove_*` change them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/issues/{number} (the `UpdateIssue` operationId).
+func (c *ClientWithResponses) UpdateIssueWithBodyWithResponse(ctx context.Context, repo RepoName, number IssueNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateIssueResponse, error) {
+	rsp, err := c.UpdateIssueWithBody(ctx, repo, number, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateIssueResponse(rsp)
+}
+
+// UpdateIssueWithResponse Edit, close or reopen an issue, or change its labels, assignees and milestone
+//
+// Title and body: the author or write access. Everything else: triage access.
+// `labels`/`assignees` replace the lists; `add_*`/`remove_*` change them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/issues/{number} (the `UpdateIssue` operationId).
+func (c *ClientWithResponses) UpdateIssueWithResponse(ctx context.Context, repo RepoName, number IssueNumber, body UpdateIssueJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateIssueResponse, error) {
+	rsp, err := c.UpdateIssue(ctx, repo, number, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateIssueResponse(rsp)
+}
+
+// ListIssueCommentsWithResponse Comments, oldest first
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/issues/{number}/comments (the `ListIssueComments` operationId).
+func (c *ClientWithResponses) ListIssueCommentsWithResponse(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*ListIssueCommentsResponse, error) {
+	rsp, err := c.ListIssueComments(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListIssueCommentsResponse(rsp)
+}
+
+// CreateIssueCommentWithBodyWithResponse Comment on an issue (triage access)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/issues/{number}/comments (the `CreateIssueComment` operationId).
+func (c *ClientWithResponses) CreateIssueCommentWithBodyWithResponse(ctx context.Context, repo RepoName, number IssueNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateIssueCommentResponse, error) {
+	rsp, err := c.CreateIssueCommentWithBody(ctx, repo, number, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateIssueCommentResponse(rsp)
+}
+
+// CreateIssueCommentWithResponse Comment on an issue (triage access)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/issues/{number}/comments (the `CreateIssueComment` operationId).
+func (c *ClientWithResponses) CreateIssueCommentWithResponse(ctx context.Context, repo RepoName, number IssueNumber, body CreateIssueCommentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateIssueCommentResponse, error) {
+	rsp, err := c.CreateIssueComment(ctx, repo, number, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateIssueCommentResponse(rsp)
+}
+
+// GetIssueTimelineWithResponse Comments and events, oldest first
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/issues/{number}/timeline (the `GetIssueTimeline` operationId).
+func (c *ClientWithResponses) GetIssueTimelineWithResponse(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*GetIssueTimelineResponse, error) {
+	rsp, err := c.GetIssueTimeline(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetIssueTimelineResponse(rsp)
+}
+
+// ListLabelsWithResponse List labels, by name
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/labels (the `ListLabels` operationId).
+func (c *ClientWithResponses) ListLabelsWithResponse(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*ListLabelsResponse, error) {
+	rsp, err := c.ListLabels(ctx, repo, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListLabelsResponse(rsp)
+}
+
+// CreateLabelWithBodyWithResponse Create a label (write access)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/labels (the `CreateLabel` operationId).
+func (c *ClientWithResponses) CreateLabelWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateLabelResponse, error) {
+	rsp, err := c.CreateLabelWithBody(ctx, repo, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateLabelResponse(rsp)
+}
+
+// CreateLabelWithResponse Create a label (write access)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/labels (the `CreateLabel` operationId).
+func (c *ClientWithResponses) CreateLabelWithResponse(ctx context.Context, repo RepoName, body CreateLabelJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateLabelResponse, error) {
+	rsp, err := c.CreateLabel(ctx, repo, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateLabelResponse(rsp)
+}
+
+// DeleteLabelWithResponse Delete a label, removing it from issues and pull requests (write access)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /repos/{repo}/labels/{id} (the `DeleteLabel` operationId).
+func (c *ClientWithResponses) DeleteLabelWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*DeleteLabelResponse, error) {
+	rsp, err := c.DeleteLabel(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteLabelResponse(rsp)
+}
+
+// UpdateLabelWithBodyWithResponse Rename or recolour a label (write access)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/labels/{id} (the `UpdateLabel` operationId).
+func (c *ClientWithResponses) UpdateLabelWithBodyWithResponse(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateLabelResponse, error) {
+	rsp, err := c.UpdateLabelWithBody(ctx, repo, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateLabelResponse(rsp)
+}
+
+// UpdateLabelWithResponse Rename or recolour a label (write access)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/labels/{id} (the `UpdateLabel` operationId).
+func (c *ClientWithResponses) UpdateLabelWithResponse(ctx context.Context, repo RepoName, id int64, body UpdateLabelJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateLabelResponse, error) {
+	rsp, err := c.UpdateLabel(ctx, repo, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateLabelResponse(rsp)
+}
+
+// ListMilestonesWithResponse List milestones (open ones by due date, then closed)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/milestones (the `ListMilestones` operationId).
+func (c *ClientWithResponses) ListMilestonesWithResponse(ctx context.Context, repo RepoName, params *ListMilestonesParams, reqEditors ...RequestEditorFn) (*ListMilestonesResponse, error) {
+	rsp, err := c.ListMilestones(ctx, repo, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListMilestonesResponse(rsp)
+}
+
+// CreateMilestoneWithBodyWithResponse Create a milestone (write access)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/milestones (the `CreateMilestone` operationId).
+func (c *ClientWithResponses) CreateMilestoneWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateMilestoneResponse, error) {
+	rsp, err := c.CreateMilestoneWithBody(ctx, repo, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateMilestoneResponse(rsp)
+}
+
+// CreateMilestoneWithResponse Create a milestone (write access)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/milestones (the `CreateMilestone` operationId).
+func (c *ClientWithResponses) CreateMilestoneWithResponse(ctx context.Context, repo RepoName, body CreateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateMilestoneResponse, error) {
+	rsp, err := c.CreateMilestone(ctx, repo, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateMilestoneResponse(rsp)
+}
+
+// DeleteMilestoneWithResponse Delete a milestone; its issues and pull requests keep existing without it (write access)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /repos/{repo}/milestones/{id} (the `DeleteMilestone` operationId).
+func (c *ClientWithResponses) DeleteMilestoneWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*DeleteMilestoneResponse, error) {
+	rsp, err := c.DeleteMilestone(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteMilestoneResponse(rsp)
+}
+
+// GetMilestoneWithResponse Get a milestone
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/milestones/{id} (the `GetMilestone` operationId).
+func (c *ClientWithResponses) GetMilestoneWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*GetMilestoneResponse, error) {
+	rsp, err := c.GetMilestone(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMilestoneResponse(rsp)
+}
+
+// UpdateMilestoneWithBodyWithResponse Edit, close or reopen a milestone (write access)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/milestones/{id} (the `UpdateMilestone` operationId).
+func (c *ClientWithResponses) UpdateMilestoneWithBodyWithResponse(ctx context.Context, repo RepoName, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateMilestoneResponse, error) {
+	rsp, err := c.UpdateMilestoneWithBody(ctx, repo, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateMilestoneResponse(rsp)
+}
+
+// UpdateMilestoneWithResponse Edit, close or reopen a milestone (write access)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/milestones/{id} (the `UpdateMilestone` operationId).
+func (c *ClientWithResponses) UpdateMilestoneWithResponse(ctx context.Context, repo RepoName, id int64, body UpdateMilestoneJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateMilestoneResponse, error) {
+	rsp, err := c.UpdateMilestone(ctx, repo, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateMilestoneResponse(rsp)
 }
 
 // ListProtectionsWithResponse List branch protection rules
@@ -13150,6 +16526,39 @@ func ParseGetSessionResponse(rsp *http.Response) (*GetSessionResponse, error) {
 	return response, nil
 }
 
+// ParseListMyIssuesResponse parses an HTTP response from a ListMyIssuesWithResponse call
+func ParseListMyIssuesResponse(rsp *http.Response) (*ListMyIssuesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListMyIssuesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest IssuePage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseRenderMarkdownResponse parses an HTTP response from a RenderMarkdownWithResponse call
 func ParseRenderMarkdownResponse(rsp *http.Response) (*RenderMarkdownResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -13776,6 +17185,526 @@ func ParseCompareRefsResponse(rsp *http.Response) (*CompareRefsResponse, error) 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest Comparison
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListIssuesResponse parses an HTTP response from a ListIssuesWithResponse call
+func ParseListIssuesResponse(rsp *http.Response) (*ListIssuesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListIssuesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest IssuePage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateIssueResponse parses an HTTP response from a CreateIssueWithResponse call
+func ParseCreateIssueResponse(rsp *http.Response) (*CreateIssueResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateIssueResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Issue
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetIssueResponse parses an HTTP response from a GetIssueWithResponse call
+func ParseGetIssueResponse(rsp *http.Response) (*GetIssueResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetIssueResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Issue
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateIssueResponse parses an HTTP response from a UpdateIssueWithResponse call
+func ParseUpdateIssueResponse(rsp *http.Response) (*UpdateIssueResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateIssueResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Issue
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListIssueCommentsResponse parses an HTTP response from a ListIssueCommentsWithResponse call
+func ParseListIssueCommentsResponse(rsp *http.Response) (*ListIssueCommentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListIssueCommentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Comment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateIssueCommentResponse parses an HTTP response from a CreateIssueCommentWithResponse call
+func ParseCreateIssueCommentResponse(rsp *http.Response) (*CreateIssueCommentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateIssueCommentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Comment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetIssueTimelineResponse parses an HTTP response from a GetIssueTimelineWithResponse call
+func ParseGetIssueTimelineResponse(rsp *http.Response) (*GetIssueTimelineResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetIssueTimelineResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []TimelineItem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListLabelsResponse parses an HTTP response from a ListLabelsWithResponse call
+func ParseListLabelsResponse(rsp *http.Response) (*ListLabelsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListLabelsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Label
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateLabelResponse parses an HTTP response from a CreateLabelWithResponse call
+func ParseCreateLabelResponse(rsp *http.Response) (*CreateLabelResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateLabelResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Label
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteLabelResponse parses an HTTP response from a DeleteLabelWithResponse call
+func ParseDeleteLabelResponse(rsp *http.Response) (*DeleteLabelResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteLabelResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateLabelResponse parses an HTTP response from a UpdateLabelWithResponse call
+func ParseUpdateLabelResponse(rsp *http.Response) (*UpdateLabelResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateLabelResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Label
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListMilestonesResponse parses an HTTP response from a ListMilestonesWithResponse call
+func ParseListMilestonesResponse(rsp *http.Response) (*ListMilestonesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListMilestonesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Milestone
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateMilestoneResponse parses an HTTP response from a CreateMilestoneWithResponse call
+func ParseCreateMilestoneResponse(rsp *http.Response) (*CreateMilestoneResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateMilestoneResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Milestone
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteMilestoneResponse parses an HTTP response from a DeleteMilestoneWithResponse call
+func ParseDeleteMilestoneResponse(rsp *http.Response) (*DeleteMilestoneResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteMilestoneResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMilestoneResponse parses an HTTP response from a GetMilestoneWithResponse call
+func ParseGetMilestoneResponse(rsp *http.Response) (*GetMilestoneResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMilestoneResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Milestone
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateMilestoneResponse parses an HTTP response from a UpdateMilestoneWithResponse call
+func ParseUpdateMilestoneResponse(rsp *http.Response) (*UpdateMilestoneResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateMilestoneResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Milestone
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -14645,6 +18574,9 @@ type ServerInterface interface {
 	// GetSession The current user and how they authenticated
 	// (GET /auth/session)
 	GetSession(w http.ResponseWriter, r *http.Request)
+	// ListMyIssues Issues across all repositories you can access
+	// (GET /issues)
+	ListMyIssues(w http.ResponseWriter, r *http.Request, params ListMyIssuesParams)
 	// RenderMarkdown Render markdown to sanitised HTML
 	// (POST /markdown)
 	RenderMarkdown(w http.ResponseWriter, r *http.Request)
@@ -14705,6 +18637,54 @@ type ServerInterface interface {
 	// CompareRefs Compare two branches (what a pull request from head into base would contain)
 	// (GET /repos/{repo}/compare)
 	CompareRefs(w http.ResponseWriter, r *http.Request, repo RepoName, params CompareRefsParams)
+	// ListIssues List issues (not pull requests)
+	// (GET /repos/{repo}/issues)
+	ListIssues(w http.ResponseWriter, r *http.Request, repo RepoName, params ListIssuesParams)
+	// CreateIssue Open an issue (triage access, so testers can file bugs)
+	// (POST /repos/{repo}/issues)
+	CreateIssue(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// GetIssue Get an issue
+	// (GET /repos/{repo}/issues/{number})
+	GetIssue(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber)
+	// UpdateIssue Edit, close or reopen an issue, or change its labels, assignees and milestone
+	// (PATCH /repos/{repo}/issues/{number})
+	UpdateIssue(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber)
+	// ListIssueComments Comments, oldest first
+	// (GET /repos/{repo}/issues/{number}/comments)
+	ListIssueComments(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber)
+	// CreateIssueComment Comment on an issue (triage access)
+	// (POST /repos/{repo}/issues/{number}/comments)
+	CreateIssueComment(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber)
+	// GetIssueTimeline Comments and events, oldest first
+	// (GET /repos/{repo}/issues/{number}/timeline)
+	GetIssueTimeline(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber)
+	// ListLabels List labels, by name
+	// (GET /repos/{repo}/labels)
+	ListLabels(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// CreateLabel Create a label (write access)
+	// (POST /repos/{repo}/labels)
+	CreateLabel(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// DeleteLabel Delete a label, removing it from issues and pull requests (write access)
+	// (DELETE /repos/{repo}/labels/{id})
+	DeleteLabel(w http.ResponseWriter, r *http.Request, repo RepoName, id int64)
+	// UpdateLabel Rename or recolour a label (write access)
+	// (PATCH /repos/{repo}/labels/{id})
+	UpdateLabel(w http.ResponseWriter, r *http.Request, repo RepoName, id int64)
+	// ListMilestones List milestones (open ones by due date, then closed)
+	// (GET /repos/{repo}/milestones)
+	ListMilestones(w http.ResponseWriter, r *http.Request, repo RepoName, params ListMilestonesParams)
+	// CreateMilestone Create a milestone (write access)
+	// (POST /repos/{repo}/milestones)
+	CreateMilestone(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// DeleteMilestone Delete a milestone; its issues and pull requests keep existing without it (write access)
+	// (DELETE /repos/{repo}/milestones/{id})
+	DeleteMilestone(w http.ResponseWriter, r *http.Request, repo RepoName, id int64)
+	// GetMilestone Get a milestone
+	// (GET /repos/{repo}/milestones/{id})
+	GetMilestone(w http.ResponseWriter, r *http.Request, repo RepoName, id int64)
+	// UpdateMilestone Edit, close or reopen a milestone (write access)
+	// (PATCH /repos/{repo}/milestones/{id})
+	UpdateMilestone(w http.ResponseWriter, r *http.Request, repo RepoName, id int64)
 	// ListProtections List branch protection rules
 	// (GET /repos/{repo}/protections)
 	ListProtections(w http.ResponseWriter, r *http.Request, repo RepoName)
@@ -14921,6 +18901,12 @@ func (_ Unimplemented) GetSession(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListMyIssues Issues across all repositories you can access
+// (GET /issues)
+func (_ Unimplemented) ListMyIssues(w http.ResponseWriter, r *http.Request, params ListMyIssuesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // RenderMarkdown Render markdown to sanitised HTML
 // (POST /markdown)
 func (_ Unimplemented) RenderMarkdown(w http.ResponseWriter, r *http.Request) {
@@ -15038,6 +19024,102 @@ func (_ Unimplemented) GetCommit(w http.ResponseWriter, r *http.Request, repo Re
 // CompareRefs Compare two branches (what a pull request from head into base would contain)
 // (GET /repos/{repo}/compare)
 func (_ Unimplemented) CompareRefs(w http.ResponseWriter, r *http.Request, repo RepoName, params CompareRefsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListIssues List issues (not pull requests)
+// (GET /repos/{repo}/issues)
+func (_ Unimplemented) ListIssues(w http.ResponseWriter, r *http.Request, repo RepoName, params ListIssuesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateIssue Open an issue (triage access, so testers can file bugs)
+// (POST /repos/{repo}/issues)
+func (_ Unimplemented) CreateIssue(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetIssue Get an issue
+// (GET /repos/{repo}/issues/{number})
+func (_ Unimplemented) GetIssue(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateIssue Edit, close or reopen an issue, or change its labels, assignees and milestone
+// (PATCH /repos/{repo}/issues/{number})
+func (_ Unimplemented) UpdateIssue(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListIssueComments Comments, oldest first
+// (GET /repos/{repo}/issues/{number}/comments)
+func (_ Unimplemented) ListIssueComments(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateIssueComment Comment on an issue (triage access)
+// (POST /repos/{repo}/issues/{number}/comments)
+func (_ Unimplemented) CreateIssueComment(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetIssueTimeline Comments and events, oldest first
+// (GET /repos/{repo}/issues/{number}/timeline)
+func (_ Unimplemented) GetIssueTimeline(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListLabels List labels, by name
+// (GET /repos/{repo}/labels)
+func (_ Unimplemented) ListLabels(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateLabel Create a label (write access)
+// (POST /repos/{repo}/labels)
+func (_ Unimplemented) CreateLabel(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteLabel Delete a label, removing it from issues and pull requests (write access)
+// (DELETE /repos/{repo}/labels/{id})
+func (_ Unimplemented) DeleteLabel(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateLabel Rename or recolour a label (write access)
+// (PATCH /repos/{repo}/labels/{id})
+func (_ Unimplemented) UpdateLabel(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListMilestones List milestones (open ones by due date, then closed)
+// (GET /repos/{repo}/milestones)
+func (_ Unimplemented) ListMilestones(w http.ResponseWriter, r *http.Request, repo RepoName, params ListMilestonesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateMilestone Create a milestone (write access)
+// (POST /repos/{repo}/milestones)
+func (_ Unimplemented) CreateMilestone(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteMilestone Delete a milestone; its issues and pull requests keep existing without it (write access)
+// (DELETE /repos/{repo}/milestones/{id})
+func (_ Unimplemented) DeleteMilestone(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetMilestone Get a milestone
+// (GET /repos/{repo}/milestones/{id})
+func (_ Unimplemented) GetMilestone(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateMilestone Edit, close or reopen a milestone (write access)
+// (PATCH /repos/{repo}/milestones/{id})
+func (_ Unimplemented) UpdateMilestone(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -15649,6 +19731,78 @@ func (siw *ServerInterfaceWrapper) GetSession(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetSession(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListMyIssues operation middleware
+func (siw *ServerInterfaceWrapper) ListMyIssues(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListMyIssuesParams
+
+	// ------------- Optional query parameter "filter" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "filter", r.URL.Query(), &params.Filter, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "filter"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "filter", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", r.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "per_page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "per_page", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMyIssues(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -16340,6 +20494,648 @@ func (siw *ServerInterfaceWrapper) CompareRefs(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
+// ListIssues operation middleware
+func (siw *ServerInterfaceWrapper) ListIssues(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListIssuesParams
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "labels" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "labels", r.URL.Query(), &params.Labels, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "labels"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "labels", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "milestone" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "milestone", r.URL.Query(), &params.Milestone, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "milestone"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "milestone", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "assignee" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "assignee", r.URL.Query(), &params.Assignee, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "assignee"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "assignee", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "author" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "author", r.URL.Query(), &params.Author, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "author"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "author", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sort", r.URL.Query(), &params.Sort, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sort"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", r.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "per_page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "per_page", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListIssues(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateIssue operation middleware
+func (siw *ServerInterfaceWrapper) CreateIssue(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateIssue(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetIssue operation middleware
+func (siw *ServerInterfaceWrapper) GetIssue(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number IssueNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetIssue(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateIssue operation middleware
+func (siw *ServerInterfaceWrapper) UpdateIssue(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number IssueNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateIssue(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListIssueComments operation middleware
+func (siw *ServerInterfaceWrapper) ListIssueComments(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number IssueNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListIssueComments(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateIssueComment operation middleware
+func (siw *ServerInterfaceWrapper) CreateIssueComment(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number IssueNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateIssueComment(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetIssueTimeline operation middleware
+func (siw *ServerInterfaceWrapper) GetIssueTimeline(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number IssueNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetIssueTimeline(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListLabels operation middleware
+func (siw *ServerInterfaceWrapper) ListLabels(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListLabels(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateLabel operation middleware
+func (siw *ServerInterfaceWrapper) CreateLabel(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateLabel(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteLabel operation middleware
+func (siw *ServerInterfaceWrapper) DeleteLabel(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteLabel(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateLabel operation middleware
+func (siw *ServerInterfaceWrapper) UpdateLabel(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateLabel(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListMilestones operation middleware
+func (siw *ServerInterfaceWrapper) ListMilestones(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListMilestonesParams
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMilestones(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateMilestone operation middleware
+func (siw *ServerInterfaceWrapper) CreateMilestone(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateMilestone(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteMilestone operation middleware
+func (siw *ServerInterfaceWrapper) DeleteMilestone(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteMilestone(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetMilestone operation middleware
+func (siw *ServerInterfaceWrapper) GetMilestone(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMilestone(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateMilestone operation middleware
+func (siw *ServerInterfaceWrapper) UpdateMilestone(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateMilestone(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListProtections operation middleware
 func (siw *ServerInterfaceWrapper) ListProtections(w http.ResponseWriter, r *http.Request) {
 
@@ -16541,6 +21337,19 @@ func (siw *ServerInterfaceWrapper) ListPulls(w http.ResponseWriter, r *http.Requ
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "labels" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "labels", r.URL.Query(), &params.Labels, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "labels"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "labels", Err: err})
 		}
 		return
 	}
@@ -17570,6 +22379,57 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/repos/{repo}/pulls/{number}/update-branch", wrapper.UpdatePullBranch)
 	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/issues", wrapper.ListMyIssues)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/issues", wrapper.ListIssues)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/issues", wrapper.CreateIssue)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/issues/{number}", wrapper.GetIssue)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/repos/{repo}/issues/{number}", wrapper.UpdateIssue)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/issues/{number}/timeline", wrapper.GetIssueTimeline)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/issues/{number}/comments", wrapper.ListIssueComments)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/issues/{number}/comments", wrapper.CreateIssueComment)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/labels", wrapper.ListLabels)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/labels", wrapper.CreateLabel)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/repos/{repo}/labels/{id}", wrapper.DeleteLabel)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/repos/{repo}/labels/{id}", wrapper.UpdateLabel)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/milestones", wrapper.ListMilestones)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/milestones", wrapper.CreateMilestone)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/repos/{repo}/milestones/{id}", wrapper.DeleteMilestone)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/milestones/{id}", wrapper.GetMilestone)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/repos/{repo}/milestones/{id}", wrapper.UpdateMilestone)
+	})
 
 	return r
 }
@@ -18445,6 +23305,45 @@ func (response GetSessiondefaultJSONResponse) VisitGetSessionResponse(w http.Res
 	return err
 }
 
+type ListMyIssuesRequestObject struct {
+	Params ListMyIssuesParams
+}
+
+type ListMyIssuesResponseObject interface {
+	VisitListMyIssuesResponse(w http.ResponseWriter) error
+}
+
+type ListMyIssues200JSONResponse IssuePage
+
+func (response ListMyIssues200JSONResponse) VisitListMyIssuesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMyIssuesdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListMyIssuesdefaultJSONResponse) VisitListMyIssuesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type RenderMarkdownRequestObject struct {
 	Body *RenderMarkdownJSONRequestBody
 }
@@ -19212,6 +24111,637 @@ type CompareRefsdefaultJSONResponse struct {
 }
 
 func (response CompareRefsdefaultJSONResponse) VisitCompareRefsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListIssuesRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Params ListIssuesParams
+}
+
+type ListIssuesResponseObject interface {
+	VisitListIssuesResponse(w http.ResponseWriter) error
+}
+
+type ListIssues200JSONResponse IssuePage
+
+func (response ListIssues200JSONResponse) VisitListIssuesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListIssuesdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListIssuesdefaultJSONResponse) VisitListIssuesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateIssueRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Body *CreateIssueJSONRequestBody
+}
+
+type CreateIssueResponseObject interface {
+	VisitCreateIssueResponse(w http.ResponseWriter) error
+}
+
+type CreateIssue201JSONResponse Issue
+
+func (response CreateIssue201JSONResponse) VisitCreateIssueResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateIssuedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreateIssuedefaultJSONResponse) VisitCreateIssueResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetIssueRequestObject struct {
+	Repo   RepoName    `json:"repo"`
+	Number IssueNumber `json:"number"`
+}
+
+type GetIssueResponseObject interface {
+	VisitGetIssueResponse(w http.ResponseWriter) error
+}
+
+type GetIssue200JSONResponse Issue
+
+func (response GetIssue200JSONResponse) VisitGetIssueResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetIssuedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetIssuedefaultJSONResponse) VisitGetIssueResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateIssueRequestObject struct {
+	Repo   RepoName    `json:"repo"`
+	Number IssueNumber `json:"number"`
+	Body   *UpdateIssueJSONRequestBody
+}
+
+type UpdateIssueResponseObject interface {
+	VisitUpdateIssueResponse(w http.ResponseWriter) error
+}
+
+type UpdateIssue200JSONResponse Issue
+
+func (response UpdateIssue200JSONResponse) VisitUpdateIssueResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateIssuedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdateIssuedefaultJSONResponse) VisitUpdateIssueResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListIssueCommentsRequestObject struct {
+	Repo   RepoName    `json:"repo"`
+	Number IssueNumber `json:"number"`
+}
+
+type ListIssueCommentsResponseObject interface {
+	VisitListIssueCommentsResponse(w http.ResponseWriter) error
+}
+
+type ListIssueComments200JSONResponse []Comment
+
+func (response ListIssueComments200JSONResponse) VisitListIssueCommentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListIssueCommentsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListIssueCommentsdefaultJSONResponse) VisitListIssueCommentsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateIssueCommentRequestObject struct {
+	Repo   RepoName    `json:"repo"`
+	Number IssueNumber `json:"number"`
+	Body   *CreateIssueCommentJSONRequestBody
+}
+
+type CreateIssueCommentResponseObject interface {
+	VisitCreateIssueCommentResponse(w http.ResponseWriter) error
+}
+
+type CreateIssueComment201JSONResponse Comment
+
+func (response CreateIssueComment201JSONResponse) VisitCreateIssueCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateIssueCommentdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreateIssueCommentdefaultJSONResponse) VisitCreateIssueCommentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetIssueTimelineRequestObject struct {
+	Repo   RepoName    `json:"repo"`
+	Number IssueNumber `json:"number"`
+}
+
+type GetIssueTimelineResponseObject interface {
+	VisitGetIssueTimelineResponse(w http.ResponseWriter) error
+}
+
+type GetIssueTimeline200JSONResponse []TimelineItem
+
+func (response GetIssueTimeline200JSONResponse) VisitGetIssueTimelineResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetIssueTimelinedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetIssueTimelinedefaultJSONResponse) VisitGetIssueTimelineResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListLabelsRequestObject struct {
+	Repo RepoName `json:"repo"`
+}
+
+type ListLabelsResponseObject interface {
+	VisitListLabelsResponse(w http.ResponseWriter) error
+}
+
+type ListLabels200JSONResponse []Label
+
+func (response ListLabels200JSONResponse) VisitListLabelsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListLabelsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListLabelsdefaultJSONResponse) VisitListLabelsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateLabelRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Body *CreateLabelJSONRequestBody
+}
+
+type CreateLabelResponseObject interface {
+	VisitCreateLabelResponse(w http.ResponseWriter) error
+}
+
+type CreateLabel201JSONResponse Label
+
+func (response CreateLabel201JSONResponse) VisitCreateLabelResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateLabeldefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreateLabeldefaultJSONResponse) VisitCreateLabelResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteLabelRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   int64    `json:"id"`
+}
+
+type DeleteLabelResponseObject interface {
+	VisitDeleteLabelResponse(w http.ResponseWriter) error
+}
+
+type DeleteLabel204Response struct {
+}
+
+func (response DeleteLabel204Response) VisitDeleteLabelResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteLabeldefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteLabeldefaultJSONResponse) VisitDeleteLabelResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateLabelRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   int64    `json:"id"`
+	Body *UpdateLabelJSONRequestBody
+}
+
+type UpdateLabelResponseObject interface {
+	VisitUpdateLabelResponse(w http.ResponseWriter) error
+}
+
+type UpdateLabel200JSONResponse Label
+
+func (response UpdateLabel200JSONResponse) VisitUpdateLabelResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateLabeldefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdateLabeldefaultJSONResponse) VisitUpdateLabelResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMilestonesRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Params ListMilestonesParams
+}
+
+type ListMilestonesResponseObject interface {
+	VisitListMilestonesResponse(w http.ResponseWriter) error
+}
+
+type ListMilestones200JSONResponse []Milestone
+
+func (response ListMilestones200JSONResponse) VisitListMilestonesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMilestonesdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListMilestonesdefaultJSONResponse) VisitListMilestonesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateMilestoneRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Body *CreateMilestoneJSONRequestBody
+}
+
+type CreateMilestoneResponseObject interface {
+	VisitCreateMilestoneResponse(w http.ResponseWriter) error
+}
+
+type CreateMilestone201JSONResponse Milestone
+
+func (response CreateMilestone201JSONResponse) VisitCreateMilestoneResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateMilestonedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreateMilestonedefaultJSONResponse) VisitCreateMilestoneResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteMilestoneRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   int64    `json:"id"`
+}
+
+type DeleteMilestoneResponseObject interface {
+	VisitDeleteMilestoneResponse(w http.ResponseWriter) error
+}
+
+type DeleteMilestone204Response struct {
+}
+
+func (response DeleteMilestone204Response) VisitDeleteMilestoneResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteMilestonedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteMilestonedefaultJSONResponse) VisitDeleteMilestoneResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMilestoneRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   int64    `json:"id"`
+}
+
+type GetMilestoneResponseObject interface {
+	VisitGetMilestoneResponse(w http.ResponseWriter) error
+}
+
+type GetMilestone200JSONResponse Milestone
+
+func (response GetMilestone200JSONResponse) VisitGetMilestoneResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMilestonedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetMilestonedefaultJSONResponse) VisitGetMilestoneResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMilestoneRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   int64    `json:"id"`
+	Body *UpdateMilestoneJSONRequestBody
+}
+
+type UpdateMilestoneResponseObject interface {
+	VisitUpdateMilestoneResponse(w http.ResponseWriter) error
+}
+
+type UpdateMilestone200JSONResponse Milestone
+
+func (response UpdateMilestone200JSONResponse) VisitUpdateMilestoneResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateMilestonedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdateMilestonedefaultJSONResponse) VisitUpdateMilestoneResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -20257,6 +25787,9 @@ type StrictServerInterface interface {
 	// GetSession The current user and how they authenticated
 	// (GET /auth/session)
 	GetSession(ctx context.Context, request GetSessionRequestObject) (GetSessionResponseObject, error)
+	// ListMyIssues Issues across all repositories you can access
+	// (GET /issues)
+	ListMyIssues(ctx context.Context, request ListMyIssuesRequestObject) (ListMyIssuesResponseObject, error)
 	// RenderMarkdown Render markdown to sanitised HTML
 	// (POST /markdown)
 	RenderMarkdown(ctx context.Context, request RenderMarkdownRequestObject) (RenderMarkdownResponseObject, error)
@@ -20317,6 +25850,54 @@ type StrictServerInterface interface {
 	// CompareRefs Compare two branches (what a pull request from head into base would contain)
 	// (GET /repos/{repo}/compare)
 	CompareRefs(ctx context.Context, request CompareRefsRequestObject) (CompareRefsResponseObject, error)
+	// ListIssues List issues (not pull requests)
+	// (GET /repos/{repo}/issues)
+	ListIssues(ctx context.Context, request ListIssuesRequestObject) (ListIssuesResponseObject, error)
+	// CreateIssue Open an issue (triage access, so testers can file bugs)
+	// (POST /repos/{repo}/issues)
+	CreateIssue(ctx context.Context, request CreateIssueRequestObject) (CreateIssueResponseObject, error)
+	// GetIssue Get an issue
+	// (GET /repos/{repo}/issues/{number})
+	GetIssue(ctx context.Context, request GetIssueRequestObject) (GetIssueResponseObject, error)
+	// UpdateIssue Edit, close or reopen an issue, or change its labels, assignees and milestone
+	// (PATCH /repos/{repo}/issues/{number})
+	UpdateIssue(ctx context.Context, request UpdateIssueRequestObject) (UpdateIssueResponseObject, error)
+	// ListIssueComments Comments, oldest first
+	// (GET /repos/{repo}/issues/{number}/comments)
+	ListIssueComments(ctx context.Context, request ListIssueCommentsRequestObject) (ListIssueCommentsResponseObject, error)
+	// CreateIssueComment Comment on an issue (triage access)
+	// (POST /repos/{repo}/issues/{number}/comments)
+	CreateIssueComment(ctx context.Context, request CreateIssueCommentRequestObject) (CreateIssueCommentResponseObject, error)
+	// GetIssueTimeline Comments and events, oldest first
+	// (GET /repos/{repo}/issues/{number}/timeline)
+	GetIssueTimeline(ctx context.Context, request GetIssueTimelineRequestObject) (GetIssueTimelineResponseObject, error)
+	// ListLabels List labels, by name
+	// (GET /repos/{repo}/labels)
+	ListLabels(ctx context.Context, request ListLabelsRequestObject) (ListLabelsResponseObject, error)
+	// CreateLabel Create a label (write access)
+	// (POST /repos/{repo}/labels)
+	CreateLabel(ctx context.Context, request CreateLabelRequestObject) (CreateLabelResponseObject, error)
+	// DeleteLabel Delete a label, removing it from issues and pull requests (write access)
+	// (DELETE /repos/{repo}/labels/{id})
+	DeleteLabel(ctx context.Context, request DeleteLabelRequestObject) (DeleteLabelResponseObject, error)
+	// UpdateLabel Rename or recolour a label (write access)
+	// (PATCH /repos/{repo}/labels/{id})
+	UpdateLabel(ctx context.Context, request UpdateLabelRequestObject) (UpdateLabelResponseObject, error)
+	// ListMilestones List milestones (open ones by due date, then closed)
+	// (GET /repos/{repo}/milestones)
+	ListMilestones(ctx context.Context, request ListMilestonesRequestObject) (ListMilestonesResponseObject, error)
+	// CreateMilestone Create a milestone (write access)
+	// (POST /repos/{repo}/milestones)
+	CreateMilestone(ctx context.Context, request CreateMilestoneRequestObject) (CreateMilestoneResponseObject, error)
+	// DeleteMilestone Delete a milestone; its issues and pull requests keep existing without it (write access)
+	// (DELETE /repos/{repo}/milestones/{id})
+	DeleteMilestone(ctx context.Context, request DeleteMilestoneRequestObject) (DeleteMilestoneResponseObject, error)
+	// GetMilestone Get a milestone
+	// (GET /repos/{repo}/milestones/{id})
+	GetMilestone(ctx context.Context, request GetMilestoneRequestObject) (GetMilestoneResponseObject, error)
+	// UpdateMilestone Edit, close or reopen a milestone (write access)
+	// (PATCH /repos/{repo}/milestones/{id})
+	UpdateMilestone(ctx context.Context, request UpdateMilestoneRequestObject) (UpdateMilestoneResponseObject, error)
 	// ListProtections List branch protection rules
 	// (GET /repos/{repo}/protections)
 	ListProtections(ctx context.Context, request ListProtectionsRequestObject) (ListProtectionsResponseObject, error)
@@ -21070,6 +26651,32 @@ func (sh *strictHandler) GetSession(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ListMyIssues operation middleware
+func (sh *strictHandler) ListMyIssues(w http.ResponseWriter, r *http.Request, params ListMyIssuesParams) {
+	var request ListMyIssuesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListMyIssues(ctx, request.(ListMyIssuesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListMyIssues")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListMyIssuesResponseObject); ok {
+		if err := validResponse.VisitListMyIssuesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // RenderMarkdown operation middleware
 func (sh *strictHandler) RenderMarkdown(w http.ResponseWriter, r *http.Request) {
 	var request RenderMarkdownRequestObject
@@ -21615,6 +27222,483 @@ func (sh *strictHandler) CompareRefs(w http.ResponseWriter, r *http.Request, rep
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CompareRefsResponseObject); ok {
 		if err := validResponse.VisitCompareRefsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListIssues operation middleware
+func (sh *strictHandler) ListIssues(w http.ResponseWriter, r *http.Request, repo RepoName, params ListIssuesParams) {
+	var request ListIssuesRequestObject
+
+	request.Repo = repo
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListIssues(ctx, request.(ListIssuesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListIssues")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListIssuesResponseObject); ok {
+		if err := validResponse.VisitListIssuesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateIssue operation middleware
+func (sh *strictHandler) CreateIssue(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	var request CreateIssueRequestObject
+
+	request.Repo = repo
+
+	var body CreateIssueJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateIssue(ctx, request.(CreateIssueRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateIssue")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateIssueResponseObject); ok {
+		if err := validResponse.VisitCreateIssueResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetIssue operation middleware
+func (sh *strictHandler) GetIssue(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber) {
+	var request GetIssueRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetIssue(ctx, request.(GetIssueRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetIssue")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetIssueResponseObject); ok {
+		if err := validResponse.VisitGetIssueResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateIssue operation middleware
+func (sh *strictHandler) UpdateIssue(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber) {
+	var request UpdateIssueRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	var body UpdateIssueJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateIssue(ctx, request.(UpdateIssueRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateIssue")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateIssueResponseObject); ok {
+		if err := validResponse.VisitUpdateIssueResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListIssueComments operation middleware
+func (sh *strictHandler) ListIssueComments(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber) {
+	var request ListIssueCommentsRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListIssueComments(ctx, request.(ListIssueCommentsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListIssueComments")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListIssueCommentsResponseObject); ok {
+		if err := validResponse.VisitListIssueCommentsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateIssueComment operation middleware
+func (sh *strictHandler) CreateIssueComment(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber) {
+	var request CreateIssueCommentRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	var body CreateIssueCommentJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateIssueComment(ctx, request.(CreateIssueCommentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateIssueComment")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateIssueCommentResponseObject); ok {
+		if err := validResponse.VisitCreateIssueCommentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetIssueTimeline operation middleware
+func (sh *strictHandler) GetIssueTimeline(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber) {
+	var request GetIssueTimelineRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetIssueTimeline(ctx, request.(GetIssueTimelineRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetIssueTimeline")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetIssueTimelineResponseObject); ok {
+		if err := validResponse.VisitGetIssueTimelineResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListLabels operation middleware
+func (sh *strictHandler) ListLabels(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	var request ListLabelsRequestObject
+
+	request.Repo = repo
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListLabels(ctx, request.(ListLabelsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListLabels")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListLabelsResponseObject); ok {
+		if err := validResponse.VisitListLabelsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateLabel operation middleware
+func (sh *strictHandler) CreateLabel(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	var request CreateLabelRequestObject
+
+	request.Repo = repo
+
+	var body CreateLabelJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateLabel(ctx, request.(CreateLabelRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateLabel")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateLabelResponseObject); ok {
+		if err := validResponse.VisitCreateLabelResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteLabel operation middleware
+func (sh *strictHandler) DeleteLabel(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	var request DeleteLabelRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteLabel(ctx, request.(DeleteLabelRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteLabel")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteLabelResponseObject); ok {
+		if err := validResponse.VisitDeleteLabelResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateLabel operation middleware
+func (sh *strictHandler) UpdateLabel(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	var request UpdateLabelRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	var body UpdateLabelJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateLabel(ctx, request.(UpdateLabelRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateLabel")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateLabelResponseObject); ok {
+		if err := validResponse.VisitUpdateLabelResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListMilestones operation middleware
+func (sh *strictHandler) ListMilestones(w http.ResponseWriter, r *http.Request, repo RepoName, params ListMilestonesParams) {
+	var request ListMilestonesRequestObject
+
+	request.Repo = repo
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListMilestones(ctx, request.(ListMilestonesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListMilestones")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListMilestonesResponseObject); ok {
+		if err := validResponse.VisitListMilestonesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateMilestone operation middleware
+func (sh *strictHandler) CreateMilestone(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	var request CreateMilestoneRequestObject
+
+	request.Repo = repo
+
+	var body CreateMilestoneJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateMilestone(ctx, request.(CreateMilestoneRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateMilestone")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateMilestoneResponseObject); ok {
+		if err := validResponse.VisitCreateMilestoneResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteMilestone operation middleware
+func (sh *strictHandler) DeleteMilestone(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	var request DeleteMilestoneRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteMilestone(ctx, request.(DeleteMilestoneRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteMilestone")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteMilestoneResponseObject); ok {
+		if err := validResponse.VisitDeleteMilestoneResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetMilestone operation middleware
+func (sh *strictHandler) GetMilestone(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	var request GetMilestoneRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMilestone(ctx, request.(GetMilestoneRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMilestone")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetMilestoneResponseObject); ok {
+		if err := validResponse.VisitGetMilestoneResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateMilestone operation middleware
+func (sh *strictHandler) UpdateMilestone(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	var request UpdateMilestoneRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	var body UpdateMilestoneJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateMilestone(ctx, request.(UpdateMilestoneRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateMilestone")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateMilestoneResponseObject); ok {
+		if err := validResponse.VisitUpdateMilestoneResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -22342,193 +28426,220 @@ func (sh *strictHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
-	"A+nv2t/Oxr//dP//BgA=",
+	"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",
+	"fnBpKA8fH/7vAA==",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

@@ -73,15 +73,24 @@ written anywhere.
 | `tgp pr list [-s open\|closed\|merged\|all] [-A user] [-B base] [-H head] [-q text]` | Pull requests in a repository |
 | `tgp pr status` | Waiting for your review, and your own, across repositories |
 | `tgp pr view [PR] [--comments]` | A pull request; `--json` includes reviews, every comment and merge blockers |
-| `tgp pr create [--fill] [-t title] [-b body\|-F file] [-B base] [-H head] [-r reviewers] [-d]` | Open a pull request |
+| `tgp pr create [--fill] [-t title] [-b body\|-F file] [-B base] [-H head] [-r reviewers] [-l labels] [-a users] [-m milestone] [-d]` | Open a pull request |
 | `tgp pr checkout PR` | Check out its branch |
 | `tgp pr diff [PR] [--name-only]` | Its changes |
 | `tgp pr comment [PR] -b text [--file path:line [--side old]] [--reply-to id]` | Comment, inline comment or reply |
 | `tgp pr comments [PR] [--unresolved]` | All comments, inline ones with path, line and diff hunk |
 | `tgp pr review [PR] --approve\|--request-changes\|--comment [-b text] [--inline path:line=text]` | Review |
 | `tgp pr merge [PR] [--merge\|--squash\|--rebase] [-d] [--sha s] [--admin] [--sync]` | Merge |
-| `tgp pr close\|reopen\|ready [--undo]\|update-branch\|edit [PR]` | Change state, base, title or reviewers |
+| `tgp pr close\|reopen\|ready [--undo]\|update-branch\|edit [PR]` | Change state, base, title, reviewers, labels, assignees or milestone (same flags as `issue edit`) |
 | `tgp protection list\|set PATTERN [flags]\|delete PATTERN` | Branch protection rules (changing them: admins) |
+| `tgp issue list [-s open\|closed\|all] [-l labels] [-m milestone\|none\|*] [-a user\|none\|*] [-A author] [-q text]` | Issues in a repository |
+| `tgp issue status` | Open issues assigned to you, and opened by you, across repositories |
+| `tgp issue view N [--comments]` | An issue; `--json` includes every comment |
+| `tgp issue create -t title [-b body\|-F file] [-l labels] [-a users] [-m milestone]` | Open an issue (testers can) |
+| `tgp issue comment N -b text` | Comment |
+| `tgp issue edit N [-t] [-b] [--add-label] [--remove-label] [--labels] [--add-assignee] [--remove-assignee] [--assignees] [-m milestone\|none]` | Edit and triage |
+| `tgp issue close N [--not-planned] [-c comment]` / `reopen N` | Close or reopen |
+| `tgp label list\|create NAME [-c color] [-d text]\|edit NAME\|delete NAME` | Labels |
+| `tgp milestone list [-s open\|closed\|all]\|view\|create TITLE [--due YYYY-MM-DD]\|edit\|close\|reopen\|delete` | Milestones, by title or id |
 | `tgp admin user list\|view\|create\|edit\|reset-password\|reset-2fa\|access` | Users (admins) |
 | `tgp admin audit [--actor u] [--action prefix] [-L n] [--before id]` | Audit log (admins) |
 | `tgp api [METHOD] PATH [-f k=v] [-F k=v] [--input file] [-H 'K: v'] [-i]` | Raw API request |
@@ -92,7 +101,7 @@ written anywhere.
 left out, it's the pull request for the current git branch.
 
 Run `tgp <command> --help` for flags and examples. Later milestones add
-`issue`, `run`, `release` and more.
+`run`, `release` and more.
 
 ### A typical agent loop
 

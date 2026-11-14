@@ -53,13 +53,18 @@ func Render(src []byte, rc RepoContext) (string, error) {
 
 type linkRewriter struct{ rc RepoContext }
 
-func (l *linkRewriter) Transform(doc *ast.Document, _ text.Reader, _ parser.Context) {
+func (l *linkRewriter) Transform(doc *ast.Document, reader text.Reader, _ parser.Context) {
 	if l.rc.Repo == "" {
 		return
 	}
+	var texts []*ast.Text
 	_ = ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkContinue, nil
+		}
+		switch v := n.(type) {
+		case *ast.Text:
+			texts = append(texts, v)
 		}
 		switch v := n.(type) {
 		case *ast.Image:
@@ -76,8 +81,57 @@ func (l *linkRewriter) Transform(doc *ast.Document, _ text.Reader, _ parser.Cont
 				v.Destination = []byte("/" + url.PathEscape(l.rc.Repo) + "/blob?" + url.Values{"ref": {l.rc.Ref}, "path": {p}}.Encode() + frag)
 			}
 		}
+		switch n.(type) {
+		case *ast.Link, *ast.AutoLink, *ast.CodeSpan:
+			return ast.WalkSkipChildren, nil
+		}
 		return ast.WalkContinue, nil
 	})
+	for _, t := range texts {
+		l.linkRefs(t, reader.Source())
+	}
+}
+
+// issueRefRe matches "#123" not preceded by a word character or "&" (HTML entities).
+var issueRefRe = regexp.MustCompile(`(?:^|[^\w&/#])#([0-9]{1,9})\b`)
+
+// linkRefs turns "#123" in a text node into links to issue/PR pages.
+func (l *linkRewriter) linkRefs(t *ast.Text, src []byte) {
+	seg := t.Segment
+	val := seg.Value(src)
+	ms := issueRefRe.FindAllSubmatchIndex(val, -1)
+	if len(ms) == 0 {
+		return
+	}
+	parent := t.Parent()
+	if parent == nil {
+		return
+	}
+	pos := 0
+	var last ast.Node = t
+	insert := func(n ast.Node) {
+		parent.InsertAfter(parent, last, n)
+		last = n
+	}
+	for _, m := range ms {
+		hash := m[2] - 1 // index of '#'
+		if hash > pos {
+			insert(ast.NewTextSegment(text.NewSegment(seg.Start+pos, seg.Start+hash)))
+		}
+		num := string(val[m[2]:m[3]])
+		link := ast.NewLink()
+		link.Destination = []byte("/" + url.PathEscape(l.rc.Repo) + "/issues/" + num)
+		link.AppendChild(link, ast.NewTextSegment(text.NewSegment(seg.Start+hash, seg.Start+m[3])))
+		insert(link)
+		pos = m[3]
+	}
+	if pos < len(val) {
+		rest := ast.NewTextSegment(text.NewSegment(seg.Start+pos, seg.Stop))
+		rest.SetSoftLineBreak(t.SoftLineBreak())
+		rest.SetHardLineBreak(t.HardLineBreak())
+		insert(rest)
+	}
+	parent.RemoveChild(parent, t)
 }
 
 // resolve turns a relative destination into a repository path.

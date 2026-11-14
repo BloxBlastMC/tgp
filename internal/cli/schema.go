@@ -67,6 +67,25 @@ const cliSchemas = `{
       }
     ]
   },
+  "IssueView": {
+    "description": "An issue with all its comments.",
+    "allOf": [
+      {"$ref": "#/components/schemas/Issue"},
+      {
+        "type": "object",
+        "required": ["comment_list"],
+        "properties": {"comment_list": {"type": "array", "items": {"$ref": "#/components/schemas/Comment"}}}
+      }
+    ]
+  },
+  "IssueStatus": {
+    "type": "object",
+    "required": ["assigned", "created"],
+    "properties": {
+      "assigned": {"type": "array", "items": {"$ref": "#/components/schemas/IssueSummary"}},
+      "created": {"type": "array", "items": {"$ref": "#/components/schemas/IssueSummary"}}
+    }
+  },
   "PullStatus": {
     "type": "object",
     "required": ["review_requested", "authored"],

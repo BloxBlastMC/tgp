@@ -229,6 +229,14 @@ func (s *Server) toPullSummaries(ctx context.Context, rows []pullRow) ([]apigen.
 			return nil, err
 		}
 	}
+	issuePtrs := make([]*model.Issue, len(rows))
+	for i := range rows {
+		issuePtrs[i] = &rows[i].issue
+	}
+	meta, err := s.loadIssueMeta(ctx, issuePtrs)
+	if err != nil {
+		return nil, err
+	}
 	for _, r := range rows {
 		pc := &pullCtx{issue: &r.issue, pr: &r.pr}
 		rule := matchRule(rulesByRepo[r.issue.RepoID], r.pr.BaseBranch)
@@ -242,6 +250,7 @@ func (s *Server) toPullSummaries(ctx context.Context, rows []pullRow) ([]apigen.
 		for _, id := range requested[r.issue.ID] {
 			sum.RequestedReviewers = append(sum.RequestedReviewers, uc.summary(ctx, id))
 		}
+		sum.Labels, sum.Assignees, sum.Milestone = meta.labelsOf(r.issue.ID), meta.assigneesOf(ctx, uc, r.issue.ID), meta.milestoneOf(&r.issue)
 		out = append(out, sum)
 	}
 	return out, nil
@@ -274,6 +283,9 @@ func (a *api) ListPulls(ctx context.Context, req apigen.ListPullsRequestObject) 
 	}
 	if v := deref(p.Q); v != "" {
 		q = q.Where("LOWER(i.title) LIKE ?", "%"+escapeLike(strings.ToLower(v))+"%")
+	}
+	if v := deref(p.Labels); v != "" {
+		q = labelFilter(q, repo.ID, v)
 	}
 	limit, offset := pageParams(p.Page, p.PerPage)
 	rows, total, err := a.s.listPullRows(ctx, q, limit, offset)
@@ -432,6 +444,12 @@ func (a *api) CreatePull(ctx context.Context, req apigen.CreatePullRequestObject
 				return err
 			}
 		}
+		if err := a.s.applyMeta(ctx, tx, repo, issue, user, metaChange{addLabels: b.Labels, addAssignees: b.Assignees, milestone: b.Milestone}); err != nil {
+			return err
+		}
+		if _, err := tx.NewDelete().Model((*model.IssueEvent)(nil)).Where("issue_id = ?", issue.ID).Exec(ctx); err != nil {
+			return err // metadata set at creation isn't news
+		}
 		return g.UpdateRef(ctx, pullRef(number), headSHA, "")
 	})
 	if err != nil {
@@ -571,6 +589,12 @@ func (a *api) UpdatePull(ctx context.Context, req apigen.UpdatePullRequestObject
 				return err
 			}
 		}
+		if err := a.s.applyMeta(ctx, tx, pc.repo, issue, user, metaChange{
+			labels: b.Labels, addLabels: b.AddLabels, removeLabels: b.RemoveLabels,
+			assignees: b.Assignees, addAssignees: b.AddAssignees, removeAssignees: b.RemoveAssignees, milestone: b.Milestone,
+		}); err != nil {
+			return err
+		}
 		issue.UpdatedAt = now
 		if _, err := tx.NewUpdate().Model(issue).Column("title", "body", "state", "closed_at", "closed_by_id", "updated_at").WherePK().Exec(ctx); err != nil {
 			return err
@@ -674,28 +698,34 @@ type commentView struct {
 	pc    *pullCtx
 	uc    *userCache
 	cache map[string]bool
+	head  string // pull request head ("" for issues)
+	ref   string // ref relative links resolve against
 }
 
 func (s *Server) commentView(pc *pullCtx, uc *userCache) *commentView {
-	return &commentView{s: s, pc: pc, uc: uc, cache: map[string]bool{}}
+	v := &commentView{s: s, pc: pc, uc: uc, cache: map[string]bool{}, ref: pc.repo.DefaultBranch}
+	if pc.pr != nil {
+		v.head, v.ref = pc.pr.HeadSHA, pc.pr.HeadSHA
+	}
+	return v
 }
 
 func (v *commentView) outdated(ctx context.Context, c *model.Comment) bool {
-	if c.Path == "" || c.CommitSHA == v.pc.pr.HeadSHA {
+	if c.Path == "" || v.head == "" || c.CommitSHA == v.head {
 		return false
 	}
 	key := c.CommitSHA + "\x00" + c.Path
 	if o, ok := v.cache[key]; ok {
 		return o
 	}
-	changed, err := v.pc.g.PathChanged(ctx, c.CommitSHA, v.pc.pr.HeadSHA, c.Path)
+	changed, err := v.pc.g.PathChanged(ctx, c.CommitSHA, v.head, c.Path)
 	o := err != nil || changed
 	v.cache[key] = o
 	return o
 }
 
 func (v *commentView) toAPI(ctx context.Context, c *model.Comment) (apigen.Comment, error) {
-	html, err := renderMarkdown(c.Body, markdownCtx(v.pc.repo, v.pc.pr.HeadSHA))
+	html, err := renderMarkdown(c.Body, markdownCtx(v.pc.repo, v.ref))
 	if err != nil {
 		return apigen.Comment{}, err
 	}
@@ -894,7 +924,8 @@ func (a *api) CreatePullComment(ctx context.Context, req apigen.CreatePullCommen
 	return apigen.CreatePullComment201JSONResponse(out), nil
 }
 
-// commentFor loads a comment of a repository along with its pull request.
+// commentFor loads a comment of a repository along with its issue or pull
+// request (pr is nil for issues).
 func (s *Server) commentFor(ctx context.Context, repoName string, id int64, need authz.Perm) (*model.Comment, *pullCtx, error) {
 	repo, perm, err := s.repoFor(ctx, repoName, need)
 	if err != nil {
@@ -908,6 +939,9 @@ func (s *Server) commentFor(ctx context.Context, repoName string, id int64, need
 	issue := new(model.Issue)
 	if err := s.db.NewSelect().Model(issue).Where("id = ?", c.IssueID).Scan(ctx); err != nil {
 		return nil, nil, err
+	}
+	if !issue.IsPull {
+		return c, &pullCtx{repo: repo, perm: perm, issue: issue, g: s.repos.Open(repo)}, nil
 	}
 	pc, err := s.loadPullIn(ctx, s.db, repo, perm, issue.Number)
 	if err != nil {
@@ -998,12 +1032,12 @@ func (a *api) DeleteComment(ctx context.Context, req apigen.DeleteCommentRequest
 // ---- reviews ----
 
 func (s *Server) toAPIReview(ctx context.Context, v *commentView, r *model.Review, comments []model.Comment) (apigen.Review, error) {
-	html, err := renderMarkdown(r.Body, markdownCtx(v.pc.repo, v.pc.pr.HeadSHA))
+	html, err := renderMarkdown(r.Body, markdownCtx(v.pc.repo, v.ref))
 	if err != nil {
 		return apigen.Review{}, err
 	}
 	out := apigen.Review{Id: r.ID, Author: v.uc.summary(ctx, r.AuthorID), State: apigen.ReviewState(r.State), Body: r.Body, BodyHtml: html,
-		CommitSha: r.CommitSHA, Stale: r.CommitSHA != v.pc.pr.HeadSHA, Dismissed: r.Dismissed, DismissedBy: v.uc.summaryPtr(ctx, r.DismissedByID),
+		CommitSha: r.CommitSHA, Stale: r.CommitSHA != v.head, Dismissed: r.Dismissed, DismissedBy: v.uc.summaryPtr(ctx, r.DismissedByID),
 		Comments: []apigen.Comment{}, CreatedAt: r.CreatedAt}
 	if r.DismissMessage != "" {
 		out.DismissMessage = &r.DismissMessage
@@ -1194,19 +1228,30 @@ func (a *api) GetPullTimeline(ctx context.Context, req apigen.GetPullTimelineReq
 	if err != nil {
 		return nil, err
 	}
-	comments, err := a.s.loadComments(ctx, pc.issue.ID)
+	items, err := a.s.timeline(ctx, pc)
 	if err != nil {
 		return nil, err
 	}
-	reviews, err := a.s.pullReviews(ctx, a.s.db, pc.issue.ID)
+	return apigen.GetPullTimeline200JSONResponse(items), nil
+}
+
+// timeline builds the conversation of an issue or pull request (pc.pr nil
+// for issues): top-level comments, reviews with their inline comments,
+// standalone inline threads and events.
+func (s *Server) timeline(ctx context.Context, pc *pullCtx) ([]apigen.TimelineItem, error) {
+	comments, err := s.loadComments(ctx, pc.issue.ID)
+	if err != nil {
+		return nil, err
+	}
+	reviews, err := s.pullReviews(ctx, s.db, pc.issue.ID)
 	if err != nil {
 		return nil, err
 	}
 	var events []model.IssueEvent
-	if err := a.s.db.NewSelect().Model(&events).Where("issue_id = ?", pc.issue.ID).Order("created_at", "id").Scan(ctx); err != nil {
+	if err := s.db.NewSelect().Model(&events).Where("issue_id = ?", pc.issue.ID).Order("created_at", "id").Scan(ctx); err != nil {
 		return nil, err
 	}
-	uc := a.s.users()
+	uc := s.users()
 	var ids []int64
 	for _, c := range comments {
 		ids = append(ids, c.AuthorID)
@@ -1222,7 +1267,7 @@ func (a *api) GetPullTimeline(ctx context.Context, req apigen.GetPullTimelineReq
 	if err := uc.load(ctx, ids...); err != nil {
 		return nil, err
 	}
-	v := a.s.commentView(pc, uc)
+	v := s.commentView(pc, uc)
 	items := make([]apigen.TimelineItem, 0, len(comments)+len(events))
 	for i := range comments {
 		c := &comments[i]
@@ -1240,7 +1285,7 @@ func (a *api) GetPullTimeline(ctx context.Context, req apigen.GetPullTimelineReq
 		items = append(items, apigen.TimelineItem{Kind: kind, CreatedAt: c.CreatedAt, Comment: &ac})
 	}
 	for _, r := range reviews[pc.issue.ID] {
-		ar, err := a.s.toAPIReview(ctx, v, &r, comments)
+		ar, err := s.toAPIReview(ctx, v, &r, comments)
 		if err != nil {
 			return nil, err
 		}
@@ -1253,7 +1298,7 @@ func (a *api) GetPullTimeline(ctx context.Context, req apigen.GetPullTimelineReq
 			Id: e.ID, Type: apigen.PullEventType(e.Type), Actor: uc.summaryPtr(ctx, e.ActorID), Data: data, CreatedAt: e.CreatedAt}})
 	}
 	sortTimeline(items)
-	return apigen.GetPullTimeline200JSONResponse(items), nil
+	return items, nil
 }
 
 // ---- merge, update branch, delete branch ----
