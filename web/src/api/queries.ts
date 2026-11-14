@@ -252,3 +252,69 @@ export const milestonesQuery = (repo: string, state: 'open' | 'closed' | 'all' =
     queryKey: ['repo', repo, 'milestones', state],
     queryFn: () => unwrap(api.GET('/repos/{repo}/milestones', { params: { path: { repo }, query: { state } } })),
   })
+
+// --- CI ---
+
+export type RunFilters = {
+  workflow?: string
+  branch?: string
+  status?: string
+  event?: 'push' | 'pull_request' | 'workflow_dispatch'
+  actor?: string
+  page?: number
+  per_page?: number
+}
+
+type RunStatusParam = NonNullable<NonNullable<import('./schema.gen').operations['listRuns']['parameters']['query']>['status']>
+
+export const runsQuery = (repo: string, f: RunFilters) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'runs', 'list', f],
+    queryFn: () =>
+      unwrap(
+        api.GET('/repos/{repo}/runs', {
+          params: { path: { repo }, query: { per_page: 30, ...f, status: f.status as RunStatusParam | undefined } },
+        }),
+      ),
+  })
+
+export const allRunsQuery = (f: { status?: string; actor?: string; page?: number }) =>
+  queryOptions({
+    queryKey: ['runs', f],
+    queryFn: () => unwrap(api.GET('/runs', { params: { query: { per_page: 50, ...f, status: f.status as RunStatusParam | undefined } } })),
+  })
+
+export const runQuery = (repo: string, n: number) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'run', n],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/runs/{number}', { params: { path: { repo, number: n } } })),
+    retry: false,
+  })
+
+export const workflowsQuery = (repo: string, ref?: string) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'workflows', ref ?? ''],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/workflows', { params: { path: { repo }, query: { ref } } })),
+  })
+
+export const repoSecretsQuery = (repo: string) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'secrets'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/secrets', { params: { path: { repo } } })),
+  })
+
+export const orgSecretsQuery = queryOptions({
+  queryKey: ['admin', 'secrets'],
+  queryFn: () => unwrap(api.GET('/admin/secrets')),
+})
+
+export const runnersQuery = queryOptions({
+  queryKey: ['admin', 'runners'],
+  queryFn: () => unwrap(api.GET('/admin/runners')),
+  refetchInterval: 10_000,
+})
+
+export const ciSettingsQuery = queryOptions({
+  queryKey: ['admin', 'ci', 'settings'],
+  queryFn: () => unwrap(api.GET('/admin/ci/settings')),
+})

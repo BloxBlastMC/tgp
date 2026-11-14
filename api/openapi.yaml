@@ -37,6 +37,7 @@ tags:
   - name: code
   - name: pulls
   - name: issues
+  - name: ci
 paths:
   /meta:
     get:
@@ -1454,6 +1455,409 @@ paths:
         "204": { description: Deleted }
         default: { $ref: "#/components/responses/Error" }
 
+  /runs:
+    get:
+      operationId: listAllRuns
+      tags: [ci]
+      summary: Recent workflow runs across every repository you can read
+      parameters:
+        - $ref: "#/components/parameters/RunStatusParam"
+        - { name: actor, in: query, description: "Username, or `@me`.", schema: { type: string } }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Runs, newest first
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RunPage" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/runs:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listRuns
+      tags: [ci]
+      summary: List a repository's workflow runs
+      parameters:
+        - { name: workflow, in: query, description: "Workflow file name (e.g. `ci.yml`) or path.", schema: { type: string } }
+        - { name: branch, in: query, schema: { type: string } }
+        - { name: event, in: query, schema: { $ref: "#/components/schemas/RunEvent" } }
+        - $ref: "#/components/parameters/RunStatusParam"
+        - { name: actor, in: query, description: "Username, or `@me`.", schema: { type: string } }
+        - { name: pull, in: query, description: Pull request number., schema: { type: integer, format: int64 } }
+        - { name: sha, in: query, description: Full or abbreviated head commit., schema: { type: string } }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Runs, newest first
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RunPage" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/runs/{number}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/RunNumber"
+    get:
+      operationId: getRun
+      tags: [ci]
+      summary: Get a run with its jobs and steps
+      responses:
+        "200":
+          description: Run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkflowRunDetail" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/runs/{number}/cancel:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/RunNumber"
+    post:
+      operationId: cancelRun
+      tags: [ci]
+      summary: Cancel a run (write access)
+      description: Queued jobs are cancelled immediately; running jobs are stopped by their runner. Fails with `conflict` if the run already finished.
+      responses:
+        "200":
+          description: Run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkflowRunDetail" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/runs/{number}/rerun:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/RunNumber"
+    post:
+      operationId: rerunRun
+      tags: [ci]
+      summary: Re-run a finished run (triage access, so testers can re-run)
+      description: Starts a new attempt of the same run, with the same commit, workflow file and inputs. With `failed_only`, jobs that succeeded keep their results and only failed or cancelled jobs (and the jobs that depend on them) run again.
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RerunRequest" }
+      responses:
+        "200":
+          description: Run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkflowRunDetail" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/jobs/{id}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/JobID"
+    get:
+      operationId: getJob
+      tags: [ci]
+      summary: Get a job with its steps
+      responses:
+        "200":
+          description: Job
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Job" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/jobs/{id}/rerun:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/JobID"
+    post:
+      operationId: rerunJob
+      tags: [ci]
+      summary: Re-run one job and the jobs that depend on it (triage access)
+      responses:
+        "200":
+          description: Run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkflowRunDetail" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/jobs/{id}/logs:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/JobID"
+    get:
+      operationId: getJobLogs
+      tags: [ci]
+      summary: Read a job's log
+      description: |
+        Returns log lines after the `after` cursor (0 for the start). Poll with the
+        returned `next` until `complete` is true to follow a running job, or use
+        `GET /repos/{repo}/jobs/{id}/logs/stream` (server-sent events: `line` events
+        carry a `LogLine`, a final `end` event carries the job).
+      parameters:
+        - { name: after, in: query, description: Return lines numbered above this., schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 20000, default: 5000 } }
+        - { name: step, in: query, description: Only lines of this step number., schema: { type: integer } }
+      responses:
+        "200":
+          description: Log lines
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/JobLogs" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/workflows:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listWorkflows
+      tags: [ci]
+      summary: List the workflow files at a ref, with validation errors
+      parameters:
+        - $ref: "#/components/parameters/RefParam"
+      responses:
+        "200":
+          description: Workflows
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Workflow" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/workflows/{workflow}/dispatch:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: workflow, in: path, required: true, description: "Workflow file name, e.g. `deploy.yml`.", schema: { type: string } }
+    post:
+      operationId: dispatchWorkflow
+      tags: [ci]
+      summary: Run a workflow manually (write access)
+      description: The workflow must have a `workflow_dispatch` trigger. Inputs are checked against its declared inputs.
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DispatchRequest" }
+      responses:
+        "201":
+          description: The new run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkflowRunDetail" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/commits/{sha}/checks:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: sha, in: path, required: true, description: Commit, branch or tag., schema: { type: string } }
+    get:
+      operationId: getCommitChecks
+      tags: [ci]
+      summary: CI results for a commit (latest attempt of each job)
+      responses:
+        "200":
+          description: Checks
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckSummary" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/secrets:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listRepoSecrets
+      tags: [ci]
+      summary: List repository secrets (write access; values are never returned)
+      responses:
+        "200":
+          description: Secrets
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Secret" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/secrets/{name}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/SecretName"
+    put:
+      operationId: setRepoSecret
+      tags: [ci]
+      summary: Create or update a repository secret (write access)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SecretValue" }
+      responses:
+        "200":
+          description: Secret
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Secret" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteRepoSecret
+      tags: [ci]
+      summary: Delete a repository secret (write access)
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/secrets:
+    get:
+      operationId: listOrgSecrets
+      tags: [admin, ci]
+      summary: List organisation secrets, available to every repository (admin)
+      responses:
+        "200":
+          description: Secrets
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Secret" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/secrets/{name}:
+    parameters:
+      - $ref: "#/components/parameters/SecretName"
+    put:
+      operationId: setOrgSecret
+      tags: [admin, ci]
+      summary: Create or update an organisation secret (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SecretValue" }
+      responses:
+        "200":
+          description: Secret
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Secret" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteOrgSecret
+      tags: [admin, ci]
+      summary: Delete an organisation secret (admin)
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/runners:
+    get:
+      operationId: listRunners
+      tags: [admin, ci]
+      summary: List runners with their status, load and running jobs (admin)
+      responses:
+        "200":
+          description: Runners
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RunnerList" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/runners/registration-tokens:
+    post:
+      operationId: createRunnerToken
+      tags: [admin, ci]
+      summary: Create a one-time runner registration token (admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expires_in_hours: { type: integer, minimum: 1, maximum: 720, default: 24 }
+      responses:
+        "201":
+          description: The token. It is shown only once.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RunnerRegistrationToken" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/runners/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+    get:
+      operationId: getRunner
+      tags: [admin, ci]
+      summary: Get a runner (admin)
+      responses:
+        "200":
+          description: Runner
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Runner" }
+        default: { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: updateRunner
+      tags: [admin, ci]
+      summary: Disable, enable or rename a runner (admin)
+      description: A disabled runner finishes the jobs it has but gets no new ones.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                disabled: { type: boolean }
+                name: { type: string }
+      responses:
+        "200":
+          description: Runner
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Runner" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteRunner
+      tags: [admin, ci]
+      summary: Remove a runner (admin)
+      description: Its credentials stop working; jobs it was running fail.
+      responses:
+        "204": { description: Removed }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/ci/settings:
+    get:
+      operationId: getCISettings
+      tags: [admin, ci]
+      summary: CI resource limits and defaults (admin)
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CISettings" }
+        default: { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: updateCISettings
+      tags: [admin, ci]
+      summary: Change CI resource limits and defaults (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CISettingsPatch" }
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CISettings" }
+        default: { $ref: "#/components/responses/Error" }
+
 components:
   parameters:
     RepoName:
@@ -1504,6 +1908,27 @@ components:
       name: state
       in: query
       schema: { type: string, enum: [open, closed, all], default: open }
+    RunNumber:
+      name: number
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    JobID:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    SecretName:
+      name: name
+      in: path
+      required: true
+      description: "Letters, digits and _; not starting with a digit or TGP_/GITHUB_. Case-insensitive (stored upper-case)."
+      schema: { type: string }
+    RunStatusParam:
+      name: status
+      in: query
+      description: "A status, a conclusion, or `active` (not completed)."
+      schema: { type: string, enum: [active, waiting, queued, in_progress, completed, success, failure, cancelled, skipped, timed_out] }
   securitySchemes:
     sessionCookie:
       type: apiKey
@@ -2091,7 +2516,7 @@ components:
       properties:
         code:
           type: string
-          enum: [closed, merged, draft, head_missing, base_missing, conflict, permission, approvals, changes_requested, behind]
+          enum: [closed, merged, draft, head_missing, base_missing, conflict, permission, approvals, changes_requested, behind, checks]
         message: { type: string }
         bypassable:
           type: boolean
@@ -2108,7 +2533,7 @@ components:
 
     PullRequest:
       type: object
-      required: [number, repo, title, body, body_html, state, draft, author, head, base, merge_base, commits, additions, deletions, changed_files, comments, mergeable, conflict_files, review_decision, reviewers, requested_reviewers, labels, assignees, blockers, can_merge, viewer_permission, created_at, updated_at]
+      required: [number, repo, title, body, body_html, state, draft, author, head, base, merge_base, commits, additions, deletions, changed_files, comments, mergeable, conflict_files, review_decision, reviewers, requested_reviewers, labels, assignees, blockers, can_merge, checks, viewer_permission, created_at, updated_at]
       properties:
         number: { type: integer, format: int64 }
         repo: { type: string }
@@ -2152,6 +2577,7 @@ components:
           description: Why you can't merge right now; empty when you can.
           items: { $ref: "#/components/schemas/MergeBlocker" }
         can_merge: { type: boolean, description: You can merge now (blockers is empty). }
+        checks: { $ref: "#/components/schemas/CheckSummary" }
         viewer_permission: { $ref: "#/components/schemas/Permission" }
         merged_by:
           allOf: [{ $ref: "#/components/schemas/UserSummary" }]
@@ -2332,7 +2758,7 @@ components:
 
     BranchProtection:
       type: object
-      required: [id, pattern, require_pull_request, required_approvals, dismiss_stale_approvals, require_up_to_date, block_force_push, allow_deletion, admins_bypass, created_at, updated_at]
+      required: [id, pattern, require_pull_request, required_approvals, dismiss_stale_approvals, require_up_to_date, block_force_push, allow_deletion, admins_bypass, required_checks, created_at, updated_at]
       properties:
         id: { type: integer, format: int64 }
         pattern: { type: string, description: "Branch name or glob, e.g. `main` or `release/*`." }
@@ -2343,6 +2769,10 @@ components:
         block_force_push: { type: boolean }
         allow_deletion: { type: boolean }
         admins_bypass: { type: boolean, description: Admins may push directly and merge despite unmet requirements. }
+        required_checks:
+          type: array
+          items: { type: string }
+          description: "CI checks (`<workflow> / <job>`) that must pass on the head commit before merging."
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
 
@@ -2358,6 +2788,7 @@ components:
         block_force_push: { type: boolean, default: true }
         allow_deletion: { type: boolean, default: false }
         admins_bypass: { type: boolean, default: false }
+        required_checks: { type: array, items: { type: string }, maxItems: 50 }
 
     BranchProtectionPatch:
       type: object
@@ -2370,6 +2801,7 @@ components:
         block_force_push: { type: boolean }
         allow_deletion: { type: boolean }
         admins_bypass: { type: boolean }
+        required_checks: { type: array, items: { type: string }, maxItems: 50 }
 
     Label:
       type: object
@@ -2510,3 +2942,326 @@ components:
         add_assignees: { type: array, items: { type: string } }
         remove_assignees: { type: array, items: { type: string } }
         milestone: { type: integer, format: int64, description: Milestone id; 0 removes the milestone. }
+
+    RunEvent:
+      type: string
+      enum: [push, pull_request, workflow_dispatch]
+
+    RunStatus:
+      type: string
+      enum: [waiting, queued, in_progress, completed]
+      description: "`waiting`: held back by a concurrency group. `queued`: jobs waiting for a runner."
+
+    JobStatus:
+      type: string
+      enum: [pending, queued, in_progress, completed]
+      description: "`pending`: waiting for the jobs it needs (or its run's concurrency group). `queued`: ready, waiting for a runner."
+
+    Conclusion:
+      type: string
+      enum: [success, failure, cancelled, skipped, timed_out]
+
+    WorkflowRun:
+      type: object
+      required: [id, number, repo, workflow_path, workflow_name, title, event, ref, head_sha, status, attempt, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        number: { type: integer, format: int64, description: Run number, counted per repository. }
+        repo: { type: string }
+        workflow_path: { type: string, description: "e.g. `.tgp/workflows/ci.yml`" }
+        workflow_name: { type: string }
+        title: { type: string, description: Commit subject or pull request title. }
+        event: { $ref: "#/components/schemas/RunEvent" }
+        ref: { type: string, description: "Full ref: `refs/heads/main`, `refs/tags/v1`, `refs/pull/3/head`." }
+        head_branch: { type: string, nullable: true }
+        head_sha: { type: string }
+        pull_number: { type: integer, format: int64, nullable: true }
+        actor:
+          allOf: [{ $ref: "#/components/schemas/UserSummary" }]
+          nullable: true
+        status: { $ref: "#/components/schemas/RunStatus" }
+        conclusion:
+          allOf: [{ $ref: "#/components/schemas/Conclusion" }]
+          nullable: true
+        status_reason:
+          type: string
+          nullable: true
+          description: Why the run ended the way it did when it isn't obvious, e.g. superseded by a newer push, queue full, invalid workflow.
+        attempt: { type: integer }
+        created_at: { type: string, format: date-time }
+        started_at: { type: string, format: date-time, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+
+    WorkflowRunDetail:
+      allOf:
+        - $ref: "#/components/schemas/WorkflowRun"
+        - type: object
+          required: [jobs, inputs, can_cancel, can_rerun]
+          properties:
+            jobs: { type: array, items: { $ref: "#/components/schemas/Job" } }
+            inputs: { type: object, additionalProperties: { type: string } }
+            can_cancel: { type: boolean }
+            can_rerun: { type: boolean }
+
+    RunPage:
+      type: object
+      required: [runs, total]
+      properties:
+        runs: { type: array, items: { $ref: "#/components/schemas/WorkflowRun" } }
+        total: { type: integer }
+
+    JobResources:
+      type: object
+      required: [cpus, memory_bytes, pids]
+      properties:
+        cpus: { type: number }
+        memory_bytes: { type: integer, format: int64 }
+        pids: { type: integer }
+
+    RunnerRef:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+
+    Job:
+      type: object
+      required: [id, run_number, attempt, key, name, check_name, needs, status, labels, image, resources, timeout_minutes, steps, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        run_number: { type: integer, format: int64 }
+        attempt: { type: integer }
+        key: { type: string, description: The job's id in the workflow file. }
+        name: { type: string, description: "Display name, including matrix values." }
+        check_name: { type: string, description: "`<workflow name> / <job name>`, the name used by required checks." }
+        matrix: { type: object, nullable: true, additionalProperties: true }
+        needs: { type: array, items: { type: string } }
+        status: { $ref: "#/components/schemas/JobStatus" }
+        conclusion:
+          allOf: [{ $ref: "#/components/schemas/Conclusion" }]
+          nullable: true
+        failure_reason: { type: string, nullable: true, description: "Set when the job failed outside its steps, e.g. runner lost, timed out, image pull failed." }
+        wait_reason: { type: string, nullable: true, description: Why a queued job hasn't started yet. }
+        runner:
+          allOf: [{ $ref: "#/components/schemas/RunnerRef" }]
+          nullable: true
+        labels: { type: array, items: { type: string }, description: Runner labels the job needs (runs-on). }
+        image: { type: string }
+        resources: { $ref: "#/components/schemas/JobResources" }
+        timeout_minutes: { type: integer }
+        steps: { type: array, items: { $ref: "#/components/schemas/JobStep" } }
+        created_at: { type: string, format: date-time }
+        queued_at: { type: string, format: date-time, nullable: true }
+        started_at: { type: string, format: date-time, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+
+    JobStep:
+      type: object
+      required: [number, name, status]
+      properties:
+        number: { type: integer, description: "1-based; step 0 is the job's setup (pulling images, starting services)." }
+        name: { type: string }
+        status: { type: string, enum: [pending, in_progress, completed] }
+        conclusion: { type: string, nullable: true, enum: [success, failure, cancelled, skipped] }
+        started_at: { type: string, format: date-time, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+
+    LogLine:
+      type: object
+      required: [n, step, t, text]
+      properties:
+        n: { type: integer, description: Line number, from 1. }
+        step: { type: integer, description: Step number (0 = setup, -1 = cleanup). }
+        t: { type: string, format: date-time }
+        text: { type: string }
+
+    JobLogs:
+      type: object
+      required: [lines, next, complete, truncated]
+      properties:
+        lines: { type: array, items: { $ref: "#/components/schemas/LogLine" } }
+        next: { type: integer, description: Pass as `after` to get the following lines. }
+        complete: { type: boolean, description: The job has finished and every line has been returned. }
+        truncated: { type: boolean, description: The log hit the size limit; later output was dropped. }
+
+    WorkflowError:
+      type: object
+      required: [message]
+      properties:
+        line: { type: integer }
+        column: { type: integer }
+        message: { type: string }
+
+    DispatchInput:
+      type: object
+      required: [name, description, required, type]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        required: { type: boolean }
+        default: { type: string, nullable: true }
+        type: { type: string, enum: [string, boolean, number, choice] }
+        options: { type: array, items: { type: string } }
+
+    Workflow:
+      type: object
+      required: [path, file, name, valid, errors, triggers, dispatch_inputs, jobs]
+      properties:
+        path: { type: string }
+        file: { type: string, description: "File name, e.g. `ci.yml`; use it in dispatch and filters." }
+        name: { type: string }
+        valid: { type: boolean }
+        errors: { type: array, items: { $ref: "#/components/schemas/WorkflowError" } }
+        triggers: { type: array, items: { $ref: "#/components/schemas/RunEvent" } }
+        dispatch_inputs: { type: array, items: { $ref: "#/components/schemas/DispatchInput" } }
+        jobs: { type: array, items: { type: string } }
+
+    DispatchRequest:
+      type: object
+      properties:
+        ref: { type: string, description: Branch or tag to run on. Defaults to the default branch. }
+        inputs: { type: object, additionalProperties: { type: string } }
+
+    RerunRequest:
+      type: object
+      properties:
+        failed_only: { type: boolean, default: false }
+
+    Check:
+      type: object
+      required: [name, workflow, job_name, run_number, job_id, status, required]
+      properties:
+        name: { type: string, description: "`<workflow> / <job>`" }
+        workflow: { type: string }
+        job_name: { type: string }
+        run_number: { type: integer, format: int64 }
+        job_id: { type: integer, format: int64 }
+        status: { $ref: "#/components/schemas/JobStatus" }
+        conclusion:
+          allOf: [{ $ref: "#/components/schemas/Conclusion" }]
+          nullable: true
+        required: { type: boolean, description: Branch protection requires this check. }
+        started_at: { type: string, format: date-time, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+
+    CheckSummary:
+      type: object
+      required: [state, total, succeeded, failed, pending, skipped, checks, missing_required]
+      properties:
+        state:
+          type: string
+          enum: [none, pending, success, failure]
+          description: "`failure` if any check failed, else `pending` if any is still running or a required check hasn't reported, else `success`; `none` without checks."
+        total: { type: integer }
+        succeeded: { type: integer }
+        failed: { type: integer }
+        pending: { type: integer }
+        skipped: { type: integer }
+        checks: { type: array, items: { $ref: "#/components/schemas/Check" } }
+        missing_required: { type: array, items: { type: string }, description: Required checks that haven't reported for this commit. }
+
+    Secret:
+      type: object
+      required: [name, scope, updated_at]
+      properties:
+        name: { type: string }
+        scope: { type: string, enum: [repo, org] }
+        updated_at: { type: string, format: date-time }
+        updated_by:
+          allOf: [{ $ref: "#/components/schemas/UserSummary" }]
+          nullable: true
+
+    SecretValue:
+      type: object
+      required: [value]
+      properties:
+        value: { type: string, maxLength: 65536 }
+
+    RunnerJob:
+      type: object
+      required: [id, repo, run_number, name]
+      properties:
+        id: { type: integer, format: int64 }
+        repo: { type: string }
+        run_number: { type: integer, format: int64 }
+        name: { type: string }
+
+    Runner:
+      type: object
+      required: [id, name, labels, status, version, os, arch, capacity, busy, jobs, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        labels: { type: array, items: { type: string } }
+        status: { type: string, enum: [online, offline, disabled] }
+        version: { type: string }
+        os: { type: string }
+        arch: { type: string }
+        capacity: { type: integer, description: Jobs it runs at once. }
+        busy: { type: integer, description: Jobs it is running now. }
+        cpu_percent: { type: number, nullable: true, description: Host CPU load (load average ÷ cores) from the last heartbeat. }
+        memory_percent: { type: number, nullable: true }
+        overloaded: { type: boolean, description: Load is above the limit, so it gets no new jobs. }
+        jobs: { type: array, items: { $ref: "#/components/schemas/RunnerJob" } }
+        last_seen_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    RunnerList:
+      type: object
+      required: [runners, queued_jobs, running_jobs]
+      properties:
+        runners: { type: array, items: { $ref: "#/components/schemas/Runner" } }
+        queued_jobs: { type: integer }
+        running_jobs: { type: integer }
+
+    RunnerRegistrationToken:
+      type: object
+      required: [token, expires_at, command]
+      properties:
+        token: { type: string }
+        expires_at: { type: string, format: date-time }
+        command: { type: string, description: A ready-to-run tgp-runner register command. }
+
+    CISettings:
+      type: object
+      required: [max_concurrent_jobs, max_jobs_per_repo, max_queued_runs_per_repo, runner_max_cpu_percent, runner_offline_after_seconds, default_image, default_cpus, max_cpus, default_memory_mb, max_memory_mb, default_pids, max_pids, default_timeout_minutes, max_timeout_minutes, max_log_mb, log_retention_days, cancel_superseded]
+      properties:
+        max_concurrent_jobs: { type: integer, minimum: 0, description: Jobs running at once across the instance; 0 = no limit beyond runner capacity. }
+        max_jobs_per_repo: { type: integer, minimum: 0, description: Jobs one repository may run at once; 0 = no limit. }
+        max_queued_runs_per_repo: { type: integer, minimum: 0, description: Unstarted runs a repository may have; older runs for the same branch are superseded first, then new runs are rejected. 0 = no limit. }
+        runner_max_cpu_percent: { type: integer, minimum: 0, description: Runners reporting more CPU load than this get no new jobs; 0 = ignore load. }
+        runner_offline_after_seconds: { type: integer, minimum: 20, description: A runner silent this long is offline and its jobs fail. }
+        default_image: { type: string, description: Image for jobs without container. }
+        default_cpus: { type: number, minimum: 0.1 }
+        max_cpus: { type: number, minimum: 0.1 }
+        default_memory_mb: { type: integer, minimum: 16 }
+        max_memory_mb: { type: integer, minimum: 16 }
+        default_pids: { type: integer, minimum: 16 }
+        max_pids: { type: integer, minimum: 16 }
+        default_timeout_minutes: { type: integer, minimum: 1 }
+        max_timeout_minutes: { type: integer, minimum: 1 }
+        max_log_mb: { type: integer, minimum: 1, description: Log size cap per job; output beyond it is dropped. }
+        log_retention_days: { type: integer, minimum: 0, description: Delete job logs older than this; 0 = keep. }
+        cancel_superseded: { type: boolean, description: A new push to a branch or pull request cancels its older runs (not on the default branch or tags). }
+
+    CISettingsPatch:
+      type: object
+      properties:
+        max_concurrent_jobs: { type: integer, minimum: 0 }
+        max_jobs_per_repo: { type: integer, minimum: 0 }
+        max_queued_runs_per_repo: { type: integer, minimum: 0 }
+        runner_max_cpu_percent: { type: integer, minimum: 0, maximum: 1000 }
+        runner_offline_after_seconds: { type: integer, minimum: 20, maximum: 3600 }
+        default_image: { type: string }
+        default_cpus: { type: number, minimum: 0.1 }
+        max_cpus: { type: number, minimum: 0.1 }
+        default_memory_mb: { type: integer, minimum: 16 }
+        max_memory_mb: { type: integer, minimum: 16 }
+        default_pids: { type: integer, minimum: 16 }
+        max_pids: { type: integer, minimum: 16 }
+        default_timeout_minutes: { type: integer, minimum: 1 }
+        max_timeout_minutes: { type: integer, minimum: 1 }
+        max_log_mb: { type: integer, minimum: 1, maximum: 1024 }
+        log_retention_days: { type: integer, minimum: 0 }
+        cancel_superseded: { type: boolean }

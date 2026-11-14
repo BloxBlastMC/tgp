@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { api, errorMessage, unwrap } from '../../api/client'
 import { branchesQuery, repoAccessQuery, repoQuery, reposQuery } from '../../api/queries'
 import { Alert, Badge, Button, Dialog, Field, Input, Section, Select, Spinner } from '../../components/ui'
+import { SecretsSection } from '../../components/ci/SecretsSection'
 import { ProtectionSection } from './ProtectionSection'
 import { useRepoName } from './RepoLayout'
 
@@ -16,6 +17,7 @@ export function RepoSettingsPage() {
     <div className="mx-auto flex max-w-3xl flex-col gap-5 p-6">
       <GeneralSection />
       <ProtectionSection repo={repo.name} isAdmin={isAdmin} />
+      <SecretsSection repo={repo.name} />
       <AccessSection isAdmin={isAdmin} />
       {isAdmin && <DangerZone />}
     </div>

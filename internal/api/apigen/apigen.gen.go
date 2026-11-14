@@ -42,6 +42,30 @@ func (e BlobEncoding) Valid() bool {
 	}
 }
 
+// Defines values for CheckSummaryState.
+const (
+	CheckSummaryStateFailure CheckSummaryState = "failure"
+	CheckSummaryStateNone    CheckSummaryState = "none"
+	CheckSummaryStatePending CheckSummaryState = "pending"
+	CheckSummaryStateSuccess CheckSummaryState = "success"
+)
+
+// Valid indicates whether the value is a known member of the CheckSummaryState enum.
+func (e CheckSummaryState) Valid() bool {
+	switch e {
+	case CheckSummaryStateFailure:
+		return true
+	case CheckSummaryStateNone:
+		return true
+	case CheckSummaryStatePending:
+		return true
+	case CheckSummaryStateSuccess:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CommentSide.
 const (
 	CommentSideNew CommentSide = "new"
@@ -72,6 +96,33 @@ func (e ComparisonMergeable) Valid() bool {
 	case ComparisonMergeableClean:
 		return true
 	case ComparisonMergeableConflict:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for Conclusion.
+const (
+	ConclusionCancelled Conclusion = "cancelled"
+	ConclusionFailure   Conclusion = "failure"
+	ConclusionSkipped   Conclusion = "skipped"
+	ConclusionSuccess   Conclusion = "success"
+	ConclusionTimedOut  Conclusion = "timed_out"
+)
+
+// Valid indicates whether the value is a known member of the Conclusion enum.
+func (e Conclusion) Valid() bool {
+	switch e {
+	case ConclusionCancelled:
+		return true
+	case ConclusionFailure:
+		return true
+	case ConclusionSkipped:
+		return true
+	case ConclusionSuccess:
+		return true
+	case ConclusionTimedOut:
 		return true
 	default:
 		return false
@@ -165,6 +216,30 @@ func (e DiffLineType) Valid() bool {
 	}
 }
 
+// Defines values for DispatchInputType.
+const (
+	Boolean DispatchInputType = "boolean"
+	Choice  DispatchInputType = "choice"
+	Number  DispatchInputType = "number"
+	String  DispatchInputType = "string"
+)
+
+// Valid indicates whether the value is a known member of the DispatchInputType enum.
+func (e DispatchInputType) Valid() bool {
+	switch e {
+	case Boolean:
+		return true
+	case Choice:
+		return true
+	case Number:
+		return true
+	case String:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for InlineCommentInputSide.
 const (
 	InlineCommentInputSideNew InlineCommentInputSide = "new"
@@ -203,16 +278,16 @@ func (e IssueState) Valid() bool {
 
 // Defines values for IssueStateReason.
 const (
-	Completed  IssueStateReason = "completed"
-	NotPlanned IssueStateReason = "not_planned"
+	IssueStateReasonCompleted  IssueStateReason = "completed"
+	IssueStateReasonNotPlanned IssueStateReason = "not_planned"
 )
 
 // Valid indicates whether the value is a known member of the IssueStateReason enum.
 func (e IssueStateReason) Valid() bool {
 	switch e {
-	case Completed:
+	case IssueStateReasonCompleted:
 		return true
-	case NotPlanned:
+	case IssueStateReasonNotPlanned:
 		return true
 	default:
 		return false
@@ -237,12 +312,82 @@ func (e IssueSummaryState) Valid() bool {
 	}
 }
 
+// Defines values for JobStatus.
+const (
+	JobStatusCompleted  JobStatus = "completed"
+	JobStatusInProgress JobStatus = "in_progress"
+	JobStatusPending    JobStatus = "pending"
+	JobStatusQueued     JobStatus = "queued"
+)
+
+// Valid indicates whether the value is a known member of the JobStatus enum.
+func (e JobStatus) Valid() bool {
+	switch e {
+	case JobStatusCompleted:
+		return true
+	case JobStatusInProgress:
+		return true
+	case JobStatusPending:
+		return true
+	case JobStatusQueued:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for JobStepConclusion.
+const (
+	JobStepConclusionCancelled JobStepConclusion = "cancelled"
+	JobStepConclusionFailure   JobStepConclusion = "failure"
+	JobStepConclusionSkipped   JobStepConclusion = "skipped"
+	JobStepConclusionSuccess   JobStepConclusion = "success"
+)
+
+// Valid indicates whether the value is a known member of the JobStepConclusion enum.
+func (e JobStepConclusion) Valid() bool {
+	switch e {
+	case JobStepConclusionCancelled:
+		return true
+	case JobStepConclusionFailure:
+		return true
+	case JobStepConclusionSkipped:
+		return true
+	case JobStepConclusionSuccess:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for JobStepStatus.
+const (
+	JobStepStatusCompleted  JobStepStatus = "completed"
+	JobStepStatusInProgress JobStepStatus = "in_progress"
+	JobStepStatusPending    JobStepStatus = "pending"
+)
+
+// Valid indicates whether the value is a known member of the JobStepStatus enum.
+func (e JobStepStatus) Valid() bool {
+	switch e {
+	case JobStepStatusCompleted:
+		return true
+	case JobStepStatusInProgress:
+		return true
+	case JobStepStatusPending:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MergeBlockerCode.
 const (
 	MergeBlockerCodeApprovals        MergeBlockerCode = "approvals"
 	MergeBlockerCodeBaseMissing      MergeBlockerCode = "base_missing"
 	MergeBlockerCodeBehind           MergeBlockerCode = "behind"
 	MergeBlockerCodeChangesRequested MergeBlockerCode = "changes_requested"
+	MergeBlockerCodeChecks           MergeBlockerCode = "checks"
 	MergeBlockerCodeClosed           MergeBlockerCode = "closed"
 	MergeBlockerCodeConflict         MergeBlockerCode = "conflict"
 	MergeBlockerCodeDraft            MergeBlockerCode = "draft"
@@ -261,6 +406,8 @@ func (e MergeBlockerCode) Valid() bool {
 	case MergeBlockerCodeBehind:
 		return true
 	case MergeBlockerCodeChangesRequested:
+		return true
+	case MergeBlockerCodeChecks:
 		return true
 	case MergeBlockerCodeClosed:
 		return true
@@ -612,6 +759,90 @@ func (e Role) Valid() bool {
 	}
 }
 
+// Defines values for RunEvent.
+const (
+	RunEventPullRequest      RunEvent = "pull_request"
+	RunEventPush             RunEvent = "push"
+	RunEventWorkflowDispatch RunEvent = "workflow_dispatch"
+)
+
+// Valid indicates whether the value is a known member of the RunEvent enum.
+func (e RunEvent) Valid() bool {
+	switch e {
+	case RunEventPullRequest:
+		return true
+	case RunEventPush:
+		return true
+	case RunEventWorkflowDispatch:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunStatus.
+const (
+	RunStatusCompleted  RunStatus = "completed"
+	RunStatusInProgress RunStatus = "in_progress"
+	RunStatusQueued     RunStatus = "queued"
+	RunStatusWaiting    RunStatus = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the RunStatus enum.
+func (e RunStatus) Valid() bool {
+	switch e {
+	case RunStatusCompleted:
+		return true
+	case RunStatusInProgress:
+		return true
+	case RunStatusQueued:
+		return true
+	case RunStatusWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerStatus.
+const (
+	Disabled RunnerStatus = "disabled"
+	Offline  RunnerStatus = "offline"
+	Online   RunnerStatus = "online"
+)
+
+// Valid indicates whether the value is a known member of the RunnerStatus enum.
+func (e RunnerStatus) Valid() bool {
+	switch e {
+	case Disabled:
+		return true
+	case Offline:
+		return true
+	case Online:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SecretScope.
+const (
+	SecretScopeOrg  SecretScope = "org"
+	SecretScopeRepo SecretScope = "repo"
+)
+
+// Valid indicates whether the value is a known member of the SecretScope enum.
+func (e SecretScope) Valid() bool {
+	switch e {
+	case SecretScopeOrg:
+		return true
+	case SecretScopeRepo:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SessionAuthMethod.
 const (
 	SessionAuthMethodSession SessionAuthMethod = "session"
@@ -774,6 +1005,48 @@ func (e PullStateParam) Valid() bool {
 	case PullStateParamMerged:
 		return true
 	case PullStateParamOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunStatusParam.
+const (
+	RunStatusParamActive     RunStatusParam = "active"
+	RunStatusParamCancelled  RunStatusParam = "cancelled"
+	RunStatusParamCompleted  RunStatusParam = "completed"
+	RunStatusParamFailure    RunStatusParam = "failure"
+	RunStatusParamInProgress RunStatusParam = "in_progress"
+	RunStatusParamQueued     RunStatusParam = "queued"
+	RunStatusParamSkipped    RunStatusParam = "skipped"
+	RunStatusParamSuccess    RunStatusParam = "success"
+	RunStatusParamTimedOut   RunStatusParam = "timed_out"
+	RunStatusParamWaiting    RunStatusParam = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the RunStatusParam enum.
+func (e RunStatusParam) Valid() bool {
+	switch e {
+	case RunStatusParamActive:
+		return true
+	case RunStatusParamCancelled:
+		return true
+	case RunStatusParamCompleted:
+		return true
+	case RunStatusParamFailure:
+		return true
+	case RunStatusParamInProgress:
+		return true
+	case RunStatusParamQueued:
+		return true
+	case RunStatusParamSkipped:
+		return true
+	case RunStatusParamSuccess:
+		return true
+	case RunStatusParamTimedOut:
+		return true
+	case RunStatusParamWaiting:
 		return true
 	default:
 		return false
@@ -954,6 +1227,90 @@ func (e ListPullsParamsState) Valid() bool {
 	}
 }
 
+// Defines values for ListRunsParamsStatus.
+const (
+	ListRunsParamsStatusActive     ListRunsParamsStatus = "active"
+	ListRunsParamsStatusCancelled  ListRunsParamsStatus = "cancelled"
+	ListRunsParamsStatusCompleted  ListRunsParamsStatus = "completed"
+	ListRunsParamsStatusFailure    ListRunsParamsStatus = "failure"
+	ListRunsParamsStatusInProgress ListRunsParamsStatus = "in_progress"
+	ListRunsParamsStatusQueued     ListRunsParamsStatus = "queued"
+	ListRunsParamsStatusSkipped    ListRunsParamsStatus = "skipped"
+	ListRunsParamsStatusSuccess    ListRunsParamsStatus = "success"
+	ListRunsParamsStatusTimedOut   ListRunsParamsStatus = "timed_out"
+	ListRunsParamsStatusWaiting    ListRunsParamsStatus = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the ListRunsParamsStatus enum.
+func (e ListRunsParamsStatus) Valid() bool {
+	switch e {
+	case ListRunsParamsStatusActive:
+		return true
+	case ListRunsParamsStatusCancelled:
+		return true
+	case ListRunsParamsStatusCompleted:
+		return true
+	case ListRunsParamsStatusFailure:
+		return true
+	case ListRunsParamsStatusInProgress:
+		return true
+	case ListRunsParamsStatusQueued:
+		return true
+	case ListRunsParamsStatusSkipped:
+		return true
+	case ListRunsParamsStatusSuccess:
+		return true
+	case ListRunsParamsStatusTimedOut:
+		return true
+	case ListRunsParamsStatusWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListAllRunsParamsStatus.
+const (
+	ListAllRunsParamsStatusActive     ListAllRunsParamsStatus = "active"
+	ListAllRunsParamsStatusCancelled  ListAllRunsParamsStatus = "cancelled"
+	ListAllRunsParamsStatusCompleted  ListAllRunsParamsStatus = "completed"
+	ListAllRunsParamsStatusFailure    ListAllRunsParamsStatus = "failure"
+	ListAllRunsParamsStatusInProgress ListAllRunsParamsStatus = "in_progress"
+	ListAllRunsParamsStatusQueued     ListAllRunsParamsStatus = "queued"
+	ListAllRunsParamsStatusSkipped    ListAllRunsParamsStatus = "skipped"
+	ListAllRunsParamsStatusSuccess    ListAllRunsParamsStatus = "success"
+	ListAllRunsParamsStatusTimedOut   ListAllRunsParamsStatus = "timed_out"
+	ListAllRunsParamsStatusWaiting    ListAllRunsParamsStatus = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the ListAllRunsParamsStatus enum.
+func (e ListAllRunsParamsStatus) Valid() bool {
+	switch e {
+	case ListAllRunsParamsStatusActive:
+		return true
+	case ListAllRunsParamsStatusCancelled:
+		return true
+	case ListAllRunsParamsStatusCompleted:
+		return true
+	case ListAllRunsParamsStatusFailure:
+		return true
+	case ListAllRunsParamsStatusInProgress:
+		return true
+	case ListAllRunsParamsStatusQueued:
+		return true
+	case ListAllRunsParamsStatusSkipped:
+		return true
+	case ListAllRunsParamsStatusSuccess:
+		return true
+	case ListAllRunsParamsStatusTimedOut:
+		return true
+	case ListAllRunsParamsStatusWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
 // AccessToken defines model for AccessToken.
 type AccessToken struct {
 	CreatedAt  time.Time  `json:"created_at"`
@@ -1051,32 +1408,96 @@ type BranchProtection struct {
 	RequireUpToDate bool `json:"require_up_to_date"`
 
 	// RequiredApprovals Approvals needed to merge (from anyone but the author).
-	RequiredApprovals int       `json:"required_approvals"`
-	UpdatedAt         time.Time `json:"updated_at"`
+	RequiredApprovals int `json:"required_approvals"`
+
+	// RequiredChecks CI checks (`<workflow> / <job>`) that must pass on the head commit before merging.
+	RequiredChecks []string  `json:"required_checks"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // BranchProtectionInput defines model for BranchProtectionInput.
 type BranchProtectionInput struct {
-	AdminsBypass          *bool  `json:"admins_bypass,omitempty"`
-	AllowDeletion         *bool  `json:"allow_deletion,omitempty"`
-	BlockForcePush        *bool  `json:"block_force_push,omitempty"`
-	DismissStaleApprovals *bool  `json:"dismiss_stale_approvals,omitempty"`
-	Pattern               string `json:"pattern"`
-	RequirePullRequest    *bool  `json:"require_pull_request,omitempty"`
-	RequireUpToDate       *bool  `json:"require_up_to_date,omitempty"`
-	RequiredApprovals     *int   `json:"required_approvals,omitempty"`
+	AdminsBypass          *bool     `json:"admins_bypass,omitempty"`
+	AllowDeletion         *bool     `json:"allow_deletion,omitempty"`
+	BlockForcePush        *bool     `json:"block_force_push,omitempty"`
+	DismissStaleApprovals *bool     `json:"dismiss_stale_approvals,omitempty"`
+	Pattern               string    `json:"pattern"`
+	RequirePullRequest    *bool     `json:"require_pull_request,omitempty"`
+	RequireUpToDate       *bool     `json:"require_up_to_date,omitempty"`
+	RequiredApprovals     *int      `json:"required_approvals,omitempty"`
+	RequiredChecks        *[]string `json:"required_checks,omitempty"`
 }
 
 // BranchProtectionPatch defines model for BranchProtectionPatch.
 type BranchProtectionPatch struct {
-	AdminsBypass          *bool   `json:"admins_bypass,omitempty"`
-	AllowDeletion         *bool   `json:"allow_deletion,omitempty"`
-	BlockForcePush        *bool   `json:"block_force_push,omitempty"`
-	DismissStaleApprovals *bool   `json:"dismiss_stale_approvals,omitempty"`
-	Pattern               *string `json:"pattern,omitempty"`
-	RequirePullRequest    *bool   `json:"require_pull_request,omitempty"`
-	RequireUpToDate       *bool   `json:"require_up_to_date,omitempty"`
-	RequiredApprovals     *int    `json:"required_approvals,omitempty"`
+	AdminsBypass          *bool     `json:"admins_bypass,omitempty"`
+	AllowDeletion         *bool     `json:"allow_deletion,omitempty"`
+	BlockForcePush        *bool     `json:"block_force_push,omitempty"`
+	DismissStaleApprovals *bool     `json:"dismiss_stale_approvals,omitempty"`
+	Pattern               *string   `json:"pattern,omitempty"`
+	RequirePullRequest    *bool     `json:"require_pull_request,omitempty"`
+	RequireUpToDate       *bool     `json:"require_up_to_date,omitempty"`
+	RequiredApprovals     *int      `json:"required_approvals,omitempty"`
+	RequiredChecks        *[]string `json:"required_checks,omitempty"`
+}
+
+// CISettings defines model for CISettings.
+type CISettings struct {
+	// CancelSuperseded A new push to a branch or pull request cancels its older runs (not on the default branch or tags).
+	CancelSuperseded bool    `json:"cancel_superseded"`
+	DefaultCpus      float32 `json:"default_cpus"`
+
+	// DefaultImage Image for jobs without container.
+	DefaultImage          string `json:"default_image"`
+	DefaultMemoryMb       int    `json:"default_memory_mb"`
+	DefaultPids           int    `json:"default_pids"`
+	DefaultTimeoutMinutes int    `json:"default_timeout_minutes"`
+
+	// LogRetentionDays Delete job logs older than this; 0 = keep.
+	LogRetentionDays int `json:"log_retention_days"`
+
+	// MaxConcurrentJobs Jobs running at once across the instance; 0 = no limit beyond runner capacity.
+	MaxConcurrentJobs int     `json:"max_concurrent_jobs"`
+	MaxCpus           float32 `json:"max_cpus"`
+
+	// MaxJobsPerRepo Jobs one repository may run at once; 0 = no limit.
+	MaxJobsPerRepo int `json:"max_jobs_per_repo"`
+
+	// MaxLogMb Log size cap per job; output beyond it is dropped.
+	MaxLogMb    int `json:"max_log_mb"`
+	MaxMemoryMb int `json:"max_memory_mb"`
+	MaxPids     int `json:"max_pids"`
+
+	// MaxQueuedRunsPerRepo Unstarted runs a repository may have; older runs for the same branch are superseded first
+	MaxQueuedRunsPerRepo int `json:"max_queued_runs_per_repo"`
+	MaxTimeoutMinutes    int `json:"max_timeout_minutes"`
+
+	// RunnerMaxCpuPercent Runners reporting more CPU load than this get no new jobs; 0 = ignore load.
+	RunnerMaxCpuPercent int `json:"runner_max_cpu_percent"`
+
+	// RunnerOfflineAfterSeconds A runner silent this long is offline and its jobs fail.
+	RunnerOfflineAfterSeconds int `json:"runner_offline_after_seconds"`
+}
+
+// CISettingsPatch defines model for CISettingsPatch.
+type CISettingsPatch struct {
+	CancelSuperseded          *bool    `json:"cancel_superseded,omitempty"`
+	DefaultCpus               *float32 `json:"default_cpus,omitempty"`
+	DefaultImage              *string  `json:"default_image,omitempty"`
+	DefaultMemoryMb           *int     `json:"default_memory_mb,omitempty"`
+	DefaultPids               *int     `json:"default_pids,omitempty"`
+	DefaultTimeoutMinutes     *int     `json:"default_timeout_minutes,omitempty"`
+	LogRetentionDays          *int     `json:"log_retention_days,omitempty"`
+	MaxConcurrentJobs         *int     `json:"max_concurrent_jobs,omitempty"`
+	MaxCpus                   *float32 `json:"max_cpus,omitempty"`
+	MaxJobsPerRepo            *int     `json:"max_jobs_per_repo,omitempty"`
+	MaxLogMb                  *int     `json:"max_log_mb,omitempty"`
+	MaxMemoryMb               *int     `json:"max_memory_mb,omitempty"`
+	MaxPids                   *int     `json:"max_pids,omitempty"`
+	MaxQueuedRunsPerRepo      *int     `json:"max_queued_runs_per_repo,omitempty"`
+	MaxTimeoutMinutes         *int     `json:"max_timeout_minutes,omitempty"`
+	RunnerMaxCpuPercent       *int     `json:"runner_max_cpu_percent,omitempty"`
+	RunnerOfflineAfterSeconds *int     `json:"runner_offline_after_seconds,omitempty"`
 }
 
 // ChangePasswordRequest defines model for ChangePasswordRequest.
@@ -1086,6 +1507,45 @@ type ChangePasswordRequest struct {
 	// NewPassword At least 10 characters.
 	NewPassword string `json:"new_password"`
 }
+
+// Check defines model for Check.
+type Check struct {
+	CompletedAt *time.Time  `json:"completed_at,omitempty"`
+	Conclusion  *Conclusion `json:"conclusion,omitempty"`
+	JobId       int64       `json:"job_id"`
+	JobName     string      `json:"job_name"`
+
+	// Name `<workflow> / <job>`
+	Name string `json:"name"`
+
+	// Required Branch protection requires this check.
+	Required  bool       `json:"required"`
+	RunNumber int64      `json:"run_number"`
+	StartedAt *time.Time `json:"started_at,omitempty"`
+
+	// Status `pending`: waiting for the jobs it needs (or its run's concurrency group). `queued`: ready, waiting for a runner.
+	Status   JobStatus `json:"status"`
+	Workflow string    `json:"workflow"`
+}
+
+// CheckSummary defines model for CheckSummary.
+type CheckSummary struct {
+	Checks []Check `json:"checks"`
+	Failed int     `json:"failed"`
+
+	// MissingRequired Required checks that haven't reported for this commit.
+	MissingRequired []string `json:"missing_required"`
+	Pending         int      `json:"pending"`
+	Skipped         int      `json:"skipped"`
+
+	// State `failure` if any check failed, else `pending` if any is still running or a required check hasn't reported, else `success`; `none` without checks.
+	State     CheckSummaryState `json:"state"`
+	Succeeded int               `json:"succeeded"`
+	Total     int               `json:"total"`
+}
+
+// CheckSummaryState `failure` if any check failed, else `pending` if any is still running or a required check hasn't reported, else `success`; `none` without checks.
+type CheckSummaryState string
 
 // Comment defines model for Comment.
 type Comment struct {
@@ -1167,6 +1627,9 @@ type Comparison struct {
 
 // ComparisonMergeable defines model for Comparison.Mergeable.
 type ComparisonMergeable string
+
+// Conclusion defines model for Conclusion.
+type Conclusion string
 
 // CreateComment defines model for CreateComment.
 type CreateComment struct {
@@ -1329,6 +1792,27 @@ type DiffLine struct {
 // DiffLineType defines model for DiffLine.Type.
 type DiffLineType string
 
+// DispatchInput defines model for DispatchInput.
+type DispatchInput struct {
+	Default     *string           `json:"default,omitempty"`
+	Description string            `json:"description"`
+	Name        string            `json:"name"`
+	Options     *[]string         `json:"options,omitempty"`
+	Required    bool              `json:"required"`
+	Type        DispatchInputType `json:"type"`
+}
+
+// DispatchInputType defines model for DispatchInput.Type.
+type DispatchInputType string
+
+// DispatchRequest defines model for DispatchRequest.
+type DispatchRequest struct {
+	Inputs *map[string]string `json:"inputs,omitempty"`
+
+	// Ref Branch or tag to run on. Defaults to the default branch.
+	Ref *string `json:"ref,omitempty"`
+}
+
 // Error defines model for Error.
 type Error struct {
 	Error struct {
@@ -1415,6 +1899,87 @@ type IssueSummary struct {
 // IssueSummaryState defines model for IssueSummary.State.
 type IssueSummaryState string
 
+// Job defines model for Job.
+type Job struct {
+	Attempt int `json:"attempt"`
+
+	// CheckName `<workflow name> / <job name>`, the name used by required checks.
+	CheckName   string      `json:"check_name"`
+	CompletedAt *time.Time  `json:"completed_at,omitempty"`
+	Conclusion  *Conclusion `json:"conclusion,omitempty"`
+	CreatedAt   time.Time   `json:"created_at"`
+
+	// FailureReason Set when the job failed outside its steps, e.g. runner lost, timed out, image pull failed.
+	FailureReason *string `json:"failure_reason,omitempty"`
+	Id            int64   `json:"id"`
+	Image         string  `json:"image"`
+
+	// Key The job's id in the workflow file.
+	Key string `json:"key"`
+
+	// Labels Runner labels the job needs (runs-on).
+	Labels []string                `json:"labels"`
+	Matrix *map[string]interface{} `json:"matrix,omitempty"`
+
+	// Name Display name, including matrix values.
+	Name      string       `json:"name"`
+	Needs     []string     `json:"needs"`
+	QueuedAt  *time.Time   `json:"queued_at,omitempty"`
+	Resources JobResources `json:"resources"`
+	RunNumber int64        `json:"run_number"`
+	Runner    *RunnerRef   `json:"runner,omitempty"`
+	StartedAt *time.Time   `json:"started_at,omitempty"`
+
+	// Status `pending`: waiting for the jobs it needs (or its run's concurrency group). `queued`: ready, waiting for a runner.
+	Status         JobStatus `json:"status"`
+	Steps          []JobStep `json:"steps"`
+	TimeoutMinutes int       `json:"timeout_minutes"`
+
+	// WaitReason Why a queued job hasn't started yet.
+	WaitReason *string `json:"wait_reason,omitempty"`
+}
+
+// JobLogs defines model for JobLogs.
+type JobLogs struct {
+	// Complete The job has finished and every line has been returned.
+	Complete bool      `json:"complete"`
+	Lines    []LogLine `json:"lines"`
+
+	// Next Pass as `after` to get the following lines.
+	Next int `json:"next"`
+
+	// Truncated The log hit the size limit; later output was dropped.
+	Truncated bool `json:"truncated"`
+}
+
+// JobResources defines model for JobResources.
+type JobResources struct {
+	Cpus        float32 `json:"cpus"`
+	MemoryBytes int64   `json:"memory_bytes"`
+	Pids        int     `json:"pids"`
+}
+
+// JobStatus `pending`: waiting for the jobs it needs (or its run's concurrency group). `queued`: ready, waiting for a runner.
+type JobStatus string
+
+// JobStep defines model for JobStep.
+type JobStep struct {
+	CompletedAt *time.Time         `json:"completed_at,omitempty"`
+	Conclusion  *JobStepConclusion `json:"conclusion,omitempty"`
+	Name        string             `json:"name"`
+
+	// Number 1-based; step 0 is the job's setup (pulling images, starting services).
+	Number    int           `json:"number"`
+	StartedAt *time.Time    `json:"started_at,omitempty"`
+	Status    JobStepStatus `json:"status"`
+}
+
+// JobStepConclusion defines model for JobStep.Conclusion.
+type JobStepConclusion string
+
+// JobStepStatus defines model for JobStep.Status.
+type JobStepStatus string
+
 // Label defines model for Label.
 type Label struct {
 	// Color Six hex digits without #, e.g. d73a4a.
@@ -1441,6 +2006,17 @@ type LabelPatch struct {
 	Color       *string `json:"color,omitempty"`
 	Description *string `json:"description,omitempty"`
 	Name        *string `json:"name,omitempty"`
+}
+
+// LogLine defines model for LogLine.
+type LogLine struct {
+	// N Line number
+	N int `json:"n"`
+
+	// Step Step number (0 = setup
+	Step int       `json:"step"`
+	T    time.Time `json:"t"`
+	Text string    `json:"text"`
 }
 
 // LoginRequest defines model for LoginRequest.
@@ -1636,17 +2212,18 @@ type PullRequest struct {
 	BodyHtml string `json:"body_html"`
 
 	// CanMerge You can merge now (blockers is empty).
-	CanMerge      bool       `json:"can_merge"`
-	ChangedFiles  int        `json:"changed_files"`
-	ClosedAt      *time.Time `json:"closed_at,omitempty"`
-	Comments      int        `json:"comments"`
-	Commits       int        `json:"commits"`
-	ConflictFiles []string   `json:"conflict_files"`
-	CreatedAt     time.Time  `json:"created_at"`
-	Deletions     int        `json:"deletions"`
-	Draft         bool       `json:"draft"`
-	Head          PullBranch `json:"head"`
-	Labels        []Label    `json:"labels"`
+	CanMerge      bool         `json:"can_merge"`
+	ChangedFiles  int          `json:"changed_files"`
+	Checks        CheckSummary `json:"checks"`
+	ClosedAt      *time.Time   `json:"closed_at,omitempty"`
+	Comments      int          `json:"comments"`
+	Commits       int          `json:"commits"`
+	ConflictFiles []string     `json:"conflict_files"`
+	CreatedAt     time.Time    `json:"created_at"`
+	Deletions     int          `json:"deletions"`
+	Draft         bool         `json:"draft"`
+	Head          PullBranch   `json:"head"`
+	Labels        []Label      `json:"labels"`
 
 	// MergeBase Common ancestor of base and head.
 	MergeBase   string  `json:"merge_base"`
@@ -1784,6 +2361,11 @@ type RepoAccess struct {
 // RepoAccessSource Why the user has access.
 type RepoAccessSource string
 
+// RerunRequest defines model for RerunRequest.
+type RerunRequest struct {
+	FailedOnly *bool `json:"failed_only,omitempty"`
+}
+
 // Review defines model for Review.
 type Review struct {
 	Author   UserSummary `json:"author"`
@@ -1829,6 +2411,93 @@ type ReviewerStateState string
 // `maintainer`: read/write on granted repositories.
 // `tester`: read, issues, comments, reviews and CI re-runs on granted repositories.
 type Role string
+
+// RunEvent defines model for RunEvent.
+type RunEvent string
+
+// RunPage defines model for RunPage.
+type RunPage struct {
+	Runs  []WorkflowRun `json:"runs"`
+	Total int           `json:"total"`
+}
+
+// RunStatus `waiting`: held back by a concurrency group. `queued`: jobs waiting for a runner.
+type RunStatus string
+
+// Runner defines model for Runner.
+type Runner struct {
+	Arch string `json:"arch"`
+
+	// Busy Jobs it is running now.
+	Busy int `json:"busy"`
+
+	// Capacity Jobs it runs at once.
+	Capacity int `json:"capacity"`
+
+	// CpuPercent Host CPU load (load average ÷ cores) from the last heartbeat.
+	CpuPercent    *float32    `json:"cpu_percent,omitempty"`
+	CreatedAt     time.Time   `json:"created_at"`
+	Id            int64       `json:"id"`
+	Jobs          []RunnerJob `json:"jobs"`
+	Labels        []string    `json:"labels"`
+	LastSeenAt    *time.Time  `json:"last_seen_at,omitempty"`
+	MemoryPercent *float32    `json:"memory_percent,omitempty"`
+	Name          string      `json:"name"`
+	Os            string      `json:"os"`
+
+	// Overloaded Load is above the limit
+	Overloaded *bool        `json:"overloaded,omitempty"`
+	Status     RunnerStatus `json:"status"`
+	Version    string       `json:"version"`
+}
+
+// RunnerStatus defines model for Runner.Status.
+type RunnerStatus string
+
+// RunnerJob defines model for RunnerJob.
+type RunnerJob struct {
+	Id        int64  `json:"id"`
+	Name      string `json:"name"`
+	Repo      string `json:"repo"`
+	RunNumber int64  `json:"run_number"`
+}
+
+// RunnerList defines model for RunnerList.
+type RunnerList struct {
+	QueuedJobs  int      `json:"queued_jobs"`
+	Runners     []Runner `json:"runners"`
+	RunningJobs int      `json:"running_jobs"`
+}
+
+// RunnerRef defines model for RunnerRef.
+type RunnerRef struct {
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+// RunnerRegistrationToken defines model for RunnerRegistrationToken.
+type RunnerRegistrationToken struct {
+	// Command A ready-to-run tgp-runner register command.
+	Command   string    `json:"command"`
+	ExpiresAt time.Time `json:"expires_at"`
+	Token     string    `json:"token"`
+}
+
+// Secret defines model for Secret.
+type Secret struct {
+	Name      string       `json:"name"`
+	Scope     SecretScope  `json:"scope"`
+	UpdatedAt time.Time    `json:"updated_at"`
+	UpdatedBy *UserSummary `json:"updated_by,omitempty"`
+}
+
+// SecretScope defines model for Secret.Scope.
+type SecretScope string
+
+// SecretValue defines model for SecretValue.
+type SecretValue struct {
+	Value string `json:"value"`
+}
 
 // Session defines model for Session.
 type Session struct {
@@ -2062,11 +2731,109 @@ type UserWithTempPassword struct {
 	User                  User      `json:"user"`
 }
 
+// Workflow defines model for Workflow.
+type Workflow struct {
+	DispatchInputs []DispatchInput `json:"dispatch_inputs"`
+	Errors         []WorkflowError `json:"errors"`
+
+	// File File name, e.g. `ci.yml`; use it in dispatch and filters.
+	File     string     `json:"file"`
+	Jobs     []string   `json:"jobs"`
+	Name     string     `json:"name"`
+	Path     string     `json:"path"`
+	Triggers []RunEvent `json:"triggers"`
+	Valid    bool       `json:"valid"`
+}
+
+// WorkflowError defines model for WorkflowError.
+type WorkflowError struct {
+	Column  *int   `json:"column,omitempty"`
+	Line    *int   `json:"line,omitempty"`
+	Message string `json:"message"`
+}
+
+// WorkflowRun defines model for WorkflowRun.
+type WorkflowRun struct {
+	Actor       *UserSummary `json:"actor,omitempty"`
+	Attempt     int          `json:"attempt"`
+	CompletedAt *time.Time   `json:"completed_at,omitempty"`
+	Conclusion  *Conclusion  `json:"conclusion,omitempty"`
+	CreatedAt   time.Time    `json:"created_at"`
+	Event       RunEvent     `json:"event"`
+	HeadBranch  *string      `json:"head_branch,omitempty"`
+	HeadSha     string       `json:"head_sha"`
+	Id          int64        `json:"id"`
+
+	// Number Run number
+	Number     int64  `json:"number"`
+	PullNumber *int64 `json:"pull_number,omitempty"`
+
+	// Ref Full ref: `refs/heads/main`, `refs/tags/v1`, `refs/pull/3/head`.
+	Ref       string     `json:"ref"`
+	Repo      string     `json:"repo"`
+	StartedAt *time.Time `json:"started_at,omitempty"`
+
+	// Status `waiting`: held back by a concurrency group. `queued`: jobs waiting for a runner.
+	Status RunStatus `json:"status"`
+
+	// StatusReason Why the run ended the way it did when it isn't obvious, e.g. superseded by a newer push, queue full, invalid workflow.
+	StatusReason *string `json:"status_reason,omitempty"`
+
+	// Title Commit subject or pull request title.
+	Title        string `json:"title"`
+	WorkflowName string `json:"workflow_name"`
+
+	// WorkflowPath e.g. `.tgp/workflows/ci.yml`
+	WorkflowPath string `json:"workflow_path"`
+}
+
+// WorkflowRunDetail defines model for WorkflowRunDetail.
+type WorkflowRunDetail struct {
+	Actor       *UserSummary      `json:"actor,omitempty"`
+	Attempt     int               `json:"attempt"`
+	CanCancel   bool              `json:"can_cancel"`
+	CanRerun    bool              `json:"can_rerun"`
+	CompletedAt *time.Time        `json:"completed_at,omitempty"`
+	Conclusion  *Conclusion       `json:"conclusion,omitempty"`
+	CreatedAt   time.Time         `json:"created_at"`
+	Event       RunEvent          `json:"event"`
+	HeadBranch  *string           `json:"head_branch,omitempty"`
+	HeadSha     string            `json:"head_sha"`
+	Id          int64             `json:"id"`
+	Inputs      map[string]string `json:"inputs"`
+	Jobs        []Job             `json:"jobs"`
+
+	// Number Run number
+	Number     int64  `json:"number"`
+	PullNumber *int64 `json:"pull_number,omitempty"`
+
+	// Ref Full ref: `refs/heads/main`, `refs/tags/v1`, `refs/pull/3/head`.
+	Ref       string     `json:"ref"`
+	Repo      string     `json:"repo"`
+	StartedAt *time.Time `json:"started_at,omitempty"`
+
+	// Status `waiting`: held back by a concurrency group. `queued`: jobs waiting for a runner.
+	Status RunStatus `json:"status"`
+
+	// StatusReason Why the run ended the way it did when it isn't obvious, e.g. superseded by a newer push, queue full, invalid workflow.
+	StatusReason *string `json:"status_reason,omitempty"`
+
+	// Title Commit subject or pull request title.
+	Title        string `json:"title"`
+	WorkflowName string `json:"workflow_name"`
+
+	// WorkflowPath e.g. `.tgp/workflows/ci.yml`
+	WorkflowPath string `json:"workflow_path"`
+}
+
 // IssueNumber defines model for IssueNumber.
 type IssueNumber = int64
 
 // IssueStateParam defines model for IssueStateParam.
 type IssueStateParam string
+
+// JobID defines model for JobID.
+type JobID = int64
 
 // Page defines model for Page.
 type Page = int
@@ -2092,6 +2859,15 @@ type RepoName = string
 // RequiredPathParam defines model for RequiredPathParam.
 type RequiredPathParam = string
 
+// RunNumber defines model for RunNumber.
+type RunNumber = int64
+
+// RunStatusParam defines model for RunStatusParam.
+type RunStatusParam string
+
+// SecretName defines model for SecretName.
+type SecretName = string
+
 // EnableTotpJSONBody defines parameters for EnableTotp.
 type EnableTotpJSONBody struct {
 	// Code Example: 123456
@@ -2110,6 +2886,17 @@ type ListAuditLogParams struct {
 
 	// Action Filter by action prefix, e.g. `user.` or `auth.login`.
 	Action *string `form:"action,omitempty" json:"action,omitempty"`
+}
+
+// CreateRunnerTokenJSONBody defines parameters for CreateRunnerToken.
+type CreateRunnerTokenJSONBody struct {
+	ExpiresInHours *int `json:"expires_in_hours,omitempty"`
+}
+
+// UpdateRunnerJSONBody defines parameters for UpdateRunner.
+type UpdateRunnerJSONBody struct {
+	Disabled *bool   `json:"disabled,omitempty"`
+	Name     *string `json:"name,omitempty"`
 }
 
 // AdminSetUserReposJSONBody defines parameters for AdminSetUserRepos.
@@ -2250,6 +3037,16 @@ type CreateIssueCommentJSONBody struct {
 	Body string `json:"body"`
 }
 
+// GetJobLogsParams defines parameters for GetJobLogs.
+type GetJobLogsParams struct {
+	// After Return lines numbered above this.
+	After *int `form:"after,omitempty" json:"after,omitempty"`
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Step Only lines of this step number.
+	Step *int `form:"step,omitempty" json:"step,omitempty"`
+}
+
 // ListMilestonesParams defines parameters for ListMilestones.
 type ListMilestonesParams struct {
 	State *ListMilestonesParamsState `form:"state,omitempty" json:"state,omitempty"`
@@ -2312,6 +3109,31 @@ type GetReadmeParams struct {
 	Path *PathParam `form:"path,omitempty" json:"path,omitempty"`
 }
 
+// ListRunsParams defines parameters for ListRuns.
+type ListRunsParams struct {
+	// Workflow Workflow file name (e.g. `ci.yml`) or path.
+	Workflow *string   `form:"workflow,omitempty" json:"workflow,omitempty"`
+	Branch   *string   `form:"branch,omitempty" json:"branch,omitempty"`
+	Event    *RunEvent `form:"event,omitempty" json:"event,omitempty"`
+
+	// Status A status, a conclusion, or `active` (not completed).
+	Status *ListRunsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+
+	// Actor Username, or `@me`.
+	Actor *string `form:"actor,omitempty" json:"actor,omitempty"`
+
+	// Pull Pull request number.
+	Pull *int64 `form:"pull,omitempty" json:"pull,omitempty"`
+
+	// Sha Full or abbreviated head commit.
+	Sha     *string  `form:"sha,omitempty" json:"sha,omitempty"`
+	Page    *Page    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListRunsParamsStatus defines parameters for ListRuns.
+type ListRunsParamsStatus string
+
 // GetTreeParams defines parameters for GetTree.
 type GetTreeParams struct {
 	// Ref Branch, tag or commit. Defaults to the default branch.
@@ -2320,6 +3142,26 @@ type GetTreeParams struct {
 	// Path Path inside the repository; empty for the root.
 	Path *PathParam `form:"path,omitempty" json:"path,omitempty"`
 }
+
+// ListWorkflowsParams defines parameters for ListWorkflows.
+type ListWorkflowsParams struct {
+	// Ref Branch, tag or commit. Defaults to the default branch.
+	Ref *RefParam `form:"ref,omitempty" json:"ref,omitempty"`
+}
+
+// ListAllRunsParams defines parameters for ListAllRuns.
+type ListAllRunsParams struct {
+	// Status A status, a conclusion, or `active` (not completed).
+	Status *ListAllRunsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+
+	// Actor Username, or `@me`.
+	Actor   *string  `form:"actor,omitempty" json:"actor,omitempty"`
+	Page    *Page    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListAllRunsParamsStatus defines parameters for ListAllRuns.
+type ListAllRunsParamsStatus string
 
 // ChangePasswordJSONRequestBody defines body for ChangePassword for application/json ContentType.
 type ChangePasswordJSONRequestBody = ChangePasswordRequest
@@ -2336,8 +3178,20 @@ type DisableTotpJSONRequestBody = PasswordConfirm
 // EnableTotpJSONRequestBody defines body for EnableTotp for application/json ContentType.
 type EnableTotpJSONRequestBody EnableTotpJSONBody
 
+// UpdateCISettingsJSONRequestBody defines body for UpdateCISettings for application/json ContentType.
+type UpdateCISettingsJSONRequestBody = CISettingsPatch
+
 // UpdateOrgJSONRequestBody defines body for UpdateOrg for application/json ContentType.
 type UpdateOrgJSONRequestBody = UpdateOrgRequest
+
+// CreateRunnerTokenJSONRequestBody defines body for CreateRunnerToken for application/json ContentType.
+type CreateRunnerTokenJSONRequestBody CreateRunnerTokenJSONBody
+
+// UpdateRunnerJSONRequestBody defines body for UpdateRunner for application/json ContentType.
+type UpdateRunnerJSONRequestBody UpdateRunnerJSONBody
+
+// SetOrgSecretJSONRequestBody defines body for SetOrgSecret for application/json ContentType.
+type SetOrgSecretJSONRequestBody = SecretValue
 
 // AdminCreateUserJSONRequestBody defines body for AdminCreateUser for application/json ContentType.
 type AdminCreateUserJSONRequestBody = CreateUserRequest
@@ -2413,6 +3267,15 @@ type DismissReviewJSONRequestBody DismissReviewJSONBody
 
 // UpdatePullBranchJSONRequestBody defines body for UpdatePullBranch for application/json ContentType.
 type UpdatePullBranchJSONRequestBody UpdatePullBranchJSONBody
+
+// RerunRunJSONRequestBody defines body for RerunRun for application/json ContentType.
+type RerunRunJSONRequestBody = RerunRequest
+
+// SetRepoSecretJSONRequestBody defines body for SetRepoSecret for application/json ContentType.
+type SetRepoSecretJSONRequestBody = SecretValue
+
+// DispatchWorkflowJSONRequestBody defines body for DispatchWorkflow for application/json ContentType.
+type DispatchWorkflowJSONRequestBody = DispatchRequest
 
 // CompleteSetupJSONRequestBody defines body for CompleteSetup for application/json ContentType.
 type CompleteSetupJSONRequestBody = SetupRequest
@@ -2587,6 +3450,25 @@ type ClientInterface interface {
 	// Corresponds with GET /admin/audit-log (the `ListAuditLog` operationId).
 	ListAuditLog(ctx context.Context, params *ListAuditLogParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetCISettings CI resource limits and defaults (admin)
+	//
+	// Corresponds with GET /admin/ci/settings (the `GetCISettings` operationId).
+	GetCISettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateCISettingsWithBody Change CI resource limits and defaults (admin)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /admin/ci/settings (the `UpdateCISettings` operationId).
+	UpdateCISettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateCISettings Change CI resource limits and defaults (admin)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /admin/ci/settings (the `UpdateCISettings` operationId).
+	UpdateCISettings(ctx context.Context, body UpdateCISettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// UpdateOrgWithBody Update org settings
 	//
 	// Takes any type of body and a specified content type.
@@ -2614,6 +3496,79 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /admin/org/logo (the `UploadOrgLogo` operationId).
 	UploadOrgLogoWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListRunners List runners with their status, load and running jobs (admin)
+	//
+	// Corresponds with GET /admin/runners (the `ListRunners` operationId).
+	ListRunners(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateRunnerTokenWithBody Create a one-time runner registration token (admin)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /admin/runners/registration-tokens (the `CreateRunnerToken` operationId).
+	CreateRunnerTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateRunnerToken Create a one-time runner registration token (admin)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /admin/runners/registration-tokens (the `CreateRunnerToken` operationId).
+	CreateRunnerToken(ctx context.Context, body CreateRunnerTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteRunner Remove a runner (admin)
+	//
+	// Its credentials stop working; jobs it was running fail.
+	//
+	// Corresponds with DELETE /admin/runners/{id} (the `DeleteRunner` operationId).
+	DeleteRunner(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetRunner Get a runner (admin)
+	//
+	// Corresponds with GET /admin/runners/{id} (the `GetRunner` operationId).
+	GetRunner(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateRunnerWithBody Disable, enable or rename a runner (admin)
+	//
+	// A disabled runner finishes the jobs it has but gets no new ones.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /admin/runners/{id} (the `UpdateRunner` operationId).
+	UpdateRunnerWithBody(ctx context.Context, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateRunner Disable, enable or rename a runner (admin)
+	//
+	// A disabled runner finishes the jobs it has but gets no new ones.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /admin/runners/{id} (the `UpdateRunner` operationId).
+	UpdateRunner(ctx context.Context, id int64, body UpdateRunnerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListOrgSecrets List organisation secrets, available to every repository (admin)
+	//
+	// Corresponds with GET /admin/secrets (the `ListOrgSecrets` operationId).
+	ListOrgSecrets(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteOrgSecret Delete an organisation secret (admin)
+	//
+	// Corresponds with DELETE /admin/secrets/{name} (the `DeleteOrgSecret` operationId).
+	DeleteOrgSecret(ctx context.Context, name SecretName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetOrgSecretWithBody Create or update an organisation secret (admin)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /admin/secrets/{name} (the `SetOrgSecret` operationId).
+	SetOrgSecretWithBody(ctx context.Context, name SecretName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetOrgSecret Create or update an organisation secret (admin)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /admin/secrets/{name} (the `SetOrgSecret` operationId).
+	SetOrgSecret(ctx context.Context, name SecretName, body SetOrgSecretJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AdminListUsers List all users with admin details
 	//
@@ -2883,6 +3838,11 @@ type ClientInterface interface {
 	// Corresponds with GET /repos/{repo}/commits/{sha} (the `GetCommit` operationId).
 	GetCommit(ctx context.Context, repo RepoName, sha string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetCommitChecks CI results for a commit (latest attempt of each job)
+	//
+	// Corresponds with GET /repos/{repo}/commits/{sha}/checks (the `GetCommitChecks` operationId).
+	GetCommitChecks(ctx context.Context, repo RepoName, sha string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CompareRefs Compare two branches (what a pull request from head into base would contain)
 	//
 	// Corresponds with GET /repos/{repo}/compare (the `CompareRefs` operationId).
@@ -2957,6 +3917,26 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /repos/{repo}/issues/{number}/timeline (the `GetIssueTimeline` operationId).
 	GetIssueTimeline(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetJob Get a job with its steps
+	//
+	// Corresponds with GET /repos/{repo}/jobs/{id} (the `GetJob` operationId).
+	GetJob(ctx context.Context, repo RepoName, id JobID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetJobLogs Read a job's log
+	//
+	// Returns log lines after the `after` cursor (0 for the start). Poll with the
+	// returned `next` until `complete` is true to follow a running job, or use
+	// `GET /repos/{repo}/jobs/{id}/logs/stream` (server-sent events: `line` events
+	// carry a `LogLine`, a final `end` event carries the job).
+	//
+	// Corresponds with GET /repos/{repo}/jobs/{id}/logs (the `GetJobLogs` operationId).
+	GetJobLogs(ctx context.Context, repo RepoName, id JobID, params *GetJobLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RerunJob Re-run one job and the jobs that depend on it (triage access)
+	//
+	// Corresponds with POST /repos/{repo}/jobs/{id}/rerun (the `RerunJob` operationId).
+	RerunJob(ctx context.Context, repo RepoName, id JobID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListLabels List labels, by name
 	//
@@ -3248,6 +4228,65 @@ type ClientInterface interface {
 	// Corresponds with GET /repos/{repo}/readme (the `GetReadme` operationId).
 	GetReadme(ctx context.Context, repo RepoName, params *GetReadmeParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListRuns List a repository's workflow runs
+	//
+	// Corresponds with GET /repos/{repo}/runs (the `ListRuns` operationId).
+	ListRuns(ctx context.Context, repo RepoName, params *ListRunsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetRun Get a run with its jobs and steps
+	//
+	// Corresponds with GET /repos/{repo}/runs/{number} (the `GetRun` operationId).
+	GetRun(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CancelRun Cancel a run (write access)
+	//
+	// Queued jobs are cancelled immediately; running jobs are stopped by their runner. Fails with `conflict` if the run already finished.
+	//
+	// Corresponds with POST /repos/{repo}/runs/{number}/cancel (the `CancelRun` operationId).
+	CancelRun(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RerunRunWithBody Re-run a finished run (triage access, so testers can re-run)
+	//
+	// Starts a new attempt of the same run, with the same commit, workflow file and inputs. With `failed_only`, jobs that succeeded keep their results and only failed or cancelled jobs (and the jobs that depend on them) run again.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/runs/{number}/rerun (the `RerunRun` operationId).
+	RerunRunWithBody(ctx context.Context, repo RepoName, number RunNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RerunRun Re-run a finished run (triage access, so testers can re-run)
+	//
+	// Starts a new attempt of the same run, with the same commit, workflow file and inputs. With `failed_only`, jobs that succeeded keep their results and only failed or cancelled jobs (and the jobs that depend on them) run again.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/runs/{number}/rerun (the `RerunRun` operationId).
+	RerunRun(ctx context.Context, repo RepoName, number RunNumber, body RerunRunJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListRepoSecrets List repository secrets (write access; values are never returned)
+	//
+	// Corresponds with GET /repos/{repo}/secrets (the `ListRepoSecrets` operationId).
+	ListRepoSecrets(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteRepoSecret Delete a repository secret (write access)
+	//
+	// Corresponds with DELETE /repos/{repo}/secrets/{name} (the `DeleteRepoSecret` operationId).
+	DeleteRepoSecret(ctx context.Context, repo RepoName, name SecretName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetRepoSecretWithBody Create or update a repository secret (write access)
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /repos/{repo}/secrets/{name} (the `SetRepoSecret` operationId).
+	SetRepoSecretWithBody(ctx context.Context, repo RepoName, name SecretName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetRepoSecret Create or update a repository secret (write access)
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /repos/{repo}/secrets/{name} (the `SetRepoSecret` operationId).
+	SetRepoSecret(ctx context.Context, repo RepoName, name SecretName, body SetRepoSecretJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListTags List tags, newest first
 	//
 	// Corresponds with GET /repos/{repo}/tags (the `ListTags` operationId).
@@ -3257,6 +4296,34 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /repos/{repo}/tree (the `GetTree` operationId).
 	GetTree(ctx context.Context, repo RepoName, params *GetTreeParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListWorkflows List the workflow files at a ref, with validation errors
+	//
+	// Corresponds with GET /repos/{repo}/workflows (the `ListWorkflows` operationId).
+	ListWorkflows(ctx context.Context, repo RepoName, params *ListWorkflowsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DispatchWorkflowWithBody Run a workflow manually (write access)
+	//
+	// The workflow must have a `workflow_dispatch` trigger. Inputs are checked against its declared inputs.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/workflows/{workflow}/dispatch (the `DispatchWorkflow` operationId).
+	DispatchWorkflowWithBody(ctx context.Context, repo RepoName, workflow string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DispatchWorkflow Run a workflow manually (write access)
+	//
+	// The workflow must have a `workflow_dispatch` trigger. Inputs are checked against its declared inputs.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/workflows/{workflow}/dispatch (the `DispatchWorkflow` operationId).
+	DispatchWorkflow(ctx context.Context, repo RepoName, workflow string, body DispatchWorkflowJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAllRuns Recent workflow runs across every repository you can read
+	//
+	// Corresponds with GET /runs (the `ListAllRuns` operationId).
+	ListAllRuns(ctx context.Context, params *ListAllRunsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CompleteSetupWithBody Complete first-start setup
 	//
@@ -3526,6 +4593,55 @@ func (c *Client) ListAuditLog(ctx context.Context, params *ListAuditLogParams, r
 	return c.Client.Do(req)
 }
 
+// GetCISettings CI resource limits and defaults (admin)
+//
+// Corresponds with GET /admin/ci/settings (the `GetCISettings` operationId).
+func (c *Client) GetCISettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCISettingsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateCISettingsWithBody Change CI resource limits and defaults (admin)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /admin/ci/settings (the `UpdateCISettings` operationId).
+func (c *Client) UpdateCISettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateCISettingsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateCISettings Change CI resource limits and defaults (admin)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /admin/ci/settings (the `UpdateCISettings` operationId).
+func (c *Client) UpdateCISettings(ctx context.Context, body UpdateCISettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateCISettingsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // UpdateOrgWithBody Update org settings
 //
 // Takes any type of body and a specified content type.
@@ -3584,6 +4700,189 @@ func (c *Client) DeleteOrgLogo(ctx context.Context, reqEditors ...RequestEditorF
 // Corresponds with PUT /admin/org/logo (the `UploadOrgLogo` operationId).
 func (c *Client) UploadOrgLogoWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUploadOrgLogoRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListRunners List runners with their status, load and running jobs (admin)
+//
+// Corresponds with GET /admin/runners (the `ListRunners` operationId).
+func (c *Client) ListRunners(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListRunnersRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateRunnerTokenWithBody Create a one-time runner registration token (admin)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /admin/runners/registration-tokens (the `CreateRunnerToken` operationId).
+func (c *Client) CreateRunnerTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateRunnerTokenRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateRunnerToken Create a one-time runner registration token (admin)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /admin/runners/registration-tokens (the `CreateRunnerToken` operationId).
+func (c *Client) CreateRunnerToken(ctx context.Context, body CreateRunnerTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateRunnerTokenRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteRunner Remove a runner (admin)
+//
+// Its credentials stop working; jobs it was running fail.
+//
+// Corresponds with DELETE /admin/runners/{id} (the `DeleteRunner` operationId).
+func (c *Client) DeleteRunner(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteRunnerRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetRunner Get a runner (admin)
+//
+// Corresponds with GET /admin/runners/{id} (the `GetRunner` operationId).
+func (c *Client) GetRunner(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRunnerRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateRunnerWithBody Disable, enable or rename a runner (admin)
+//
+// A disabled runner finishes the jobs it has but gets no new ones.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /admin/runners/{id} (the `UpdateRunner` operationId).
+func (c *Client) UpdateRunnerWithBody(ctx context.Context, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateRunnerRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateRunner Disable, enable or rename a runner (admin)
+//
+// A disabled runner finishes the jobs it has but gets no new ones.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /admin/runners/{id} (the `UpdateRunner` operationId).
+func (c *Client) UpdateRunner(ctx context.Context, id int64, body UpdateRunnerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateRunnerRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListOrgSecrets List organisation secrets, available to every repository (admin)
+//
+// Corresponds with GET /admin/secrets (the `ListOrgSecrets` operationId).
+func (c *Client) ListOrgSecrets(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListOrgSecretsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteOrgSecret Delete an organisation secret (admin)
+//
+// Corresponds with DELETE /admin/secrets/{name} (the `DeleteOrgSecret` operationId).
+func (c *Client) DeleteOrgSecret(ctx context.Context, name SecretName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteOrgSecretRequest(c.Server, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetOrgSecretWithBody Create or update an organisation secret (admin)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /admin/secrets/{name} (the `SetOrgSecret` operationId).
+func (c *Client) SetOrgSecretWithBody(ctx context.Context, name SecretName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetOrgSecretRequestWithBody(c.Server, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetOrgSecret Create or update an organisation secret (admin)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /admin/secrets/{name} (the `SetOrgSecret` operationId).
+func (c *Client) SetOrgSecret(ctx context.Context, name SecretName, body SetOrgSecretJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetOrgSecretRequest(c.Server, name, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4262,6 +5561,21 @@ func (c *Client) GetCommit(ctx context.Context, repo RepoName, sha string, reqEd
 	return c.Client.Do(req)
 }
 
+// GetCommitChecks CI results for a commit (latest attempt of each job)
+//
+// Corresponds with GET /repos/{repo}/commits/{sha}/checks (the `GetCommitChecks` operationId).
+func (c *Client) GetCommitChecks(ctx context.Context, repo RepoName, sha string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCommitChecksRequest(c.Server, repo, sha)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // CompareRefs Compare two branches (what a pull request from head into base would contain)
 //
 // Corresponds with GET /repos/{repo}/compare (the `CompareRefs` operationId).
@@ -4437,6 +5751,56 @@ func (c *Client) CreateIssueComment(ctx context.Context, repo RepoName, number I
 // Corresponds with GET /repos/{repo}/issues/{number}/timeline (the `GetIssueTimeline` operationId).
 func (c *Client) GetIssueTimeline(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetIssueTimelineRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetJob Get a job with its steps
+//
+// Corresponds with GET /repos/{repo}/jobs/{id} (the `GetJob` operationId).
+func (c *Client) GetJob(ctx context.Context, repo RepoName, id JobID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetJobRequest(c.Server, repo, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetJobLogs Read a job's log
+//
+// Returns log lines after the `after` cursor (0 for the start). Poll with the
+// returned `next` until `complete` is true to follow a running job, or use
+// `GET /repos/{repo}/jobs/{id}/logs/stream` (server-sent events: `line` events
+// carry a `LogLine`, a final `end` event carries the job).
+//
+// Corresponds with GET /repos/{repo}/jobs/{id}/logs (the `GetJobLogs` operationId).
+func (c *Client) GetJobLogs(ctx context.Context, repo RepoName, id JobID, params *GetJobLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetJobLogsRequest(c.Server, repo, id, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RerunJob Re-run one job and the jobs that depend on it (triage access)
+//
+// Corresponds with POST /repos/{repo}/jobs/{id}/rerun (the `RerunJob` operationId).
+func (c *Client) RerunJob(ctx context.Context, repo RepoName, id JobID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRerunJobRequest(c.Server, repo, id)
 	if err != nil {
 		return nil, err
 	}
@@ -5157,6 +6521,155 @@ func (c *Client) GetReadme(ctx context.Context, repo RepoName, params *GetReadme
 	return c.Client.Do(req)
 }
 
+// ListRuns List a repository's workflow runs
+//
+// Corresponds with GET /repos/{repo}/runs (the `ListRuns` operationId).
+func (c *Client) ListRuns(ctx context.Context, repo RepoName, params *ListRunsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListRunsRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetRun Get a run with its jobs and steps
+//
+// Corresponds with GET /repos/{repo}/runs/{number} (the `GetRun` operationId).
+func (c *Client) GetRun(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRunRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CancelRun Cancel a run (write access)
+//
+// Queued jobs are cancelled immediately; running jobs are stopped by their runner. Fails with `conflict` if the run already finished.
+//
+// Corresponds with POST /repos/{repo}/runs/{number}/cancel (the `CancelRun` operationId).
+func (c *Client) CancelRun(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCancelRunRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RerunRunWithBody Re-run a finished run (triage access, so testers can re-run)
+//
+// Starts a new attempt of the same run, with the same commit, workflow file and inputs. With `failed_only`, jobs that succeeded keep their results and only failed or cancelled jobs (and the jobs that depend on them) run again.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/runs/{number}/rerun (the `RerunRun` operationId).
+func (c *Client) RerunRunWithBody(ctx context.Context, repo RepoName, number RunNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRerunRunRequestWithBody(c.Server, repo, number, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RerunRun Re-run a finished run (triage access, so testers can re-run)
+//
+// Starts a new attempt of the same run, with the same commit, workflow file and inputs. With `failed_only`, jobs that succeeded keep their results and only failed or cancelled jobs (and the jobs that depend on them) run again.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/runs/{number}/rerun (the `RerunRun` operationId).
+func (c *Client) RerunRun(ctx context.Context, repo RepoName, number RunNumber, body RerunRunJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRerunRunRequest(c.Server, repo, number, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListRepoSecrets List repository secrets (write access; values are never returned)
+//
+// Corresponds with GET /repos/{repo}/secrets (the `ListRepoSecrets` operationId).
+func (c *Client) ListRepoSecrets(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListRepoSecretsRequest(c.Server, repo)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteRepoSecret Delete a repository secret (write access)
+//
+// Corresponds with DELETE /repos/{repo}/secrets/{name} (the `DeleteRepoSecret` operationId).
+func (c *Client) DeleteRepoSecret(ctx context.Context, repo RepoName, name SecretName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteRepoSecretRequest(c.Server, repo, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetRepoSecretWithBody Create or update a repository secret (write access)
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /repos/{repo}/secrets/{name} (the `SetRepoSecret` operationId).
+func (c *Client) SetRepoSecretWithBody(ctx context.Context, repo RepoName, name SecretName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetRepoSecretRequestWithBody(c.Server, repo, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetRepoSecret Create or update a repository secret (write access)
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /repos/{repo}/secrets/{name} (the `SetRepoSecret` operationId).
+func (c *Client) SetRepoSecret(ctx context.Context, repo RepoName, name SecretName, body SetRepoSecretJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetRepoSecretRequest(c.Server, repo, name, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListTags List tags, newest first
 //
 // Corresponds with GET /repos/{repo}/tags (the `ListTags` operationId).
@@ -5177,6 +6690,74 @@ func (c *Client) ListTags(ctx context.Context, repo RepoName, reqEditors ...Requ
 // Corresponds with GET /repos/{repo}/tree (the `GetTree` operationId).
 func (c *Client) GetTree(ctx context.Context, repo RepoName, params *GetTreeParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTreeRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListWorkflows List the workflow files at a ref, with validation errors
+//
+// Corresponds with GET /repos/{repo}/workflows (the `ListWorkflows` operationId).
+func (c *Client) ListWorkflows(ctx context.Context, repo RepoName, params *ListWorkflowsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListWorkflowsRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DispatchWorkflowWithBody Run a workflow manually (write access)
+//
+// The workflow must have a `workflow_dispatch` trigger. Inputs are checked against its declared inputs.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/workflows/{workflow}/dispatch (the `DispatchWorkflow` operationId).
+func (c *Client) DispatchWorkflowWithBody(ctx context.Context, repo RepoName, workflow string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDispatchWorkflowRequestWithBody(c.Server, repo, workflow, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DispatchWorkflow Run a workflow manually (write access)
+//
+// The workflow must have a `workflow_dispatch` trigger. Inputs are checked against its declared inputs.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/workflows/{workflow}/dispatch (the `DispatchWorkflow` operationId).
+func (c *Client) DispatchWorkflow(ctx context.Context, repo RepoName, workflow string, body DispatchWorkflowJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDispatchWorkflowRequest(c.Server, repo, workflow, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListAllRuns Recent workflow runs across every repository you can read
+//
+// Corresponds with GET /runs (the `ListAllRuns` operationId).
+func (c *Client) ListAllRuns(ctx context.Context, params *ListAllRunsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAllRunsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -5626,6 +7207,73 @@ func NewListAuditLogRequest(server string, params *ListAuditLogParams) (*http.Re
 	return req, nil
 }
 
+// NewGetCISettingsRequest constructs an http.Request for the GetCISettings method
+func NewGetCISettingsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/ci/settings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateCISettingsRequest calls the generic UpdateCISettings builder with application/json body
+func NewUpdateCISettingsRequest(server string, body UpdateCISettingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateCISettingsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewUpdateCISettingsRequestWithBody constructs an http.Request for the UpdateCISettings method, with any body, and a specified content type
+func NewUpdateCISettingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/ci/settings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewUpdateOrgRequest calls the generic UpdateOrg builder with application/json body
 func NewUpdateOrgRequest(server string, body UpdateOrgJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -5703,6 +7351,296 @@ func NewUploadOrgLogoRequestWithBody(server string, contentType string, body io.
 	}
 
 	operationPath := fmt.Sprintf("/admin/org/logo")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListRunnersRequest constructs an http.Request for the ListRunners method
+func NewListRunnersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/runners")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateRunnerTokenRequest calls the generic CreateRunnerToken builder with application/json body
+func NewCreateRunnerTokenRequest(server string, body CreateRunnerTokenJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateRunnerTokenRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateRunnerTokenRequestWithBody constructs an http.Request for the CreateRunnerToken method, with any body, and a specified content type
+func NewCreateRunnerTokenRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/runners/registration-tokens")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteRunnerRequest constructs an http.Request for the DeleteRunner method
+func NewDeleteRunnerRequest(server string, id int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/runners/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetRunnerRequest constructs an http.Request for the GetRunner method
+func NewGetRunnerRequest(server string, id int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/runners/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateRunnerRequest calls the generic UpdateRunner builder with application/json body
+func NewUpdateRunnerRequest(server string, id int64, body UpdateRunnerJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateRunnerRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewUpdateRunnerRequestWithBody constructs an http.Request for the UpdateRunner method, with any body, and a specified content type
+func NewUpdateRunnerRequestWithBody(server string, id int64, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/runners/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListOrgSecretsRequest constructs an http.Request for the ListOrgSecrets method
+func NewListOrgSecretsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/secrets")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteOrgSecretRequest constructs an http.Request for the DeleteOrgSecret method
+func NewDeleteOrgSecretRequest(server string, name SecretName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/secrets/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewSetOrgSecretRequest calls the generic SetOrgSecret builder with application/json body
+func NewSetOrgSecretRequest(server string, name SecretName, body SetOrgSecretJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSetOrgSecretRequestWithBody(server, name, "application/json", bodyReader)
+}
+
+// NewSetOrgSecretRequestWithBody constructs an http.Request for the SetOrgSecret method, with any body, and a specified content type
+func NewSetOrgSecretRequestWithBody(server string, name SecretName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/admin/secrets/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -7109,6 +9047,47 @@ func NewGetCommitRequest(server string, repo RepoName, sha string) (*http.Reques
 	return req, nil
 }
 
+// NewGetCommitChecksRequest constructs an http.Request for the GetCommitChecks method
+func NewGetCommitChecksRequest(server string, repo RepoName, sha string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "sha", sha, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/commits/%s/checks", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewCompareRefsRequest constructs an http.Request for the CompareRefs method
 func NewCompareRefsRequest(server string, repo RepoName, params *CompareRefsParams) (*http.Request, error) {
 	var err error
@@ -7602,6 +9581,180 @@ func NewGetIssueTimelineRequest(server string, repo RepoName, number IssueNumber
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetJobRequest constructs an http.Request for the GetJob method
+func NewGetJobRequest(server string, repo RepoName, id JobID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/jobs/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetJobLogsRequest constructs an http.Request for the GetJobLogs method
+func NewGetJobLogsRequest(server string, repo RepoName, id JobID, params *GetJobLogsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/jobs/%s/logs", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.After != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after", *params.After, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Step != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "step", *params.Step, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRerunJobRequest constructs an http.Request for the RerunJob method
+func NewRerunJobRequest(server string, repo RepoName, id JobID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/jobs/%s/rerun", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -9116,6 +11269,428 @@ func NewGetReadmeRequest(server string, repo RepoName, params *GetReadmeParams) 
 	return req, nil
 }
 
+// NewListRunsRequest constructs an http.Request for the ListRuns method
+func NewListRunsRequest(server string, repo RepoName, params *ListRunsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/runs", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Workflow != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "workflow", *params.Workflow, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Branch != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "branch", *params.Branch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Event != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "event", *params.Event, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Status != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "status", *params.Status, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Actor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "actor", *params.Actor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Pull != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pull", *params.Pull, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int64"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Sha != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sha", *params.Sha, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetRunRequest constructs an http.Request for the GetRun method
+func NewGetRunRequest(server string, repo RepoName, number RunNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/runs/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCancelRunRequest constructs an http.Request for the CancelRun method
+func NewCancelRunRequest(server string, repo RepoName, number RunNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/runs/%s/cancel", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRerunRunRequest calls the generic RerunRun builder with application/json body
+func NewRerunRunRequest(server string, repo RepoName, number RunNumber, body RerunRunJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRerunRunRequestWithBody(server, repo, number, "application/json", bodyReader)
+}
+
+// NewRerunRunRequestWithBody constructs an http.Request for the RerunRun method, with any body, and a specified content type
+func NewRerunRunRequestWithBody(server string, repo RepoName, number RunNumber, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/runs/%s/rerun", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListRepoSecretsRequest constructs an http.Request for the ListRepoSecrets method
+func NewListRepoSecretsRequest(server string, repo RepoName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/secrets", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteRepoSecretRequest constructs an http.Request for the DeleteRepoSecret method
+func NewDeleteRepoSecretRequest(server string, repo RepoName, name SecretName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/secrets/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewSetRepoSecretRequest calls the generic SetRepoSecret builder with application/json body
+func NewSetRepoSecretRequest(server string, repo RepoName, name SecretName, body SetRepoSecretJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSetRepoSecretRequestWithBody(server, repo, name, "application/json", bodyReader)
+}
+
+// NewSetRepoSecretRequestWithBody constructs an http.Request for the SetRepoSecret method, with any body, and a specified content type
+func NewSetRepoSecretRequestWithBody(server string, repo RepoName, name SecretName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/secrets/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListTagsRequest constructs an http.Request for the ListTags method
 func NewListTagsRequest(server string, repo RepoName) (*http.Request, error) {
 	var err error
@@ -9200,6 +11775,211 @@ func NewGetTreeRequest(server string, repo RepoName, params *GetTreeParams) (*ht
 		if params.Path != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "path", *params.Path, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListWorkflowsRequest constructs an http.Request for the ListWorkflows method
+func NewListWorkflowsRequest(server string, repo RepoName, params *ListWorkflowsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/workflows", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Ref != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "ref", *params.Ref, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDispatchWorkflowRequest calls the generic DispatchWorkflow builder with application/json body
+func NewDispatchWorkflowRequest(server string, repo RepoName, workflow string, body DispatchWorkflowJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDispatchWorkflowRequestWithBody(server, repo, workflow, "application/json", bodyReader)
+}
+
+// NewDispatchWorkflowRequestWithBody constructs an http.Request for the DispatchWorkflow method, with any body, and a specified content type
+func NewDispatchWorkflowRequestWithBody(server string, repo RepoName, workflow string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "workflow", workflow, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/workflows/%s/dispatch", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAllRunsRequest constructs an http.Request for the ListAllRuns method
+func NewListAllRunsRequest(server string, params *ListAllRunsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/runs")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Status != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "status", *params.Status, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Actor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "actor", *params.Actor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -9438,6 +12218,27 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /admin/audit-log (the `ListAuditLog` operationId).
 	ListAuditLogWithResponse(ctx context.Context, params *ListAuditLogParams, reqEditors ...RequestEditorFn) (*ListAuditLogResponse, error)
 
+	// GetCISettingsWithResponse CI resource limits and defaults (admin)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /admin/ci/settings (the `GetCISettings` operationId).
+	GetCISettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetCISettingsResponse, error)
+
+	// UpdateCISettingsWithBodyWithResponse Change CI resource limits and defaults (admin)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /admin/ci/settings (the `UpdateCISettings` operationId).
+	UpdateCISettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateCISettingsResponse, error)
+
+	// UpdateCISettingsWithResponse Change CI resource limits and defaults (admin)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /admin/ci/settings (the `UpdateCISettings` operationId).
+	UpdateCISettingsWithResponse(ctx context.Context, body UpdateCISettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateCISettingsResponse, error)
+
 	// UpdateOrgWithBodyWithResponse Update org settings
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -9467,6 +12268,89 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PUT /admin/org/logo (the `UploadOrgLogo` operationId).
 	UploadOrgLogoWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadOrgLogoResponse, error)
+
+	// ListRunnersWithResponse List runners with their status, load and running jobs (admin)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /admin/runners (the `ListRunners` operationId).
+	ListRunnersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListRunnersResponse, error)
+
+	// CreateRunnerTokenWithBodyWithResponse Create a one-time runner registration token (admin)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /admin/runners/registration-tokens (the `CreateRunnerToken` operationId).
+	CreateRunnerTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateRunnerTokenResponse, error)
+
+	// CreateRunnerTokenWithResponse Create a one-time runner registration token (admin)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /admin/runners/registration-tokens (the `CreateRunnerToken` operationId).
+	CreateRunnerTokenWithResponse(ctx context.Context, body CreateRunnerTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateRunnerTokenResponse, error)
+
+	// DeleteRunnerWithResponse Remove a runner (admin)
+	//
+	// Its credentials stop working; jobs it was running fail.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /admin/runners/{id} (the `DeleteRunner` operationId).
+	DeleteRunnerWithResponse(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*DeleteRunnerResponse, error)
+
+	// GetRunnerWithResponse Get a runner (admin)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /admin/runners/{id} (the `GetRunner` operationId).
+	GetRunnerWithResponse(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*GetRunnerResponse, error)
+
+	// UpdateRunnerWithBodyWithResponse Disable, enable or rename a runner (admin)
+	//
+	// A disabled runner finishes the jobs it has but gets no new ones.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /admin/runners/{id} (the `UpdateRunner` operationId).
+	UpdateRunnerWithBodyWithResponse(ctx context.Context, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateRunnerResponse, error)
+
+	// UpdateRunnerWithResponse Disable, enable or rename a runner (admin)
+	//
+	// A disabled runner finishes the jobs it has but gets no new ones.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /admin/runners/{id} (the `UpdateRunner` operationId).
+	UpdateRunnerWithResponse(ctx context.Context, id int64, body UpdateRunnerJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateRunnerResponse, error)
+
+	// ListOrgSecretsWithResponse List organisation secrets, available to every repository (admin)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /admin/secrets (the `ListOrgSecrets` operationId).
+	ListOrgSecretsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListOrgSecretsResponse, error)
+
+	// DeleteOrgSecretWithResponse Delete an organisation secret (admin)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /admin/secrets/{name} (the `DeleteOrgSecret` operationId).
+	DeleteOrgSecretWithResponse(ctx context.Context, name SecretName, reqEditors ...RequestEditorFn) (*DeleteOrgSecretResponse, error)
+
+	// SetOrgSecretWithBodyWithResponse Create or update an organisation secret (admin)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /admin/secrets/{name} (the `SetOrgSecret` operationId).
+	SetOrgSecretWithBodyWithResponse(ctx context.Context, name SecretName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetOrgSecretResponse, error)
+
+	// SetOrgSecretWithResponse Create or update an organisation secret (admin)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /admin/secrets/{name} (the `SetOrgSecret` operationId).
+	SetOrgSecretWithResponse(ctx context.Context, name SecretName, body SetOrgSecretJSONRequestBody, reqEditors ...RequestEditorFn) (*SetOrgSecretResponse, error)
 
 	// AdminListUsersWithResponse List all users with admin details
 	//
@@ -9780,6 +12664,13 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /repos/{repo}/commits/{sha} (the `GetCommit` operationId).
 	GetCommitWithResponse(ctx context.Context, repo RepoName, sha string, reqEditors ...RequestEditorFn) (*GetCommitResponse, error)
 
+	// GetCommitChecksWithResponse CI results for a commit (latest attempt of each job)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/commits/{sha}/checks (the `GetCommitChecks` operationId).
+	GetCommitChecksWithResponse(ctx context.Context, repo RepoName, sha string, reqEditors ...RequestEditorFn) (*GetCommitChecksResponse, error)
+
 	// CompareRefsWithResponse Compare two branches (what a pull request from head into base would contain)
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -9864,6 +12755,32 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /repos/{repo}/issues/{number}/timeline (the `GetIssueTimeline` operationId).
 	GetIssueTimelineWithResponse(ctx context.Context, repo RepoName, number IssueNumber, reqEditors ...RequestEditorFn) (*GetIssueTimelineResponse, error)
+
+	// GetJobWithResponse Get a job with its steps
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/jobs/{id} (the `GetJob` operationId).
+	GetJobWithResponse(ctx context.Context, repo RepoName, id JobID, reqEditors ...RequestEditorFn) (*GetJobResponse, error)
+
+	// GetJobLogsWithResponse Read a job's log
+	//
+	// Returns log lines after the `after` cursor (0 for the start). Poll with the
+	// returned `next` until `complete` is true to follow a running job, or use
+	// `GET /repos/{repo}/jobs/{id}/logs/stream` (server-sent events: `line` events
+	// carry a `LogLine`, a final `end` event carries the job).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/jobs/{id}/logs (the `GetJobLogs` operationId).
+	GetJobLogsWithResponse(ctx context.Context, repo RepoName, id JobID, params *GetJobLogsParams, reqEditors ...RequestEditorFn) (*GetJobLogsResponse, error)
+
+	// RerunJobWithResponse Re-run one job and the jobs that depend on it (triage access)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/jobs/{id}/rerun (the `RerunJob` operationId).
+	RerunJobWithResponse(ctx context.Context, repo RepoName, id JobID, reqEditors ...RequestEditorFn) (*RerunJobResponse, error)
 
 	// ListLabelsWithResponse List labels, by name
 	//
@@ -10187,6 +13104,75 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /repos/{repo}/readme (the `GetReadme` operationId).
 	GetReadmeWithResponse(ctx context.Context, repo RepoName, params *GetReadmeParams, reqEditors ...RequestEditorFn) (*GetReadmeResponse, error)
 
+	// ListRunsWithResponse List a repository's workflow runs
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/runs (the `ListRuns` operationId).
+	ListRunsWithResponse(ctx context.Context, repo RepoName, params *ListRunsParams, reqEditors ...RequestEditorFn) (*ListRunsResponse, error)
+
+	// GetRunWithResponse Get a run with its jobs and steps
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/runs/{number} (the `GetRun` operationId).
+	GetRunWithResponse(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*GetRunResponse, error)
+
+	// CancelRunWithResponse Cancel a run (write access)
+	//
+	// Queued jobs are cancelled immediately; running jobs are stopped by their runner. Fails with `conflict` if the run already finished.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/runs/{number}/cancel (the `CancelRun` operationId).
+	CancelRunWithResponse(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*CancelRunResponse, error)
+
+	// RerunRunWithBodyWithResponse Re-run a finished run (triage access, so testers can re-run)
+	//
+	// Starts a new attempt of the same run, with the same commit, workflow file and inputs. With `failed_only`, jobs that succeeded keep their results and only failed or cancelled jobs (and the jobs that depend on them) run again.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/runs/{number}/rerun (the `RerunRun` operationId).
+	RerunRunWithBodyWithResponse(ctx context.Context, repo RepoName, number RunNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RerunRunResponse, error)
+
+	// RerunRunWithResponse Re-run a finished run (triage access, so testers can re-run)
+	//
+	// Starts a new attempt of the same run, with the same commit, workflow file and inputs. With `failed_only`, jobs that succeeded keep their results and only failed or cancelled jobs (and the jobs that depend on them) run again.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/runs/{number}/rerun (the `RerunRun` operationId).
+	RerunRunWithResponse(ctx context.Context, repo RepoName, number RunNumber, body RerunRunJSONRequestBody, reqEditors ...RequestEditorFn) (*RerunRunResponse, error)
+
+	// ListRepoSecretsWithResponse List repository secrets (write access; values are never returned)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/secrets (the `ListRepoSecrets` operationId).
+	ListRepoSecretsWithResponse(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*ListRepoSecretsResponse, error)
+
+	// DeleteRepoSecretWithResponse Delete a repository secret (write access)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /repos/{repo}/secrets/{name} (the `DeleteRepoSecret` operationId).
+	DeleteRepoSecretWithResponse(ctx context.Context, repo RepoName, name SecretName, reqEditors ...RequestEditorFn) (*DeleteRepoSecretResponse, error)
+
+	// SetRepoSecretWithBodyWithResponse Create or update a repository secret (write access)
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /repos/{repo}/secrets/{name} (the `SetRepoSecret` operationId).
+	SetRepoSecretWithBodyWithResponse(ctx context.Context, repo RepoName, name SecretName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetRepoSecretResponse, error)
+
+	// SetRepoSecretWithResponse Create or update a repository secret (write access)
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /repos/{repo}/secrets/{name} (the `SetRepoSecret` operationId).
+	SetRepoSecretWithResponse(ctx context.Context, repo RepoName, name SecretName, body SetRepoSecretJSONRequestBody, reqEditors ...RequestEditorFn) (*SetRepoSecretResponse, error)
+
 	// ListTagsWithResponse List tags, newest first
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -10200,6 +13186,38 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /repos/{repo}/tree (the `GetTree` operationId).
 	GetTreeWithResponse(ctx context.Context, repo RepoName, params *GetTreeParams, reqEditors ...RequestEditorFn) (*GetTreeResponse, error)
+
+	// ListWorkflowsWithResponse List the workflow files at a ref, with validation errors
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/workflows (the `ListWorkflows` operationId).
+	ListWorkflowsWithResponse(ctx context.Context, repo RepoName, params *ListWorkflowsParams, reqEditors ...RequestEditorFn) (*ListWorkflowsResponse, error)
+
+	// DispatchWorkflowWithBodyWithResponse Run a workflow manually (write access)
+	//
+	// The workflow must have a `workflow_dispatch` trigger. Inputs are checked against its declared inputs.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/workflows/{workflow}/dispatch (the `DispatchWorkflow` operationId).
+	DispatchWorkflowWithBodyWithResponse(ctx context.Context, repo RepoName, workflow string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DispatchWorkflowResponse, error)
+
+	// DispatchWorkflowWithResponse Run a workflow manually (write access)
+	//
+	// The workflow must have a `workflow_dispatch` trigger. Inputs are checked against its declared inputs.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/workflows/{workflow}/dispatch (the `DispatchWorkflow` operationId).
+	DispatchWorkflowWithResponse(ctx context.Context, repo RepoName, workflow string, body DispatchWorkflowJSONRequestBody, reqEditors ...RequestEditorFn) (*DispatchWorkflowResponse, error)
+
+	// ListAllRunsWithResponse Recent workflow runs across every repository you can read
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /runs (the `ListAllRuns` operationId).
+	ListAllRunsWithResponse(ctx context.Context, params *ListAllRunsParams, reqEditors ...RequestEditorFn) (*ListAllRunsResponse, error)
 
 	// CompleteSetupWithBodyWithResponse Complete first-start setup
 	//
@@ -10653,6 +13671,102 @@ func (r ListAuditLogResponse) ContentType() string {
 	return ""
 }
 
+type GetCISettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *CISettings
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetCISettingsResponse) GetJSON200() *CISettings {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetCISettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetCISettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCISettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCISettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetCISettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateCISettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *CISettings
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateCISettingsResponse) GetJSON200() *CISettings {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdateCISettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateCISettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateCISettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateCISettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateCISettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type UpdateOrgResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -10784,6 +13898,376 @@ func (r UploadOrgLogoResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r UploadOrgLogoResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListRunnersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunnerList
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListRunnersResponse) GetJSON200() *RunnerList {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListRunnersResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListRunnersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListRunnersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListRunnersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListRunnersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateRunnerTokenResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *RunnerRegistrationToken
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateRunnerTokenResponse) GetJSON201() *RunnerRegistrationToken {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CreateRunnerTokenResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateRunnerTokenResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateRunnerTokenResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateRunnerTokenResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateRunnerTokenResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteRunnerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteRunnerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteRunnerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteRunnerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteRunnerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteRunnerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetRunnerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Runner
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetRunnerResponse) GetJSON200() *Runner {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetRunnerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetRunnerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRunnerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRunnerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetRunnerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateRunnerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Runner
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateRunnerResponse) GetJSON200() *Runner {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdateRunnerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateRunnerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateRunnerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateRunnerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateRunnerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListOrgSecretsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]Secret
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListOrgSecretsResponse) GetJSON200() *[]Secret {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListOrgSecretsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListOrgSecretsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListOrgSecretsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListOrgSecretsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListOrgSecretsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteOrgSecretResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteOrgSecretResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteOrgSecretResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteOrgSecretResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteOrgSecretResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteOrgSecretResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type SetOrgSecretResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Secret
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r SetOrgSecretResponse) GetJSON200() *Secret {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r SetOrgSecretResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r SetOrgSecretResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r SetOrgSecretResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SetOrgSecretResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r SetOrgSecretResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -12247,6 +15731,54 @@ func (r GetCommitResponse) ContentType() string {
 	return ""
 }
 
+type GetCommitChecksResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *CheckSummary
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetCommitChecksResponse) GetJSON200() *CheckSummary {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetCommitChecksResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetCommitChecksResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCommitChecksResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCommitChecksResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetCommitChecksResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type CompareRefsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -12625,6 +16157,150 @@ func (r GetIssueTimelineResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetIssueTimelineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetJobResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Job
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetJobResponse) GetJSON200() *Job {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetJobResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetJobResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetJobResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetJobResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetJobResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetJobLogsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *JobLogs
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetJobLogsResponse) GetJSON200() *JobLogs {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetJobLogsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetJobLogsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetJobLogsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetJobLogsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetJobLogsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type RerunJobResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *WorkflowRunDetail
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r RerunJobResponse) GetJSON200() *WorkflowRunDetail {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r RerunJobResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r RerunJobResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r RerunJobResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RerunJobResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RerunJobResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -13995,6 +17671,335 @@ func (r GetReadmeResponse) ContentType() string {
 	return ""
 }
 
+type ListRunsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunPage
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListRunsResponse) GetJSON200() *RunPage {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListRunsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListRunsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListRunsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListRunsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListRunsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetRunResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *WorkflowRunDetail
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetRunResponse) GetJSON200() *WorkflowRunDetail {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetRunResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetRunResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRunResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRunResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetRunResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CancelRunResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *WorkflowRunDetail
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r CancelRunResponse) GetJSON200() *WorkflowRunDetail {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CancelRunResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CancelRunResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CancelRunResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CancelRunResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CancelRunResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type RerunRunResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *WorkflowRunDetail
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r RerunRunResponse) GetJSON200() *WorkflowRunDetail {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r RerunRunResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r RerunRunResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r RerunRunResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RerunRunResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RerunRunResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListRepoSecretsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]Secret
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListRepoSecretsResponse) GetJSON200() *[]Secret {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListRepoSecretsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListRepoSecretsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListRepoSecretsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListRepoSecretsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListRepoSecretsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteRepoSecretResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteRepoSecretResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteRepoSecretResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteRepoSecretResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteRepoSecretResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteRepoSecretResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type SetRepoSecretResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Secret
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r SetRepoSecretResponse) GetJSON200() *Secret {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r SetRepoSecretResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r SetRepoSecretResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r SetRepoSecretResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SetRepoSecretResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r SetRepoSecretResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListTagsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -14085,6 +18090,150 @@ func (r GetTreeResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetTreeResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListWorkflowsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]Workflow
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListWorkflowsResponse) GetJSON200() *[]Workflow {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListWorkflowsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListWorkflowsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListWorkflowsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListWorkflowsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListWorkflowsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DispatchWorkflowResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *WorkflowRunDetail
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r DispatchWorkflowResponse) GetJSON201() *WorkflowRunDetail {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DispatchWorkflowResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DispatchWorkflowResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DispatchWorkflowResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DispatchWorkflowResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DispatchWorkflowResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListAllRunsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunPage
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAllRunsResponse) GetJSON200() *RunPage {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListAllRunsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAllRunsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAllRunsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAllRunsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAllRunsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -14375,6 +18524,45 @@ func (c *ClientWithResponses) ListAuditLogWithResponse(ctx context.Context, para
 	return ParseListAuditLogResponse(rsp)
 }
 
+// GetCISettingsWithResponse CI resource limits and defaults (admin)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /admin/ci/settings (the `GetCISettings` operationId).
+func (c *ClientWithResponses) GetCISettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetCISettingsResponse, error) {
+	rsp, err := c.GetCISettings(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCISettingsResponse(rsp)
+}
+
+// UpdateCISettingsWithBodyWithResponse Change CI resource limits and defaults (admin)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /admin/ci/settings (the `UpdateCISettings` operationId).
+func (c *ClientWithResponses) UpdateCISettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateCISettingsResponse, error) {
+	rsp, err := c.UpdateCISettingsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateCISettingsResponse(rsp)
+}
+
+// UpdateCISettingsWithResponse Change CI resource limits and defaults (admin)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /admin/ci/settings (the `UpdateCISettings` operationId).
+func (c *ClientWithResponses) UpdateCISettingsWithResponse(ctx context.Context, body UpdateCISettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateCISettingsResponse, error) {
+	rsp, err := c.UpdateCISettings(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateCISettingsResponse(rsp)
+}
+
 // UpdateOrgWithBodyWithResponse Update org settings
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -14427,6 +18615,155 @@ func (c *ClientWithResponses) UploadOrgLogoWithBodyWithResponse(ctx context.Cont
 		return nil, err
 	}
 	return ParseUploadOrgLogoResponse(rsp)
+}
+
+// ListRunnersWithResponse List runners with their status, load and running jobs (admin)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /admin/runners (the `ListRunners` operationId).
+func (c *ClientWithResponses) ListRunnersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListRunnersResponse, error) {
+	rsp, err := c.ListRunners(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListRunnersResponse(rsp)
+}
+
+// CreateRunnerTokenWithBodyWithResponse Create a one-time runner registration token (admin)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /admin/runners/registration-tokens (the `CreateRunnerToken` operationId).
+func (c *ClientWithResponses) CreateRunnerTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateRunnerTokenResponse, error) {
+	rsp, err := c.CreateRunnerTokenWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateRunnerTokenResponse(rsp)
+}
+
+// CreateRunnerTokenWithResponse Create a one-time runner registration token (admin)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /admin/runners/registration-tokens (the `CreateRunnerToken` operationId).
+func (c *ClientWithResponses) CreateRunnerTokenWithResponse(ctx context.Context, body CreateRunnerTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateRunnerTokenResponse, error) {
+	rsp, err := c.CreateRunnerToken(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateRunnerTokenResponse(rsp)
+}
+
+// DeleteRunnerWithResponse Remove a runner (admin)
+//
+// Its credentials stop working; jobs it was running fail.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /admin/runners/{id} (the `DeleteRunner` operationId).
+func (c *ClientWithResponses) DeleteRunnerWithResponse(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*DeleteRunnerResponse, error) {
+	rsp, err := c.DeleteRunner(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteRunnerResponse(rsp)
+}
+
+// GetRunnerWithResponse Get a runner (admin)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /admin/runners/{id} (the `GetRunner` operationId).
+func (c *ClientWithResponses) GetRunnerWithResponse(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*GetRunnerResponse, error) {
+	rsp, err := c.GetRunner(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRunnerResponse(rsp)
+}
+
+// UpdateRunnerWithBodyWithResponse Disable, enable or rename a runner (admin)
+//
+// A disabled runner finishes the jobs it has but gets no new ones.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /admin/runners/{id} (the `UpdateRunner` operationId).
+func (c *ClientWithResponses) UpdateRunnerWithBodyWithResponse(ctx context.Context, id int64, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateRunnerResponse, error) {
+	rsp, err := c.UpdateRunnerWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateRunnerResponse(rsp)
+}
+
+// UpdateRunnerWithResponse Disable, enable or rename a runner (admin)
+//
+// A disabled runner finishes the jobs it has but gets no new ones.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /admin/runners/{id} (the `UpdateRunner` operationId).
+func (c *ClientWithResponses) UpdateRunnerWithResponse(ctx context.Context, id int64, body UpdateRunnerJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateRunnerResponse, error) {
+	rsp, err := c.UpdateRunner(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateRunnerResponse(rsp)
+}
+
+// ListOrgSecretsWithResponse List organisation secrets, available to every repository (admin)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /admin/secrets (the `ListOrgSecrets` operationId).
+func (c *ClientWithResponses) ListOrgSecretsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListOrgSecretsResponse, error) {
+	rsp, err := c.ListOrgSecrets(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListOrgSecretsResponse(rsp)
+}
+
+// DeleteOrgSecretWithResponse Delete an organisation secret (admin)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /admin/secrets/{name} (the `DeleteOrgSecret` operationId).
+func (c *ClientWithResponses) DeleteOrgSecretWithResponse(ctx context.Context, name SecretName, reqEditors ...RequestEditorFn) (*DeleteOrgSecretResponse, error) {
+	rsp, err := c.DeleteOrgSecret(ctx, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteOrgSecretResponse(rsp)
+}
+
+// SetOrgSecretWithBodyWithResponse Create or update an organisation secret (admin)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /admin/secrets/{name} (the `SetOrgSecret` operationId).
+func (c *ClientWithResponses) SetOrgSecretWithBodyWithResponse(ctx context.Context, name SecretName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetOrgSecretResponse, error) {
+	rsp, err := c.SetOrgSecretWithBody(ctx, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetOrgSecretResponse(rsp)
+}
+
+// SetOrgSecretWithResponse Create or update an organisation secret (admin)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /admin/secrets/{name} (the `SetOrgSecret` operationId).
+func (c *ClientWithResponses) SetOrgSecretWithResponse(ctx context.Context, name SecretName, body SetOrgSecretJSONRequestBody, reqEditors ...RequestEditorFn) (*SetOrgSecretResponse, error) {
+	rsp, err := c.SetOrgSecret(ctx, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetOrgSecretResponse(rsp)
 }
 
 // AdminListUsersWithResponse List all users with admin details
@@ -14981,6 +19318,19 @@ func (c *ClientWithResponses) GetCommitWithResponse(ctx context.Context, repo Re
 	return ParseGetCommitResponse(rsp)
 }
 
+// GetCommitChecksWithResponse CI results for a commit (latest attempt of each job)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/commits/{sha}/checks (the `GetCommitChecks` operationId).
+func (c *ClientWithResponses) GetCommitChecksWithResponse(ctx context.Context, repo RepoName, sha string, reqEditors ...RequestEditorFn) (*GetCommitChecksResponse, error) {
+	rsp, err := c.GetCommitChecks(ctx, repo, sha, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCommitChecksResponse(rsp)
+}
+
 // CompareRefsWithResponse Compare two branches (what a pull request from head into base would contain)
 //
 // Returns a wrapper object for the known response body format(s).
@@ -15130,6 +19480,50 @@ func (c *ClientWithResponses) GetIssueTimelineWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseGetIssueTimelineResponse(rsp)
+}
+
+// GetJobWithResponse Get a job with its steps
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/jobs/{id} (the `GetJob` operationId).
+func (c *ClientWithResponses) GetJobWithResponse(ctx context.Context, repo RepoName, id JobID, reqEditors ...RequestEditorFn) (*GetJobResponse, error) {
+	rsp, err := c.GetJob(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetJobResponse(rsp)
+}
+
+// GetJobLogsWithResponse Read a job's log
+//
+// Returns log lines after the `after` cursor (0 for the start). Poll with the
+// returned `next` until `complete` is true to follow a running job, or use
+// `GET /repos/{repo}/jobs/{id}/logs/stream` (server-sent events: `line` events
+// carry a `LogLine`, a final `end` event carries the job).
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/jobs/{id}/logs (the `GetJobLogs` operationId).
+func (c *ClientWithResponses) GetJobLogsWithResponse(ctx context.Context, repo RepoName, id JobID, params *GetJobLogsParams, reqEditors ...RequestEditorFn) (*GetJobLogsResponse, error) {
+	rsp, err := c.GetJobLogs(ctx, repo, id, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetJobLogsResponse(rsp)
+}
+
+// RerunJobWithResponse Re-run one job and the jobs that depend on it (triage access)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/jobs/{id}/rerun (the `RerunJob` operationId).
+func (c *ClientWithResponses) RerunJobWithResponse(ctx context.Context, repo RepoName, id JobID, reqEditors ...RequestEditorFn) (*RerunJobResponse, error) {
+	rsp, err := c.RerunJob(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRerunJobResponse(rsp)
 }
 
 // ListLabelsWithResponse List labels, by name
@@ -15706,6 +20100,129 @@ func (c *ClientWithResponses) GetReadmeWithResponse(ctx context.Context, repo Re
 	return ParseGetReadmeResponse(rsp)
 }
 
+// ListRunsWithResponse List a repository's workflow runs
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/runs (the `ListRuns` operationId).
+func (c *ClientWithResponses) ListRunsWithResponse(ctx context.Context, repo RepoName, params *ListRunsParams, reqEditors ...RequestEditorFn) (*ListRunsResponse, error) {
+	rsp, err := c.ListRuns(ctx, repo, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListRunsResponse(rsp)
+}
+
+// GetRunWithResponse Get a run with its jobs and steps
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/runs/{number} (the `GetRun` operationId).
+func (c *ClientWithResponses) GetRunWithResponse(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*GetRunResponse, error) {
+	rsp, err := c.GetRun(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRunResponse(rsp)
+}
+
+// CancelRunWithResponse Cancel a run (write access)
+//
+// Queued jobs are cancelled immediately; running jobs are stopped by their runner. Fails with `conflict` if the run already finished.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/runs/{number}/cancel (the `CancelRun` operationId).
+func (c *ClientWithResponses) CancelRunWithResponse(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*CancelRunResponse, error) {
+	rsp, err := c.CancelRun(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCancelRunResponse(rsp)
+}
+
+// RerunRunWithBodyWithResponse Re-run a finished run (triage access, so testers can re-run)
+//
+// Starts a new attempt of the same run, with the same commit, workflow file and inputs. With `failed_only`, jobs that succeeded keep their results and only failed or cancelled jobs (and the jobs that depend on them) run again.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/runs/{number}/rerun (the `RerunRun` operationId).
+func (c *ClientWithResponses) RerunRunWithBodyWithResponse(ctx context.Context, repo RepoName, number RunNumber, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RerunRunResponse, error) {
+	rsp, err := c.RerunRunWithBody(ctx, repo, number, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRerunRunResponse(rsp)
+}
+
+// RerunRunWithResponse Re-run a finished run (triage access, so testers can re-run)
+//
+// Starts a new attempt of the same run, with the same commit, workflow file and inputs. With `failed_only`, jobs that succeeded keep their results and only failed or cancelled jobs (and the jobs that depend on them) run again.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/runs/{number}/rerun (the `RerunRun` operationId).
+func (c *ClientWithResponses) RerunRunWithResponse(ctx context.Context, repo RepoName, number RunNumber, body RerunRunJSONRequestBody, reqEditors ...RequestEditorFn) (*RerunRunResponse, error) {
+	rsp, err := c.RerunRun(ctx, repo, number, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRerunRunResponse(rsp)
+}
+
+// ListRepoSecretsWithResponse List repository secrets (write access; values are never returned)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/secrets (the `ListRepoSecrets` operationId).
+func (c *ClientWithResponses) ListRepoSecretsWithResponse(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*ListRepoSecretsResponse, error) {
+	rsp, err := c.ListRepoSecrets(ctx, repo, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListRepoSecretsResponse(rsp)
+}
+
+// DeleteRepoSecretWithResponse Delete a repository secret (write access)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /repos/{repo}/secrets/{name} (the `DeleteRepoSecret` operationId).
+func (c *ClientWithResponses) DeleteRepoSecretWithResponse(ctx context.Context, repo RepoName, name SecretName, reqEditors ...RequestEditorFn) (*DeleteRepoSecretResponse, error) {
+	rsp, err := c.DeleteRepoSecret(ctx, repo, name, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteRepoSecretResponse(rsp)
+}
+
+// SetRepoSecretWithBodyWithResponse Create or update a repository secret (write access)
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /repos/{repo}/secrets/{name} (the `SetRepoSecret` operationId).
+func (c *ClientWithResponses) SetRepoSecretWithBodyWithResponse(ctx context.Context, repo RepoName, name SecretName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetRepoSecretResponse, error) {
+	rsp, err := c.SetRepoSecretWithBody(ctx, repo, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetRepoSecretResponse(rsp)
+}
+
+// SetRepoSecretWithResponse Create or update a repository secret (write access)
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /repos/{repo}/secrets/{name} (the `SetRepoSecret` operationId).
+func (c *ClientWithResponses) SetRepoSecretWithResponse(ctx context.Context, repo RepoName, name SecretName, body SetRepoSecretJSONRequestBody, reqEditors ...RequestEditorFn) (*SetRepoSecretResponse, error) {
+	rsp, err := c.SetRepoSecret(ctx, repo, name, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetRepoSecretResponse(rsp)
+}
+
 // ListTagsWithResponse List tags, newest first
 //
 // Returns a wrapper object for the known response body format(s).
@@ -15730,6 +20247,62 @@ func (c *ClientWithResponses) GetTreeWithResponse(ctx context.Context, repo Repo
 		return nil, err
 	}
 	return ParseGetTreeResponse(rsp)
+}
+
+// ListWorkflowsWithResponse List the workflow files at a ref, with validation errors
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/workflows (the `ListWorkflows` operationId).
+func (c *ClientWithResponses) ListWorkflowsWithResponse(ctx context.Context, repo RepoName, params *ListWorkflowsParams, reqEditors ...RequestEditorFn) (*ListWorkflowsResponse, error) {
+	rsp, err := c.ListWorkflows(ctx, repo, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListWorkflowsResponse(rsp)
+}
+
+// DispatchWorkflowWithBodyWithResponse Run a workflow manually (write access)
+//
+// The workflow must have a `workflow_dispatch` trigger. Inputs are checked against its declared inputs.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/workflows/{workflow}/dispatch (the `DispatchWorkflow` operationId).
+func (c *ClientWithResponses) DispatchWorkflowWithBodyWithResponse(ctx context.Context, repo RepoName, workflow string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DispatchWorkflowResponse, error) {
+	rsp, err := c.DispatchWorkflowWithBody(ctx, repo, workflow, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDispatchWorkflowResponse(rsp)
+}
+
+// DispatchWorkflowWithResponse Run a workflow manually (write access)
+//
+// The workflow must have a `workflow_dispatch` trigger. Inputs are checked against its declared inputs.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/workflows/{workflow}/dispatch (the `DispatchWorkflow` operationId).
+func (c *ClientWithResponses) DispatchWorkflowWithResponse(ctx context.Context, repo RepoName, workflow string, body DispatchWorkflowJSONRequestBody, reqEditors ...RequestEditorFn) (*DispatchWorkflowResponse, error) {
+	rsp, err := c.DispatchWorkflow(ctx, repo, workflow, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDispatchWorkflowResponse(rsp)
+}
+
+// ListAllRunsWithResponse Recent workflow runs across every repository you can read
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /runs (the `ListAllRuns` operationId).
+func (c *ClientWithResponses) ListAllRunsWithResponse(ctx context.Context, params *ListAllRunsParams, reqEditors ...RequestEditorFn) (*ListAllRunsResponse, error) {
+	rsp, err := c.ListAllRuns(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAllRunsResponse(rsp)
 }
 
 // CompleteSetupWithBodyWithResponse Complete first-start setup
@@ -16072,6 +20645,72 @@ func ParseListAuditLogResponse(rsp *http.Response) (*ListAuditLogResponse, error
 	return response, nil
 }
 
+// ParseGetCISettingsResponse parses an HTTP response from a GetCISettingsWithResponse call
+func ParseGetCISettingsResponse(rsp *http.Response) (*GetCISettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCISettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CISettings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateCISettingsResponse parses an HTTP response from a UpdateCISettingsWithResponse call
+func ParseUpdateCISettingsResponse(rsp *http.Response) (*UpdateCISettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateCISettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CISettings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseUpdateOrgResponse parses an HTTP response from a UpdateOrgWithResponse call
 func ParseUpdateOrgResponse(rsp *http.Response) (*UpdateOrgResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -16150,6 +20789,262 @@ func ParseUploadOrgLogoResponse(rsp *http.Response) (*UploadOrgLogoResponse, err
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest Org
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListRunnersResponse parses an HTTP response from a ListRunnersWithResponse call
+func ParseListRunnersResponse(rsp *http.Response) (*ListRunnersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListRunnersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunnerList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateRunnerTokenResponse parses an HTTP response from a CreateRunnerTokenWithResponse call
+func ParseCreateRunnerTokenResponse(rsp *http.Response) (*CreateRunnerTokenResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateRunnerTokenResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest RunnerRegistrationToken
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteRunnerResponse parses an HTTP response from a DeleteRunnerWithResponse call
+func ParseDeleteRunnerResponse(rsp *http.Response) (*DeleteRunnerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteRunnerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetRunnerResponse parses an HTTP response from a GetRunnerWithResponse call
+func ParseGetRunnerResponse(rsp *http.Response) (*GetRunnerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRunnerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Runner
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateRunnerResponse parses an HTTP response from a UpdateRunnerWithResponse call
+func ParseUpdateRunnerResponse(rsp *http.Response) (*UpdateRunnerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateRunnerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Runner
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListOrgSecretsResponse parses an HTTP response from a ListOrgSecretsWithResponse call
+func ParseListOrgSecretsResponse(rsp *http.Response) (*ListOrgSecretsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListOrgSecretsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Secret
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteOrgSecretResponse parses an HTTP response from a DeleteOrgSecretWithResponse call
+func ParseDeleteOrgSecretResponse(rsp *http.Response) (*DeleteOrgSecretResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteOrgSecretResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSetOrgSecretResponse parses an HTTP response from a SetOrgSecretWithResponse call
+func ParseSetOrgSecretResponse(rsp *http.Response) (*SetOrgSecretResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SetOrgSecretResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Secret
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -17169,6 +22064,39 @@ func ParseGetCommitResponse(rsp *http.Response) (*GetCommitResponse, error) {
 	return response, nil
 }
 
+// ParseGetCommitChecksResponse parses an HTTP response from a GetCommitChecksWithResponse call
+func ParseGetCommitChecksResponse(rsp *http.Response) (*GetCommitChecksResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCommitChecksResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CheckSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseCompareRefsResponse parses an HTTP response from a CompareRefsWithResponse call
 func ParseCompareRefsResponse(rsp *http.Response) (*CompareRefsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -17416,6 +22344,105 @@ func ParseGetIssueTimelineResponse(rsp *http.Response) (*GetIssueTimelineRespons
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest []TimelineItem
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetJobResponse parses an HTTP response from a GetJobWithResponse call
+func ParseGetJobResponse(rsp *http.Response) (*GetJobResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetJobResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Job
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetJobLogsResponse parses an HTTP response from a GetJobLogsWithResponse call
+func ParseGetJobLogsResponse(rsp *http.Response) (*GetJobLogsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetJobLogsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest JobLogs
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRerunJobResponse parses an HTTP response from a RerunJobWithResponse call
+func ParseRerunJobResponse(rsp *http.Response) (*RerunJobResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RerunJobResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest WorkflowRunDetail
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -18371,6 +23398,233 @@ func ParseGetReadmeResponse(rsp *http.Response) (*GetReadmeResponse, error) {
 	return response, nil
 }
 
+// ParseListRunsResponse parses an HTTP response from a ListRunsWithResponse call
+func ParseListRunsResponse(rsp *http.Response) (*ListRunsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListRunsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetRunResponse parses an HTTP response from a GetRunWithResponse call
+func ParseGetRunResponse(rsp *http.Response) (*GetRunResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRunResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest WorkflowRunDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCancelRunResponse parses an HTTP response from a CancelRunWithResponse call
+func ParseCancelRunResponse(rsp *http.Response) (*CancelRunResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CancelRunResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest WorkflowRunDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRerunRunResponse parses an HTTP response from a RerunRunWithResponse call
+func ParseRerunRunResponse(rsp *http.Response) (*RerunRunResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RerunRunResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest WorkflowRunDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListRepoSecretsResponse parses an HTTP response from a ListRepoSecretsWithResponse call
+func ParseListRepoSecretsResponse(rsp *http.Response) (*ListRepoSecretsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListRepoSecretsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Secret
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteRepoSecretResponse parses an HTTP response from a DeleteRepoSecretWithResponse call
+func ParseDeleteRepoSecretResponse(rsp *http.Response) (*DeleteRepoSecretResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteRepoSecretResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSetRepoSecretResponse parses an HTTP response from a SetRepoSecretWithResponse call
+func ParseSetRepoSecretResponse(rsp *http.Response) (*SetRepoSecretResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SetRepoSecretResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Secret
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListTagsResponse parses an HTTP response from a ListTagsWithResponse call
 func ParseListTagsResponse(rsp *http.Response) (*ListTagsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -18420,6 +23674,105 @@ func ParseGetTreeResponse(rsp *http.Response) (*GetTreeResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest Tree
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListWorkflowsResponse parses an HTTP response from a ListWorkflowsWithResponse call
+func ParseListWorkflowsResponse(rsp *http.Response) (*ListWorkflowsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListWorkflowsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Workflow
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDispatchWorkflowResponse parses an HTTP response from a DispatchWorkflowWithResponse call
+func ParseDispatchWorkflowResponse(rsp *http.Response) (*DispatchWorkflowResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DispatchWorkflowResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest WorkflowRunDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAllRunsResponse parses an HTTP response from a ListAllRunsWithResponse call
+func ParseListAllRunsResponse(rsp *http.Response) (*ListAllRunsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAllRunsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunPage
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -18532,6 +23885,12 @@ type ServerInterface interface {
 	// ListAuditLog Security audit log, newest first
 	// (GET /admin/audit-log)
 	ListAuditLog(w http.ResponseWriter, r *http.Request, params ListAuditLogParams)
+	// GetCISettings CI resource limits and defaults (admin)
+	// (GET /admin/ci/settings)
+	GetCISettings(w http.ResponseWriter, r *http.Request)
+	// UpdateCISettings Change CI resource limits and defaults (admin)
+	// (PATCH /admin/ci/settings)
+	UpdateCISettings(w http.ResponseWriter, r *http.Request)
 	// UpdateOrg Update org settings
 	// (PATCH /admin/org)
 	UpdateOrg(w http.ResponseWriter, r *http.Request)
@@ -18541,6 +23900,30 @@ type ServerInterface interface {
 	// UploadOrgLogo Upload the org logo
 	// (PUT /admin/org/logo)
 	UploadOrgLogo(w http.ResponseWriter, r *http.Request)
+	// ListRunners List runners with their status, load and running jobs (admin)
+	// (GET /admin/runners)
+	ListRunners(w http.ResponseWriter, r *http.Request)
+	// CreateRunnerToken Create a one-time runner registration token (admin)
+	// (POST /admin/runners/registration-tokens)
+	CreateRunnerToken(w http.ResponseWriter, r *http.Request)
+	// DeleteRunner Remove a runner (admin)
+	// (DELETE /admin/runners/{id})
+	DeleteRunner(w http.ResponseWriter, r *http.Request, id int64)
+	// GetRunner Get a runner (admin)
+	// (GET /admin/runners/{id})
+	GetRunner(w http.ResponseWriter, r *http.Request, id int64)
+	// UpdateRunner Disable, enable or rename a runner (admin)
+	// (PATCH /admin/runners/{id})
+	UpdateRunner(w http.ResponseWriter, r *http.Request, id int64)
+	// ListOrgSecrets List organisation secrets, available to every repository (admin)
+	// (GET /admin/secrets)
+	ListOrgSecrets(w http.ResponseWriter, r *http.Request)
+	// DeleteOrgSecret Delete an organisation secret (admin)
+	// (DELETE /admin/secrets/{name})
+	DeleteOrgSecret(w http.ResponseWriter, r *http.Request, name SecretName)
+	// SetOrgSecret Create or update an organisation secret (admin)
+	// (PUT /admin/secrets/{name})
+	SetOrgSecret(w http.ResponseWriter, r *http.Request, name SecretName)
 	// AdminListUsers List all users with admin details
 	// (GET /admin/users)
 	AdminListUsers(w http.ResponseWriter, r *http.Request)
@@ -18634,6 +24017,9 @@ type ServerInterface interface {
 	// GetCommit A commit with its diff
 	// (GET /repos/{repo}/commits/{sha})
 	GetCommit(w http.ResponseWriter, r *http.Request, repo RepoName, sha string)
+	// GetCommitChecks CI results for a commit (latest attempt of each job)
+	// (GET /repos/{repo}/commits/{sha}/checks)
+	GetCommitChecks(w http.ResponseWriter, r *http.Request, repo RepoName, sha string)
 	// CompareRefs Compare two branches (what a pull request from head into base would contain)
 	// (GET /repos/{repo}/compare)
 	CompareRefs(w http.ResponseWriter, r *http.Request, repo RepoName, params CompareRefsParams)
@@ -18658,6 +24044,15 @@ type ServerInterface interface {
 	// GetIssueTimeline Comments and events, oldest first
 	// (GET /repos/{repo}/issues/{number}/timeline)
 	GetIssueTimeline(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber)
+	// GetJob Get a job with its steps
+	// (GET /repos/{repo}/jobs/{id})
+	GetJob(w http.ResponseWriter, r *http.Request, repo RepoName, id JobID)
+	// GetJobLogs Read a job's log
+	// (GET /repos/{repo}/jobs/{id}/logs)
+	GetJobLogs(w http.ResponseWriter, r *http.Request, repo RepoName, id JobID, params GetJobLogsParams)
+	// RerunJob Re-run one job and the jobs that depend on it (triage access)
+	// (POST /repos/{repo}/jobs/{id}/rerun)
+	RerunJob(w http.ResponseWriter, r *http.Request, repo RepoName, id JobID)
 	// ListLabels List labels, by name
 	// (GET /repos/{repo}/labels)
 	ListLabels(w http.ResponseWriter, r *http.Request, repo RepoName)
@@ -18745,12 +24140,42 @@ type ServerInterface interface {
 	// GetReadme The README of a directory, rendered to HTML
 	// (GET /repos/{repo}/readme)
 	GetReadme(w http.ResponseWriter, r *http.Request, repo RepoName, params GetReadmeParams)
+	// ListRuns List a repository's workflow runs
+	// (GET /repos/{repo}/runs)
+	ListRuns(w http.ResponseWriter, r *http.Request, repo RepoName, params ListRunsParams)
+	// GetRun Get a run with its jobs and steps
+	// (GET /repos/{repo}/runs/{number})
+	GetRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber)
+	// CancelRun Cancel a run (write access)
+	// (POST /repos/{repo}/runs/{number}/cancel)
+	CancelRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber)
+	// RerunRun Re-run a finished run (triage access, so testers can re-run)
+	// (POST /repos/{repo}/runs/{number}/rerun)
+	RerunRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber)
+	// ListRepoSecrets List repository secrets (write access; values are never returned)
+	// (GET /repos/{repo}/secrets)
+	ListRepoSecrets(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// DeleteRepoSecret Delete a repository secret (write access)
+	// (DELETE /repos/{repo}/secrets/{name})
+	DeleteRepoSecret(w http.ResponseWriter, r *http.Request, repo RepoName, name SecretName)
+	// SetRepoSecret Create or update a repository secret (write access)
+	// (PUT /repos/{repo}/secrets/{name})
+	SetRepoSecret(w http.ResponseWriter, r *http.Request, repo RepoName, name SecretName)
 	// ListTags List tags, newest first
 	// (GET /repos/{repo}/tags)
 	ListTags(w http.ResponseWriter, r *http.Request, repo RepoName)
 	// GetTree List a directory
 	// (GET /repos/{repo}/tree)
 	GetTree(w http.ResponseWriter, r *http.Request, repo RepoName, params GetTreeParams)
+	// ListWorkflows List the workflow files at a ref, with validation errors
+	// (GET /repos/{repo}/workflows)
+	ListWorkflows(w http.ResponseWriter, r *http.Request, repo RepoName, params ListWorkflowsParams)
+	// DispatchWorkflow Run a workflow manually (write access)
+	// (POST /repos/{repo}/workflows/{workflow}/dispatch)
+	DispatchWorkflow(w http.ResponseWriter, r *http.Request, repo RepoName, workflow string)
+	// ListAllRuns Recent workflow runs across every repository you can read
+	// (GET /runs)
+	ListAllRuns(w http.ResponseWriter, r *http.Request, params ListAllRunsParams)
 	// CompleteSetup Complete first-start setup
 	// (POST /setup)
 	CompleteSetup(w http.ResponseWriter, r *http.Request)
@@ -18817,6 +24242,18 @@ func (_ Unimplemented) ListAuditLog(w http.ResponseWriter, r *http.Request, para
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// GetCISettings CI resource limits and defaults (admin)
+// (GET /admin/ci/settings)
+func (_ Unimplemented) GetCISettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateCISettings Change CI resource limits and defaults (admin)
+// (PATCH /admin/ci/settings)
+func (_ Unimplemented) UpdateCISettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // UpdateOrg Update org settings
 // (PATCH /admin/org)
 func (_ Unimplemented) UpdateOrg(w http.ResponseWriter, r *http.Request) {
@@ -18832,6 +24269,54 @@ func (_ Unimplemented) DeleteOrgLogo(w http.ResponseWriter, r *http.Request) {
 // UploadOrgLogo Upload the org logo
 // (PUT /admin/org/logo)
 func (_ Unimplemented) UploadOrgLogo(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListRunners List runners with their status, load and running jobs (admin)
+// (GET /admin/runners)
+func (_ Unimplemented) ListRunners(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateRunnerToken Create a one-time runner registration token (admin)
+// (POST /admin/runners/registration-tokens)
+func (_ Unimplemented) CreateRunnerToken(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteRunner Remove a runner (admin)
+// (DELETE /admin/runners/{id})
+func (_ Unimplemented) DeleteRunner(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetRunner Get a runner (admin)
+// (GET /admin/runners/{id})
+func (_ Unimplemented) GetRunner(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateRunner Disable, enable or rename a runner (admin)
+// (PATCH /admin/runners/{id})
+func (_ Unimplemented) UpdateRunner(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListOrgSecrets List organisation secrets, available to every repository (admin)
+// (GET /admin/secrets)
+func (_ Unimplemented) ListOrgSecrets(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteOrgSecret Delete an organisation secret (admin)
+// (DELETE /admin/secrets/{name})
+func (_ Unimplemented) DeleteOrgSecret(w http.ResponseWriter, r *http.Request, name SecretName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetOrgSecret Create or update an organisation secret (admin)
+// (PUT /admin/secrets/{name})
+func (_ Unimplemented) SetOrgSecret(w http.ResponseWriter, r *http.Request, name SecretName) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -19021,6 +24506,12 @@ func (_ Unimplemented) GetCommit(w http.ResponseWriter, r *http.Request, repo Re
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// GetCommitChecks CI results for a commit (latest attempt of each job)
+// (GET /repos/{repo}/commits/{sha}/checks)
+func (_ Unimplemented) GetCommitChecks(w http.ResponseWriter, r *http.Request, repo RepoName, sha string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // CompareRefs Compare two branches (what a pull request from head into base would contain)
 // (GET /repos/{repo}/compare)
 func (_ Unimplemented) CompareRefs(w http.ResponseWriter, r *http.Request, repo RepoName, params CompareRefsParams) {
@@ -19066,6 +24557,24 @@ func (_ Unimplemented) CreateIssueComment(w http.ResponseWriter, r *http.Request
 // GetIssueTimeline Comments and events, oldest first
 // (GET /repos/{repo}/issues/{number}/timeline)
 func (_ Unimplemented) GetIssueTimeline(w http.ResponseWriter, r *http.Request, repo RepoName, number IssueNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetJob Get a job with its steps
+// (GET /repos/{repo}/jobs/{id})
+func (_ Unimplemented) GetJob(w http.ResponseWriter, r *http.Request, repo RepoName, id JobID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetJobLogs Read a job's log
+// (GET /repos/{repo}/jobs/{id}/logs)
+func (_ Unimplemented) GetJobLogs(w http.ResponseWriter, r *http.Request, repo RepoName, id JobID, params GetJobLogsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RerunJob Re-run one job and the jobs that depend on it (triage access)
+// (POST /repos/{repo}/jobs/{id}/rerun)
+func (_ Unimplemented) RerunJob(w http.ResponseWriter, r *http.Request, repo RepoName, id JobID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -19243,6 +24752,48 @@ func (_ Unimplemented) GetReadme(w http.ResponseWriter, r *http.Request, repo Re
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListRuns List a repository's workflow runs
+// (GET /repos/{repo}/runs)
+func (_ Unimplemented) ListRuns(w http.ResponseWriter, r *http.Request, repo RepoName, params ListRunsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetRun Get a run with its jobs and steps
+// (GET /repos/{repo}/runs/{number})
+func (_ Unimplemented) GetRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CancelRun Cancel a run (write access)
+// (POST /repos/{repo}/runs/{number}/cancel)
+func (_ Unimplemented) CancelRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RerunRun Re-run a finished run (triage access, so testers can re-run)
+// (POST /repos/{repo}/runs/{number}/rerun)
+func (_ Unimplemented) RerunRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListRepoSecrets List repository secrets (write access; values are never returned)
+// (GET /repos/{repo}/secrets)
+func (_ Unimplemented) ListRepoSecrets(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteRepoSecret Delete a repository secret (write access)
+// (DELETE /repos/{repo}/secrets/{name})
+func (_ Unimplemented) DeleteRepoSecret(w http.ResponseWriter, r *http.Request, repo RepoName, name SecretName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetRepoSecret Create or update a repository secret (write access)
+// (PUT /repos/{repo}/secrets/{name})
+func (_ Unimplemented) SetRepoSecret(w http.ResponseWriter, r *http.Request, repo RepoName, name SecretName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ListTags List tags, newest first
 // (GET /repos/{repo}/tags)
 func (_ Unimplemented) ListTags(w http.ResponseWriter, r *http.Request, repo RepoName) {
@@ -19252,6 +24803,24 @@ func (_ Unimplemented) ListTags(w http.ResponseWriter, r *http.Request, repo Rep
 // GetTree List a directory
 // (GET /repos/{repo}/tree)
 func (_ Unimplemented) GetTree(w http.ResponseWriter, r *http.Request, repo RepoName, params GetTreeParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListWorkflows List the workflow files at a ref, with validation errors
+// (GET /repos/{repo}/workflows)
+func (_ Unimplemented) ListWorkflows(w http.ResponseWriter, r *http.Request, repo RepoName, params ListWorkflowsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DispatchWorkflow Run a workflow manually (write access)
+// (POST /repos/{repo}/workflows/{workflow}/dispatch)
+func (_ Unimplemented) DispatchWorkflow(w http.ResponseWriter, r *http.Request, repo RepoName, workflow string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListAllRuns Recent workflow runs across every repository you can read
+// (GET /runs)
+func (_ Unimplemented) ListAllRuns(w http.ResponseWriter, r *http.Request, params ListAllRunsParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -19472,6 +25041,34 @@ func (siw *ServerInterfaceWrapper) ListAuditLog(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
+// GetCISettings operation middleware
+func (siw *ServerInterfaceWrapper) GetCISettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCISettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateCISettings operation middleware
+func (siw *ServerInterfaceWrapper) UpdateCISettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateCISettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // UpdateOrg operation middleware
 func (siw *ServerInterfaceWrapper) UpdateOrg(w http.ResponseWriter, r *http.Request) {
 
@@ -19505,6 +25102,178 @@ func (siw *ServerInterfaceWrapper) UploadOrgLogo(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UploadOrgLogo(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListRunners operation middleware
+func (siw *ServerInterfaceWrapper) ListRunners(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListRunners(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateRunnerToken operation middleware
+func (siw *ServerInterfaceWrapper) CreateRunnerToken(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateRunnerToken(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteRunner operation middleware
+func (siw *ServerInterfaceWrapper) DeleteRunner(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteRunner(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetRunner operation middleware
+func (siw *ServerInterfaceWrapper) GetRunner(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRunner(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateRunner operation middleware
+func (siw *ServerInterfaceWrapper) UpdateRunner(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateRunner(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListOrgSecrets operation middleware
+func (siw *ServerInterfaceWrapper) ListOrgSecrets(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListOrgSecrets(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteOrgSecret operation middleware
+func (siw *ServerInterfaceWrapper) DeleteOrgSecret(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "name" -------------
+	var name SecretName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", chi.URLParam(r, "name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteOrgSecret(w, r, name)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetOrgSecret operation middleware
+func (siw *ServerInterfaceWrapper) SetOrgSecret(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "name" -------------
+	var name SecretName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", chi.URLParam(r, "name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetOrgSecret(w, r, name)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -20439,6 +26208,41 @@ func (siw *ServerInterfaceWrapper) GetCommit(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// GetCommitChecks operation middleware
+func (siw *ServerInterfaceWrapper) GetCommitChecks(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "sha" -------------
+	var sha string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "sha", chi.URLParam(r, "sha"), &sha, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sha", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCommitChecks(w, r, repo, sha)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CompareRefs operation middleware
 func (siw *ServerInterfaceWrapper) CompareRefs(w http.ResponseWriter, r *http.Request) {
 
@@ -20832,6 +26636,153 @@ func (siw *ServerInterfaceWrapper) GetIssueTimeline(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetIssueTimeline(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetJob operation middleware
+func (siw *ServerInterfaceWrapper) GetJob(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id JobID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetJob(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetJobLogs operation middleware
+func (siw *ServerInterfaceWrapper) GetJobLogs(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id JobID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetJobLogsParams
+
+	// ------------- Optional query parameter "after" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "after", r.URL.Query(), &params.After, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "after"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "after", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "step" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "step", r.URL.Query(), &params.Step, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "step"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "step", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetJobLogs(w, r, repo, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RerunJob operation middleware
+func (siw *ServerInterfaceWrapper) RerunJob(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id JobID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RerunJob(w, r, repo, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -21956,6 +27907,353 @@ func (siw *ServerInterfaceWrapper) GetReadme(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// ListRuns operation middleware
+func (siw *ServerInterfaceWrapper) ListRuns(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListRunsParams
+
+	// ------------- Optional query parameter "workflow" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "workflow", r.URL.Query(), &params.Workflow, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "workflow"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "workflow", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "branch" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "branch", r.URL.Query(), &params.Branch, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "branch"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "branch", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "event" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "event", r.URL.Query(), &params.Event, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "event"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "event", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "status", r.URL.Query(), &params.Status, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "status"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "status", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "actor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "actor", r.URL.Query(), &params.Actor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "actor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "actor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pull" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pull", r.URL.Query(), &params.Pull, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pull"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pull", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "sha" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sha", r.URL.Query(), &params.Sha, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sha"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sha", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", r.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "per_page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "per_page", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListRuns(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetRun operation middleware
+func (siw *ServerInterfaceWrapper) GetRun(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number RunNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRun(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CancelRun operation middleware
+func (siw *ServerInterfaceWrapper) CancelRun(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number RunNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancelRun(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RerunRun operation middleware
+func (siw *ServerInterfaceWrapper) RerunRun(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number RunNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RerunRun(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListRepoSecrets operation middleware
+func (siw *ServerInterfaceWrapper) ListRepoSecrets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListRepoSecrets(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteRepoSecret operation middleware
+func (siw *ServerInterfaceWrapper) DeleteRepoSecret(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "name" -------------
+	var name SecretName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", chi.URLParam(r, "name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteRepoSecret(w, r, repo, name)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetRepoSecret operation middleware
+func (siw *ServerInterfaceWrapper) SetRepoSecret(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "name" -------------
+	var name SecretName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", chi.URLParam(r, "name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetRepoSecret(w, r, repo, name)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListTags operation middleware
 func (siw *ServerInterfaceWrapper) ListTags(w http.ResponseWriter, r *http.Request) {
 
@@ -22028,6 +28326,155 @@ func (siw *ServerInterfaceWrapper) GetTree(w http.ResponseWriter, r *http.Reques
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetTree(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListWorkflows operation middleware
+func (siw *ServerInterfaceWrapper) ListWorkflows(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListWorkflowsParams
+
+	// ------------- Optional query parameter "ref" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "ref", r.URL.Query(), &params.Ref, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "ref"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "ref", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListWorkflows(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DispatchWorkflow operation middleware
+func (siw *ServerInterfaceWrapper) DispatchWorkflow(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "workflow" -------------
+	var workflow string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "workflow", chi.URLParam(r, "workflow"), &workflow, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "workflow", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DispatchWorkflow(w, r, repo, workflow)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAllRuns operation middleware
+func (siw *ServerInterfaceWrapper) ListAllRuns(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAllRunsParams
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "status", r.URL.Query(), &params.Status, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "status"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "status", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "actor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "actor", r.URL.Query(), &params.Actor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "actor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "actor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", r.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "per_page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "per_page", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAllRuns(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -22430,6 +28877,78 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Patch(options.BaseURL+"/repos/{repo}/milestones/{id}", wrapper.UpdateMilestone)
 	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/runs", wrapper.ListAllRuns)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/runs", wrapper.ListRuns)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/runs/{number}", wrapper.GetRun)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/runs/{number}/cancel", wrapper.CancelRun)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/runs/{number}/rerun", wrapper.RerunRun)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/jobs/{id}", wrapper.GetJob)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/jobs/{id}/rerun", wrapper.RerunJob)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/jobs/{id}/logs", wrapper.GetJobLogs)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/workflows", wrapper.ListWorkflows)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/workflows/{workflow}/dispatch", wrapper.DispatchWorkflow)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/commits/{sha}/checks", wrapper.GetCommitChecks)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/secrets", wrapper.ListRepoSecrets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/repos/{repo}/secrets/{name}", wrapper.DeleteRepoSecret)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/repos/{repo}/secrets/{name}", wrapper.SetRepoSecret)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/admin/secrets", wrapper.ListOrgSecrets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/admin/secrets/{name}", wrapper.DeleteOrgSecret)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/admin/secrets/{name}", wrapper.SetOrgSecret)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/admin/runners", wrapper.ListRunners)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/admin/runners/registration-tokens", wrapper.CreateRunnerToken)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/admin/runners/{id}", wrapper.DeleteRunner)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/admin/runners/{id}", wrapper.GetRunner)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/admin/runners/{id}", wrapper.UpdateRunner)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/admin/ci/settings", wrapper.GetCISettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/admin/ci/settings", wrapper.UpdateCISettings)
+	})
 
 	return r
 }
@@ -22773,6 +29292,83 @@ func (response ListAuditLogdefaultJSONResponse) VisitListAuditLogResponse(w http
 	return err
 }
 
+type GetCISettingsRequestObject struct {
+}
+
+type GetCISettingsResponseObject interface {
+	VisitGetCISettingsResponse(w http.ResponseWriter) error
+}
+
+type GetCISettings200JSONResponse CISettings
+
+func (response GetCISettings200JSONResponse) VisitGetCISettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCISettingsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetCISettingsdefaultJSONResponse) VisitGetCISettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateCISettingsRequestObject struct {
+	Body *UpdateCISettingsJSONRequestBody
+}
+
+type UpdateCISettingsResponseObject interface {
+	VisitUpdateCISettingsResponse(w http.ResponseWriter) error
+}
+
+type UpdateCISettings200JSONResponse CISettings
+
+func (response UpdateCISettings200JSONResponse) VisitUpdateCISettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateCISettingsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdateCISettingsdefaultJSONResponse) VisitUpdateCISettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type UpdateOrgRequestObject struct {
 	Body *UpdateOrgJSONRequestBody
 }
@@ -22872,6 +29468,306 @@ type UploadOrgLogodefaultJSONResponse struct {
 }
 
 func (response UploadOrgLogodefaultJSONResponse) VisitUploadOrgLogoResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListRunnersRequestObject struct {
+}
+
+type ListRunnersResponseObject interface {
+	VisitListRunnersResponse(w http.ResponseWriter) error
+}
+
+type ListRunners200JSONResponse RunnerList
+
+func (response ListRunners200JSONResponse) VisitListRunnersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListRunnersdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListRunnersdefaultJSONResponse) VisitListRunnersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateRunnerTokenRequestObject struct {
+	Body *CreateRunnerTokenJSONRequestBody
+}
+
+type CreateRunnerTokenResponseObject interface {
+	VisitCreateRunnerTokenResponse(w http.ResponseWriter) error
+}
+
+type CreateRunnerToken201JSONResponse RunnerRegistrationToken
+
+func (response CreateRunnerToken201JSONResponse) VisitCreateRunnerTokenResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateRunnerTokendefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreateRunnerTokendefaultJSONResponse) VisitCreateRunnerTokenResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteRunnerRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type DeleteRunnerResponseObject interface {
+	VisitDeleteRunnerResponse(w http.ResponseWriter) error
+}
+
+type DeleteRunner204Response struct {
+}
+
+func (response DeleteRunner204Response) VisitDeleteRunnerResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteRunnerdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteRunnerdefaultJSONResponse) VisitDeleteRunnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRunnerRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type GetRunnerResponseObject interface {
+	VisitGetRunnerResponse(w http.ResponseWriter) error
+}
+
+type GetRunner200JSONResponse Runner
+
+func (response GetRunner200JSONResponse) VisitGetRunnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRunnerdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetRunnerdefaultJSONResponse) VisitGetRunnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateRunnerRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *UpdateRunnerJSONRequestBody
+}
+
+type UpdateRunnerResponseObject interface {
+	VisitUpdateRunnerResponse(w http.ResponseWriter) error
+}
+
+type UpdateRunner200JSONResponse Runner
+
+func (response UpdateRunner200JSONResponse) VisitUpdateRunnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateRunnerdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdateRunnerdefaultJSONResponse) VisitUpdateRunnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListOrgSecretsRequestObject struct {
+}
+
+type ListOrgSecretsResponseObject interface {
+	VisitListOrgSecretsResponse(w http.ResponseWriter) error
+}
+
+type ListOrgSecrets200JSONResponse []Secret
+
+func (response ListOrgSecrets200JSONResponse) VisitListOrgSecretsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListOrgSecretsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListOrgSecretsdefaultJSONResponse) VisitListOrgSecretsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteOrgSecretRequestObject struct {
+	Name SecretName `json:"name"`
+}
+
+type DeleteOrgSecretResponseObject interface {
+	VisitDeleteOrgSecretResponse(w http.ResponseWriter) error
+}
+
+type DeleteOrgSecret204Response struct {
+}
+
+func (response DeleteOrgSecret204Response) VisitDeleteOrgSecretResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteOrgSecretdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteOrgSecretdefaultJSONResponse) VisitDeleteOrgSecretResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetOrgSecretRequestObject struct {
+	Name SecretName `json:"name"`
+	Body *SetOrgSecretJSONRequestBody
+}
+
+type SetOrgSecretResponseObject interface {
+	VisitSetOrgSecretResponse(w http.ResponseWriter) error
+}
+
+type SetOrgSecret200JSONResponse Secret
+
+func (response SetOrgSecret200JSONResponse) VisitSetOrgSecretResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetOrgSecretdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response SetOrgSecretdefaultJSONResponse) VisitSetOrgSecretResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -24082,6 +30978,46 @@ func (response GetCommitdefaultJSONResponse) VisitGetCommitResponse(w http.Respo
 	return err
 }
 
+type GetCommitChecksRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Sha  string   `json:"sha"`
+}
+
+type GetCommitChecksResponseObject interface {
+	VisitGetCommitChecksResponse(w http.ResponseWriter) error
+}
+
+type GetCommitChecks200JSONResponse CheckSummary
+
+func (response GetCommitChecks200JSONResponse) VisitGetCommitChecksResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCommitChecksdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetCommitChecksdefaultJSONResponse) VisitGetCommitChecksResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type CompareRefsRequestObject struct {
 	Repo   RepoName `json:"repo"`
 	Params CompareRefsParams
@@ -24393,6 +31329,127 @@ type GetIssueTimelinedefaultJSONResponse struct {
 }
 
 func (response GetIssueTimelinedefaultJSONResponse) VisitGetIssueTimelineResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetJobRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   JobID    `json:"id"`
+}
+
+type GetJobResponseObject interface {
+	VisitGetJobResponse(w http.ResponseWriter) error
+}
+
+type GetJob200JSONResponse Job
+
+func (response GetJob200JSONResponse) VisitGetJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetJobdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetJobdefaultJSONResponse) VisitGetJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetJobLogsRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Id     JobID    `json:"id"`
+	Params GetJobLogsParams
+}
+
+type GetJobLogsResponseObject interface {
+	VisitGetJobLogsResponse(w http.ResponseWriter) error
+}
+
+type GetJobLogs200JSONResponse JobLogs
+
+func (response GetJobLogs200JSONResponse) VisitGetJobLogsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetJobLogsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetJobLogsdefaultJSONResponse) VisitGetJobLogsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RerunJobRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   JobID    `json:"id"`
+}
+
+type RerunJobResponseObject interface {
+	VisitRerunJobResponse(w http.ResponseWriter) error
+}
+
+type RerunJob200JSONResponse WorkflowRunDetail
+
+func (response RerunJob200JSONResponse) VisitRerunJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RerunJobdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response RerunJobdefaultJSONResponse) VisitRerunJobResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -25560,6 +32617,281 @@ func (response GetReadmedefaultJSONResponse) VisitGetReadmeResponse(w http.Respo
 	return err
 }
 
+type ListRunsRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Params ListRunsParams
+}
+
+type ListRunsResponseObject interface {
+	VisitListRunsResponse(w http.ResponseWriter) error
+}
+
+type ListRuns200JSONResponse RunPage
+
+func (response ListRuns200JSONResponse) VisitListRunsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListRunsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListRunsdefaultJSONResponse) VisitListRunsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRunRequestObject struct {
+	Repo   RepoName  `json:"repo"`
+	Number RunNumber `json:"number"`
+}
+
+type GetRunResponseObject interface {
+	VisitGetRunResponse(w http.ResponseWriter) error
+}
+
+type GetRun200JSONResponse WorkflowRunDetail
+
+func (response GetRun200JSONResponse) VisitGetRunResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRundefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetRundefaultJSONResponse) VisitGetRunResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CancelRunRequestObject struct {
+	Repo   RepoName  `json:"repo"`
+	Number RunNumber `json:"number"`
+}
+
+type CancelRunResponseObject interface {
+	VisitCancelRunResponse(w http.ResponseWriter) error
+}
+
+type CancelRun200JSONResponse WorkflowRunDetail
+
+func (response CancelRun200JSONResponse) VisitCancelRunResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CancelRundefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CancelRundefaultJSONResponse) VisitCancelRunResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RerunRunRequestObject struct {
+	Repo   RepoName  `json:"repo"`
+	Number RunNumber `json:"number"`
+	Body   *RerunRunJSONRequestBody
+}
+
+type RerunRunResponseObject interface {
+	VisitRerunRunResponse(w http.ResponseWriter) error
+}
+
+type RerunRun200JSONResponse WorkflowRunDetail
+
+func (response RerunRun200JSONResponse) VisitRerunRunResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RerunRundefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response RerunRundefaultJSONResponse) VisitRerunRunResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListRepoSecretsRequestObject struct {
+	Repo RepoName `json:"repo"`
+}
+
+type ListRepoSecretsResponseObject interface {
+	VisitListRepoSecretsResponse(w http.ResponseWriter) error
+}
+
+type ListRepoSecrets200JSONResponse []Secret
+
+func (response ListRepoSecrets200JSONResponse) VisitListRepoSecretsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListRepoSecretsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListRepoSecretsdefaultJSONResponse) VisitListRepoSecretsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteRepoSecretRequestObject struct {
+	Repo RepoName   `json:"repo"`
+	Name SecretName `json:"name"`
+}
+
+type DeleteRepoSecretResponseObject interface {
+	VisitDeleteRepoSecretResponse(w http.ResponseWriter) error
+}
+
+type DeleteRepoSecret204Response struct {
+}
+
+func (response DeleteRepoSecret204Response) VisitDeleteRepoSecretResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteRepoSecretdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteRepoSecretdefaultJSONResponse) VisitDeleteRepoSecretResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetRepoSecretRequestObject struct {
+	Repo RepoName   `json:"repo"`
+	Name SecretName `json:"name"`
+	Body *SetRepoSecretJSONRequestBody
+}
+
+type SetRepoSecretResponseObject interface {
+	VisitSetRepoSecretResponse(w http.ResponseWriter) error
+}
+
+type SetRepoSecret200JSONResponse Secret
+
+func (response SetRepoSecret200JSONResponse) VisitSetRepoSecretResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetRepoSecretdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response SetRepoSecretdefaultJSONResponse) VisitSetRepoSecretResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListTagsRequestObject struct {
 	Repo RepoName `json:"repo"`
 }
@@ -25628,6 +32960,126 @@ type GetTreedefaultJSONResponse struct {
 }
 
 func (response GetTreedefaultJSONResponse) VisitGetTreeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListWorkflowsRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Params ListWorkflowsParams
+}
+
+type ListWorkflowsResponseObject interface {
+	VisitListWorkflowsResponse(w http.ResponseWriter) error
+}
+
+type ListWorkflows200JSONResponse []Workflow
+
+func (response ListWorkflows200JSONResponse) VisitListWorkflowsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListWorkflowsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListWorkflowsdefaultJSONResponse) VisitListWorkflowsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DispatchWorkflowRequestObject struct {
+	Repo     RepoName `json:"repo"`
+	Workflow string   `json:"workflow"`
+	Body     *DispatchWorkflowJSONRequestBody
+}
+
+type DispatchWorkflowResponseObject interface {
+	VisitDispatchWorkflowResponse(w http.ResponseWriter) error
+}
+
+type DispatchWorkflow201JSONResponse WorkflowRunDetail
+
+func (response DispatchWorkflow201JSONResponse) VisitDispatchWorkflowResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DispatchWorkflowdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DispatchWorkflowdefaultJSONResponse) VisitDispatchWorkflowResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAllRunsRequestObject struct {
+	Params ListAllRunsParams
+}
+
+type ListAllRunsResponseObject interface {
+	VisitListAllRunsResponse(w http.ResponseWriter) error
+}
+
+type ListAllRuns200JSONResponse RunPage
+
+func (response ListAllRuns200JSONResponse) VisitListAllRunsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAllRunsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListAllRunsdefaultJSONResponse) VisitListAllRunsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -25745,6 +33197,12 @@ type StrictServerInterface interface {
 	// ListAuditLog Security audit log, newest first
 	// (GET /admin/audit-log)
 	ListAuditLog(ctx context.Context, request ListAuditLogRequestObject) (ListAuditLogResponseObject, error)
+	// GetCISettings CI resource limits and defaults (admin)
+	// (GET /admin/ci/settings)
+	GetCISettings(ctx context.Context, request GetCISettingsRequestObject) (GetCISettingsResponseObject, error)
+	// UpdateCISettings Change CI resource limits and defaults (admin)
+	// (PATCH /admin/ci/settings)
+	UpdateCISettings(ctx context.Context, request UpdateCISettingsRequestObject) (UpdateCISettingsResponseObject, error)
 	// UpdateOrg Update org settings
 	// (PATCH /admin/org)
 	UpdateOrg(ctx context.Context, request UpdateOrgRequestObject) (UpdateOrgResponseObject, error)
@@ -25754,6 +33212,30 @@ type StrictServerInterface interface {
 	// UploadOrgLogo Upload the org logo
 	// (PUT /admin/org/logo)
 	UploadOrgLogo(ctx context.Context, request UploadOrgLogoRequestObject) (UploadOrgLogoResponseObject, error)
+	// ListRunners List runners with their status, load and running jobs (admin)
+	// (GET /admin/runners)
+	ListRunners(ctx context.Context, request ListRunnersRequestObject) (ListRunnersResponseObject, error)
+	// CreateRunnerToken Create a one-time runner registration token (admin)
+	// (POST /admin/runners/registration-tokens)
+	CreateRunnerToken(ctx context.Context, request CreateRunnerTokenRequestObject) (CreateRunnerTokenResponseObject, error)
+	// DeleteRunner Remove a runner (admin)
+	// (DELETE /admin/runners/{id})
+	DeleteRunner(ctx context.Context, request DeleteRunnerRequestObject) (DeleteRunnerResponseObject, error)
+	// GetRunner Get a runner (admin)
+	// (GET /admin/runners/{id})
+	GetRunner(ctx context.Context, request GetRunnerRequestObject) (GetRunnerResponseObject, error)
+	// UpdateRunner Disable, enable or rename a runner (admin)
+	// (PATCH /admin/runners/{id})
+	UpdateRunner(ctx context.Context, request UpdateRunnerRequestObject) (UpdateRunnerResponseObject, error)
+	// ListOrgSecrets List organisation secrets, available to every repository (admin)
+	// (GET /admin/secrets)
+	ListOrgSecrets(ctx context.Context, request ListOrgSecretsRequestObject) (ListOrgSecretsResponseObject, error)
+	// DeleteOrgSecret Delete an organisation secret (admin)
+	// (DELETE /admin/secrets/{name})
+	DeleteOrgSecret(ctx context.Context, request DeleteOrgSecretRequestObject) (DeleteOrgSecretResponseObject, error)
+	// SetOrgSecret Create or update an organisation secret (admin)
+	// (PUT /admin/secrets/{name})
+	SetOrgSecret(ctx context.Context, request SetOrgSecretRequestObject) (SetOrgSecretResponseObject, error)
 	// AdminListUsers List all users with admin details
 	// (GET /admin/users)
 	AdminListUsers(ctx context.Context, request AdminListUsersRequestObject) (AdminListUsersResponseObject, error)
@@ -25847,6 +33329,9 @@ type StrictServerInterface interface {
 	// GetCommit A commit with its diff
 	// (GET /repos/{repo}/commits/{sha})
 	GetCommit(ctx context.Context, request GetCommitRequestObject) (GetCommitResponseObject, error)
+	// GetCommitChecks CI results for a commit (latest attempt of each job)
+	// (GET /repos/{repo}/commits/{sha}/checks)
+	GetCommitChecks(ctx context.Context, request GetCommitChecksRequestObject) (GetCommitChecksResponseObject, error)
 	// CompareRefs Compare two branches (what a pull request from head into base would contain)
 	// (GET /repos/{repo}/compare)
 	CompareRefs(ctx context.Context, request CompareRefsRequestObject) (CompareRefsResponseObject, error)
@@ -25871,6 +33356,15 @@ type StrictServerInterface interface {
 	// GetIssueTimeline Comments and events, oldest first
 	// (GET /repos/{repo}/issues/{number}/timeline)
 	GetIssueTimeline(ctx context.Context, request GetIssueTimelineRequestObject) (GetIssueTimelineResponseObject, error)
+	// GetJob Get a job with its steps
+	// (GET /repos/{repo}/jobs/{id})
+	GetJob(ctx context.Context, request GetJobRequestObject) (GetJobResponseObject, error)
+	// GetJobLogs Read a job's log
+	// (GET /repos/{repo}/jobs/{id}/logs)
+	GetJobLogs(ctx context.Context, request GetJobLogsRequestObject) (GetJobLogsResponseObject, error)
+	// RerunJob Re-run one job and the jobs that depend on it (triage access)
+	// (POST /repos/{repo}/jobs/{id}/rerun)
+	RerunJob(ctx context.Context, request RerunJobRequestObject) (RerunJobResponseObject, error)
 	// ListLabels List labels, by name
 	// (GET /repos/{repo}/labels)
 	ListLabels(ctx context.Context, request ListLabelsRequestObject) (ListLabelsResponseObject, error)
@@ -25958,12 +33452,42 @@ type StrictServerInterface interface {
 	// GetReadme The README of a directory, rendered to HTML
 	// (GET /repos/{repo}/readme)
 	GetReadme(ctx context.Context, request GetReadmeRequestObject) (GetReadmeResponseObject, error)
+	// ListRuns List a repository's workflow runs
+	// (GET /repos/{repo}/runs)
+	ListRuns(ctx context.Context, request ListRunsRequestObject) (ListRunsResponseObject, error)
+	// GetRun Get a run with its jobs and steps
+	// (GET /repos/{repo}/runs/{number})
+	GetRun(ctx context.Context, request GetRunRequestObject) (GetRunResponseObject, error)
+	// CancelRun Cancel a run (write access)
+	// (POST /repos/{repo}/runs/{number}/cancel)
+	CancelRun(ctx context.Context, request CancelRunRequestObject) (CancelRunResponseObject, error)
+	// RerunRun Re-run a finished run (triage access, so testers can re-run)
+	// (POST /repos/{repo}/runs/{number}/rerun)
+	RerunRun(ctx context.Context, request RerunRunRequestObject) (RerunRunResponseObject, error)
+	// ListRepoSecrets List repository secrets (write access; values are never returned)
+	// (GET /repos/{repo}/secrets)
+	ListRepoSecrets(ctx context.Context, request ListRepoSecretsRequestObject) (ListRepoSecretsResponseObject, error)
+	// DeleteRepoSecret Delete a repository secret (write access)
+	// (DELETE /repos/{repo}/secrets/{name})
+	DeleteRepoSecret(ctx context.Context, request DeleteRepoSecretRequestObject) (DeleteRepoSecretResponseObject, error)
+	// SetRepoSecret Create or update a repository secret (write access)
+	// (PUT /repos/{repo}/secrets/{name})
+	SetRepoSecret(ctx context.Context, request SetRepoSecretRequestObject) (SetRepoSecretResponseObject, error)
 	// ListTags List tags, newest first
 	// (GET /repos/{repo}/tags)
 	ListTags(ctx context.Context, request ListTagsRequestObject) (ListTagsResponseObject, error)
 	// GetTree List a directory
 	// (GET /repos/{repo}/tree)
 	GetTree(ctx context.Context, request GetTreeRequestObject) (GetTreeResponseObject, error)
+	// ListWorkflows List the workflow files at a ref, with validation errors
+	// (GET /repos/{repo}/workflows)
+	ListWorkflows(ctx context.Context, request ListWorkflowsRequestObject) (ListWorkflowsResponseObject, error)
+	// DispatchWorkflow Run a workflow manually (write access)
+	// (POST /repos/{repo}/workflows/{workflow}/dispatch)
+	DispatchWorkflow(ctx context.Context, request DispatchWorkflowRequestObject) (DispatchWorkflowResponseObject, error)
+	// ListAllRuns Recent workflow runs across every repository you can read
+	// (GET /runs)
+	ListAllRuns(ctx context.Context, request ListAllRunsRequestObject) (ListAllRunsResponseObject, error)
 	// CompleteSetup Complete first-start setup
 	// (POST /setup)
 	CompleteSetup(ctx context.Context, request CompleteSetupRequestObject) (CompleteSetupResponseObject, error)
@@ -26266,6 +33790,61 @@ func (sh *strictHandler) ListAuditLog(w http.ResponseWriter, r *http.Request, pa
 	}
 }
 
+// GetCISettings operation middleware
+func (sh *strictHandler) GetCISettings(w http.ResponseWriter, r *http.Request) {
+	var request GetCISettingsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCISettings(ctx, request.(GetCISettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCISettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetCISettingsResponseObject); ok {
+		if err := validResponse.VisitGetCISettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateCISettings operation middleware
+func (sh *strictHandler) UpdateCISettings(w http.ResponseWriter, r *http.Request) {
+	var request UpdateCISettingsRequestObject
+
+	var body UpdateCISettingsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateCISettings(ctx, request.(UpdateCISettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateCISettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateCISettingsResponseObject); ok {
+		if err := validResponse.VisitUpdateCISettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // UpdateOrg operation middleware
 func (sh *strictHandler) UpdateOrg(w http.ResponseWriter, r *http.Request) {
 	var request UpdateOrgRequestObject
@@ -26340,6 +33919,232 @@ func (sh *strictHandler) UploadOrgLogo(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UploadOrgLogoResponseObject); ok {
 		if err := validResponse.VisitUploadOrgLogoResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListRunners operation middleware
+func (sh *strictHandler) ListRunners(w http.ResponseWriter, r *http.Request) {
+	var request ListRunnersRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListRunners(ctx, request.(ListRunnersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListRunners")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListRunnersResponseObject); ok {
+		if err := validResponse.VisitListRunnersResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateRunnerToken operation middleware
+func (sh *strictHandler) CreateRunnerToken(w http.ResponseWriter, r *http.Request) {
+	var request CreateRunnerTokenRequestObject
+
+	var body CreateRunnerTokenJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		if !errors.Is(err, io.EOF) {
+			sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+			return
+		}
+	} else {
+		request.Body = &body
+	}
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateRunnerToken(ctx, request.(CreateRunnerTokenRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateRunnerToken")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateRunnerTokenResponseObject); ok {
+		if err := validResponse.VisitCreateRunnerTokenResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteRunner operation middleware
+func (sh *strictHandler) DeleteRunner(w http.ResponseWriter, r *http.Request, id int64) {
+	var request DeleteRunnerRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteRunner(ctx, request.(DeleteRunnerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteRunner")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteRunnerResponseObject); ok {
+		if err := validResponse.VisitDeleteRunnerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetRunner operation middleware
+func (sh *strictHandler) GetRunner(w http.ResponseWriter, r *http.Request, id int64) {
+	var request GetRunnerRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRunner(ctx, request.(GetRunnerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRunner")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetRunnerResponseObject); ok {
+		if err := validResponse.VisitGetRunnerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateRunner operation middleware
+func (sh *strictHandler) UpdateRunner(w http.ResponseWriter, r *http.Request, id int64) {
+	var request UpdateRunnerRequestObject
+
+	request.Id = id
+
+	var body UpdateRunnerJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateRunner(ctx, request.(UpdateRunnerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateRunner")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateRunnerResponseObject); ok {
+		if err := validResponse.VisitUpdateRunnerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListOrgSecrets operation middleware
+func (sh *strictHandler) ListOrgSecrets(w http.ResponseWriter, r *http.Request) {
+	var request ListOrgSecretsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListOrgSecrets(ctx, request.(ListOrgSecretsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListOrgSecrets")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListOrgSecretsResponseObject); ok {
+		if err := validResponse.VisitListOrgSecretsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteOrgSecret operation middleware
+func (sh *strictHandler) DeleteOrgSecret(w http.ResponseWriter, r *http.Request, name SecretName) {
+	var request DeleteOrgSecretRequestObject
+
+	request.Name = name
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteOrgSecret(ctx, request.(DeleteOrgSecretRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteOrgSecret")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteOrgSecretResponseObject); ok {
+		if err := validResponse.VisitDeleteOrgSecretResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SetOrgSecret operation middleware
+func (sh *strictHandler) SetOrgSecret(w http.ResponseWriter, r *http.Request, name SecretName) {
+	var request SetOrgSecretRequestObject
+
+	request.Name = name
+
+	var body SetOrgSecretJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SetOrgSecret(ctx, request.(SetOrgSecretRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SetOrgSecret")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SetOrgSecretResponseObject); ok {
+		if err := validResponse.VisitSetOrgSecretResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -27202,6 +35007,33 @@ func (sh *strictHandler) GetCommit(w http.ResponseWriter, r *http.Request, repo 
 	}
 }
 
+// GetCommitChecks operation middleware
+func (sh *strictHandler) GetCommitChecks(w http.ResponseWriter, r *http.Request, repo RepoName, sha string) {
+	var request GetCommitChecksRequestObject
+
+	request.Repo = repo
+	request.Sha = sha
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCommitChecks(ctx, request.(GetCommitChecksRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCommitChecks")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetCommitChecksResponseObject); ok {
+		if err := validResponse.VisitGetCommitChecksResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // CompareRefs operation middleware
 func (sh *strictHandler) CompareRefs(w http.ResponseWriter, r *http.Request, repo RepoName, params CompareRefsParams) {
 	var request CompareRefsRequestObject
@@ -27431,6 +35263,88 @@ func (sh *strictHandler) GetIssueTimeline(w http.ResponseWriter, r *http.Request
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetIssueTimelineResponseObject); ok {
 		if err := validResponse.VisitGetIssueTimelineResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetJob operation middleware
+func (sh *strictHandler) GetJob(w http.ResponseWriter, r *http.Request, repo RepoName, id JobID) {
+	var request GetJobRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetJob(ctx, request.(GetJobRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetJob")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetJobResponseObject); ok {
+		if err := validResponse.VisitGetJobResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetJobLogs operation middleware
+func (sh *strictHandler) GetJobLogs(w http.ResponseWriter, r *http.Request, repo RepoName, id JobID, params GetJobLogsParams) {
+	var request GetJobLogsRequestObject
+
+	request.Repo = repo
+	request.Id = id
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetJobLogs(ctx, request.(GetJobLogsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetJobLogs")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetJobLogsResponseObject); ok {
+		if err := validResponse.VisitGetJobLogsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RerunJob operation middleware
+func (sh *strictHandler) RerunJob(w http.ResponseWriter, r *http.Request, repo RepoName, id JobID) {
+	var request RerunJobRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RerunJob(ctx, request.(RerunJobRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RerunJob")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RerunJobResponseObject); ok {
+		if err := validResponse.VisitRerunJobResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -28313,6 +36227,211 @@ func (sh *strictHandler) GetReadme(w http.ResponseWriter, r *http.Request, repo 
 	}
 }
 
+// ListRuns operation middleware
+func (sh *strictHandler) ListRuns(w http.ResponseWriter, r *http.Request, repo RepoName, params ListRunsParams) {
+	var request ListRunsRequestObject
+
+	request.Repo = repo
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListRuns(ctx, request.(ListRunsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListRuns")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListRunsResponseObject); ok {
+		if err := validResponse.VisitListRunsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetRun operation middleware
+func (sh *strictHandler) GetRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber) {
+	var request GetRunRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRun(ctx, request.(GetRunRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRun")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetRunResponseObject); ok {
+		if err := validResponse.VisitGetRunResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CancelRun operation middleware
+func (sh *strictHandler) CancelRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber) {
+	var request CancelRunRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CancelRun(ctx, request.(CancelRunRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CancelRun")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CancelRunResponseObject); ok {
+		if err := validResponse.VisitCancelRunResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RerunRun operation middleware
+func (sh *strictHandler) RerunRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber) {
+	var request RerunRunRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	var body RerunRunJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		if !errors.Is(err, io.EOF) {
+			sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+			return
+		}
+	} else {
+		request.Body = &body
+	}
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RerunRun(ctx, request.(RerunRunRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RerunRun")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RerunRunResponseObject); ok {
+		if err := validResponse.VisitRerunRunResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListRepoSecrets operation middleware
+func (sh *strictHandler) ListRepoSecrets(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	var request ListRepoSecretsRequestObject
+
+	request.Repo = repo
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListRepoSecrets(ctx, request.(ListRepoSecretsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListRepoSecrets")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListRepoSecretsResponseObject); ok {
+		if err := validResponse.VisitListRepoSecretsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteRepoSecret operation middleware
+func (sh *strictHandler) DeleteRepoSecret(w http.ResponseWriter, r *http.Request, repo RepoName, name SecretName) {
+	var request DeleteRepoSecretRequestObject
+
+	request.Repo = repo
+	request.Name = name
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteRepoSecret(ctx, request.(DeleteRepoSecretRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteRepoSecret")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteRepoSecretResponseObject); ok {
+		if err := validResponse.VisitDeleteRepoSecretResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SetRepoSecret operation middleware
+func (sh *strictHandler) SetRepoSecret(w http.ResponseWriter, r *http.Request, repo RepoName, name SecretName) {
+	var request SetRepoSecretRequestObject
+
+	request.Repo = repo
+	request.Name = name
+
+	var body SetRepoSecretJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SetRepoSecret(ctx, request.(SetRepoSecretRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SetRepoSecret")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SetRepoSecretResponseObject); ok {
+		if err := validResponse.VisitSetRepoSecretResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListTags operation middleware
 func (sh *strictHandler) ListTags(w http.ResponseWriter, r *http.Request, repo RepoName) {
 	var request ListTagsRequestObject
@@ -28359,6 +36478,96 @@ func (sh *strictHandler) GetTree(w http.ResponseWriter, r *http.Request, repo Re
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetTreeResponseObject); ok {
 		if err := validResponse.VisitGetTreeResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListWorkflows operation middleware
+func (sh *strictHandler) ListWorkflows(w http.ResponseWriter, r *http.Request, repo RepoName, params ListWorkflowsParams) {
+	var request ListWorkflowsRequestObject
+
+	request.Repo = repo
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListWorkflows(ctx, request.(ListWorkflowsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListWorkflows")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListWorkflowsResponseObject); ok {
+		if err := validResponse.VisitListWorkflowsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DispatchWorkflow operation middleware
+func (sh *strictHandler) DispatchWorkflow(w http.ResponseWriter, r *http.Request, repo RepoName, workflow string) {
+	var request DispatchWorkflowRequestObject
+
+	request.Repo = repo
+	request.Workflow = workflow
+
+	var body DispatchWorkflowJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		if !errors.Is(err, io.EOF) {
+			sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+			return
+		}
+	} else {
+		request.Body = &body
+	}
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DispatchWorkflow(ctx, request.(DispatchWorkflowRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DispatchWorkflow")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DispatchWorkflowResponseObject); ok {
+		if err := validResponse.VisitDispatchWorkflowResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAllRuns operation middleware
+func (sh *strictHandler) ListAllRuns(w http.ResponseWriter, r *http.Request, params ListAllRunsParams) {
+	var request ListAllRunsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAllRuns(ctx, request.(ListAllRunsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAllRuns")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListAllRunsResponseObject); ok {
+		if err := validResponse.VisitListAllRunsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -28426,220 +36635,294 @@ func (sh *strictHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
-	"fnBpKA8fH/7vAA==",
+	"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",
+	"9nn9AbLO+gO8wNR+W7+U2gPua1RVn3AQQv+/AQA=",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

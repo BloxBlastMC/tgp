@@ -7,7 +7,8 @@ issues, CI with strict resource limits, and an agent-friendly CLI.
 
 > **Status:** early development: setup, users, authentication, repositories,
 > git over HTTPS, code browsing, the `tgp` CLI, pull requests with reviews and
-> branch protection, and issues with labels and milestones work; CI comes next.
+> branch protection, issues with labels and milestones, and CI (Docker
+> runners with resource limits) work; artifacts and releases come next.
 > See [docs/roadmap.md](docs/roadmap.md).
 
 ## Components
@@ -60,8 +61,21 @@ tgp repo list --json=name,clone_url     # every command: --json, --jq, stable ex
 
 See [docs/cli.md](docs/cli.md).
 
+### CI
+
+Add workflows under `.tgp/workflows/` (GitHub Actions-like YAML) and connect
+one or more `tgp-runner` machines with Docker:
+
+```sh
+tgp admin runner token                  # or Admin → Runners → Add runner
+tgp-runner register --url https://git.example.com --token tgp_reg_…
+tgp-runner run
+```
+
+See [docs/ci.md](docs/ci.md) for the workflow syntax and resource limits.
+
 The server also creates `master.key` in the data dir. It encrypts 2FA seeds
-(and later CI secrets): back it up with the database.
+and CI secrets: back it up with the database.
 
 ### Configuration
 

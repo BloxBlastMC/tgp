@@ -20,6 +20,7 @@ import (
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/githook"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/secretbox"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/server"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/storage"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/version"
 	"git.taile67276.ts.net/BloxBlast/tgp/web"
 )
@@ -205,6 +206,13 @@ func runServe(parent context.Context, o *rootOpts) error {
 		return fmt.Errorf("install git hooks: %w", err)
 	}
 
+	if cfg.Storage.Type != "local" {
+		return fmt.Errorf("storage.type %q isn't supported yet; use \"local\"", cfg.Storage.Type)
+	}
+	store, err := storage.NewLocal(cfg.Storage.Local.Path)
+	if err != nil {
+		return fmt.Errorf("storage: %w", err)
+	}
 	srv := server.New(server.Options{
 		Config:   cfg,
 		DB:       d,
@@ -213,6 +221,7 @@ func runServe(parent context.Context, o *rootOpts) error {
 		Box:      box,
 		Git:      g,
 		HooksDir: hooksDir,
+		Storage:  store,
 	})
 	tok, err := srv.EnsureSetupToken(ctx)
 	if err != nil {

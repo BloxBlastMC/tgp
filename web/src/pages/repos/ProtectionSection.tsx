@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Shield } from 'lucide-react'
+import { Plus, Shield, X } from 'lucide-react'
 import { useState } from 'react'
 import { api, errorMessage, unwrap, type BranchProtection } from '../../api/client'
 import { protectionsQuery } from '../../api/queries'
@@ -16,6 +16,7 @@ const defaults: RuleForm = {
   block_force_push: true,
   allow_deletion: false,
   admins_bypass: false,
+  required_checks: [],
 }
 
 function summary(r: BranchProtection): string[] {
@@ -26,6 +27,7 @@ function summary(r: BranchProtection): string[] {
   if (r.require_up_to_date) out.push('up to date')
   if (r.block_force_push) out.push('no force pushes')
   if (!r.allow_deletion) out.push('no deletion')
+  if (r.required_checks?.length) out.push(`${r.required_checks.length} required check${r.required_checks.length === 1 ? '' : 's'}`)
   if (r.admins_bypass) out.push('admins may bypass')
   return out
 }
@@ -83,7 +85,7 @@ export function ProtectionSection({ repo, isAdmin }: { repo: string; isAdmin: bo
 }
 
 function RuleDialog({ repo, rule, onClose, onSaved }: { repo: string; rule: BranchProtection | null; onClose: () => void; onSaved: () => void }) {
-  const [f, setF] = useState<RuleForm>(rule ? { ...rule } : defaults)
+  const [f, setF] = useState<RuleForm>(rule ? { ...rule, required_checks: rule.required_checks ?? [] } : defaults)
   const set = <K extends keyof RuleForm>(k: K, v: RuleForm[K]) => setF((x) => ({ ...x, [k]: v }))
   const save = useMutation({
     mutationFn: () =>
@@ -137,8 +139,58 @@ function RuleDialog({ repo, rule, onClose, onSaved }: { repo: string; rule: Bran
       <Checkbox checked={f.require_up_to_date} onChange={(v) => set('require_up_to_date', v)} label="Require branches to be up to date" hint="The head must contain the latest base commit before merging." />
       <Checkbox checked={f.block_force_push} onChange={(v) => set('block_force_push', v)} label="Block force pushes" hint="Rewriting the branch's history is rejected." />
       <Checkbox checked={f.allow_deletion} onChange={(v) => set('allow_deletion', v)} label="Allow deletion" hint="Let people with write access delete matching branches." />
+      <RequiredChecksEditor value={f.required_checks} onChange={(v) => set('required_checks', v)} />
       <Checkbox checked={f.admins_bypass} onChange={(v) => set('admins_bypass', v)} label="Admins may bypass" hint="Admins can push directly and merge without meeting the requirements (audited)." />
       {(save.isError || del.isError) && <Alert>{errorMessage(save.error ?? del.error)}</Alert>}
     </Dialog>
+  )
+}
+
+/** Edits the list of required CI check names (`<workflow> / <job>`). */
+export function RequiredChecksEditor({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const [draft, setDraft] = useState('')
+  const add = () => {
+    const name = draft.trim()
+    if (!name) return
+    if (!value.some((v) => v.toLowerCase() === name.toLowerCase())) onChange([...value, name])
+    setDraft('')
+  }
+  return (
+    <Field label="Required checks" hint="CI jobs that must pass on the head commit, named “Workflow / job” as shown on pull requests, e.g. CI / test.">
+      {(id) => (
+        <div className="flex flex-col gap-1.5">
+          {value.length > 0 && (
+            <ul className="flex flex-wrap gap-1" aria-label="Required checks">
+              {value.map((c) => (
+                <li key={c} className="flex h-6 items-center gap-1 rounded border border-border-strong bg-bg px-2 font-mono text-[12px]">
+                  {c}
+                  <button type="button" className="text-fg-faint hover:text-danger" aria-label={`Remove ${c}`} onClick={() => onChange(value.filter((v) => v !== c))}>
+                    <X size={12} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex gap-2">
+            <Input
+              id={id}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  add()
+                }
+              }}
+              placeholder="CI / test"
+              className="font-mono"
+            />
+            <Button onClick={add} disabled={!draft.trim()}>
+              Add
+            </Button>
+          </div>
+        </div>
+      )}
+    </Field>
   )
 }

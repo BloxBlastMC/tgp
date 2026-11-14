@@ -49,11 +49,14 @@ export function useCommands(session: Session | null | undefined, toggleTheme: ()
       cmds.splice(4, 0,
         { id: 'admin-users', label: 'Admin: Users', group: 'Navigate', shortcut: 'g a', run: go('/admin/users') },
         { id: 'admin-org', label: 'Admin: Organization', group: 'Navigate', run: go('/admin/org') },
+        { id: 'admin-runners', label: 'Admin: Runners', group: 'Navigate', run: go('/admin/runners') },
+        { id: 'admin-ci', label: 'Admin: CI settings', group: 'Navigate', run: go('/admin/ci') },
         { id: 'admin-audit', label: 'Admin: Audit log', group: 'Navigate', run: go('/admin/audit') },
       )
     }
     if (current) {
       const repo = current.name
+      cmds.unshift({ id: 'repo-ci', label: `${repo}: CI runs`, group: 'Repository', run: () => void navigate({ to: '/$repo/ci', params: { repo } }) })
       cmds.unshift({ id: 'repo-pulls', label: `${repo}: Pull requests`, group: 'Repository', run: () => void navigate({ to: '/$repo/pulls', params: { repo } }) })
       cmds.unshift({ id: 'repo-milestones', label: `${repo}: Milestones`, group: 'Repository', run: () => void navigate({ to: '/$repo/milestones', params: { repo } }) })
       cmds.unshift({ id: 'repo-labels', label: `${repo}: Labels`, group: 'Repository', run: () => void navigate({ to: '/$repo/labels', params: { repo } }) })

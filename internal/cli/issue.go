@@ -101,7 +101,7 @@ func issueStateLabel(a *app, state string, reason *apigen.IssueStateReason) stri
 	if state == "open" {
 		return a.io.Green("open")
 	}
-	if reason != nil && *reason == apigen.NotPlanned {
+	if reason != nil && *reason == apigen.IssueStateReasonNotPlanned {
 		return a.io.Dim("closed (not planned)")
 	}
 	return a.io.paint("35", "closed")
@@ -555,7 +555,7 @@ func newIssueStateCmd(a *app, verb string) *cobra.Command {
 			}
 			req := apigen.UpdateIssue{State: &st}
 			if notPlanned {
-				r := apigen.NotPlanned
+				r := apigen.IssueStateReasonNotPlanned
 				req.StateReason = &r
 			}
 			r, err := c.UpdateIssueWithResponse(cmd.Context(), repo, n, req)

@@ -37,6 +37,12 @@ import { MilestonesPage, validateMilestones } from '../pages/issues/MilestonesPa
 import { NewIssuePage } from '../pages/issues/NewIssuePage'
 import { RepoIssuesPage } from '../pages/issues/RepoIssuesPage'
 import { validateIssueList } from '../lib/issues'
+import { validateRunList, validateRunPage } from '../lib/ci'
+import { RepoRunsPage } from '../pages/ci/RepoRunsPage'
+import { RunPage } from '../pages/ci/RunPage'
+import { GlobalRunsPage, validateGlobalRuns } from '../pages/ci/GlobalRunsPage'
+import { AdminRunnersPage } from '../pages/admin/AdminRunnersPage'
+import { AdminCIPage } from '../pages/admin/AdminCIPage'
 
 type RouterContext = { queryClient: QueryClient }
 
@@ -54,16 +60,6 @@ function AppLayout() {
       <CommandPalette commands={commands} open={paletteOpen} setOpen={setPaletteOpen} />
     </div>
   )
-}
-
-function placeholder(title: string, body: string) {
-  return function Placeholder() {
-    return (
-      <Page title={title}>
-        <EmptyState title={`No ${title.toLowerCase()} yet`}>{body}</EmptyState>
-      </Page>
-    )
-  }
 }
 
 const rootRoute = createRootRouteWithContext<RouterContext>()({
@@ -161,6 +157,8 @@ const repoRoutes = [
   createRoute({ getParentRoute: () => repoRoute, path: '/pulls', validateSearch: validatePullList, component: RepoPullsPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/pulls/$number', validateSearch: validatePull, component: PullPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/compare/$', component: ComparePage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/ci', validateSearch: validateRunList, component: RepoRunsPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/ci/runs/$number', validateSearch: validateRunPage, component: RunPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/settings', component: RepoSettingsPage }),
 ]
 
@@ -173,12 +171,14 @@ const routeTree = rootRoute.addChildren([
     repoRoute.addChildren(repoRoutes),
     createRoute({ getParentRoute: () => appRoute, path: '/pulls', validateSearch: validateGlobalPulls, component: GlobalPullsPage }),
     createRoute({ getParentRoute: () => appRoute, path: '/issues', validateSearch: validateGlobalIssues, component: GlobalIssuesPage }),
-    createRoute({ getParentRoute: () => appRoute, path: '/ci', component: placeholder('CI', 'Workflow runs across all repositories.') }),
+    createRoute({ getParentRoute: () => appRoute, path: '/ci', validateSearch: validateGlobalRuns, component: GlobalRunsPage }),
     createRoute({ getParentRoute: () => appRoute, path: '/settings', component: SettingsPage }),
     adminRoute.addChildren([
       adminIndexRoute,
       createRoute({ getParentRoute: () => adminRoute, path: '/users', component: AdminUsersPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/org', component: AdminOrgPage }),
+      createRoute({ getParentRoute: () => adminRoute, path: '/runners', component: AdminRunnersPage }),
+      createRoute({ getParentRoute: () => adminRoute, path: '/ci', component: AdminCIPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/audit', component: AdminAuditPage }),
     ]),
   ]),

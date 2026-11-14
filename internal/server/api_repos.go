@@ -216,8 +216,17 @@ func (a *api) DeleteRepo(ctx context.Context, req apigen.DeleteRepoRequestObject
 	if err != nil {
 		return nil, err
 	}
+	var jobIDs []int64
+	if err := s.db.NewSelect().Model((*model.Job)(nil)).Column("id").Where("repo_id = ?", repo.ID).Scan(ctx, &jobIDs); err != nil {
+		return nil, err
+	}
 	if err := s.repos.Delete(ctx, repo); err != nil {
 		return nil, err
+	}
+	for _, id := range jobIDs { // CI logs live outside the database
+		if err := s.store.DeletePrefix(ctx, logPrefix(id)); err != nil {
+			s.log.Warn("delete CI logs", "job", id, "err", err)
+		}
 	}
 	_ = audit.Record(ctx, s.db, audit.Entry{Actor: mustPrincipal(ctx).User, Action: audit.RepoDelete, TargetType: "repo", Target: repo.Name, IP: clientIP(r)})
 	return apigen.DeleteRepo204Response{}, nil

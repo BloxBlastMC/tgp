@@ -99,6 +99,16 @@ const cliSchemas = `{
     "required": ["number", "branch", "head_sha"],
     "properties": {"number": {"type": "integer"}, "branch": {"type": "string"}, "head_sha": {"type": "string"}}
   },
+  "RunLogLine": {
+    "type": "object",
+    "required": ["job_id", "job", "step", "step_name", "n", "t", "text"],
+    "properties": {
+      "job_id": {"type": "integer"}, "job": {"type": "string"},
+      "step": {"type": "integer", "description": "0 = set up, -1 = clean up"}, "step_name": {"type": "string"},
+      "n": {"type": "integer", "description": "Line number within the job's log"},
+      "t": {"type": "string", "format": "date-time"}, "text": {"type": "string"}
+    }
+  },
   "Deleted": {
     "type": "object",
     "required": ["name", "deleted"],

@@ -91,7 +91,17 @@ written anywhere.
 | `tgp issue close N [--not-planned] [-c comment]` / `reopen N` | Close or reopen |
 | `tgp label list\|create NAME [-c color] [-d text]\|edit NAME\|delete NAME` | Labels |
 | `tgp milestone list [-s open\|closed\|all]\|view\|create TITLE [--due YYYY-MM-DD]\|edit\|close\|reopen\|delete` | Milestones, by title or id |
+| `tgp pr checks [PR] [--watch] [--required]` | CI checks of the head commit; exit 0 passed, 1 failed, 8 pending |
+| `tgp run list [-w workflow] [-b branch] [-e event] [-s status] [-u user] [--pr N] [--commit sha]` | CI runs |
+| `tgp run view [N]` | A run's jobs and steps, with wait and failure reasons (default: latest run of the current branch) |
+| `tgp run logs [N] [-j job] [--failed] [-n tail] [-f]` | Job logs, prefixed with job and step; `--failed` for just what broke |
+| `tgp run watch [N] [--exit-status]` | Wait for a run to finish |
+| `tgp run rerun N [--failed\|-j job]` / `cancel N` | Re-run (testers can) or cancel |
+| `tgp workflow list [--ref r]` / `run FILE [-f key=value] [--ref r]` | Workflow files with errors and inputs; start a manual run |
+| `tgp secret list\|set NAME [-b value\|stdin]\|delete NAME [--org]` | CI secrets (values are never shown) |
 | `tgp admin user list\|view\|create\|edit\|reset-password\|reset-2fa\|access` | Users (admins) |
+| `tgp admin runner list\|view\|token\|edit\|delete` | CI runners (admins) |
+| `tgp admin ci view\|set KEY=VALUE...` | CI limits and defaults (admins) |
 | `tgp admin audit [--actor u] [--action prefix] [-L n] [--before id]` | Audit log (admins) |
 | `tgp api [METHOD] PATH [-f k=v] [-F k=v] [--input file] [-H 'K: v'] [-i]` | Raw API request |
 | `tgp schema [COMMAND...]` | JSON Schema of a command's output |
@@ -100,8 +110,8 @@ written anywhere.
 `PR` is a number (`12` or `#12`), a pull request URL, or a head branch name;
 left out, it's the pull request for the current git branch.
 
-Run `tgp <command> --help` for flags and examples. Later milestones add
-`run`, `release` and more.
+Run `tgp <command> --help` for flags and examples. CI is described in
+[ci.md](ci.md). Later milestones add `release` and more.
 
 ### A typical agent loop
 
@@ -111,6 +121,7 @@ tgp pr create --fill --reviewer tom --json=number
 tgp pr view --json --jq '{can_merge, blockers: [.blockers[].message]}'
 tgp pr comments --unresolved --json --jq '.[] | "\(.id) \(.path):\(.line) \(.body)"'
 tgp pr comment --reply-to 381 -b "Fixed in 3f2a9c1"
+tgp pr checks --watch || tgp run logs --failed --tail 80
 tgp pr merge --squash --delete-branch --sha "$(git rev-parse HEAD)"
 ```
 
@@ -169,6 +180,7 @@ either an API error code, such as `not_found`, `forbidden`, `validation_failed`,
 | 5 | Not found |
 | 6 | Conflict or validation failure (`conflict`, `validation_failed`, `setup_required`) |
 | 7 | Network error, server busy or rate limited: retrying may help |
+| 8 | `tgp pr checks`: checks are still pending |
 
 These codes and exit statuses are stable. New ones may be added, but an
 existing one never changes meaning.

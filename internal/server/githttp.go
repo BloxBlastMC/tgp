@@ -17,6 +17,7 @@ import (
 
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/apierr"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/authz"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/ci/runnerapi"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/git"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/githook"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/model"
@@ -85,6 +86,10 @@ func (s *Server) serveGit(w http.ResponseWriter, r *http.Request, repoName, acti
 		askForCredentials(w, "authentication required: use your username and a personal access token as the password")
 		return
 	}
+	if strings.HasPrefix(raw, runnerapi.JobTokenPrefix) {
+		s.serveGitForJob(w, r, repoName, action, svc, raw)
+		return
+	}
 	p, err := s.principalFromToken(ctx, raw)
 	if err != nil {
 		askForCredentials(w, "invalid credentials: use a personal access token (Settings → Personal access tokens) as the password")
@@ -150,6 +155,42 @@ func (s *Server) serveGit(w http.ResponseWriter, r *http.Request, repoName, acti
 	}
 	if err != nil && !errors.Is(err, context.Canceled) {
 		s.log.Warn("git transfer failed", "repo", repo.Name, "service", svc, "user", p.User.Username, "err", err)
+	}
+}
+
+// serveGitForJob lets a running CI job clone its own repository with its
+// job token (read-only, valid only while the job runs).
+func (s *Server) serveGitForJob(w http.ResponseWriter, r *http.Request, repoName, action string, svc git.Service, token string) {
+	ctx := r.Context()
+	j, err := s.jobByToken(ctx, token)
+	if err != nil {
+		askForCredentials(w, "invalid or expired job token")
+		return
+	}
+	repo, err := s.repos.Get(ctx, s.db, repoName)
+	if err != nil || repo.ID != j.RepoID {
+		gitError(w, http.StatusNotFound, "repository not found")
+		return
+	}
+	if svc != git.UploadPack {
+		gitError(w, http.StatusForbidden, "job tokens are read-only")
+		return
+	}
+	release, err := s.acquireGit(ctx)
+	if err != nil {
+		w.Header().Set("Retry-After", "10")
+		gitError(w, http.StatusServiceUnavailable, "server busy: too many concurrent git operations, retry shortly")
+		return
+	}
+	defer release()
+	path := s.repos.Path(repo)
+	if action == "info/refs" {
+		err = s.git.AdvertiseRefs(w, r, path, svc, git.RPCOptions{})
+	} else {
+		err = s.git.ServeRPC(w, r, path, svc, git.RPCOptions{})
+	}
+	if err != nil && !errors.Is(err, context.Canceled) {
+		s.log.Warn("git transfer failed", "repo", repo.Name, "service", svc, "job", j.ID, "err", err)
 	}
 }
 
@@ -302,5 +343,6 @@ func (s *Server) postReceive(ctx context.Context, repo *model.Repo, user *model.
 			}
 		}
 	}
+	s.ciOnPush(context.WithoutCancel(ctx), repo, user, updates)
 	return githook.Response{Allowed: true, Messages: s.pushHints(ctx, repo, updates)}, nil
 }

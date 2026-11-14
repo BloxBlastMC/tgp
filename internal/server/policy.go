@@ -51,6 +51,16 @@ var operationAccess = map[string]access{
 	"AdminSetUserRepos":  accessAdmin,
 	"CreateRepo":         accessAdmin,
 	"DeleteRepo":         accessAdmin,
+	"ListOrgSecrets":     accessAdmin,
+	"SetOrgSecret":       accessAdmin,
+	"DeleteOrgSecret":    accessAdmin,
+	"ListRunners":        accessAdmin,
+	"GetRunner":          accessAdmin,
+	"UpdateRunner":       accessAdmin,
+	"DeleteRunner":       accessAdmin,
+	"CreateRunnerToken":  accessAdmin,
+	"GetCISettings":      accessAdmin,
+	"UpdateCISettings":   accessAdmin,
 }
 
 // allowedBeforeSetup lists operations that work while setup is pending.
