@@ -1,0 +1,23 @@
+# tgp-runner image: talks to the host's Docker through its socket.
+#   docker build -f deploy/docker/Dockerfile.runner -t tgp-runner .
+# Jobs run in sibling containers on the host's daemon; workspaces are
+# Docker volumes, so no host paths need mounting besides the socket.
+
+FROM golang:1.27-bookworm AS go
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+ARG VERSION=dev
+RUN CGO_ENABLED=0 go build -trimpath \
+      -ldflags "-s -w -X git.taile67276.ts.net/BloxBlast/tgp/internal/version.Version=${VERSION}" \
+      -o /out/tgp-runner ./cmd/tgp-runner
+
+FROM docker:27-cli
+# git checks repositories out before copying them into job containers.
+RUN apk add --no-cache git ca-certificates
+COPY --from=go /out/tgp-runner /usr/local/bin/
+ENV TGP_RUNNER_CONFIG=/etc/tgp-runner/runner.toml
+VOLUME /etc/tgp-runner
+ENTRYPOINT ["tgp-runner"]
+CMD ["run"]

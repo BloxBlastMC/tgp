@@ -1,0 +1,10 @@
+# Caddy in front of tgp-server on the same host. Caddy obtains and renews
+# the certificate itself. Set in tgp's config:
+#   [server] base_url = "https://git.example.com", trust_proxy = true
+git.example.com {
+	reverse_proxy 127.0.0.1:3000 {
+		# Pass live CI logs (server-sent events) and git transfers through
+		# as they're produced.
+		flush_interval -1
+	}
+}

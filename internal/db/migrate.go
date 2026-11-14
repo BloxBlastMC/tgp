@@ -60,3 +60,40 @@ func Status(ctx context.Context, d *DB) ([]MigrationStatus, error) {
 	}
 	return out, nil
 }
+
+// MigrateTo applies only the named migrations (which must all be known),
+// bringing a database to the schema of an older tgp version. Restores use
+// it to load a backup into the schema it was taken from before migrating
+// to the current one.
+func MigrateTo(ctx context.Context, d *DB, log *slog.Logger, names []string) error {
+	want := make(map[string]bool, len(names))
+	for _, n := range names {
+		want[n] = true
+	}
+	sub := migrate.NewMigrations()
+	for _, m := range migrations.Migrations.Sorted() {
+		if want[m.Name] {
+			sub.Add(migrate.Migration{Name: m.Name, Comment: m.Comment, Up: m.Up, Down: m.Down})
+			delete(want, m.Name)
+		}
+	}
+	for n := range want {
+		return fmt.Errorf("unknown migration %q: the backup is from a newer tgp version", n)
+	}
+	m := migrate.NewMigrator(d.DB, sub, migrate.WithMarkAppliedOnSuccess(true))
+	if err := m.Init(ctx); err != nil {
+		return fmt.Errorf("init migrations: %w", err)
+	}
+	if err := m.Lock(ctx); err != nil {
+		return fmt.Errorf("lock migrations: %w", err)
+	}
+	defer func() {
+		if err := m.Unlock(ctx); err != nil {
+			log.Warn("unlock migrations", "err", err)
+		}
+	}()
+	if _, err := m.Migrate(ctx); err != nil {
+		return fmt.Errorf("migrate: %w", err)
+	}
+	return nil
+}

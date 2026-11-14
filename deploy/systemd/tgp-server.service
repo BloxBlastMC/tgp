@@ -1,0 +1,46 @@
+# systemd unit for tgp-server. Install:
+#   useradd --system --home-dir /var/lib/tgp --shell /usr/sbin/nologin tgp
+#   install -m 0755 tgp-server /usr/local/bin/
+#   install -d -m 0750 -o root -g tgp /etc/tgp
+#   install -m 0640 -o root -g tgp config.toml /etc/tgp/config.toml
+#   cp tgp-server.service /etc/systemd/system/ && systemctl daemon-reload
+#   systemctl enable --now tgp-server
+#   journalctl -u tgp-server        # the first-start setup token is printed here
+[Unit]
+Description=tgp git platform server
+Documentation=https://git.taile67276.ts.net/BloxBlast/tgp/src/branch/main/docs/deployment.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tgp
+Group=tgp
+ExecStart=/usr/local/bin/tgp-server serve -c /etc/tgp/config.toml
+Restart=on-failure
+RestartSec=5s
+# The server drains requests for up to [server] shutdown_timeout (30s).
+TimeoutStopSec=45s
+# /var/lib/tgp, owned by tgp. Matches data_dir in the example config.
+StateDirectory=tgp
+StateDirectoryMode=0750
+UMask=0027
+LimitNOFILE=65536
+
+# Hardening. git runs as a child process and needs nothing beyond these.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# If repos or local storage live outside /var/lib/tgp, list them here:
+# ReadWritePaths=/srv/tgp-repos
+
+[Install]
+WantedBy=multi-user.target

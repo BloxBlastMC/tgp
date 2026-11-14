@@ -1,0 +1,34 @@
+# systemd unit for tgp-runner on a CI machine with Docker. Install:
+#   useradd --system --home-dir /var/lib/tgp-runner --shell /usr/sbin/nologin -G docker tgp-runner
+#   install -m 0755 tgp-runner /usr/local/bin/
+#   install -d -m 0750 -o tgp-runner -g tgp-runner /etc/tgp-runner
+#   sudo -u tgp-runner tgp-runner register -c /etc/tgp-runner/runner.toml \
+#     --url https://git.example.com --token tgp_reg_… --name build-01 --capacity 2
+#   cp tgp-runner.service /etc/systemd/system/ && systemctl daemon-reload
+#   systemctl enable --now tgp-runner
+#
+# Membership of the docker group is root-equivalent on this machine: run
+# runners on hosts dedicated to CI.
+[Unit]
+Description=tgp CI runner
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=tgp-runner
+Group=tgp-runner
+ExecStart=/usr/local/bin/tgp-runner run -c /etc/tgp-runner/runner.toml --log-format json
+Restart=always
+RestartSec=10s
+# SIGTERM stops taking jobs and waits for running ones; systemd kills the
+# runner (and its jobs fail) after this long. Match your longest job.
+KillSignal=SIGTERM
+TimeoutStopSec=30min
+StateDirectory=tgp-runner
+WorkingDirectory=/var/lib/tgp-runner
+Environment=HOME=/var/lib/tgp-runner
+
+[Install]
+WantedBy=multi-user.target

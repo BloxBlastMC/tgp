@@ -1,0 +1,87 @@
+# tgp with PostgreSQL behind Caddy (automatic HTTPS). From this directory:
+#
+#   cp .env.example .env     # set TGP_DOMAIN and POSTGRES_PASSWORD
+#   docker compose up -d --build
+#   docker compose logs tgp  # the first-start setup token is printed here
+#
+# Add a runner on this machine (jobs then share it with the server; use a
+# separate machine for anything busy):
+#
+#   docker compose run --rm runner register --url https://$TGP_DOMAIN --token tgp_reg_… --name local --capacity 2
+#   docker compose --profile runner up -d
+#
+# Backups:
+#   docker compose exec tgp tgp-server backup -o - > tgp-$(date +%F).tar.gz
+
+name: tgp
+
+services:
+  tgp:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+    image: tgp-server:local
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TGP_BASE_URL: https://${TGP_DOMAIN:?set TGP_DOMAIN in .env}
+      TGP_TRUST_PROXY: "true"
+      TGP_DB_DRIVER: postgres
+      TGP_DB_DSN: postgres://tgp:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/tgp?sslmode=disable
+      TGP_LOG_FORMAT: json
+    volumes:
+      - tgp-data:/var/lib/tgp
+    expose:
+      - "3000"
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tgp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: tgp
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "tgp", "-d", "tgp"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - tgp
+    environment:
+      TGP_DOMAIN: ${TGP_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  runner:
+    profiles: [runner]
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.runner
+    image: tgp-runner:local
+    restart: unless-stopped
+    volumes:
+      # Root-equivalent access to this host's Docker.
+      - /var/run/docker.sock:/var/run/docker.sock
+      - runner-config:/etc/tgp-runner
+
+volumes:
+  tgp-data:
+  pg-data:
+  caddy-data:
+  caddy-config:
+  runner-config:
