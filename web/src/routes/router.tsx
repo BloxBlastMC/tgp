@@ -25,6 +25,11 @@ import { RepoLayout } from '../pages/repos/RepoLayout'
 import { RepoSettingsPage } from '../pages/repos/RepoSettingsPage'
 import { ReposPage } from '../pages/repos/ReposPage'
 import { validateCommits, validateRefPath } from '../pages/repos/search'
+import { ComparePage } from '../pages/pulls/ComparePage'
+import { GlobalPullsPage, validateGlobalPulls } from '../pages/pulls/GlobalPullsPage'
+import { validatePullList } from '../pages/pulls/PullList'
+import { PullPage, validatePull } from '../pages/pulls/PullPage'
+import { RepoPullsPage } from '../pages/pulls/RepoPullsPage'
 
 type RouterContext = { queryClient: QueryClient }
 
@@ -141,6 +146,9 @@ const repoRoutes = [
   createRoute({ getParentRoute: () => repoRoute, path: '/commits', validateSearch: validateCommits, component: CommitsPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/commit/$sha', component: CommitPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/branches', component: BranchesPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/pulls', validateSearch: validatePullList, component: RepoPullsPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/pulls/$number', validateSearch: validatePull, component: PullPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/compare/$', component: ComparePage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/settings', component: RepoSettingsPage }),
 ]
 
@@ -151,7 +159,7 @@ const routeTree = rootRoute.addChildren([
   appRoute.addChildren([
     createRoute({ getParentRoute: () => appRoute, path: '/', component: ReposPage }),
     repoRoute.addChildren(repoRoutes),
-    createRoute({ getParentRoute: () => appRoute, path: '/pulls', component: placeholder('Pull requests', 'Pull requests across all repositories you can access.') }),
+    createRoute({ getParentRoute: () => appRoute, path: '/pulls', validateSearch: validateGlobalPulls, component: GlobalPullsPage }),
     createRoute({ getParentRoute: () => appRoute, path: '/issues', component: placeholder('Issues', 'Issues across all repositories you can access.') }),
     createRoute({ getParentRoute: () => appRoute, path: '/ci', component: placeholder('CI', 'Workflow runs across all repositories.') }),
     createRoute({ getParentRoute: () => appRoute, path: '/settings', component: SettingsPage }),

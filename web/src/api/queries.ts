@@ -119,3 +119,80 @@ export const userReposQuery = (username: string) =>
     queryKey: ['admin', 'users', username, 'repos'],
     queryFn: () => unwrap(api.GET('/admin/users/{username}/repos', { params: { path: { username } } })),
   })
+
+// --- pull requests ---
+
+export type PullState = 'open' | 'closed' | 'merged' | 'all'
+
+export const usersQuery = queryOptions({
+  queryKey: ['users'],
+  queryFn: () => unwrap(api.GET('/users')),
+  staleTime: 60_000,
+})
+
+export const pullsQuery = (repo: string, f: { state: PullState; q?: string; page?: number }) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'pulls', 'list', f.state, f.q ?? '', f.page ?? 1],
+    queryFn: () =>
+      unwrap(
+        api.GET('/repos/{repo}/pulls', {
+          params: { path: { repo }, query: { state: f.state, q: f.q || undefined, page: f.page, per_page: 50 } },
+        }),
+      ),
+  })
+
+export type MyPullsFilter = 'review_requested' | 'authored' | 'all'
+
+export const myPullsQuery = (filter: MyPullsFilter, state: PullState = 'open') =>
+  queryOptions({
+    queryKey: ['pulls', filter, state],
+    queryFn: () => unwrap(api.GET('/pulls', { params: { query: { filter, state, per_page: 100 } } })),
+  })
+
+const pullKey = (repo: string, n: number) => ['repo', repo, 'pull', n] as const
+
+export const pullQuery = (repo: string, n: number) =>
+  queryOptions({
+    queryKey: [...pullKey(repo, n), 'detail'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/pulls/{number}', { params: { path: { repo, number: n } } })),
+  })
+
+export const pullTimelineQuery = (repo: string, n: number) =>
+  queryOptions({
+    queryKey: [...pullKey(repo, n), 'timeline'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/pulls/{number}/timeline', { params: { path: { repo, number: n } } })),
+  })
+
+export const pullCommentsQuery = (repo: string, n: number) =>
+  queryOptions({
+    queryKey: [...pullKey(repo, n), 'comments'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/pulls/{number}/comments', { params: { path: { repo, number: n } } })),
+  })
+
+export const pullCommitsQuery = (repo: string, n: number) =>
+  queryOptions({
+    queryKey: [...pullKey(repo, n), 'commits'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/pulls/{number}/commits', { params: { path: { repo, number: n } } })),
+  })
+
+export const pullFilesQuery = (repo: string, n: number) =>
+  queryOptions({
+    queryKey: [...pullKey(repo, n), 'files'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/pulls/{number}/files', { params: { path: { repo, number: n } } })),
+  })
+
+/** Everything about one pull request (detail, timeline, comments, diff). */
+export const pullKeyPrefix = pullKey
+
+export const compareQuery = (repo: string, base: string, head: string) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'compare', base, head],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/compare', { params: { path: { repo }, query: { base, head } } })),
+    retry: false,
+  })
+
+export const protectionsQuery = (repo: string) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'protections'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/protections', { params: { path: { repo } } })),
+  })

@@ -739,6 +739,370 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repos/{repo}/branches/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Delete a branch
+         * @description Needs write access. The default branch, the base or head branch of an open
+         *     pull request, and protected branches that don't allow deletion can't be deleted.
+         */
+        post: operations["deleteBranch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/compare": {
+        parameters: {
+            query: {
+                base: string;
+                head: string;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** Compare two branches (what a pull request from head into base would contain) */
+        get: operations["compareRefs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/protections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List branch protection rules */
+        get: operations["listProtections"];
+        put?: never;
+        /** Add a branch protection rule (admins) */
+        post: operations["createProtection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/protections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a branch protection rule (admins) */
+        delete: operations["deleteProtection"];
+        options?: never;
+        head?: never;
+        /** Change a branch protection rule (admins) */
+        patch: operations["updateProtection"];
+        trace?: never;
+    };
+    "/pulls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pull requests across all repositories you can access */
+        get: operations["listMyPulls"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/pulls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List pull requests, most recently updated first */
+        get: operations["listPulls"];
+        put?: never;
+        /** Open a pull request (write access) */
+        post: operations["createPull"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/pulls/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        /** Get a pull request with its mergeability, reviews summary and merge blockers */
+        get: operations["getPull"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Edit, close, reopen or change the draft state of a pull request
+         * @description The author or anyone with write access. Changing reviewers needs triage access.
+         */
+        patch: operations["updatePull"];
+        trace?: never;
+    };
+    "/repos/{repo}/pulls/{number}/commits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        /** Commits in a pull request, oldest first (at most 250) */
+        get: operations["listPullCommits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/pulls/{number}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        /** The pull request's changes (merge base to head) */
+        get: operations["getPullDiff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/pulls/{number}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Conversation timeline, oldest first
+         * @description Conversation comments, reviews (with the inline comments submitted with
+         *     them), standalone inline comments and events. Replies to inline comments
+         *     aren't separate items; get them from `listPullComments`.
+         */
+        get: operations["getPullTimeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/pulls/{number}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        /** All comments (conversation and inline, including replies), oldest first */
+        get: operations["listPullComments"];
+        put?: never;
+        /**
+         * Comment on a pull request (triage access)
+         * @description Without `path`, a conversation comment. With `path` and `line`, an inline
+         *     comment on a line of the diff (`side: new` for the head version, `old`
+         *     for the base version). With `reply_to`, a reply in an inline thread.
+         */
+        post: operations["createPullComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/comments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a comment (its author or an admin) */
+        delete: operations["deleteComment"];
+        options?: never;
+        head?: never;
+        /** Edit a comment (its author) or resolve an inline thread (triage access) */
+        patch: operations["updateComment"];
+        trace?: never;
+    };
+    "/repos/{repo}/pulls/{number}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        /** Reviews, oldest first */
+        get: operations["listReviews"];
+        put?: never;
+        /**
+         * Submit a review (triage access)
+         * @description Testers and maintainers can approve or request changes; the author can
+         *     only comment. Inline comments are submitted together with the review.
+         */
+        post: operations["createReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/pulls/{number}/reviews/{id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dismiss an approval or change request (write access) */
+        post: operations["dismissReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/pulls/{number}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Merge a pull request (write access)
+         * @description Fails with `conflict` (and `details.blockers`) when the pull request
+         *     can't be merged; `getPull` lists the blockers in advance.
+         */
+        post: operations["mergePull"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/pulls/{number}/update-branch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Merge the base branch into the head branch (write access) */
+        post: operations["updatePullBranch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1017,6 +1381,8 @@ export interface components {
             /** Format: date-time */
             date: string;
             is_default?: boolean;
+            /** @description A branch protection rule applies (branches only). */
+            protected?: boolean;
         };
         TreeEntry: {
             name: string;
@@ -1130,6 +1496,348 @@ export interface components {
             path: string;
             ranges: components["schemas"]["BlameRange"][];
         };
+        /** @enum {string} */
+        PullState: "open" | "closed" | "merged";
+        /**
+         * @description `merge`: a merge commit. `squash`: one commit with all the changes.
+         *     `rebase`: each commit replayed onto the base (fast-forward when possible).
+         * @enum {string}
+         */
+        MergeMethod: "merge" | "squash" | "rebase";
+        /**
+         * @description `approved`: enough approvals (or at least one when no rule requires any).
+         *     `changes_requested`: someone's latest review requests changes.
+         *     `review_required`: a protection rule needs more approvals. `none`: no reviews yet.
+         * @enum {string}
+         */
+        ReviewDecision: "approved" | "changes_requested" | "review_required" | "none";
+        PullSummary: {
+            /** Format: int64 */
+            number: number;
+            /** @description Repository name. */
+            repo: string;
+            title: string;
+            state: components["schemas"]["PullState"];
+            draft: boolean;
+            author: components["schemas"]["UserSummary"];
+            head_branch: string;
+            base_branch: string;
+            comments: number;
+            review_decision: components["schemas"]["ReviewDecision"];
+            requested_reviewers: components["schemas"]["UserSummary"][];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: date-time */
+            closed_at?: string | null;
+            /** Format: date-time */
+            merged_at?: string | null;
+        };
+        PullPage: {
+            pulls: components["schemas"]["PullSummary"][];
+            /** @description Total matching */
+            total: number;
+        };
+        PullBranch: {
+            branch: string;
+            /** @description Current tip (for a merged pull request */
+            sha: string;
+            /** @description The branch still exists. */
+            exists: boolean;
+        };
+        MergeBlocker: {
+            /** @enum {string} */
+            code: "closed" | "merged" | "draft" | "head_missing" | "base_missing" | "conflict" | "permission" | "approvals" | "changes_requested" | "behind";
+            message: string;
+            /** @description An admin may merge anyway with `bypass_protection` (the rule allows admins to bypass it). */
+            bypassable: boolean;
+        };
+        ReviewerState: {
+            user: components["schemas"]["UserSummary"];
+            /** @enum {string} */
+            state: "approved" | "changes_requested" | "commented" | "dismissed" | "requested";
+            commit_sha?: string;
+            /** @description Reviewed an older head commit. */
+            stale: boolean;
+        };
+        PullRequest: {
+            /** Format: int64 */
+            number: number;
+            repo: string;
+            title: string;
+            body: string;
+            /** @description Rendered */
+            body_html: string;
+            state: components["schemas"]["PullState"];
+            draft: boolean;
+            author: components["schemas"]["UserSummary"];
+            head: components["schemas"]["PullBranch"];
+            base: components["schemas"]["PullBranch"];
+            /** @description Common ancestor of base and head. */
+            merge_base: string;
+            commits: number;
+            additions: number;
+            deletions: number;
+            changed_files: number;
+            comments: number;
+            /**
+             * @description Whether head merges into base without conflicts. `unknown` for closed pull requests or a missing head.
+             * @enum {string}
+             */
+            mergeable: "clean" | "conflict" | "unknown";
+            conflict_files: string[];
+            /** @description Base commits not in head. */
+            behind_by?: number;
+            review_decision: components["schemas"]["ReviewDecision"];
+            /** @description Each reviewer's latest review state, plus requested reviewers who haven't reviewed. */
+            reviewers: components["schemas"]["ReviewerState"][];
+            requested_reviewers: components["schemas"]["UserSummary"][];
+            /** @description The protection rule applying to the base branch, if any. */
+            protection?: components["schemas"]["BranchProtection"] | null;
+            /** @description Why you can't merge right now; empty when you can. */
+            blockers: components["schemas"]["MergeBlocker"][];
+            /** @description You can merge now (blockers is empty). */
+            can_merge: boolean;
+            viewer_permission: components["schemas"]["Permission"];
+            merged_by?: components["schemas"]["UserSummary"] | null;
+            merge_commit?: string | null;
+            /** @description merge, squash, rebase, or manual (the head was pushed to the base outside tgp). */
+            merge_method?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: date-time */
+            closed_at?: string | null;
+            /** Format: date-time */
+            merged_at?: string | null;
+        };
+        CreatePullRequest: {
+            title: string;
+            body?: string;
+            /** @description Branch with the changes. */
+            head: string;
+            /** @description Branch to merge into; defaults to the default branch. */
+            base?: string;
+            /** @default false */
+            draft: boolean;
+            /** @description Usernames to request reviews from. */
+            reviewers?: string[];
+        };
+        UpdatePullRequest: {
+            title?: string;
+            body?: string;
+            /** @description Change the base branch. */
+            base?: string;
+            /**
+             * @description Close or reopen.
+             * @enum {string}
+             */
+            state?: "open" | "closed";
+            /** @description false marks the pull request ready for review. */
+            draft?: boolean;
+            /** @description Replaces the requested reviewers. */
+            reviewers?: string[];
+        };
+        MergePullRequest: {
+            method?: components["schemas"]["MergeMethod"];
+            /** @description Subject of the merge or squash commit. */
+            title?: string;
+            /** @description Body of the merge or squash commit. */
+            message?: string;
+            /** @description Only merge if the head is still at this commit. */
+            sha?: string;
+            /**
+             * @description Delete the head branch after merging.
+             * @default false
+             */
+            delete_branch: boolean;
+            /**
+             * @description Admins only, when the rule allows it; merge despite missing approvals, change requests or an out-of-date branch.
+             * @default false
+             */
+            bypass_protection: boolean;
+        };
+        Comment: {
+            /** Format: int64 */
+            id: number;
+            author: components["schemas"]["UserSummary"];
+            body: string;
+            body_html: string;
+            /** Format: int64 */
+            review_id?: number | null;
+            /**
+             * Format: int64
+             * @description The thread's first comment
+             */
+            reply_to?: number | null;
+            /** @description File */
+            path?: string;
+            /** @description Line number on `side` */
+            line?: number;
+            /** @enum {string} */
+            side?: "new" | "old";
+            /** @description Head commit the inline comment was made on. */
+            commit_sha?: string;
+            /** @description Diff lines leading up to the commented line */
+            diff_hunk?: string;
+            /** @description The file changed since the comment was made */
+            outdated?: boolean;
+            resolved?: boolean;
+            resolved_by?: components["schemas"]["UserSummary"] | null;
+            edited: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateComment: {
+            body: string;
+            path?: string;
+            line?: number;
+            /**
+             * @default new
+             * @enum {string}
+             */
+            side: "new" | "old";
+            /** Format: int64 */
+            reply_to?: number;
+        };
+        InlineCommentInput: {
+            path: string;
+            line: number;
+            /**
+             * @default new
+             * @enum {string}
+             */
+            side: "new" | "old";
+            body: string;
+        };
+        Review: {
+            /** Format: int64 */
+            id: number;
+            author: components["schemas"]["UserSummary"];
+            /** @enum {string} */
+            state: "approved" | "changes_requested" | "commented";
+            body: string;
+            body_html: string;
+            commit_sha: string;
+            /** @description Made on an older head commit. */
+            stale: boolean;
+            dismissed: boolean;
+            dismissed_by?: components["schemas"]["UserSummary"] | null;
+            dismiss_message?: string;
+            /** @description Inline comments submitted with the review. */
+            comments: components["schemas"]["Comment"][];
+            /** Format: date-time */
+            created_at: string;
+        };
+        CreateReview: {
+            /** @enum {string} */
+            state: "approve" | "request_changes" | "comment";
+            /** @description Required when requesting changes or commenting without inline comments. */
+            body?: string;
+            /** @description Head commit you reviewed; rejected if the head has moved since. */
+            commit_sha?: string;
+            comments?: components["schemas"]["InlineCommentInput"][];
+        };
+        PullEvent: {
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            type: "closed" | "reopened" | "merged" | "pushed" | "base_changed" | "title_changed" | "ready_for_review" | "converted_to_draft" | "review_requested" | "review_request_removed" | "review_dismissed" | "head_deleted" | "head_restored" | "branch_deleted" | "branch_updated";
+            actor?: components["schemas"]["UserSummary"] | null;
+            /**
+             * @description Type-specific: `pushed` {before, after, commits, forced}; `base_changed`
+             *     and `title_changed` {from, to}; `merged` {commit, method}; `review_requested`
+             *     and `review_request_removed` {reviewer}; `review_dismissed` {reviewer, message};
+             *     `branch_deleted` {branch}; `branch_updated` {commit}.
+             */
+            data: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            created_at: string;
+        };
+        TimelineItem: {
+            /** @enum {string} */
+            kind: "comment" | "review" | "inline_comment" | "event";
+            /** Format: date-time */
+            created_at: string;
+            comment?: components["schemas"]["Comment"];
+            review?: components["schemas"]["Review"];
+            event?: components["schemas"]["PullEvent"];
+        };
+        Comparison: {
+            base: string;
+            head: string;
+            base_sha: string;
+            head_sha: string;
+            merge_base: string;
+            ahead_by: number;
+            behind_by: number;
+            /** @description Oldest first */
+            commits: components["schemas"]["Commit"][];
+            diff: components["schemas"]["Diff"];
+            /** @enum {string} */
+            mergeable: "clean" | "conflict";
+            conflict_files: string[];
+            /**
+             * Format: int64
+             * @description An open pull request from head into base.
+             */
+            existing_pull?: number | null;
+        };
+        BranchProtection: {
+            /** Format: int64 */
+            id: number;
+            /** @description Branch name or glob, e.g. `main` or `release/*`. */
+            pattern: string;
+            /** @description No direct pushes; changes land through pull requests. */
+            require_pull_request: boolean;
+            /** @description Approvals needed to merge (from anyone but the author). */
+            required_approvals: number;
+            /** @description Approvals of an older head commit don't count. */
+            dismiss_stale_approvals: boolean;
+            /** @description The head must contain the latest base commit before merging. */
+            require_up_to_date: boolean;
+            block_force_push: boolean;
+            allow_deletion: boolean;
+            /** @description Admins may push directly and merge despite unmet requirements. */
+            admins_bypass: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        BranchProtectionInput: {
+            pattern: string;
+            /** @default true */
+            require_pull_request: boolean;
+            /** @default 1 */
+            required_approvals: number;
+            /** @default true */
+            dismiss_stale_approvals: boolean;
+            /** @default false */
+            require_up_to_date: boolean;
+            /** @default true */
+            block_force_push: boolean;
+            /** @default false */
+            allow_deletion: boolean;
+            /** @default false */
+            admins_bypass: boolean;
+        };
+        BranchProtectionPatch: {
+            pattern?: string;
+            require_pull_request?: boolean;
+            required_approvals?: number;
+            dismiss_stale_approvals?: boolean;
+            require_up_to_date?: boolean;
+            block_force_push?: boolean;
+            allow_deletion?: boolean;
+            admins_bypass?: boolean;
+        };
     };
     responses: {
         /** @description Error response */
@@ -1151,6 +1859,10 @@ export interface components {
         PathParam: string;
         /** @description Path of a file inside the repository. */
         RequiredPathParam: string;
+        PullNumber: number;
+        PullStateParam: "open" | "closed" | "merged" | "all";
+        Page: number;
+        PerPage: number;
     };
     requestBodies: never;
     headers: never;
@@ -2239,6 +2951,644 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserRepoAccess"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteBranch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    /** @description Only delete if the branch still points at this commit. */
+                    sha?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    compareRefs: {
+        parameters: {
+            query: {
+                base: string;
+                head: string;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Comparison */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comparison"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listProtections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Rules */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchProtection"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createProtection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BranchProtectionInput"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchProtection"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteProtection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateProtection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BranchProtectionPatch"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchProtection"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listMyPulls: {
+        parameters: {
+            query?: {
+                /** @description `review_requested`: waiting for your review. `authored`: opened by you. `all`: every pull request you can see. */
+                filter?: "review_requested" | "authored" | "all";
+                state?: components["parameters"]["PullStateParam"];
+                page?: components["parameters"]["Page"];
+                per_page?: components["parameters"]["PerPage"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pull requests, most recently updated first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PullPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listPulls: {
+        parameters: {
+            query?: {
+                state?: components["parameters"]["PullStateParam"];
+                /** @description Username of the author. */
+                author?: string;
+                /** @description Only pull requests into this branch. */
+                base?: string;
+                /** @description Only pull requests from this branch. */
+                head?: string;
+                /** @description Case-insensitive substring of the title. */
+                q?: string;
+                page?: components["parameters"]["Page"];
+                per_page?: components["parameters"]["PerPage"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pull requests */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PullPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createPull: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePullRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PullRequest"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPull: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pull request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PullRequest"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updatePull: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePullRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PullRequest"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listPullCommits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Commits */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Commit"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPullDiff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Diff */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Diff"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPullTimeline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Timeline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineItem"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listPullComments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Comments */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createPullComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateComment"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body?: string;
+                    /** @description Resolve or unresolve the thread this comment starts. */
+                    resolved?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comment"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listReviews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reviews */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Review"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReview"];
+            };
+        };
+        responses: {
+            /** @description Submitted */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Review"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    dismissReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    message: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Dismissed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Review"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    mergePull: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["MergePullRequest"];
+            };
+        };
+        responses: {
+            /** @description Merged */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PullRequest"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updatePullBranch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["PullNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description Only update if the head is still at this commit. */
+                    sha?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PullRequest"];
                 };
             };
             default: components["responses"]["Error"];

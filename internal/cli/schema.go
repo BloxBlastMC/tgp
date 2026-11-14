@@ -49,6 +49,37 @@ const cliSchemas = `{
       }
     }
   },
+  "PullView": {
+    "description": "A pull request with all its reviews and comments.",
+    "allOf": [
+      {"$ref": "#/components/schemas/PullRequest"},
+      {
+        "type": "object",
+        "required": ["reviews", "comment_list"],
+        "properties": {
+          "reviews": {"type": "array", "items": {"$ref": "#/components/schemas/Review"}},
+          "comment_list": {
+            "type": "array",
+            "description": "Every comment: conversation, inline (path, line, side, diff_hunk, outdated, resolved) and replies (reply_to), oldest first.",
+            "items": {"$ref": "#/components/schemas/Comment"}
+          }
+        }
+      }
+    ]
+  },
+  "PullStatus": {
+    "type": "object",
+    "required": ["review_requested", "authored"],
+    "properties": {
+      "review_requested": {"type": "array", "items": {"$ref": "#/components/schemas/PullSummary"}},
+      "authored": {"type": "array", "items": {"$ref": "#/components/schemas/PullSummary"}}
+    }
+  },
+  "PullCheckout": {
+    "type": "object",
+    "required": ["number", "branch", "head_sha"],
+    "properties": {"number": {"type": "integer"}, "branch": {"type": "string"}, "head_sha": {"type": "string"}}
+  },
   "Deleted": {
     "type": "object",
     "required": ["name", "deleted"],
@@ -154,7 +185,20 @@ func outputFields(cmd *cobra.Command) []string {
 	if s.Items != nil && s.Items.Value != nil {
 		s = s.Items.Value
 	}
-	return sortedKeys(s.Properties)
+	props := map[string]bool{}
+	var collect func(*openapi3.Schema)
+	collect = func(s *openapi3.Schema) {
+		for k := range s.Properties {
+			props[k] = true
+		}
+		for _, sub := range s.AllOf {
+			if sub.Value != nil {
+				collect(sub.Value)
+			}
+		}
+	}
+	collect(s)
+	return sortedKeys(props)
 }
 
 // jsonSchema renders a command's output schema as a standalone JSON Schema

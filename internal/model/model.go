@@ -144,6 +144,7 @@ type Repo struct {
 	CreatedAt     time.Time  `bun:"created_at"`
 	UpdatedAt     time.Time  `bun:"updated_at"`
 	PushedAt      *time.Time `bun:"pushed_at"`
+	NextNumber    int64      `bun:"next_number,scanonly"` // advanced only by nextNumber
 }
 
 type RepoGrant struct {
@@ -153,4 +154,134 @@ type RepoGrant struct {
 	RepoID    int64     `bun:"repo_id"`
 	UserID    int64     `bun:"user_id"`
 	CreatedAt time.Time `bun:"created_at"`
+}
+
+// Issue is an issue or (with IsPull) the issue half of a pull request.
+type Issue struct {
+	bun.BaseModel `bun:"table:issues,alias:i"`
+
+	ID           int64      `bun:"id,pk,autoincrement"`
+	RepoID       int64      `bun:"repo_id"`
+	Number       int64      `bun:"number"`
+	IsPull       bool       `bun:"is_pull"`
+	Title        string     `bun:"title"`
+	Body         string     `bun:"body"`
+	AuthorID     int64      `bun:"author_id"`
+	State        string     `bun:"state"`
+	ClosedAt     *time.Time `bun:"closed_at"`
+	ClosedByID   *int64     `bun:"closed_by_id"`
+	CommentCount int        `bun:"comment_count"`
+	CreatedAt    time.Time  `bun:"created_at"`
+	UpdatedAt    time.Time  `bun:"updated_at"`
+}
+
+// Issue states.
+const (
+	StateOpen   = "open"
+	StateClosed = "closed"
+)
+
+// PullRequest holds the pull-request-specific fields of an issue.
+type PullRequest struct {
+	bun.BaseModel `bun:"table:pull_requests,alias:pr"`
+
+	IssueID          int64      `bun:"issue_id,pk"`
+	RepoID           int64      `bun:"repo_id"`
+	HeadBranch       string     `bun:"head_branch"`
+	BaseBranch       string     `bun:"base_branch"`
+	HeadSHA          string     `bun:"head_sha"`
+	HeadDeleted      bool       `bun:"head_deleted"`
+	Draft            bool       `bun:"draft"`
+	MergedAt         *time.Time `bun:"merged_at"`
+	MergedByID       *int64     `bun:"merged_by_id"`
+	MergeCommitSHA   string     `bun:"merge_commit_sha"`
+	MergeMethod      string     `bun:"merge_method"`
+	MergeBaseSHA     string     `bun:"merge_base_sha"`
+	Mergeable        string     `bun:"mergeable"`
+	MergeableBaseSHA string     `bun:"mergeable_base_sha"`
+	MergeableHeadSHA string     `bun:"mergeable_head_sha"`
+	ConflictFiles    string     `bun:"conflict_files"`
+}
+
+type ReviewRequest struct {
+	bun.BaseModel `bun:"table:review_requests"`
+
+	ID        int64     `bun:"id,pk,autoincrement"`
+	IssueID   int64     `bun:"issue_id"`
+	UserID    int64     `bun:"user_id"`
+	CreatedAt time.Time `bun:"created_at"`
+}
+
+// Review states.
+const (
+	ReviewApproved         = "approved"
+	ReviewChangesRequested = "changes_requested"
+	ReviewCommented        = "commented"
+)
+
+type Review struct {
+	bun.BaseModel `bun:"table:reviews"`
+
+	ID             int64      `bun:"id,pk,autoincrement"`
+	IssueID        int64      `bun:"issue_id"`
+	AuthorID       int64      `bun:"author_id"`
+	State          string     `bun:"state"`
+	Body           string     `bun:"body"`
+	CommitSHA      string     `bun:"commit_sha"`
+	Dismissed      bool       `bun:"dismissed"`
+	DismissedByID  *int64     `bun:"dismissed_by_id"`
+	DismissMessage string     `bun:"dismiss_message"`
+	DismissedAt    *time.Time `bun:"dismissed_at"`
+	CreatedAt      time.Time  `bun:"created_at"`
+}
+
+// Comment is a conversation comment or (with Path) an inline code comment.
+type Comment struct {
+	bun.BaseModel `bun:"table:comments"`
+
+	ID           int64      `bun:"id,pk,autoincrement"`
+	IssueID      int64      `bun:"issue_id"`
+	AuthorID     int64      `bun:"author_id"`
+	Body         string     `bun:"body"`
+	ReviewID     *int64     `bun:"review_id"`
+	ReplyToID    *int64     `bun:"reply_to_id"`
+	Path         string     `bun:"path"`
+	Line         int        `bun:"line"`
+	Side         string     `bun:"side"`
+	CommitSHA    string     `bun:"commit_sha"`
+	DiffHunk     string     `bun:"diff_hunk"`
+	Resolved     bool       `bun:"resolved"`
+	ResolvedByID *int64     `bun:"resolved_by_id"`
+	Edited       bool       `bun:"edited"`
+	CreatedAt    time.Time  `bun:"created_at"`
+	UpdatedAt    time.Time  `bun:"updated_at"`
+	DeletedAt    *time.Time `bun:"deleted_at"`
+}
+
+type IssueEvent struct {
+	bun.BaseModel `bun:"table:issue_events"`
+
+	ID        int64     `bun:"id,pk,autoincrement"`
+	IssueID   int64     `bun:"issue_id"`
+	ActorID   *int64    `bun:"actor_id"`
+	Type      string    `bun:"type"`
+	Data      string    `bun:"data"`
+	CreatedAt time.Time `bun:"created_at"`
+}
+
+type BranchProtection struct {
+	bun.BaseModel `bun:"table:branch_protections"`
+
+	ID                    int64     `bun:"id,pk,autoincrement"`
+	RepoID                int64     `bun:"repo_id"`
+	Pattern               string    `bun:"pattern"`
+	RequirePullRequest    bool      `bun:"require_pull_request"`
+	RequiredApprovals     int       `bun:"required_approvals"`
+	DismissStaleApprovals bool      `bun:"dismiss_stale_approvals"`
+	RequireUpToDate       bool      `bun:"require_up_to_date"`
+	BlockForcePush        bool      `bun:"block_force_push"`
+	AllowDeletion         bool      `bun:"allow_deletion"`
+	AdminsBypass          bool      `bun:"admins_bypass"`
+	CreatedAt             time.Time `bun:"created_at"`
+	UpdatedAt             time.Time `bun:"updated_at"`
 }

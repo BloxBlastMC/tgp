@@ -120,6 +120,8 @@ TGP_NO_KEYRING=1, TGP_DEBUG=1 (log HTTP requests), NO_COLOR.`,
 	root.AddCommand(
 		newAuthCmd(a),
 		newRepoCmd(a),
+		newPRCmd(a),
+		newProtectionCmd(a),
 		newAdminCmd(a),
 		newAPICmd(a),
 		newSchemaCmd(a),
