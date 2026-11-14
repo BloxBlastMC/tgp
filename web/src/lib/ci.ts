@@ -327,3 +327,23 @@ export function checksHeadline(c: Schemas['CheckSummary']): string {
   return `${lead} · ${parts.join(', ')}`
 }
 
+
+// ---- log search and export ----
+
+/** Line numbers whose text (without ANSI escapes) contains `q`, case-insensitively. */
+export function findMatches(lines: LogLine[], q: string): number[] {
+  const needle = q.trim().toLowerCase()
+  if (!needle) return []
+  return lines.filter((l) => stripAnsi(l.text).toLowerCase().includes(needle)).map((l) => l.n)
+}
+
+/** The next match index after moving `delta` from `current`, wrapping around. */
+export function stepMatch(current: number, delta: number, count: number): number {
+  if (count === 0) return -1
+  return (((current + delta) % count) + count) % count
+}
+
+/** Plain-text log for download: one line per entry, optional timestamps. */
+export function logText(lines: LogLine[], timestamps = true): string {
+  return lines.map((l) => (timestamps ? `${l.t} ${stripAnsi(l.text)}` : stripAnsi(l.text))).join('\n') + (lines.length ? '\n' : '')
+}

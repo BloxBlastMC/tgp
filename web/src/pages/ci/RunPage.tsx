@@ -1,14 +1,36 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import { Ban, ChevronDown, Download, Trash2, ChevronRight, Cpu, GitCommit, HardDrive, RotateCw, Server, Timer, Box } from 'lucide-react'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import {
+  ArrowDownToLine,
+  Ban,
+  Box,
+  ChevronDown,
+  ChevronRight,
+  ChevronsDownUp,
+  ChevronsUpDown,
+  ChevronUp,
+  Clock,
+  Cpu,
+  Download,
+  GitCommit,
+  HardDrive,
+  Play,
+  RotateCw,
+  Search,
+  Server,
+  Timer,
+  Trash2,
+  WrapText,
+} from 'lucide-react'
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { api, ApiRequestError, errorMessage, unwrap, type Job, type WorkflowRunDetail } from '../../api/client'
 import { repoQuery, runArtifactsQuery, runQuery } from '../../api/queries'
 import { Duration, EventBadge, eventLabel, KindIcon, StatusIcon } from '../../components/ci/common'
-import { StepLog, useJobLogs } from '../../components/ci/logs'
+import { LogViewContext, StepLog, useJobLogs, type LogView } from '../../components/ci/logs'
 import { EmptyState } from '../../components/Page'
-import { Alert, Badge, Button, cx, Spinner, Time } from '../../components/ui'
-import { defaultJob, formatBytes, groupJobs, groupKind, isFailed, linesByStep, statusKind, statusLabel, statusTone, stepTitle } from '../../lib/ci'
+import { Alert, Badge, Button, cx, Dot, Eyebrow, IconButton, Input, PageSkeleton, Time, useConfirm, useToast } from '../../components/ui'
+import { canWrite as canWritePerm } from '../../lib/permissions'
+import { defaultJob, findMatches, formatBytes, groupJobs, groupKind, isFailed, linesByStep, logText, statusKind, statusLabel, statusTone, stepMatch, stepTitle } from '../../lib/ci'
 import { useRepoName } from '../repos/RepoLayout'
 import { artifactZipUrl, expiresText } from '../../lib/releases'
 
@@ -19,9 +41,14 @@ export function RunPage() {
   const search = useSearch({ strict: false }) as { job?: number }
   const run = useQuery({ ...runQuery(repo, n), refetchInterval: (q) => (q.state.data && q.state.data.status !== 'completed' ? 3000 : false) })
 
-  if (run.isPending) return <Spinner />
+  if (run.isPending) return <PageSkeleton rows={4} />
   if (run.isError) {
-    if (run.error instanceof ApiRequestError && run.error.status === 404) return <EmptyState title="Run not found">There's no run #{number} in {repo}.</EmptyState>
+    if (run.error instanceof ApiRequestError && run.error.status === 404)
+      return (
+        <EmptyState icon={<Play size={20} />} title="Run not found">
+          There's no run #{number} in {repo}.
+        </EmptyState>
+      )
     return (
       <div className="p-4">
         <Alert>{errorMessage(run.error)}</Alert>
@@ -34,11 +61,19 @@ export function RunPage() {
     <div className="flex h-full min-h-0 flex-col">
       <RunHeader repo={repo} run={r} />
       <div className="flex min-h-0 flex-1">
-        <div className="flex w-64 shrink-0 flex-col overflow-auto border-r border-border">
+        <div className="flex w-64 shrink-0 flex-col overflow-auto border-r border-border bg-bg-sidebar/40">
           <JobList repo={repo} run={r} selected={job?.id} />
           <ArtifactList repo={repo} run={r} />
         </div>
-        <div className="min-w-0 flex-1">{job ? <JobPanel key={job.id} repo={repo} run={r} job={job} /> : <EmptyState title="No jobs">This run has no jobs.</EmptyState>}</div>
+        <div className="min-w-0 flex-1">
+          {job ? (
+            <JobPanel key={job.id} repo={repo} run={r} job={job} />
+          ) : (
+            <EmptyState icon={<Play size={20} />} title="No jobs">
+              This run has no jobs.
+            </EmptyState>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -74,16 +109,17 @@ function useRunMutations(repo: string, run: WorkflowRunDetail) {
 
 function RunHeader({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
   const { rerun, cancel } = useRunMutations(repo, run)
+  const confirm = useConfirm()
   const kind = statusKind(run.status, run.conclusion)
   const anyFailed = run.jobs.some((j) => j.status === 'completed' && isFailed(j.conclusion))
   const err = rerun.error ?? cancel.error
   return (
-    <div className="shrink-0 border-b border-border px-4 py-3">
+    <div className="shrink-0 border-b border-border px-6 py-4">
       <div className="flex items-start gap-3">
-        <KindIcon kind={kind} size={20} className="mt-0.5" />
+        <KindIcon kind={kind} size={22} className="mt-0.5" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="truncate text-lg font-semibold">{run.title || run.workflow_name}</h1>
+            <h1 className="truncate text-xl font-semibold tracking-tight">{run.title || run.workflow_name}</h1>
             <span className="text-fg-faint">#{run.number}</span>
             <Badge tone={statusTone[kind]}>{statusLabel[kind]}</Badge>
           </div>
@@ -113,18 +149,31 @@ function RunHeader({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
         </div>
         <div className="flex shrink-0 gap-2">
           {run.can_cancel && (
-            <Button variant="danger" loading={cancel.isPending} onClick={() => window.confirm('Cancel this run?') && cancel.mutate()}>
-              <Ban size={13} /> Cancel run
+            <Button
+              variant="danger"
+              icon={<Ban size={13} />}
+              loading={cancel.isPending}
+              onClick={async () => {
+                const ok = await confirm({
+                  title: `Cancel run #${run.number}?`,
+                  description: 'Running jobs are stopped and queued jobs never start.',
+                  confirmLabel: 'Cancel run',
+                  cancelLabel: 'Keep running',
+                })
+                if (ok) cancel.mutate()
+              }}
+            >
+              Cancel run
             </Button>
           )}
           {run.can_rerun && anyFailed && (
-            <Button loading={rerun.isPending && rerun.variables === true} onClick={() => rerun.mutate(true)}>
-              <RotateCw size={13} /> Re-run failed jobs
+            <Button icon={<RotateCw size={13} />} loading={rerun.isPending && rerun.variables === true} onClick={() => rerun.mutate(true)}>
+              Re-run failed jobs
             </Button>
           )}
           {run.can_rerun && (
-            <Button loading={rerun.isPending && rerun.variables === false} onClick={() => rerun.mutate(false)}>
-              <RotateCw size={13} /> Re-run all jobs
+            <Button variant={anyFailed ? 'secondary' : 'primary'} icon={<RotateCw size={13} />} loading={rerun.isPending && rerun.variables === false} onClick={() => rerun.mutate(false)}>
+              Re-run all jobs
             </Button>
           )}
         </div>
@@ -150,7 +199,7 @@ function JobRow({ repo, run, job, selected, nested }: { repo: string; run: Workf
       params={{ repo, number: String(run.number) }}
       search={{ job: job.id }}
       replace
-      className={cx('flex h-8 items-center gap-2 rounded pr-2 text-base', nested ? 'pl-6' : 'pl-2', selected ? 'bg-bg-hover text-fg' : 'text-fg-muted hover:bg-bg-hover hover:text-fg')}
+      className={cx('flex h-8 items-center gap-2 rounded-md pr-2 text-base transition-colors', nested ? 'pl-6' : 'pl-2', selected ? 'bg-bg-active font-medium text-fg' : 'text-fg-muted hover:bg-bg-hover hover:text-fg')}
       aria-current={selected ? 'page' : undefined}
     >
       <StatusIcon status={job.status} conclusion={job.conclusion} size={14} />
@@ -173,13 +222,15 @@ function JobList({ repo, run, selected }: { repo: string; run: WorkflowRunDetail
   const [closed, setClosed] = useState<Record<string, boolean>>({})
   return (
     <nav className="p-2" aria-label="Jobs">
-      <h2 className="px-2 py-1 text-xs font-semibold tracking-wide text-fg-faint uppercase">Jobs</h2>
+      <Eyebrow as="h2" className="px-2 pt-1 pb-2">
+        Jobs
+      </Eyebrow>
       {groups.map((g) =>
         g.jobs.length === 1 && !g.jobs[0]!.matrix ? (
           <JobRow key={g.key} repo={repo} run={run} job={g.jobs[0]!} selected={g.jobs[0]!.id === selected} />
         ) : (
           <div key={g.key}>
-            <button type="button" onClick={() => setClosed((c) => ({ ...c, [g.key]: !c[g.key] }))} className="flex h-8 w-full items-center gap-2 rounded px-2 text-left text-base text-fg-muted hover:bg-bg-hover hover:text-fg" aria-expanded={!closed[g.key]}>
+            <button type="button" onClick={() => setClosed((c) => ({ ...c, [g.key]: !c[g.key] }))} className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-base text-fg-muted hover:bg-bg-hover hover:text-fg" aria-expanded={!closed[g.key]}>
               <KindIcon kind={groupKind(g.jobs)} size={14} />
               <span className="min-w-0 flex-1 truncate font-medium">{g.key}</span>
               <span className="text-xs text-fg-faint">{g.jobs.length}</span>
@@ -193,8 +244,34 @@ function JobList({ repo, run, selected }: { repo: string; run: WorkflowRunDetail
   )
 }
 
+function usePref(key: string, initial: boolean): [boolean, (v: boolean) => void] {
+  const [v, setV] = useState(() => {
+    try {
+      const s = localStorage.getItem(key)
+      return s == null ? initial : s === '1'
+    } catch {
+      return initial
+    }
+  })
+  return [
+    v,
+    (next: boolean) => {
+      setV(next)
+      try {
+        localStorage.setItem(key, next ? '1' : '0')
+      } catch {
+        /* ignore */
+      }
+    },
+  ]
+}
+
+/** Bumped by "expand all" / "collapse all"; steps follow the latest value. */
+const ExpandContext = createContext<{ open: boolean; n: number } | null>(null)
+
 function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; job: Job }) {
   const qc = useQueryClient()
+  const toast = useToast()
   const { rerunJob } = useRunMutations(repo, run)
   const logs = useJobLogs(repo, job, (j) => {
     qc.setQueryData(runQuery(repo, run.number).queryKey, (r: WorkflowRunDetail | undefined) => (r ? { ...r, jobs: r.jobs.map((x) => (x.id === j.id ? j : x)) } : r))
@@ -210,13 +287,32 @@ function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; jo
   // Step numbers seen in the log but missing from the step list (shouldn't happen, but don't lose lines).
   for (const k of byStep.keys()) if (!steps.some((s) => s.number === k)) steps.push({ number: k, name: stepTitle(k, job.steps), status: 'completed', conclusion: null, started_at: null, completed_at: null })
 
+  const [wrap, setWrap] = usePref('tgp-log-wrap', true)
+  const [timestamps, setTimestamps] = usePref('tgp-log-time', false)
+  const [follow, setFollow] = useState(true)
+  const [query, setQuery] = useState('')
+  const [matchIdx, setMatchIdx] = useState(0)
+  const [expand, setExpand] = useState<{ open: boolean; n: number } | null>(null)
+  const matches = useMemo(() => findMatches(logs.lines, query), [logs.lines, query])
+  const active = matches.length ? (matches[Math.min(matchIdx, matches.length - 1)] ?? null) : null
+  const maxN = logs.lines.length ? logs.lines[logs.lines.length - 1]!.n : 0
+  const view: LogView = useMemo(
+    () => ({ wrap, timestamps, gutter: Math.max(3, String(maxN).length), matches: new Set(matches), active }),
+    [wrap, timestamps, maxN, matches, active],
+  )
+
   // Auto-scroll while following a running job, unless the user scrolled up.
   const pane = useRef<HTMLDivElement>(null)
-  const stick = useRef(true)
   useLayoutEffect(() => {
     const el = pane.current
-    if (el && stick.current && job.status === 'in_progress') el.scrollTop = el.scrollHeight
-  }, [logs.lines.length, job.status])
+    if (el && follow && !query && job.status === 'in_progress') el.scrollTop = el.scrollHeight
+  }, [logs.lines.length, job.status, follow, query])
+  // Bring the active match into view.
+  useEffect(() => {
+    if (active == null) return
+    const raf = requestAnimationFrame(() => pane.current?.querySelector(`[data-line="${active}"]`)?.scrollIntoView({ block: 'center' }))
+    return () => cancelAnimationFrame(raf)
+  }, [active])
   // Jump to #L<n> once lines have loaded.
   const jumped = useRef(false)
   useEffect(() => {
@@ -227,68 +323,162 @@ function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; jo
     window.setTimeout(() => document.getElementById(`L${m[1]}`)?.scrollIntoView({ block: 'center' }), 50)
   }, [logs.lines.length])
 
+  const download = () => {
+    const url = URL.createObjectURL(new Blob([logText(logs.lines)], { type: 'text/plain' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${repo}-run${run.number}-${job.name.replace(/[^\w.-]+/g, '_')}.log`
+    a.click()
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
   return (
     <div
       ref={pane}
       className="h-full overflow-auto"
       onScroll={(e) => {
         const el = e.currentTarget
-        stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40
+        if (job.status !== 'in_progress') return
+        const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40
+        if (atBottom !== follow) setFollow(atBottom)
       }}
     >
-      <div className="sticky top-0 z-10 border-b border-border bg-bg px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <KindIcon kind={kind} size={16} />
-          <h2 className="min-w-0 flex-1 truncate font-medium">{job.name}</h2>
-          <span className="text-sm text-fg-faint">
-            <Duration start={job.started_at} end={job.completed_at} />
-          </span>
-          {logs.live && <Badge tone="accent">live</Badge>}
-          {run.can_rerun && job.status === 'completed' && (
-            <Button variant="ghost" loading={rerunJob.isPending} onClick={() => rerunJob.mutate(job.id)} aria-label={`Re-run ${job.name}`}>
-              <RotateCw size={13} /> Re-run job
+      <div className="sticky top-0 z-10 border-b border-border bg-bg/95 backdrop-blur">
+        <div className="px-5 pt-3 pb-2.5">
+          <div className="flex items-center gap-2">
+            <KindIcon kind={kind} size={16} />
+            <h2 className="min-w-0 flex-1 truncate font-semibold">{job.name}</h2>
+            <span className="text-sm text-fg-faint">
+              <Duration start={job.started_at} end={job.completed_at} />
+            </span>
+            {logs.live && (
+              <Badge tone="accent" icon={<Dot tone="accent" pulse />}>
+                live
+              </Badge>
+            )}
+            {run.can_rerun && job.status === 'completed' && (
+              <Button variant="ghost" size="sm" icon={<RotateCw size={13} />} loading={rerunJob.isPending} onClick={() => rerunJob.mutate(job.id)} aria-label={`Re-run ${job.name}`}>
+                Re-run job
+              </Button>
+            )}
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-fg-faint">
+            <span className="inline-flex items-center gap-1" title="Runner">
+              <Server size={11} /> {job.runner?.name ?? 'no runner yet'}
+            </span>
+            <span className="inline-flex items-center gap-1 font-mono" title="Image">
+              <Box size={11} /> {job.image}
+            </span>
+            <span className="inline-flex items-center gap-1" title="CPU limit">
+              <Cpu size={11} /> {job.resources.cpus} CPU
+            </span>
+            <span className="inline-flex items-center gap-1" title="Memory limit">
+              <HardDrive size={11} /> {formatBytes(job.resources.memory_bytes)}
+            </span>
+            <span title="Process limit">{job.resources.pids} pids</span>
+            <span className="inline-flex items-center gap-1" title="Timeout">
+              <Timer size={11} /> {job.timeout_minutes}m timeout
+            </span>
+            {job.labels.length > 0 && <span title="Runner labels (runs-on)">runs-on: {job.labels.join(', ')}</span>}
+            {job.attempt > 1 && <span>attempt {job.attempt}</span>}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-border bg-bg-subtle px-5 py-1.5">
+          <div className="relative w-64 max-w-full">
+            <Input
+              size="sm"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setMatchIdx(0)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  setMatchIdx((i) => stepMatch(i, e.shiftKey ? -1 : 1, matches.length))
+                } else if (e.key === 'Escape') setQuery('')
+              }}
+              placeholder="Search logs"
+              aria-label="Search logs"
+              leading={<Search size={12} />}
+              className="pr-16"
+            />
+            {query && (
+              <span className="absolute top-1/2 right-2 -translate-y-1/2 text-xs text-fg-faint tabular-nums" aria-live="polite">
+                {matches.length ? `${Math.min(matchIdx, matches.length - 1) + 1} of ${matches.length}` : 'No matches'}
+              </span>
+            )}
+          </div>
+          <IconButton label="Previous match" size="sm" disabled={!matches.length} onClick={() => setMatchIdx((i) => stepMatch(i, -1, matches.length))}>
+            <ChevronUp size={13} />
+          </IconButton>
+          <IconButton label="Next match" size="sm" disabled={!matches.length} onClick={() => setMatchIdx((i) => stepMatch(i, 1, matches.length))}>
+            <ChevronDown size={13} />
+          </IconButton>
+          <span className="mx-1 h-4 w-px bg-border" aria-hidden />
+          <IconButton label="Wrap long lines" size="sm" pressed={wrap} onClick={() => setWrap(!wrap)}>
+            <WrapText size={13} />
+          </IconButton>
+          <IconButton label="Show timestamps" size="sm" pressed={timestamps} onClick={() => setTimestamps(!timestamps)}>
+            <Clock size={13} />
+          </IconButton>
+          <IconButton label="Expand all steps" size="sm" onClick={() => setExpand((x) => ({ open: true, n: (x?.n ?? 0) + 1 }))}>
+            <ChevronsUpDown size={13} />
+          </IconButton>
+          <IconButton label="Collapse all steps" size="sm" onClick={() => setExpand((x) => ({ open: false, n: (x?.n ?? 0) + 1 }))}>
+            <ChevronsDownUp size={13} />
+          </IconButton>
+          <span className="flex-1" />
+          {job.status === 'in_progress' && (
+            <Button
+              size="sm"
+              variant={follow ? 'secondary' : 'ghost'}
+              icon={<ArrowDownToLine size={12} />}
+              aria-pressed={follow}
+              onClick={() => {
+                setFollow(true)
+                pane.current?.scrollTo({ top: pane.current.scrollHeight })
+              }}
+            >
+              {follow ? 'Following' : 'Follow log'}
             </Button>
           )}
-        </div>
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-fg-faint">
-          <span className="inline-flex items-center gap-1" title="Runner">
-            <Server size={11} /> {job.runner?.name ?? 'no runner yet'}
-          </span>
-          <span className="inline-flex items-center gap-1 font-mono" title="Image">
-            <Box size={11} /> {job.image}
-          </span>
-          <span className="inline-flex items-center gap-1" title="CPU limit">
-            <Cpu size={11} /> {job.resources.cpus} CPU
-          </span>
-          <span className="inline-flex items-center gap-1" title="Memory limit">
-            <HardDrive size={11} /> {formatBytes(job.resources.memory_bytes)}
-          </span>
-          <span title="Process limit">{job.resources.pids} pids</span>
-          <span className="inline-flex items-center gap-1" title="Timeout">
-            <Timer size={11} /> {job.timeout_minutes}m timeout
-          </span>
-          {job.labels.length > 0 && <span title="Runner labels (runs-on)">runs-on: {job.labels.join(', ')}</span>}
-          {job.attempt > 1 && <span>attempt {job.attempt}</span>}
+          <Button
+            size="sm"
+            variant="ghost"
+            icon={<Download size={12} />}
+            disabled={!logs.lines.length}
+            onClick={() => {
+              download()
+              toast.success('Log downloaded')
+            }}
+          >
+            Download log
+          </Button>
         </div>
         {rerunJob.isError && (
-          <div className="mt-2">
+          <div className="px-5 pb-2">
             <Alert>{errorMessage(rerunJob.error)}</Alert>
           </div>
         )}
       </div>
-      <div className="flex flex-col gap-2 p-3">
-        {job.failure_reason && <Alert>{job.failure_reason}</Alert>}
-        {job.status === 'queued' && <Alert tone="warning">{job.wait_reason ? `Waiting: ${job.wait_reason}` : 'Waiting for a runner to pick up this job…'}</Alert>}
-        {job.status === 'pending' && <Alert tone="info">{job.wait_reason ?? (job.needs.length ? `Waiting for ${job.needs.join(', ')} to finish.` : 'Waiting to start.')}</Alert>}
-        {logs.error && !logs.live && <Alert tone="warning">Couldn't load logs: {logs.error}</Alert>}
-        {logs.truncated && <Alert tone="warning">The log reached the size limit; later output was dropped.</Alert>}
-        <ul className="flex flex-col" aria-label="Steps">
-          {steps.map((s) => (
-            <StepSection key={s.number} step={s} lines={byStep.get(s.number) ?? []} jobRunning={job.status === 'in_progress'} />
-          ))}
-        </ul>
-        {steps.length === 0 && job.status === 'completed' && <p className="px-2 text-fg-faint">This job produced no output.</p>}
-      </div>
+      <LogViewContext.Provider value={view}>
+        <ExpandContext.Provider value={expand}>
+          <div className="flex flex-col gap-2 p-3">
+            {job.failure_reason && <Alert>{job.failure_reason}</Alert>}
+            {job.status === 'queued' && <Alert tone="warning">{job.wait_reason ? `Waiting: ${job.wait_reason}` : 'Waiting for a runner to pick up this job…'}</Alert>}
+            {job.status === 'pending' && <Alert tone="info">{job.wait_reason ?? (job.needs.length ? `Waiting for ${job.needs.join(', ')} to finish.` : 'Waiting to start.')}</Alert>}
+            {logs.error && !logs.live && <Alert tone="warning">Couldn't load logs: {logs.error}</Alert>}
+            {logs.truncated && <Alert tone="warning">The log reached the size limit; later output was dropped.</Alert>}
+            <ul className="flex flex-col overflow-hidden rounded-lg border border-border bg-surface-1" aria-label="Steps">
+              {steps.map((s) => (
+                <StepSection key={s.number} step={s} lines={byStep.get(s.number) ?? []} jobRunning={job.status === 'in_progress'} />
+              ))}
+            </ul>
+            {steps.length === 0 && job.status === 'completed' && <p className="px-2 text-fg-faint">This job produced no output.</p>}
+          </div>
+        </ExpandContext.Provider>
+      </LogViewContext.Provider>
     </div>
   )
 }
@@ -298,20 +488,27 @@ type StepView = { number: number; name: string; status: string; conclusion: stri
 function StepSection({ step, lines, jobRunning }: { step: StepView; lines: { n: number; step: number; t: string; text: string }[]; jobRunning: boolean }) {
   const auto = step.status === 'in_progress' || step.conclusion === 'failure' || (jobRunning && step.number === 0 && step.status === 'in_progress')
   const [open, setOpen] = useState<boolean | null>(null)
-  const isOpen = open ?? auto
+  const expand = useContext(ExpandContext)
+  const view = useContext(LogViewContext)
+  useEffect(() => {
+    if (expand) setOpen(expand.open)
+  }, [expand])
+  const hasMatch = view.matches.size > 0 && lines.some((l) => view.matches.has(l.n))
+  const isOpen = hasMatch || (open ?? auto)
   return (
-    <li className="rounded" data-testid="step">
-      <button type="button" onClick={() => setOpen(!isOpen)} className="flex h-8 w-full items-center gap-2 rounded px-2 text-left hover:bg-bg-hover" aria-expanded={isOpen}>
+    <li className="border-b border-border last:border-0" data-testid="step">
+      <button type="button" onClick={() => setOpen(!isOpen)} className="flex h-9 w-full items-center gap-2 px-3 text-left transition-colors hover:bg-bg-hover" aria-expanded={isOpen}>
         {isOpen ? <ChevronDown size={13} className="text-fg-faint" /> : <ChevronRight size={13} className="text-fg-faint" />}
         <StatusIcon status={step.status} conclusion={step.conclusion ?? (step.number <= 0 && step.status === 'completed' ? 'success' : null)} size={14} />
-        <span className="min-w-0 flex-1 truncate">{step.name}</span>
+        <span className={cx('min-w-0 flex-1 truncate', isOpen && 'font-medium')}>{step.name}</span>
+        {hasMatch && <Badge tone="warning">match</Badge>}
         <span className="text-xs text-fg-faint">
           <Duration start={step.started_at} end={step.completed_at} />
         </span>
       </button>
       {isOpen && (
-        <div className="ml-2 border-l border-border py-1 pl-1">
-          {lines.length ? <StepLog lines={lines} /> : <p className="px-3 py-1 font-mono text-sm text-fg-faint">{step.status === 'pending' ? 'Not started.' : step.conclusion === 'skipped' ? 'Skipped.' : 'No output.'}</p>}
+        <div className="border-t border-border bg-bg py-1.5">
+          {lines.length ? <StepLog lines={lines} /> : <p className="px-4 py-1 font-mono text-sm text-fg-faint">{step.status === 'pending' ? 'Not started.' : step.conclusion === 'skipped' ? 'Skipped.' : 'No output.'}</p>}
         </div>
       )}
     </li>
@@ -321,7 +518,8 @@ function StepSection({ step, lines, jobRunning }: { step: StepView; lines: { n: 
 function ArtifactList({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
   const qc = useQueryClient()
   const perm = useQuery(repoQuery(repo)).data?.permission
-  const canWrite = perm === 'write' || perm === 'admin'
+  const canWrite = canWritePerm(perm)
+  const confirm = useConfirm()
   // Jobs upload artifacts while the run is going: poll until it's done.
   const q = useQuery({ ...runArtifactsQuery(repo, run.number), refetchInterval: run.status !== 'completed' ? 5000 : false })
   const del = useMutation({
@@ -332,13 +530,13 @@ function ArtifactList({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
   if (list.length === 0 && !q.isError) return null
   return (
     <section className="border-t border-border p-2" aria-label="Artifacts">
-      <h2 className="px-2 py-1 text-xs font-semibold tracking-wide text-fg-faint uppercase">
+      <Eyebrow as="h2" className="px-2 pt-1 pb-2">
         Artifacts <span className="font-normal">{list.length}</span>
-      </h2>
+      </Eyebrow>
       {q.isError && <Alert>{errorMessage(q.error)}</Alert>}
       {del.isError && <Alert>{errorMessage(del.error)}</Alert>}
       {list.map((a) => (
-        <div key={a.id} className="group flex items-center gap-1.5 rounded px-2 py-1 hover:bg-bg-hover">
+        <div key={a.id} className="group flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-bg-hover">
           <Box size={13} className="shrink-0 text-fg-muted" />
           <div className="min-w-0 flex-1">
             <a href={artifactZipUrl(repo, a.id)} download={`${a.name}.zip`} className="block truncate text-base hover:underline" title={`${a.name} (from ${a.job_name}, attempt ${a.attempt})`}>
@@ -348,19 +546,21 @@ function ArtifactList({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
               {formatBytes(a.size_bytes)} · {expiresText(a.expires_at)}
             </div>
           </div>
-          <a href={artifactZipUrl(repo, a.id)} download={`${a.name}.zip`} aria-label={`Download ${a.name}`} className="rounded p-1 text-fg-muted hover:text-fg">
+          <a href={artifactZipUrl(repo, a.id)} download={`${a.name}.zip`} aria-label={`Download ${a.name}`} className="rounded-md p-1 text-fg-muted hover:bg-bg-active hover:text-fg">
             <Download size={13} />
           </a>
           {canWrite && (
-            <button
-              type="button"
-              aria-label={`Delete ${a.name}`}
-              className="rounded p-1 text-fg-muted opacity-0 group-hover:opacity-100 hover:text-danger focus:opacity-100"
-              disabled={del.isPending}
-              onClick={() => window.confirm(`Delete artifact ${a.name}?`) && del.mutate(a.id)}
+            <IconButton
+              label={`Delete ${a.name}`}
+              size="xs"
+              className="text-fg-faint hover:bg-danger/10 hover:text-danger"
+              loading={del.isPending && del.variables === a.id}
+              onClick={async () => {
+                if (await confirm({ title: `Delete artifact ${a.name}?`, description: "Downloads stop working. This can't be undone.", confirmLabel: 'Delete artifact' })) del.mutate(a.id)
+              }}
             >
-              <Trash2 size={13} />
-            </button>
+              <Trash2 size={12} />
+            </IconButton>
           )}
         </div>
       ))}

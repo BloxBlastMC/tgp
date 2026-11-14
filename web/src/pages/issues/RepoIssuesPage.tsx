@@ -1,43 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { ArrowUpDown, CheckCircle2, ChevronDown, CircleDot, Milestone as MilestoneIcon, Plus, SearchX, Tag, User, UserPen, X } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ArrowUpDown, CheckCircle2, CircleDot, Milestone as MilestoneIcon, Plus, SearchX, Tag, User, UserPen, X } from 'lucide-react'
 import { issuesQuery, milestonesQuery, repoQuery, usersQuery, type IssueFilters } from '../../api/queries'
 import { LabelPicker } from '../../components/issues/meta'
 import { EmptyState } from '../../components/Page'
-import { Avatar, Button, ButtonLink, ErrorState, FilterBar, FilterMenu, IconLink, Pagination, Picker, SearchInput, SegmentedControl, SkeletonRows, type SelectItem } from '../../components/ui'
+import { Avatar, Button, ButtonLink, ErrorState, FilterBar, FilterMenu, FilterPicker, IconLink, Pagination, SearchInput, SegmentedControl, SkeletonRows, type SelectItem } from '../../components/ui'
 import { hasFilters, splitLabels, toggleLabel, type IssueListSearch } from '../../lib/issues'
 import { canTriage } from '../../lib/permissions'
 import { useRepoName } from '../repos/RepoLayout'
 import { IssueRows } from './IssueList'
 
 export { canTriage }
-
-/** A single-choice filter as a searchable popover; the trigger shows the choice. */
-function FilterPicker({ title, icon, value, items, onChange }: { title: string; icon: ReactNode; value?: string; items: SelectItem[]; onChange: (v: string | undefined) => void }) {
-  const current = items.find((i) => i.key === value)
-  return (
-    <Picker
-      title={`Filter by ${title.toLowerCase()}`}
-      items={items}
-      value={value ? [value] : []}
-      onChange={(keys) => onChange(keys[0])}
-      placement="bottom-start"
-      width="w-64"
-      trigger={(t) => (
-        <Button {...t} size="sm" icon={icon} iconRight={<ChevronDown size={12} className="text-fg-faint" />} aria-label={`${title}: ${current?.label ?? 'any'}`} className={value ? 'border-accent/50 text-fg' : ''}>
-          {current ? (
-            <>
-              <span className="text-fg-muted">{title}:</span> <span className="max-w-28 truncate">{current.label}</span>
-            </>
-          ) : (
-            title
-          )}
-        </Button>
-      )}
-    />
-  )
-}
 
 const PER_PAGE = 50
 

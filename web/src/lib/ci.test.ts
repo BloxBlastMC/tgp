@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   appendLines,
   checksHeadline,
+  findMatches,
+  logText,
+  stepMatch,
   buildLogItems,
   defaultJob,
   durationText,
@@ -144,5 +147,25 @@ describe('checksHeadline', () => {
     expect(checksHeadline({ ...base, state: 'failure', total: 3, failed: 1, succeeded: 2 })).toBe('Some checks were not successful · 1 failing, 2 successful')
     expect(checksHeadline({ ...base, state: 'pending', missing_required: ['CI / test'] })).toBe('Some checks haven’t completed yet · 1 expected')
     expect(checksHeadline({ ...base, state: 'success', total: 1, succeeded: 1 })).toBe('All checks have passed · 1 successful')
+  })
+})
+
+describe('log search', () => {
+  const lines = [line(1, 'Compiling \x1b[32mgame\x1b[0m'), line(2, 'Error: boom'), line(3, 'error again'), line(4, 'done')]
+  it('finds lines ignoring case and ANSI', () => {
+    expect(findMatches(lines, 'error')).toEqual([2, 3])
+    expect(findMatches(lines, 'GAME')).toEqual([1])
+    expect(findMatches(lines, '  ')).toEqual([])
+  })
+  it('wraps match navigation', () => {
+    expect(stepMatch(0, 1, 3)).toBe(1)
+    expect(stepMatch(2, 1, 3)).toBe(0)
+    expect(stepMatch(0, -1, 3)).toBe(2)
+    expect(stepMatch(0, 1, 0)).toBe(-1)
+  })
+  it('exports plain text', () => {
+    expect(logText(lines.slice(0, 1), false)).toBe('Compiling game\n')
+    expect(logText(lines.slice(1, 2))).toBe('2026-11-13T00:00:00Z Error: boom\n')
+    expect(logText([])).toBe('')
   })
 })

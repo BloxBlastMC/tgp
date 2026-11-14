@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { errorMessage } from '../../api/client'
 import { allRunsQuery } from '../../api/queries'
+import { Play } from 'lucide-react'
 import { Pager, RunRows } from '../../components/ci/common'
 import { EmptyState, Page } from '../../components/Page'
-import { Alert, Spinner } from '../../components/ui'
-import { Segmented } from '../pulls/PullList'
+import { ErrorState, FilterBar, SegmentedControl, SkeletonRows } from '../../components/ui'
 
 export type GlobalRunsSearch = { scope?: 'active'; mine?: true; page?: number }
 
@@ -28,11 +27,12 @@ export function GlobalRunsPage() {
   const runs = useQuery({
     ...allRunsQuery({ status: search.scope === 'active' ? 'active' : undefined, actor: search.mine ? '@me' : undefined, page }),
     refetchInterval: (q) => (q.state.data?.runs.some((r) => r.status !== 'completed') ? 5000 : 30_000),
+    placeholderData: (prev) => prev,
   })
   return (
-    <Page title="CI">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
-        <Segmented
+    <Page title="CI" icon={Play} description={runs.data ? `${runs.data.total} runs` : undefined}>
+      <FilterBar className="px-5">
+        <SegmentedControl
           label="Runs"
           value={search.scope ?? 'all'}
           options={[
@@ -41,7 +41,7 @@ export function GlobalRunsPage() {
           ]}
           onChange={(v) => set({ scope: v === 'active' ? 'active' : undefined })}
         />
-        <Segmented
+        <SegmentedControl
           label="Actor"
           value={search.mine ? 'mine' : 'everyone'}
           options={[
@@ -50,17 +50,13 @@ export function GlobalRunsPage() {
           ]}
           onChange={(v) => set({ mine: v === 'mine' ? true : undefined })}
         />
-        <div className="flex-1" />
-        {runs.data && <span className="text-sm text-fg-faint">{runs.data.total} runs</span>}
-      </div>
+      </FilterBar>
       {runs.isPending ? (
-        <Spinner />
+        <SkeletonRows rows={6} />
       ) : runs.isError ? (
-        <div className="p-4">
-          <Alert>{errorMessage(runs.error)}</Alert>
-        </div>
+        <ErrorState error={runs.error} />
       ) : runs.data.runs.length === 0 ? (
-        <EmptyState title={search.scope === 'active' ? 'Nothing running' : 'No workflow runs yet'}>
+        <EmptyState icon={<Play size={20} />} title={search.scope === 'active' ? 'Nothing running' : 'No workflow runs yet'}>
           {search.scope === 'active' ? 'No runs are queued or in progress.' : 'Add a workflow under .tgp/workflows/ in a repository to start using CI.'}
         </EmptyState>
       ) : (
