@@ -233,7 +233,9 @@ func (s *Server) ensureTag(ctx context.Context, repo *model.Repo, tag, target st
 func (s *Server) published(ctx context.Context, repo *model.Repo, actor *model.User, rel *model.Release, sha string, tagCreated bool) {
 	ctx = context.WithoutCancel(ctx)
 	if tagCreated {
-		s.ciOnPush(ctx, repo, actor, []githook.Update{{Ref: tagPrefix + rel.Tag, Old: git.ZeroID, New: sha}})
+		up := []githook.Update{{Ref: tagPrefix + rel.Tag, Old: git.ZeroID, New: sha}}
+		s.ciOnPush(ctx, repo, actor, up)
+		s.hooksOnPush(ctx, repo, actor, up)
 	}
 	s.ciOnRelease(ctx, repo, actor, rel, sha)
 }
@@ -296,6 +298,11 @@ func (a *api) CreateRelease(ctx context.Context, req apigen.CreateReleaseRequest
 	v, err := s.toAPIRelease(ctx, repo, rel)
 	if err != nil {
 		return nil, err
+	}
+	if rel.Draft {
+		s.hooksRelease(ctx, repo, user, v, "created")
+	} else {
+		s.hooksRelease(ctx, repo, user, v, "created", "published", releaseKind(rel))
 	}
 	return apigen.CreateRelease201JSONResponse(v), nil
 }
@@ -368,11 +375,18 @@ func (a *api) UpdateRelease(ctx context.Context, req apigen.UpdateReleaseRequest
 	if publishing {
 		s.published(ctx, repo, mustPrincipal(ctx).User, rel, sha, created)
 	} else if created {
-		s.ciOnPush(context.WithoutCancel(ctx), repo, mustPrincipal(ctx).User, []githook.Update{{Ref: tagPrefix + rel.Tag, Old: git.ZeroID, New: sha}})
+		up := []githook.Update{{Ref: tagPrefix + rel.Tag, Old: git.ZeroID, New: sha}}
+		s.ciOnPush(context.WithoutCancel(ctx), repo, mustPrincipal(ctx).User, up)
+		s.hooksOnPush(context.WithoutCancel(ctx), repo, mustPrincipal(ctx).User, up)
 	}
 	v, err := s.toAPIRelease(ctx, repo, rel)
 	if err != nil {
 		return nil, err
+	}
+	if publishing {
+		s.hooksRelease(ctx, repo, mustPrincipal(ctx).User, v, "published", releaseKind(rel))
+	} else {
+		s.hooksRelease(ctx, repo, mustPrincipal(ctx).User, v, "edited")
 	}
 	return apigen.UpdateRelease200JSONResponse(v), nil
 }
@@ -384,6 +398,7 @@ func (a *api) DeleteRelease(ctx context.Context, req apigen.DeleteReleaseRequest
 		return nil, err
 	}
 	rel, repo := rc.rel, rc.repo
+	gone, gerr := s.toAPIRelease(ctx, repo, rel)
 	var assets []*model.ReleaseAsset
 	if err := s.db.NewSelect().Model(&assets).Where("release_id = ?", rel.ID).Scan(ctx); err != nil {
 		return nil, err
@@ -412,6 +427,9 @@ func (a *api) DeleteRelease(ctx context.Context, req apigen.DeleteReleaseRequest
 	if err := s.record(ctx, s.db, audit.ReleaseDelete, "repo", repo.Name,
 		map[string]any{"tag": rel.Tag, "assets": len(assets), "tag_deleted": tagDeleted}); err != nil {
 		return nil, err
+	}
+	if gerr == nil {
+		s.hooksRelease(ctx, repo, mustPrincipal(ctx).User, gone, "deleted")
 	}
 	return apigen.DeleteRelease204Response{}, nil
 }
@@ -599,4 +617,12 @@ func (r *releaseOnClose) Close() error {
 	err := r.ReadCloser.Close()
 	r.once.Do(r.release)
 	return err
+}
+
+// releaseKind is the webhook action for a published release's type.
+func releaseKind(rel *model.Release) string {
+	if rel.Prerelease {
+		return "prereleased"
+	}
+	return "released"
 }

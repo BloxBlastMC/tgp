@@ -466,6 +466,7 @@ func (a *api) CreatePull(ctx context.Context, req apigen.CreatePullRequestObject
 	if err != nil {
 		return nil, err
 	}
+	a.s.hooksOpened(ctx, repo, user, number, out, true)
 	return apigen.CreatePull201JSONResponse(out), nil
 }
 
@@ -497,6 +498,9 @@ func (a *api) UpdatePull(ctx context.Context, req apigen.UpdatePullRequestObject
 	b := req.Body
 	user := mustPrincipal(ctx).User
 	editing := b.Title != nil || b.Body != nil || b.Base != nil || b.State != nil || b.Draft != nil
+	ctx = hookScope(ctx)
+	mark := a.s.eventMark(ctx)
+	oldBody := pc.issue.Body
 	if editing && !canEditPull(pc, user) {
 		return nil, apierr.Forbidden("only the author or someone with write access can change this pull request")
 	}
@@ -620,6 +624,11 @@ func (a *api) UpdatePull(ctx context.Context, req apigen.UpdatePullRequestObject
 	if err != nil {
 		return nil, err
 	}
+	var edited []int64
+	if pc.issue.Body != oldBody {
+		edited = append(edited, pc.issue.ID)
+	}
+	a.s.hooksFromEvents(ctx, pc.repo, user, mark, edited...)
 	return apigen.UpdatePull200JSONResponse(out), nil
 }
 
@@ -932,6 +941,7 @@ func (a *api) CreatePullComment(ctx context.Context, req apigen.CreatePullCommen
 	if err != nil {
 		return nil, err
 	}
+	a.s.hooksComment(ctx, pc.repo, user, pc.issue, "created", out)
 	return apigen.CreatePullComment201JSONResponse(out), nil
 }
 
@@ -1007,6 +1017,9 @@ func (a *api) UpdateComment(ctx context.Context, req apigen.UpdateCommentRequest
 	if err != nil {
 		return nil, err
 	}
+	if req.Body.Body != nil {
+		a.s.hooksComment(ctx, pc.repo, mustPrincipal(ctx).User, pc.issue, "edited", out)
+	}
 	return apigen.UpdateComment200JSONResponse(out), nil
 }
 
@@ -1019,6 +1032,7 @@ func (a *api) DeleteComment(ctx context.Context, req apigen.DeleteCommentRequest
 	if c.AuthorID != user.ID && pc.perm < authz.Admin {
 		return nil, apierr.Forbidden("only the author or an admin can delete a comment")
 	}
+	gone, gerr := a.s.commentView(pc, a.s.users()).toAPI(ctx, c)
 	err = a.s.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		// Deleting a thread's first comment deletes its replies (FK cascade).
 		n, err := tx.NewSelect().Model((*model.Comment)(nil)).Where("id = ? OR reply_to_id = ?", c.ID, c.ID).Count(ctx)
@@ -1036,6 +1050,9 @@ func (a *api) DeleteComment(ctx context.Context, req apigen.DeleteCommentRequest
 	})
 	if err != nil {
 		return nil, err
+	}
+	if gerr == nil {
+		a.s.hooksComment(ctx, pc.repo, user, pc.issue, "deleted", gone)
 	}
 	return apigen.DeleteComment204Response{}, nil
 }
@@ -1186,6 +1203,7 @@ func (a *api) CreateReview(ctx context.Context, req apigen.CreateReviewRequestOb
 	if err != nil {
 		return nil, err
 	}
+	a.s.hooksReview(ctx, pc, "submitted", out)
 	return apigen.CreateReview201JSONResponse(out), nil
 }
 
@@ -1229,6 +1247,7 @@ func (a *api) DismissReview(ctx context.Context, req apigen.DismissReviewRequest
 	if err != nil {
 		return nil, err
 	}
+	a.s.hooksReview(ctx, pc, "dismissed", out)
 	return apigen.DismissReview200JSONResponse(out), nil
 }
 
@@ -1315,6 +1334,8 @@ func (s *Server) timeline(ctx context.Context, pc *pullCtx) ([]apigen.TimelineIt
 // ---- merge, update branch, delete branch ----
 
 func (a *api) MergePull(ctx context.Context, req apigen.MergePullRequestObject) (apigen.MergePullResponseObject, error) {
+	ctx = hookScope(ctx)
+	mark := a.s.eventMark(ctx)
 	pc, err := a.s.loadPull(ctx, req.Repo, req.Number, authz.Read)
 	if err != nil {
 		return nil, err
@@ -1345,6 +1366,7 @@ func (a *api) MergePull(ctx context.Context, req apigen.MergePullRequestObject) 
 	if err != nil {
 		return nil, err
 	}
+	a.s.hooksFromEvents(ctx, pc.repo, mustPrincipal(ctx).User, mark)
 	return apigen.MergePull200JSONResponse(out), nil
 }
 

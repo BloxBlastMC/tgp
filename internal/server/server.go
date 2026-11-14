@@ -58,6 +58,9 @@ type Server struct {
 	// store holds blobs (CI logs).
 	store storage.Store
 	ci    ciState
+
+	hooks     hookState
+	hooksOnce sync.Once
 }
 
 // Options configures a Server.

@@ -7,6 +7,7 @@ import { Alert, Badge, Button, Dialog, Field, Input, Section, Select, Spinner } 
 import { SecretsSection } from '../../components/ci/SecretsSection'
 import { ProtectionSection } from './ProtectionSection'
 import { useRepoName } from './RepoLayout'
+import { RepoSettingsNav } from '../webhooks/WebhookPages'
 
 export function RepoSettingsPage() {
   const name = useRepoName()
@@ -15,6 +16,7 @@ export function RepoSettingsPage() {
   if (repo.permission !== 'write' && !isAdmin) return <div className="p-4"><Alert>You need write access to change settings.</Alert></div>
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5 p-6">
+      <RepoSettingsNav />
       <GeneralSection />
       <ProtectionSection repo={repo.name} isAdmin={isAdmin} />
       <SecretsSection repo={repo.name} />

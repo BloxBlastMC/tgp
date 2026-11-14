@@ -1999,6 +1999,167 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/webhook-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Events webhooks can subscribe to, with their actions */
+        get: operations["listWebhookEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/webhooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List a repository's webhooks (write access) */
+        get: operations["listRepoWebhooks"];
+        put?: never;
+        /**
+         * Add a webhook to a repository (write access)
+         * @description A `ping` event is sent right away.
+         */
+        post: operations["createRepoWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/webhooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List organisation webhooks, which get events from every repository (admin) */
+        get: operations["listOrgWebhooks"];
+        put?: never;
+        /** Add an organisation webhook (admin) */
+        post: operations["createOrgWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+            };
+            cookie?: never;
+        };
+        /** Get a webhook (write access to its repository; admin for organisation webhooks) */
+        get: operations["getWebhook"];
+        put?: never;
+        post?: never;
+        /** Delete a webhook and its delivery log */
+        delete: operations["deleteWebhook"];
+        options?: never;
+        head?: never;
+        /** Change a webhook */
+        patch: operations["updateWebhook"];
+        trace?: never;
+    };
+    "/webhooks/{id}/ping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a ping event now
+         * @description Waits up to the delivery timeout and returns the delivery with its result.
+         */
+        post: operations["pingWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/{id}/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+            };
+            cookie?: never;
+        };
+        /** Recent deliveries, newest first (kept for 30 days) */
+        get: operations["listWebhookDeliveries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/{id}/deliveries/{delivery}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+                delivery: components["parameters"]["DeliveryID"];
+            };
+            cookie?: never;
+        };
+        /** A delivery with its request and response */
+        get: operations["getWebhookDelivery"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/{id}/deliveries/{delivery}/redeliver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+                delivery: components["parameters"]["DeliveryID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a delivery's payload again, as a new delivery */
+        post: operations["redeliverWebhookDelivery"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3360,6 +3521,105 @@ export interface components {
             draft?: boolean;
             prerelease?: boolean;
         };
+        WebhookEventInfo: {
+            name: string;
+            description: string;
+            /** @description Values of the payload's `action` (empty for events without one). */
+            actions: string[];
+        };
+        Webhook: {
+            /** Format: int64 */
+            id: number;
+            /**
+             * @description org webhooks get events from every repository.
+             * @enum {string}
+             */
+            scope: "repo" | "org";
+            repo?: string | null;
+            url: string;
+            /** @description Event names, or `*` for all. */
+            events: string[];
+            active: boolean;
+            /** @description Deliveries are signed (the secret itself is never shown). */
+            has_secret: boolean;
+            /** @description TLS certificates aren't verified. */
+            insecure_ssl: boolean;
+            created_by?: components["schemas"]["UserSummary"] | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            last_delivery?: components["schemas"]["WebhookDelivery"] | null;
+        };
+        WebhookInput: {
+            /** @description http(s) URL that receives POST requests. */
+            url: string;
+            /** @description Default: [push]. */
+            events?: string[];
+            /** @description Signs deliveries (X-Tgp-Signature-256 / X-Hub-Signature-256). */
+            secret?: string;
+            /** @default true */
+            active: boolean;
+            /** @default false */
+            insecure_ssl: boolean;
+        };
+        WebhookPatch: {
+            url?: string;
+            events?: string[];
+            /** @description An empty string removes the secret. */
+            secret?: string;
+            active?: boolean;
+            insecure_ssl?: boolean;
+        };
+        /** @enum {string} */
+        WebhookDeliveryStatus: "pending" | "success" | "failed";
+        WebhookDelivery: {
+            /** Format: int64 */
+            id: number;
+            /** @description The X-Tgp-Delivery header. */
+            guid: string;
+            event: string;
+            action?: string | null;
+            status: components["schemas"]["WebhookDeliveryStatus"];
+            redelivery: boolean;
+            attempts: number;
+            /** @description HTTP status of the last attempt. */
+            response_status?: number | null;
+            duration_ms?: number | null;
+            /** @description Why the last attempt failed. */
+            error?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            delivered_at?: string | null;
+            /**
+             * Format: date-time
+             * @description When a pending delivery is tried next.
+             */
+            next_attempt_at?: string | null;
+        };
+        WebhookDeliveryDetail: components["schemas"]["WebhookDelivery"] & {
+            request: {
+                url: string;
+                headers: {
+                    [key: string]: string;
+                };
+                payload: {
+                    [key: string]: unknown;
+                };
+            };
+            response?: {
+                headers: {
+                    [key: string]: string;
+                };
+                body: string;
+                truncated: boolean;
+            } | null;
+        };
+        WebhookDeliveryPage: {
+            deliveries: components["schemas"]["WebhookDelivery"][];
+            total: number;
+        };
     };
     responses: {
         /** @description Error response */
@@ -3373,6 +3633,8 @@ export interface components {
         };
     };
     parameters: {
+        WebhookID: number;
+        DeliveryID: number;
         ArtifactID: number;
         ReleaseID: number;
         /** @description Repository name (case-insensitive). */
@@ -6723,6 +6985,295 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listWebhookEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Events */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookEventInfo"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listRepoWebhooks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webhooks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createRepoWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebhookInput"];
+            };
+        };
+        responses: {
+            /** @description Webhook */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listOrgWebhooks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webhooks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createOrgWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebhookInput"];
+            };
+        };
+        responses: {
+            /** @description Webhook */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webhook */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebhookPatch"];
+            };
+        };
+        responses: {
+            /** @description Webhook */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    pingWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Delivery */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookDelivery"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listWebhookDeliveries: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["WebhookDeliveryStatus"];
+                event?: string;
+                page?: components["parameters"]["Page"];
+                per_page?: components["parameters"]["PerPage"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deliveries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookDeliveryPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getWebhookDelivery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+                delivery: components["parameters"]["DeliveryID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Delivery */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookDeliveryDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    redeliverWebhookDelivery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["WebhookID"];
+                delivery: components["parameters"]["DeliveryID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The new delivery (queued) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookDelivery"];
+                };
             };
             default: components["responses"]["Error"];
         };

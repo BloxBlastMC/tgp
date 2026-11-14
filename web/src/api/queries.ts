@@ -347,3 +347,47 @@ export const releaseByTagQuery = (repo: string, tag: string) =>
     queryFn: () => unwrap(api.GET('/repos/{repo}/releases/tags/{tag}', { params: { path: { repo, tag } } })),
     retry: false,
   })
+
+// --- webhooks ---
+
+/** Where a webhook lives: a repository, or the whole organisation. */
+export type HookScope = { kind: 'repo'; repo: string } | { kind: 'org' }
+
+export const webhookEventsQuery = queryOptions({
+  queryKey: ['webhook-events'],
+  queryFn: () => unwrap(api.GET('/webhook-events')),
+  staleTime: Infinity,
+})
+
+export const webhooksQuery = (scope: HookScope) =>
+  queryOptions({
+    queryKey: ['webhooks', scope.kind === 'repo' ? scope.repo.toLowerCase() : 'org'],
+    queryFn: () =>
+      scope.kind === 'repo'
+        ? unwrap(api.GET('/repos/{repo}/webhooks', { params: { path: { repo: scope.repo } } }))
+        : unwrap(api.GET('/admin/webhooks')),
+  })
+
+export const webhookQuery = (id: number) =>
+  queryOptions({
+    queryKey: ['webhook', id],
+    queryFn: () => unwrap(api.GET('/webhooks/{id}', { params: { path: { id } } })),
+    retry: false,
+  })
+
+export type DeliveryFilters = { status?: 'pending' | 'success' | 'failed'; page?: number }
+
+export const webhookDeliveriesQuery = (id: number, f: DeliveryFilters) =>
+  queryOptions({
+    queryKey: ['webhook', id, 'deliveries', f],
+    queryFn: () => unwrap(api.GET('/webhooks/{id}/deliveries', { params: { path: { id }, query: { per_page: 30, ...f } } })),
+    // Pending deliveries change on their own (and a new hook's ping arrives
+    // shortly after creation): keep the list fresh until it settles.
+    refetchInterval: (q) => (!q.state.data || q.state.data.deliveries.length === 0 || q.state.data.deliveries.some((d) => d.status === 'pending') ? 3000 : false),
+  })
+
+export const webhookDeliveryQuery = (id: number, delivery: number) =>
+  queryOptions({
+    queryKey: ['webhook', id, 'delivery', delivery],
+    queryFn: () => unwrap(api.GET('/webhooks/{id}/deliveries/{delivery}', { params: { path: { id, delivery } } })),
+  })

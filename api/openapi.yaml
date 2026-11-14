@@ -39,6 +39,7 @@ tags:
   - name: issues
   - name: ci
   - name: releases
+  - name: webhooks
 paths:
   /meta:
     get:
@@ -2162,8 +2163,204 @@ paths:
         "204": { description: Deleted }
         default: { $ref: "#/components/responses/Error" }
 
+  /webhook-events:
+    get:
+      operationId: listWebhookEvents
+      tags: [webhooks]
+      summary: Events webhooks can subscribe to, with their actions
+      responses:
+        "200":
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/WebhookEventInfo" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/webhooks:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listRepoWebhooks
+      tags: [webhooks]
+      summary: List a repository's webhooks (write access)
+      responses:
+        "200":
+          description: Webhooks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Webhook" }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createRepoWebhook
+      tags: [webhooks]
+      summary: Add a webhook to a repository (write access)
+      description: A `ping` event is sent right away.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookInput" }
+      responses:
+        "201":
+          description: Webhook
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Webhook" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /admin/webhooks:
+    get:
+      operationId: listOrgWebhooks
+      tags: [webhooks, admin]
+      summary: List organisation webhooks, which get events from every repository (admin)
+      responses:
+        "200":
+          description: Webhooks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Webhook" }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createOrgWebhook
+      tags: [webhooks, admin]
+      summary: Add an organisation webhook (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookInput" }
+      responses:
+        "201":
+          description: Webhook
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Webhook" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /webhooks/{id}:
+    parameters:
+      - $ref: "#/components/parameters/WebhookID"
+    get:
+      operationId: getWebhook
+      tags: [webhooks]
+      summary: Get a webhook (write access to its repository; admin for organisation webhooks)
+      responses:
+        "200":
+          description: Webhook
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Webhook" }
+        default: { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: updateWebhook
+      tags: [webhooks]
+      summary: Change a webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookPatch" }
+      responses:
+        "200":
+          description: Webhook
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Webhook" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteWebhook
+      tags: [webhooks]
+      summary: Delete a webhook and its delivery log
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /webhooks/{id}/ping:
+    parameters:
+      - $ref: "#/components/parameters/WebhookID"
+    post:
+      operationId: pingWebhook
+      tags: [webhooks]
+      summary: Send a ping event now
+      description: Waits up to the delivery timeout and returns the delivery with its result.
+      responses:
+        "200":
+          description: Delivery
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookDelivery" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /webhooks/{id}/deliveries:
+    parameters:
+      - $ref: "#/components/parameters/WebhookID"
+    get:
+      operationId: listWebhookDeliveries
+      tags: [webhooks]
+      summary: Recent deliveries, newest first (kept for 30 days)
+      parameters:
+        - { name: status, in: query, schema: { $ref: "#/components/schemas/WebhookDeliveryStatus" } }
+        - { name: event, in: query, schema: { type: string } }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Deliveries
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookDeliveryPage" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /webhooks/{id}/deliveries/{delivery}:
+    parameters:
+      - $ref: "#/components/parameters/WebhookID"
+      - $ref: "#/components/parameters/DeliveryID"
+    get:
+      operationId: getWebhookDelivery
+      tags: [webhooks]
+      summary: A delivery with its request and response
+      responses:
+        "200":
+          description: Delivery
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookDeliveryDetail" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /webhooks/{id}/deliveries/{delivery}/redeliver:
+    parameters:
+      - $ref: "#/components/parameters/WebhookID"
+      - $ref: "#/components/parameters/DeliveryID"
+    post:
+      operationId: redeliverWebhookDelivery
+      tags: [webhooks]
+      summary: Send a delivery's payload again, as a new delivery
+      responses:
+        "201":
+          description: The new delivery (queued)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookDelivery" }
+        default: { $ref: "#/components/responses/Error" }
+
 components:
   parameters:
+    WebhookID:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    DeliveryID:
+      name: delivery
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
     ArtifactID:
       name: id
       in: path
@@ -3704,3 +3901,102 @@ components:
         body: { type: string, maxLength: 200000 }
         draft: { type: boolean }
         prerelease: { type: boolean }
+
+    WebhookEventInfo:
+      type: object
+      required: [name, description, actions]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        actions: { type: array, items: { type: string }, description: "Values of the payload's `action` (empty for events without one)." }
+
+    Webhook:
+      type: object
+      required: [id, scope, url, events, active, has_secret, insecure_ssl, created_at, updated_at]
+      properties:
+        id: { type: integer, format: int64 }
+        scope: { type: string, enum: [repo, org], description: "org webhooks get events from every repository." }
+        repo: { type: string, nullable: true }
+        url: { type: string }
+        events: { type: array, items: { type: string }, description: "Event names, or `*` for all." }
+        active: { type: boolean }
+        has_secret: { type: boolean, description: Deliveries are signed (the secret itself is never shown). }
+        insecure_ssl: { type: boolean, description: TLS certificates aren't verified. }
+        created_by:
+          allOf: [{ $ref: "#/components/schemas/UserSummary" }]
+          nullable: true
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        last_delivery:
+          allOf: [{ $ref: "#/components/schemas/WebhookDelivery" }]
+          nullable: true
+
+    WebhookInput:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string, maxLength: 2000, description: "http(s) URL that receives POST requests." }
+        events: { type: array, items: { type: string }, description: "Default: [push]." }
+        secret: { type: string, maxLength: 256, description: "Signs deliveries (X-Tgp-Signature-256 / X-Hub-Signature-256)." }
+        active: { type: boolean, default: true }
+        insecure_ssl: { type: boolean, default: false }
+
+    WebhookPatch:
+      type: object
+      properties:
+        url: { type: string, maxLength: 2000 }
+        events: { type: array, items: { type: string } }
+        secret: { type: string, maxLength: 256, description: An empty string removes the secret. }
+        active: { type: boolean }
+        insecure_ssl: { type: boolean }
+
+    WebhookDeliveryStatus:
+      type: string
+      enum: [pending, success, failed]
+
+    WebhookDelivery:
+      type: object
+      required: [id, guid, event, status, redelivery, attempts, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        guid: { type: string, description: "The X-Tgp-Delivery header." }
+        event: { type: string }
+        action: { type: string, nullable: true }
+        status: { $ref: "#/components/schemas/WebhookDeliveryStatus" }
+        redelivery: { type: boolean }
+        attempts: { type: integer }
+        response_status: { type: integer, nullable: true, description: HTTP status of the last attempt. }
+        duration_ms: { type: integer, nullable: true }
+        error: { type: string, nullable: true, description: Why the last attempt failed. }
+        created_at: { type: string, format: date-time }
+        delivered_at: { type: string, format: date-time, nullable: true }
+        next_attempt_at: { type: string, format: date-time, nullable: true, description: When a pending delivery is tried next. }
+
+    WebhookDeliveryDetail:
+      allOf:
+        - $ref: "#/components/schemas/WebhookDelivery"
+        - type: object
+          required: [request]
+          properties:
+            request:
+              type: object
+              required: [url, headers, payload]
+              properties:
+                url: { type: string }
+                headers: { type: object, additionalProperties: { type: string } }
+                payload: { type: object, additionalProperties: true }
+            response:
+              type: object
+              nullable: true
+              required: [headers, body, truncated]
+              properties:
+                headers: { type: object, additionalProperties: { type: string } }
+                body: { type: string }
+                truncated: { type: boolean }
+
+    WebhookDeliveryPage:
+      type: object
+      required: [deliveries, total]
+      properties:
+        deliveries: { type: array, items: { $ref: "#/components/schemas/WebhookDelivery" } }
+        total: { type: integer }

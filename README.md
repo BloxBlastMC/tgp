@@ -8,8 +8,8 @@ issues, CI with strict resource limits, and an agent-friendly CLI.
 > **Status:** early development: setup, users, authentication, repositories,
 > git over HTTPS, code browsing, the `tgp` CLI, pull requests with reviews and
 > branch protection, issues with labels and milestones, CI (Docker runners
-> with resource limits, artifacts and caches) and releases work; webhooks come
-> next.
+> with resource limits, artifacts and caches), releases and webhooks work;
+> admin and operations tooling comes next.
 > See [docs/roadmap.md](docs/roadmap.md).
 
 ## Components

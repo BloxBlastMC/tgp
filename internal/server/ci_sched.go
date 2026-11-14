@@ -351,6 +351,9 @@ func (s *Server) ciJanitor(ctx context.Context) error {
 	if err := s.expireCaches(ctx, cs); err != nil {
 		return fmt.Errorf("cache retention: %w", err)
 	}
+	if err := s.expireDeliveries(ctx); err != nil {
+		return fmt.Errorf("webhook delivery retention: %w", err)
+	}
 	return nil
 }
 
@@ -359,6 +362,7 @@ func (s *Server) RunCIJanitor(ctx context.Context) error { return s.ciJanitor(ct
 
 // StartBackground runs the CI janitor until ctx ends.
 func (s *Server) StartBackground(ctx context.Context) {
+	go s.runHookWorker(ctx)
 	go func() {
 		t := time.NewTicker(10 * time.Second)
 		defer t.Stop()

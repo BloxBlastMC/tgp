@@ -58,6 +58,15 @@ type = "local"                         # TGP_STORAGE_TYPE
 # start if missing. Back it up: without it those secrets can't be decrypted.
 # master_key_file = "/var/lib/tgp/master.key"   # TGP_MASTER_KEY_FILE
 
+[webhooks]
+# Deliveries to link-local addresses (cloud metadata services) are always
+# refused. Set this to also refuse loopback and private networks (10/8,
+# 172.16/12, 192.168/16, 100.64/10, fc00::/7) if maintainers shouldn't be
+# able to reach internal services. (TGP_WEBHOOKS_BLOCK_PRIVATE)
+block_private_networks = false
+timeout = "10s"                        # per delivery attempt
+workers = 4                            # deliveries sent at once per server
+
 [log]
 level = "info"    # debug | info | warn | error   (TGP_LOG_LEVEL)
 format = "text"   # text | json                   (TGP_LOG_FORMAT)
