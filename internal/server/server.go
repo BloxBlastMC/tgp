@@ -61,6 +61,9 @@ type Server struct {
 
 	hooks     hookState
 	hooksOnce sync.Once
+
+	started     time.Time
+	healthCache healthState
 }
 
 // Options configures a Server.
@@ -94,6 +97,7 @@ func New(o Options) *Server {
 		git:         o.Git,
 		hooksDir:    o.HooksDir,
 		hookSecret:  auth.RandomToken(32),
+		started:     time.Now().UTC(),
 	}
 	s.repos = &repos.Store{DB: o.DB, Git: o.Git, Root: o.Config.Repos.Root}
 	s.store = o.Storage

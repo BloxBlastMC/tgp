@@ -27,7 +27,7 @@ func newAdminCmd(a *app) *cobra.Command {
 	user.AddCommand(newAdminUserListCmd(a), newAdminUserViewCmd(a), newAdminUserCreateCmd(a),
 		newAdminUserEditCmd(a), newAdminUserResetPasswordCmd(a), newAdminUserReset2FACmd(a),
 		newAdminUserAccessCmd(a))
-	cmd.AddCommand(user, newAdminRunnerCmd(a), newAdminCICmd(a), newAdminAuditCmd(a))
+	cmd.AddCommand(user, newAdminHealthCmd(a), newAdminRunnerCmd(a), newAdminCICmd(a), newAdminAuditCmd(a))
 	return group(cmd)
 }
 

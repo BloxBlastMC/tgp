@@ -1702,6 +1702,28 @@ export interface paths {
         patch: operations["updateCISettings"];
         trace?: never;
     };
+    "/admin/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Server health, resource use and queue lengths (admin)
+         * @description Checks the database, blob storage and disks, and reports queue
+         *     lengths and storage use per repository. Repository sizes on disk are
+         *     measured at most every 5 minutes unless `refresh` is set.
+         */
+        get: operations["getServerHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/repos/{repo}/runs/{number}/artifacts": {
         parameters: {
             query?: never;
@@ -3336,6 +3358,164 @@ export interface components {
             expires_at: string;
             /** @description A ready-to-run tgp-runner register command. */
             command: string;
+        };
+        /**
+         * @description ok = healthy, warn = needs attention soon, fail = broken now.
+         * @enum {string}
+         */
+        HealthStatus: "ok" | "warn" | "fail";
+        HealthCheck: {
+            /** @description Stable identifier, e.g. database, storage, disk, runners, ci_queue, webhooks, migrations, master_key. */
+            name: string;
+            status: components["schemas"]["HealthStatus"];
+            message: string;
+        };
+        HealthHost: {
+            hostname: string;
+            os: string;
+            arch: string;
+            cpus: number;
+            goroutines: number;
+            /**
+             * Format: int64
+             * @description Memory the server process got from the OS.
+             */
+            memory_bytes: number;
+        };
+        HealthDatabase: {
+            /** @enum {string} */
+            driver: "sqlite" | "postgres";
+            ok: boolean;
+            error?: string;
+            /** @description Round trip of a trivial query. */
+            latency_ms: number;
+            /** Format: int64 */
+            size_bytes?: number | null;
+            /** @description Name of the newest applied migration. */
+            schema_version: string;
+            pending_migrations: number;
+        };
+        HealthDisk: {
+            path: string;
+            /** @description What tgp keeps on this filesystem. */
+            uses: ("data" | "repos" | "storage" | "database")[];
+            /** Format: int64 */
+            total_bytes: number;
+            /**
+             * Format: int64
+             * @description Bytes available to the server process.
+             */
+            free_bytes: number;
+            /**
+             * Format: int64
+             * @description Total minus free; includes space reserved for root
+             */
+            used_bytes: number;
+        };
+        HealthStorage: {
+            /** @enum {string} */
+            type: "local" | "s3";
+            ok: boolean;
+            error?: string;
+            /** Format: int64 */
+            logs_bytes: number;
+            /** Format: int64 */
+            artifacts_bytes: number;
+            artifacts_count: number;
+            /** Format: int64 */
+            caches_bytes: number;
+            caches_count: number;
+            /** Format: int64 */
+            release_assets_bytes: number;
+            release_assets_count: number;
+            /** Format: int64 */
+            total_bytes: number;
+        };
+        RepoUsage: {
+            name: string;
+            archived: boolean;
+            /** Format: date-time */
+            pushed_at?: string | null;
+            /**
+             * Format: int64
+             * @description Size of the bare repository on disk.
+             */
+            git_bytes: number;
+            /** Format: int64 */
+            logs_bytes: number;
+            /** Format: int64 */
+            artifacts_bytes: number;
+            /** Format: int64 */
+            caches_bytes: number;
+            /** Format: int64 */
+            release_assets_bytes: number;
+            /** Format: int64 */
+            total_bytes: number;
+        };
+        HealthRepos: {
+            count: number;
+            /** Format: int64 */
+            git_bytes: number;
+            /**
+             * Format: date-time
+             * @description When repository sizes on disk were measured.
+             */
+            measured_at: string;
+            /** @description Every repository, largest total first. */
+            items: components["schemas"]["RepoUsage"][];
+        };
+        HealthCI: {
+            queued_jobs: number;
+            running_jobs: number;
+            /** Format: date-time */
+            oldest_queued_at?: string | null;
+            runners_online: number;
+            runners_offline: number;
+            runners_disabled: number;
+            /** @description Capacity of online */
+            slots_total: number;
+            slots_busy: number;
+        };
+        HealthWebhooks: {
+            hooks: number;
+            active_hooks: number;
+            /** @description Deliveries waiting for their first or next attempt. */
+            pending_deliveries: number;
+            /** @description Pending deliveries that already failed at least once. */
+            retrying_deliveries: number;
+            failed_deliveries_24h: number;
+            /** Format: date-time */
+            oldest_pending_at?: string | null;
+        };
+        HealthCounts: {
+            users: number;
+            disabled_users: number;
+            /** @description Unexpired sign-in sessions. */
+            sessions: number;
+            repos: number;
+            open_pulls: number;
+            open_issues: number;
+        };
+        ServerHealth: {
+            status: components["schemas"]["HealthStatus"];
+            /** @description Every check, worst first. `status` is the worst of these. */
+            checks: components["schemas"]["HealthCheck"][];
+            version: string;
+            commit: string;
+            /** Format: date-time */
+            started_at: string;
+            /** Format: int64 */
+            uptime_seconds: number;
+            /** Format: date-time */
+            generated_at: string;
+            host: components["schemas"]["HealthHost"];
+            database: components["schemas"]["HealthDatabase"];
+            disks: components["schemas"]["HealthDisk"][];
+            storage: components["schemas"]["HealthStorage"];
+            repos: components["schemas"]["HealthRepos"];
+            ci: components["schemas"]["HealthCI"];
+            webhooks: components["schemas"]["HealthWebhooks"];
+            counts: components["schemas"]["HealthCounts"];
         };
         CISettings: {
             /** @description Jobs running at once across the instance; 0 = no limit beyond runner capacity. */
@@ -6477,6 +6657,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CISettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getServerHealth: {
+        parameters: {
+            query?: {
+                /** @description Measure repository sizes on disk now instead of using the cached figures. */
+                refresh?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Health report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerHealth"];
                 };
             };
             default: components["responses"]["Error"];

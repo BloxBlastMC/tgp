@@ -391,3 +391,10 @@ export const webhookDeliveryQuery = (id: number, delivery: number) =>
     queryKey: ['webhook', id, 'delivery', delivery],
     queryFn: () => unwrap(api.GET('/webhooks/{id}/deliveries/{delivery}', { params: { path: { id, delivery } } })),
   })
+
+export const healthQuery = (refresh = false) =>
+  queryOptions({
+    queryKey: ['admin', 'health', { refresh }],
+    queryFn: () => unwrap(api.GET('/admin/health', { params: { query: refresh ? { refresh: true } : {} } })),
+    refetchInterval: 30_000,
+  })

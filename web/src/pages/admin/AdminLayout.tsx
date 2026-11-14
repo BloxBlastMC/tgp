@@ -3,6 +3,7 @@ import { Page } from '../../components/Page'
 
 const tabs = [
   { to: '/admin/users', label: 'Users' },
+  { to: '/admin/health', label: 'Health' },
   { to: '/admin/org', label: 'Organization' },
   { to: '/admin/runners', label: 'Runners' },
   { to: '/admin/ci', label: 'CI settings' },

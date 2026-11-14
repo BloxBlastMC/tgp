@@ -11,7 +11,7 @@ Each milestone ships as its own pull request.
 7. **CI core**: workflow YAML, triggers, resource-limited scheduler, runner protocol, Docker executor, live logs, secrets, required checks, `tgp run/workflow/secret`. ✅ See [ci.md](ci.md).
 8. **Artifacts, cache, releases**: `upload-artifact`/`download-artifact`/`cache` built-ins, `hashFiles`, releases with assets and source archives, `on: release`, local/S3 storage, retention and quotas, `tgp release/artifact/cache`. ✅ See [releases.md](releases.md) and [ci.md](ci.md#artifacts).
 9. **Webhooks**: repository and organisation webhooks, push/create/delete, pull request, review, issue, comment, release and CI run events, HMAC signatures, ordered delivery with retries, delivery log and redelivery, `tgp webhook`. ✅ See [webhooks.md](webhooks.md).
-10. **Admin & ops**: server health, CI limits UI, deployment docs, backup/restore.
+10. **Admin & ops**: server health page and `tgp admin health` (checks, disks, queues, storage per repository), `tgp-server backup`/`restore` (online, database-neutral, SQLite ⇄ PostgreSQL), systemd units, Docker Compose, Caddy/nginx examples. ✅ See [deployment.md](deployment.md) and [backup.md](backup.md).
 
 ## Roles
 

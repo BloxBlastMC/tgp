@@ -60,6 +60,7 @@ var operationAccess = map[string]access{
 	"DeleteRunner":       accessAdmin,
 	"CreateRunnerToken":  accessAdmin,
 	"GetCISettings":      accessAdmin,
+	"GetServerHealth":    accessAdmin,
 	"UpdateCISettings":   accessAdmin,
 	"ListOrgWebhooks":    accessAdmin,
 	"CreateOrgWebhook":   accessAdmin,

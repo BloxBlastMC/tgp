@@ -41,15 +41,41 @@ type Server struct {
 	SetupToken string
 	// App is the server itself, for tests that drive background work.
 	App *server.Server
+	// Config and DB are the server's, for tests that work on its data.
+	Config *config.Config
+	DB     *db.DB
+}
+
+// MasterKey is the test servers' secrets key; Config(dir) writes it to
+// the master key file.
+var MasterKey = bytes.Repeat([]byte{7}, 32)
+
+// Config returns the configuration test servers use for a data dir.
+func Config(dir string) *config.Config {
+	cfg := config.Default()
+	cfg.DataDir = dir
+	cfg.Database.DSN = filepath.Join(dir, "tgp.db")
+	cfg.Repos.Root = filepath.Join(dir, "repos")
+	cfg.Security.MasterKeyFile = filepath.Join(dir, "master.key")
+	return cfg
 }
 
 // Start runs a server backed by SQLite in a temp dir until the test ends.
 func Start(t *testing.T) *Server {
 	t.Helper()
-	cfg := config.Default()
-	cfg.DataDir = t.TempDir()
-	cfg.Database.DSN = filepath.Join(cfg.DataDir, "tgp.db")
-	cfg.Repos.Root = filepath.Join(cfg.DataDir, "repos")
+	return StartIn(t, t.TempDir())
+}
+
+// StartIn runs a server on an existing (or new) data dir until the test
+// ends.
+func StartIn(t *testing.T, dir string) *Server {
+	t.Helper()
+	cfg := Config(dir)
+	if _, err := os.Stat(cfg.Security.MasterKeyFile); err != nil {
+		if err := os.WriteFile(cfg.Security.MasterKeyFile, MasterKey, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
 	var logOut io.Writer = io.Discard
 	if os.Getenv("TGP_TEST_SERVER_LOG") != "" {
 		logOut = os.Stderr
@@ -64,7 +90,7 @@ func Start(t *testing.T) *Server {
 	if err := db.Migrate(ctx, d, log); err != nil {
 		t.Fatal(err)
 	}
-	box, err := secretbox.New(bytes.Repeat([]byte{7}, 32))
+	box, err := secretbox.New(MasterKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +115,7 @@ func Start(t *testing.T) *Server {
 	ts := httptest.NewServer(srv.Handler())
 	t.Cleanup(ts.Close)
 	srv.SetInternalURL(ts.URL)
-	return &Server{t: t, URL: ts.URL, SetupToken: tok, App: srv}
+	return &Server{t: t, URL: ts.URL, SetupToken: tok, App: srv, Config: cfg, DB: d}
 }
 
 // Client is a minimal API client for arranging test state.

@@ -1,0 +1,7 @@
+{$TGP_DOMAIN} {
+	reverse_proxy tgp:3000 {
+		# Stream live CI logs (server-sent events) and git transfers as
+		# they're produced.
+		flush_interval -1
+	}
+}

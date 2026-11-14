@@ -62,6 +62,8 @@ func newRootCmd() *cobra.Command {
 			RunE:  func(cmd *cobra.Command, _ []string) error { return runServe(cmd.Context(), o) },
 		},
 		newMigrateCmd(o),
+		newBackupCmd(o),
+		newRestoreCmd(o),
 		&cobra.Command{
 			Use:    "hook <pre-receive|post-receive>",
 			Short:  "Run a git hook (invoked by git during pushes)",

@@ -43,6 +43,7 @@ import { RunPage } from '../pages/ci/RunPage'
 import { GlobalRunsPage, validateGlobalRuns } from '../pages/ci/GlobalRunsPage'
 import { AdminRunnersPage } from '../pages/admin/AdminRunnersPage'
 import { AdminCIPage } from '../pages/admin/AdminCIPage'
+import { AdminHealthPage } from '../pages/admin/AdminHealthPage'
 import { CachesPage, validateCaches } from '../pages/ci/CachesPage'
 import { ReleaseDetailPage, ReleasesPage, validateReleases } from '../pages/releases/ReleasesPage'
 import { EditReleasePage, NewReleasePage } from '../pages/releases/ReleaseFormPage'
@@ -195,6 +196,7 @@ const routeTree = rootRoute.addChildren([
     adminRoute.addChildren([
       adminIndexRoute,
       createRoute({ getParentRoute: () => adminRoute, path: '/users', component: AdminUsersPage }),
+      createRoute({ getParentRoute: () => adminRoute, path: '/health', component: AdminHealthPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/org', component: AdminOrgPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/runners', component: AdminRunnersPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/ci', component: AdminCIPage }),

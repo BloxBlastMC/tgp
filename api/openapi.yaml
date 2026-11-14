@@ -1860,6 +1860,29 @@ paths:
               schema: { $ref: "#/components/schemas/CISettings" }
         default: { $ref: "#/components/responses/Error" }
 
+  /admin/health:
+    get:
+      operationId: getServerHealth
+      tags: [admin]
+      summary: Server health, resource use and queue lengths (admin)
+      description: |
+        Checks the database, blob storage and disks, and reports queue
+        lengths and storage use per repository. Repository sizes on disk are
+        measured at most every 5 minutes unless `refresh` is set.
+      parameters:
+        - name: refresh
+          in: query
+          required: false
+          description: Measure repository sizes on disk now instead of using the cached figures.
+          schema: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Health report
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ServerHealth" }
+        default: { $ref: "#/components/responses/Error" }
+
   /repos/{repo}/runs/{number}/artifacts:
     parameters:
       - $ref: "#/components/parameters/RepoName"
@@ -3733,6 +3756,155 @@ components:
         token: { type: string }
         expires_at: { type: string, format: date-time }
         command: { type: string, description: A ready-to-run tgp-runner register command. }
+
+    HealthStatus:
+      type: string
+      enum: [ok, warn, fail]
+      description: ok = healthy, warn = needs attention soon, fail = broken now.
+
+    HealthCheck:
+      type: object
+      required: [name, status, message]
+      properties:
+        name: { type: string, description: "Stable identifier, e.g. database, storage, disk, runners, ci_queue, webhooks, migrations, master_key." }
+        status: { $ref: "#/components/schemas/HealthStatus" }
+        message: { type: string }
+
+    HealthHost:
+      type: object
+      required: [hostname, os, arch, cpus, goroutines, memory_bytes]
+      properties:
+        hostname: { type: string }
+        os: { type: string }
+        arch: { type: string }
+        cpus: { type: integer }
+        goroutines: { type: integer }
+        memory_bytes: { type: integer, format: int64, description: Memory the server process got from the OS. }
+
+    HealthDatabase:
+      type: object
+      required: [driver, ok, latency_ms, schema_version, pending_migrations]
+      properties:
+        driver: { type: string, enum: [sqlite, postgres] }
+        ok: { type: boolean }
+        error: { type: string }
+        latency_ms: { type: number, description: Round trip of a trivial query. }
+        size_bytes: { type: integer, format: int64, nullable: true }
+        schema_version: { type: string, description: Name of the newest applied migration. }
+        pending_migrations: { type: integer }
+
+    HealthDisk:
+      type: object
+      required: [path, uses, total_bytes, free_bytes, used_bytes]
+      properties:
+        path: { type: string }
+        uses:
+          type: array
+          description: What tgp keeps on this filesystem.
+          items: { type: string, enum: [data, repos, storage, database] }
+        total_bytes: { type: integer, format: int64 }
+        free_bytes: { type: integer, format: int64, description: Bytes available to the server process. }
+        used_bytes: { type: integer, format: int64, description: Total minus free; includes space reserved for root, which the server can't use. }
+
+    HealthStorage:
+      type: object
+      required: [type, ok, logs_bytes, artifacts_bytes, artifacts_count, caches_bytes, caches_count, release_assets_bytes, release_assets_count, total_bytes]
+      properties:
+        type: { type: string, enum: [local, s3] }
+        ok: { type: boolean }
+        error: { type: string }
+        logs_bytes: { type: integer, format: int64 }
+        artifacts_bytes: { type: integer, format: int64 }
+        artifacts_count: { type: integer }
+        caches_bytes: { type: integer, format: int64 }
+        caches_count: { type: integer }
+        release_assets_bytes: { type: integer, format: int64 }
+        release_assets_count: { type: integer }
+        total_bytes: { type: integer, format: int64 }
+
+    RepoUsage:
+      type: object
+      required: [name, archived, git_bytes, logs_bytes, artifacts_bytes, caches_bytes, release_assets_bytes, total_bytes]
+      properties:
+        name: { type: string }
+        archived: { type: boolean }
+        pushed_at: { type: string, format: date-time, nullable: true }
+        git_bytes: { type: integer, format: int64, description: Size of the bare repository on disk. }
+        logs_bytes: { type: integer, format: int64 }
+        artifacts_bytes: { type: integer, format: int64 }
+        caches_bytes: { type: integer, format: int64 }
+        release_assets_bytes: { type: integer, format: int64 }
+        total_bytes: { type: integer, format: int64 }
+
+    HealthRepos:
+      type: object
+      required: [count, git_bytes, measured_at, items]
+      properties:
+        count: { type: integer }
+        git_bytes: { type: integer, format: int64 }
+        measured_at: { type: string, format: date-time, description: When repository sizes on disk were measured. }
+        items:
+          type: array
+          description: Every repository, largest total first.
+          items: { $ref: "#/components/schemas/RepoUsage" }
+
+    HealthCI:
+      type: object
+      required: [queued_jobs, running_jobs, runners_online, runners_offline, runners_disabled, slots_total, slots_busy]
+      properties:
+        queued_jobs: { type: integer }
+        running_jobs: { type: integer }
+        oldest_queued_at: { type: string, format: date-time, nullable: true }
+        runners_online: { type: integer }
+        runners_offline: { type: integer }
+        runners_disabled: { type: integer }
+        slots_total: { type: integer, description: Capacity of online, enabled runners. }
+        slots_busy: { type: integer }
+
+    HealthWebhooks:
+      type: object
+      required: [hooks, active_hooks, pending_deliveries, retrying_deliveries, failed_deliveries_24h]
+      properties:
+        hooks: { type: integer }
+        active_hooks: { type: integer }
+        pending_deliveries: { type: integer, description: Deliveries waiting for their first or next attempt. }
+        retrying_deliveries: { type: integer, description: Pending deliveries that already failed at least once. }
+        failed_deliveries_24h: { type: integer }
+        oldest_pending_at: { type: string, format: date-time, nullable: true }
+
+    HealthCounts:
+      type: object
+      required: [users, disabled_users, sessions, repos, open_pulls, open_issues]
+      properties:
+        users: { type: integer }
+        disabled_users: { type: integer }
+        sessions: { type: integer, description: Unexpired sign-in sessions. }
+        repos: { type: integer }
+        open_pulls: { type: integer }
+        open_issues: { type: integer }
+
+    ServerHealth:
+      type: object
+      required: [status, checks, version, commit, started_at, uptime_seconds, generated_at, host, database, disks, storage, repos, ci, webhooks, counts]
+      properties:
+        status: { $ref: "#/components/schemas/HealthStatus" }
+        checks:
+          type: array
+          description: Every check, worst first. `status` is the worst of these.
+          items: { $ref: "#/components/schemas/HealthCheck" }
+        version: { type: string }
+        commit: { type: string }
+        started_at: { type: string, format: date-time }
+        uptime_seconds: { type: integer, format: int64 }
+        generated_at: { type: string, format: date-time }
+        host: { $ref: "#/components/schemas/HealthHost" }
+        database: { $ref: "#/components/schemas/HealthDatabase" }
+        disks: { type: array, items: { $ref: "#/components/schemas/HealthDisk" } }
+        storage: { $ref: "#/components/schemas/HealthStorage" }
+        repos: { $ref: "#/components/schemas/HealthRepos" }
+        ci: { $ref: "#/components/schemas/HealthCI" }
+        webhooks: { $ref: "#/components/schemas/HealthWebhooks" }
+        counts: { $ref: "#/components/schemas/HealthCounts" }
 
     CISettings:
       type: object

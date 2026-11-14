@@ -5,11 +5,11 @@
 A self-hosted git platform for a single team: repositories, pull requests,
 issues, CI with strict resource limits, and an agent-friendly CLI.
 
-> **Status:** early development: setup, users, authentication, repositories,
-> git over HTTPS, code browsing, the `tgp` CLI, pull requests with reviews and
-> branch protection, issues with labels and milestones, CI (Docker runners
-> with resource limits, artifacts and caches), releases and webhooks work;
-> admin and operations tooling comes next.
+> **Status:** all ten milestones of the first version are in: setup, users,
+> authentication, repositories, git over HTTPS, code browsing, the `tgp` CLI,
+> pull requests with reviews and branch protection, issues with labels and
+> milestones, CI (Docker runners with resource limits, artifacts and caches),
+> releases, webhooks, server health, and backup/restore.
 > See [docs/roadmap.md](docs/roadmap.md).
 
 ## Components
@@ -83,6 +83,14 @@ and CI secrets: back it up with the database.
 Configuration is a TOML file (see [deploy/config.example.toml](deploy/config.example.toml))
 with `TGP_*` environment overrides.
 
+### Production
+
+[docs/deployment.md](docs/deployment.md) covers systemd units, Docker
+Compose, Caddy and nginx, runners, monitoring (**Admin → Health**,
+`tgp admin health`), upgrades and scaling out. Back up with
+`tgp-server backup` and restore with `tgp-server restore`, which also moves
+an installation from SQLite to PostgreSQL: see [docs/backup.md](docs/backup.md).
+
 For UI work, run `./bin/tgp-server` and `cd web && pnpm dev`; Vite proxies
 `/api` to the server on :3000.
 
@@ -107,11 +115,12 @@ internal/
   secretbox     AES-GCM encryption of secrets under the master key
   server        HTTP server, routing, authn/authz policy, API handlers
   users         user creation and management shared by setup and admin
-  servercmd     tgp-server CLI
+  servercmd     tgp-server CLI (serve, migrate, backup, restore)
+  backup        backup archives and restores
   cli           tgp CLI (commands, JSON/jq output, errors, credentials)
   testserver    real in-process server for tests of other packages
   runnercmd     tgp-runner CLI
 web/            React + TypeScript UI, embedded into tgp-server at build time
-deploy/         example configuration and deployment files
+deploy/         example config, systemd units, Docker images + Compose, proxy configs
 docs/           documentation
 ```
