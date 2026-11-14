@@ -337,3 +337,19 @@ func (r *Repo) PathChanged(ctx context.Context, from, to, path string) (bool, er
 	}
 	return len(strings.TrimSpace(string(out))) > 0, nil
 }
+
+// ChangedFiles lists the paths that differ between two commits (renames
+// count as a delete and an add).
+func (r *Repo) ChangedFiles(ctx context.Context, from, to string) ([]string, error) {
+	out, err := r.run(ctx, "diff", "--name-only", "-z", "--no-renames", "--no-ext-diff", "--end-of-options", from, to)
+	if err != nil {
+		return nil, err
+	}
+	var files []string
+	for _, f := range strings.Split(string(out), "\x00") {
+		if f != "" {
+			files = append(files, f)
+		}
+	}
+	return files, nil
+}

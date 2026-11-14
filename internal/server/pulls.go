@@ -376,7 +376,7 @@ func blocker(code apigen.MergeBlockerCode, bypassable bool, format string, args 
 
 // mergeBlockers lists why the pull request can't be merged by someone with
 // perm. Rule-based blockers are bypassable when the rule lets admins bypass.
-func mergeBlockers(pc *pullCtx, mi *mergeInfo, rs reviewSummary, rule *model.BranchProtection, perm authz.Perm) []apigen.MergeBlocker {
+func mergeBlockers(pc *pullCtx, mi *mergeInfo, rs reviewSummary, rule *model.BranchProtection, perm authz.Perm, checks apigen.CheckSummary) []apigen.MergeBlocker {
 	out := []apigen.MergeBlocker{}
 	switch {
 	case pc.merged():
@@ -409,6 +409,16 @@ func mergeBlockers(pc *pullCtx, mi *mergeInfo, rs reviewSummary, rule *model.Bra
 		}
 		if rule.RequireUpToDate && mi.behind > 0 {
 			out = append(out, blocker(apigen.MergeBlockerCodeBehind, bp, "the head branch is %d commit(s) behind %s; update it first", mi.behind, pc.pr.BaseBranch))
+		}
+		if failing, pending := requiredChecksFailing(checks); len(failing) > 0 || len(pending) > 0 {
+			var parts []string
+			if len(failing) > 0 {
+				parts = append(parts, "failing: "+strings.Join(failing, ", "))
+			}
+			if len(pending) > 0 {
+				parts = append(parts, "waiting for: "+strings.Join(pending, ", "))
+			}
+			out = append(out, blocker(apigen.MergeBlockerCodeChecks, bp, "required checks haven't passed (%s)", strings.Join(parts, "; ")))
 		}
 	}
 	return out
@@ -445,7 +455,11 @@ func (s *Server) toAPIPull(ctx context.Context, pc *pullCtx, uc *userCache) (api
 		return apigen.PullRequest{}, err
 	}
 	rs := summarizeReviews(ctx, uc, reviews[pc.issue.ID], reqIDs, pc.issue.AuthorID, pc.pr.HeadSHA, rule)
-	blockers := mergeBlockers(pc, mi, rs, rule, pc.perm)
+	checks, err := s.commitChecks(ctx, pc.repo, pc.pr.HeadSHA, ruleChecks(rule))
+	if err != nil {
+		return apigen.PullRequest{}, err
+	}
+	blockers := mergeBlockers(pc, mi, rs, rule, pc.perm, checks)
 
 	out := apigen.PullRequest{
 		Number: pc.issue.Number, Repo: pc.repo.Name, Title: pc.issue.Title, Body: pc.issue.Body,
@@ -455,7 +469,7 @@ func (s *Server) toAPIPull(ctx context.Context, pc *pullCtx, uc *userCache) (api
 		MergeBase: mi.mergeBase, Comments: pc.issue.CommentCount,
 		Mergeable: apigen.PullRequestMergeable(mi.mergeable), ConflictFiles: mi.conflicts,
 		ReviewDecision: rs.decision, Reviewers: rs.reviewers, RequestedReviewers: []apigen.UserSummary{},
-		Blockers: blockers, CanMerge: len(blockers) == 0, ViewerPermission: apigen.Permission(pc.perm.String()),
+		Blockers: blockers, CanMerge: len(blockers) == 0, Checks: checks, ViewerPermission: apigen.Permission(pc.perm.String()),
 		CreatedAt: pc.issue.CreatedAt, UpdatedAt: pc.issue.UpdatedAt, ClosedAt: pc.issue.ClosedAt, MergedAt: pc.pr.MergedAt,
 		MergedBy: uc.summaryPtr(ctx, pc.pr.MergedByID),
 	}
@@ -585,6 +599,11 @@ func (s *Server) syncHeads(ctx context.Context, g *git.Repo, repo *model.Repo, a
 		if err := s.setHead(ctx, g, pr, rows[i].Number, actor, u.New, evPushed); err != nil {
 			return err
 		}
+		var title string
+		if err := s.db.NewSelect().Model((*model.Issue)(nil)).Column("title").Where("id = ?", pr.IssueID).Scan(ctx, &title); err != nil {
+			return err
+		}
+		s.ciOnPull(context.WithoutCancel(ctx), repo, actor, pr, rows[i].Number, title, "synchronize")
 	}
 	return nil
 }
@@ -717,7 +736,11 @@ func (s *Server) mergePull(ctx context.Context, pc *pullCtx, user *model.User, o
 		return err
 	}
 	rs := summarizeReviews(ctx, s.users(), reviews[pc.issue.ID], nil, pc.issue.AuthorID, pc.pr.HeadSHA, rule)
-	all := mergeBlockers(pc, mi, rs, rule, pc.perm)
+	checks, err := s.commitChecks(ctx, pc.repo, pc.pr.HeadSHA, ruleChecks(rule))
+	if err != nil {
+		return err
+	}
+	all := mergeBlockers(pc, mi, rs, rule, pc.perm, checks)
 	var remaining, bypassed []apigen.MergeBlocker
 	for _, b := range all {
 		if o.bypass && b.Bypassable {
@@ -837,7 +860,11 @@ func (s *Server) afterServerPush(ctx context.Context, repo *model.Repo, user *mo
 	if _, err := s.db.NewUpdate().Model(repo).Column("pushed_at").WherePK().Exec(ctx); err != nil {
 		return err
 	}
-	return s.syncPulls(ctx, repo, user, updates)
+	if err := s.syncPulls(ctx, repo, user, updates); err != nil {
+		return err
+	}
+	s.ciOnPush(context.WithoutCancel(ctx), repo, user, updates)
+	return nil
 }
 
 // deleteBranch deletes a branch if the rules allow it.

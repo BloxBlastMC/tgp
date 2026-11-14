@@ -77,7 +77,7 @@ func toAPIProtection(r *model.BranchProtection) apigen.BranchProtection {
 	return apigen.BranchProtection{
 		Id: r.ID, Pattern: r.Pattern, RequirePullRequest: r.RequirePullRequest, RequiredApprovals: r.RequiredApprovals,
 		DismissStaleApprovals: r.DismissStaleApprovals, RequireUpToDate: r.RequireUpToDate, BlockForcePush: r.BlockForcePush,
-		AllowDeletion: r.AllowDeletion, AdminsBypass: r.AdminsBypass, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
+		AllowDeletion: r.AllowDeletion, AdminsBypass: r.AdminsBypass, RequiredChecks: ruleChecks(r), CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 	}
 }
 
@@ -119,7 +119,8 @@ func (s *Server) auditProtection(ctx context.Context, db bun.IDB, action string,
 	return audit.Record(ctx, db, audit.Entry{
 		Actor: mustPrincipal(ctx).User, Action: action, TargetType: "repo", Target: repo.Name, IP: clientIP(hr),
 		Details: map[string]any{"pattern": r.Pattern, "require_pull_request": r.RequirePullRequest,
-			"required_approvals": r.RequiredApprovals, "admins_bypass": r.AdminsBypass, "allow_deletion": r.AllowDeletion},
+			"required_approvals": r.RequiredApprovals, "admins_bypass": r.AdminsBypass, "allow_deletion": r.AllowDeletion,
+			"required_checks": ruleChecks(r)},
 	})
 }
 
@@ -146,10 +147,18 @@ func (a *api) CreateProtection(ctx context.Context, req apigen.CreateProtectionR
 		BlockForcePush:        boolOr(b.BlockForcePush, true),
 		AllowDeletion:         boolOr(b.AllowDeletion, false),
 		AdminsBypass:          boolOr(b.AdminsBypass, false),
+		RequiredChecks:        "[]",
 		CreatedAt:             now, UpdatedAt: now,
 	}
 	if err := validateApprovals(rule.RequiredApprovals); err != nil {
 		return nil, err
+	}
+	if b.RequiredChecks != nil {
+		checks, err := cleanChecks(*b.RequiredChecks)
+		if err != nil {
+			return nil, err
+		}
+		rule.RequiredChecks = mustJSON(checks)
 	}
 	err = a.s.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		exists, err := tx.NewSelect().Model((*model.BranchProtection)(nil)).Where("repo_id = ? AND pattern = ?", repo.ID, pattern).Exists(ctx)
@@ -226,6 +235,13 @@ func (a *api) UpdateProtection(ctx context.Context, req apigen.UpdateProtectionR
 			}
 			rule.RequiredApprovals = *b.RequiredApprovals
 		}
+		if b.RequiredChecks != nil {
+			checks, err := cleanChecks(*b.RequiredChecks)
+			if err != nil {
+				return err
+			}
+			rule.RequiredChecks = mustJSON(checks)
+		}
 		rule.UpdatedAt = time.Now().UTC()
 		if _, err := tx.NewUpdate().Model(rule).WherePK().Exec(ctx); err != nil {
 			return err
@@ -271,4 +287,30 @@ func intOr(p *int, def int) int {
 		return def
 	}
 	return *p
+}
+
+// ruleChecks returns a rule's required checks (none without a rule).
+func ruleChecks(r *model.BranchProtection) []string {
+	if r == nil {
+		return nil
+	}
+	return jsonStrings(r.RequiredChecks)
+}
+
+// cleanChecks validates required check names.
+func cleanChecks(in []string) ([]string, error) {
+	out := []string{}
+	seen := map[string]bool{}
+	for _, c := range in {
+		c = strings.TrimSpace(c)
+		if c == "" || seen[c] {
+			continue
+		}
+		if len(c) > 255 {
+			return nil, apierr.Validation("required check names are at most 255 characters").WithDetails(map[string]any{"field": "required_checks"})
+		}
+		seen[c] = true
+		out = append(out, c)
+	}
+	return out, nil
 }

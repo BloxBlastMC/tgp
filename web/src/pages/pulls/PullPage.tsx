@@ -52,7 +52,7 @@ export function PullPage() {
   const number = Number(numStr)
   const search = useSearch({ strict: false }) as PullSearch
   const tab = search.tab ?? 'conversation'
-  const pr = useQuery({ ...pullQuery(repo, number), enabled: Number.isInteger(number) && number > 0 })
+  const pr = useQuery({ ...pullQuery(repo, number), enabled: Number.isInteger(number) && number > 0, refetchInterval: (q) => (q.state.data?.state === 'open' && q.state.data.checks?.state === 'pending' ? 5000 : false) })
   const [pending, setPending] = useState<Pending[]>([])
   const [reviewOpen, setReviewOpen] = useState(false)
 

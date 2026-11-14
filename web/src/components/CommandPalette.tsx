@@ -2,6 +2,7 @@ import { Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Command } from '../lib/commands'
 import { cx } from './ui'
+import { filterCommands } from '../lib/palette'
 
 function isTyping(e: KeyboardEvent) {
   const t = e.target as HTMLElement | null
@@ -61,10 +62,7 @@ export function CommandPalette({
     } else if (!open && d.open) d.close()
   }, [open])
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    return commands.filter((c) => !q || c.label.toLowerCase().includes(q) || c.group.toLowerCase().includes(q))
-  }, [commands, query])
+  const filtered = useMemo(() => filterCommands(commands, query), [commands, query])
 
   const run = (c: Command | undefined) => {
     if (!c) return

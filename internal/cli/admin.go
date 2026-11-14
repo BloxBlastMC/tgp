@@ -15,7 +15,7 @@ import (
 func newAdminCmd(a *app) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "admin",
-		Short: "Administer users and the audit log (admins)",
+		Short: "Administer users, runners, CI limits and the audit log (admins)",
 		Long:  "Admin commands. They need an admin account and a token with the admin scope.",
 	}
 	user := &cobra.Command{
@@ -27,7 +27,7 @@ func newAdminCmd(a *app) *cobra.Command {
 	user.AddCommand(newAdminUserListCmd(a), newAdminUserViewCmd(a), newAdminUserCreateCmd(a),
 		newAdminUserEditCmd(a), newAdminUserResetPasswordCmd(a), newAdminUserReset2FACmd(a),
 		newAdminUserAccessCmd(a))
-	cmd.AddCommand(user, newAdminAuditCmd(a))
+	cmd.AddCommand(user, newAdminRunnerCmd(a), newAdminCICmd(a), newAdminAuditCmd(a))
 	return group(cmd)
 }
 

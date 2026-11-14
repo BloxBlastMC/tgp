@@ -144,7 +144,8 @@ type Repo struct {
 	CreatedAt     time.Time  `bun:"created_at"`
 	UpdatedAt     time.Time  `bun:"updated_at"`
 	PushedAt      *time.Time `bun:"pushed_at"`
-	NextNumber    int64      `bun:"next_number,scanonly"` // advanced only by nextNumber
+	NextNumber    int64      `bun:"next_number,scanonly"`     // advanced only by nextNumber
+	NextRunNumber int64      `bun:"next_run_number,scanonly"` // advanced only by nextRunNumber
 }
 
 type RepoGrant struct {
@@ -284,6 +285,7 @@ type BranchProtection struct {
 	BlockForcePush        bool      `bun:"block_force_push"`
 	AllowDeletion         bool      `bun:"allow_deletion"`
 	AdminsBypass          bool      `bun:"admins_bypass"`
+	RequiredChecks        string    `bun:"required_checks"` // JSON array of check names
 	CreatedAt             time.Time `bun:"created_at"`
 	UpdatedAt             time.Time `bun:"updated_at"`
 }
@@ -327,4 +329,167 @@ type IssueAssignee struct {
 
 	IssueID int64 `bun:"issue_id,pk"`
 	UserID  int64 `bun:"user_id,pk"`
+}
+
+// ---- CI ----
+
+// Run statuses.
+const (
+	RunWaiting    = "waiting"
+	RunQueued     = "queued"
+	RunInProgress = "in_progress"
+	RunCompleted  = "completed"
+)
+
+// Job statuses (conclusions are shared with runs and steps).
+const (
+	JobPending    = "pending"
+	JobQueued     = "queued"
+	JobInProgress = "in_progress"
+	JobCompleted  = "completed"
+
+	ConclusionSuccess   = "success"
+	ConclusionFailure   = "failure"
+	ConclusionCancelled = "cancelled"
+	ConclusionSkipped   = "skipped"
+	ConclusionTimedOut  = "timed_out"
+)
+
+type Runner struct {
+	bun.BaseModel `bun:"table:runners,alias:rn"`
+
+	ID            int64      `bun:"id,pk,autoincrement"`
+	Name          string     `bun:"name"`
+	Labels        string     `bun:"labels"` // JSON array
+	TokenHash     string     `bun:"token_hash"`
+	Capacity      int        `bun:"capacity"`
+	Version       string     `bun:"version"`
+	OS            string     `bun:"os"`
+	Arch          string     `bun:"arch"`
+	CPUPercent    *float64   `bun:"cpu_percent"`
+	MemoryPercent *float64   `bun:"memory_percent"`
+	Disabled      bool       `bun:"disabled"`
+	LastSeenAt    *time.Time `bun:"last_seen_at"`
+	CreatedByID   *int64     `bun:"created_by_id"`
+	CreatedAt     time.Time  `bun:"created_at"`
+}
+
+type RunnerToken struct {
+	bun.BaseModel `bun:"table:runner_tokens"`
+
+	ID          int64      `bun:"id,pk,autoincrement"`
+	TokenHash   string     `bun:"token_hash"`
+	CreatedByID *int64     `bun:"created_by_id"`
+	CreatedAt   time.Time  `bun:"created_at"`
+	ExpiresAt   time.Time  `bun:"expires_at"`
+	UsedAt      *time.Time `bun:"used_at"`
+	RunnerID    *int64     `bun:"runner_id"`
+}
+
+type WorkflowRun struct {
+	bun.BaseModel `bun:"table:workflow_runs,alias:wr"`
+
+	ID               int64      `bun:"id,pk,autoincrement"`
+	RepoID           int64      `bun:"repo_id"`
+	Number           int64      `bun:"number"`
+	WorkflowPath     string     `bun:"workflow_path"`
+	WorkflowName     string     `bun:"workflow_name"`
+	WorkflowYAML     string     `bun:"workflow_yaml"`
+	Event            string     `bun:"event"`
+	Ref              string     `bun:"ref"`
+	HeadBranch       string     `bun:"head_branch"`
+	HeadSHA          string     `bun:"head_sha"`
+	BeforeSHA        string     `bun:"before_sha"`
+	PullNumber       *int64     `bun:"pull_number"`
+	ActorID          *int64     `bun:"actor_id"`
+	Title            string     `bun:"title"`
+	Status           string     `bun:"status"`
+	Conclusion       string     `bun:"conclusion"`
+	StatusReason     string     `bun:"status_reason"`
+	Attempt          int        `bun:"attempt"`
+	ConcurrencyGroup string     `bun:"concurrency_group"`
+	CancelInProgress bool       `bun:"cancel_in_progress"`
+	CancelRequested  bool       `bun:"cancel_requested"`
+	Inputs           string     `bun:"inputs"`         // JSON object
+	GitHubContext    string     `bun:"github_context"` // JSON object
+	CreatedAt        time.Time  `bun:"created_at"`
+	UpdatedAt        time.Time  `bun:"updated_at"`
+	StartedAt        *time.Time `bun:"started_at"`
+	CompletedAt      *time.Time `bun:"completed_at"`
+}
+
+type Job struct {
+	bun.BaseModel `bun:"table:jobs,alias:j"`
+
+	ID              int64      `bun:"id,pk,autoincrement"`
+	RunID           int64      `bun:"run_id"`
+	RepoID          int64      `bun:"repo_id"`
+	Attempt         int        `bun:"attempt"`
+	Key             string     `bun:"key"`
+	Name            string     `bun:"name"`
+	CheckName       string     `bun:"check_name"`
+	Matrix          string     `bun:"matrix"` // JSON object or ""
+	Needs           string     `bun:"needs"`  // JSON array
+	Labels          string     `bun:"labels"` // JSON array
+	Image           string     `bun:"image"`
+	CPUs            float64    `bun:"cpus"`
+	MemoryBytes     int64      `bun:"memory_bytes"`
+	Pids            int        `bun:"pids"`
+	TimeoutMinutes  int        `bun:"timeout_minutes"`
+	MaxParallel     int        `bun:"max_parallel"`
+	Definition      string     `bun:"definition"` // JSON jobDef
+	Status          string     `bun:"status"`
+	Conclusion      string     `bun:"conclusion"`
+	FailureReason   string     `bun:"failure_reason"`
+	Outputs         string     `bun:"outputs"` // JSON object
+	RunnerID        *int64     `bun:"runner_id"`
+	TokenHash       *string    `bun:"token_hash"`
+	CancelRequested bool       `bun:"cancel_requested"`
+	ReusedFromID    *int64     `bun:"reused_from_id"`
+	LogLines        int64      `bun:"log_lines"`
+	LogBytes        int64      `bun:"log_bytes"`
+	LogTruncated    bool       `bun:"log_truncated"`
+	LogsDeleted     bool       `bun:"logs_deleted"`
+	CreatedAt       time.Time  `bun:"created_at"`
+	QueuedAt        *time.Time `bun:"queued_at"`
+	StartedAt       *time.Time `bun:"started_at"`
+	CompletedAt     *time.Time `bun:"completed_at"`
+	HeartbeatAt     *time.Time `bun:"heartbeat_at"`
+	CancelledAt     *time.Time `bun:"cancelled_at"`
+}
+
+type JobStep struct {
+	bun.BaseModel `bun:"table:job_steps,alias:js"`
+
+	ID          int64      `bun:"id,pk,autoincrement"`
+	JobID       int64      `bun:"job_id"`
+	Number      int        `bun:"number"`
+	Name        string     `bun:"name"`
+	Status      string     `bun:"status"`
+	Conclusion  string     `bun:"conclusion"`
+	StartedAt   *time.Time `bun:"started_at"`
+	CompletedAt *time.Time `bun:"completed_at"`
+}
+
+type JobLogChunk struct {
+	bun.BaseModel `bun:"table:job_log_chunks,alias:lc"`
+
+	JobID     int64     `bun:"job_id,pk"`
+	Seq       int       `bun:"seq,pk"`
+	FirstLine int64     `bun:"first_line"`
+	LineCount int       `bun:"line_count"`
+	Bytes     int64     `bun:"bytes"`
+	CreatedAt time.Time `bun:"created_at"`
+}
+
+type Secret struct {
+	bun.BaseModel `bun:"table:secrets,alias:sec"`
+
+	ID          int64     `bun:"id,pk,autoincrement"`
+	RepoID      *int64    `bun:"repo_id"`
+	Name        string    `bun:"name"`
+	Value       string    `bun:"value"` // sealed with the master key
+	CreatedAt   time.Time `bun:"created_at"`
+	UpdatedAt   time.Time `bun:"updated_at"`
+	UpdatedByID *int64    `bun:"updated_by_id"`
 }

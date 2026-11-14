@@ -413,6 +413,7 @@ func (a *api) CreatePull(ctx context.Context, req apigen.CreatePullRequestObject
 		return nil, apierr.Validation("%s has no commits that aren't already in %s", b.Head, base)
 	}
 	var number int64
+	var created *model.PullRequest
 	err = a.s.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		if n, err := a.s.existingOpenPull(ctx, tx, repo.ID, b.Head, base, 0); err != nil {
 			return err
@@ -436,6 +437,7 @@ func (a *api) CreatePull(ctx context.Context, req apigen.CreatePullRequestObject
 		}
 		pr := &model.PullRequest{IssueID: issue.ID, RepoID: repo.ID, HeadBranch: b.Head, BaseBranch: base, HeadSHA: headSHA,
 			Draft: deref(b.Draft), Mergeable: "unknown", ConflictFiles: "[]"}
+		created = pr
 		if _, err := tx.NewInsert().Model(pr).Exec(ctx); err != nil {
 			return err
 		}
@@ -455,6 +457,7 @@ func (a *api) CreatePull(ctx context.Context, req apigen.CreatePullRequestObject
 	if err != nil {
 		return nil, err
 	}
+	a.s.ciOnPull(context.WithoutCancel(ctx), repo, user, created, number, title, "opened")
 	pc, err := a.s.loadPullIn(ctx, a.s.db, repo, perm, number)
 	if err != nil {
 		return nil, err
@@ -503,6 +506,7 @@ func (a *api) UpdatePull(ctx context.Context, req apigen.UpdatePullRequestObject
 	if pc.merged() && (b.Base != nil || b.State != nil || b.Draft != nil) {
 		return nil, apierr.Conflict("pull request #%d is already merged", pc.issue.Number)
 	}
+	ciAction := ""
 	err = a.s.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		issue, pr := pc.issue, pc.pr
 		now := time.Now().UTC()
@@ -550,6 +554,9 @@ func (a *api) UpdatePull(ctx context.Context, req apigen.UpdatePullRequestObject
 			if err := addEvent(ctx, tx, issue.ID, user, ev, nil); err != nil {
 				return err
 			}
+			if !*b.Draft && issue.State == model.StateOpen {
+				ciAction = "ready_for_review"
+			}
 			pr.Draft = *b.Draft
 		}
 		if b.State != nil {
@@ -582,6 +589,7 @@ func (a *api) UpdatePull(ctx context.Context, req apigen.UpdatePullRequestObject
 				if err := addEvent(ctx, tx, issue.ID, user, evReopened, nil); err != nil {
 					return err
 				}
+				ciAction = "reopened"
 			}
 		}
 		if b.Reviewers != nil {
@@ -604,6 +612,9 @@ func (a *api) UpdatePull(ctx context.Context, req apigen.UpdatePullRequestObject
 	})
 	if err != nil {
 		return nil, err
+	}
+	if ciAction != "" {
+		a.s.ciOnPull(context.WithoutCancel(ctx), pc.repo, user, pc.pr, pc.issue.Number, pc.issue.Title, ciAction)
 	}
 	out, err := a.s.toAPIPull(ctx, pc, a.s.users())
 	if err != nil {

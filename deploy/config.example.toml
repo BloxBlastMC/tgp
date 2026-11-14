@@ -31,7 +31,8 @@ max_concurrent_git = 0
 max_push_bytes = 2147483648
 
 [storage]
-# Where CI logs, artifacts, caches and release assets go: "local" or "s3".
+# Where CI logs, artifacts, caches and release assets go. Only "local" works
+# for now; "s3" arrives with artifacts (milestone 8).
 type = "local"                         # TGP_STORAGE_TYPE
 
 [storage.local]

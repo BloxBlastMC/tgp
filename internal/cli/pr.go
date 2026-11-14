@@ -28,7 +28,7 @@ from -R or the current directory's git remote.`,
 	}
 	cmd.AddCommand(newPRListCmd(a), newPRStatusCmd(a), newPRViewCmd(a), newPRCreateCmd(a), newPRCheckoutCmd(a),
 		newPRDiffCmd(a), newPRCommentCmd(a), newPRCommentsCmd(a), newPRReviewCmd(a), newPRMergeCmd(a),
-		newPRStateCmd(a, "close"), newPRStateCmd(a, "reopen"), newPREditCmd(a), newPRReadyCmd(a), newPRUpdateBranchCmd(a))
+		newPRStateCmd(a, "close"), newPRStateCmd(a, "reopen"), newPREditCmd(a), newPRReadyCmd(a), newPRUpdateBranchCmd(a), newPRChecksCmd(a))
 	return group(cmd)
 }
 

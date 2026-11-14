@@ -39,6 +39,8 @@ type Server struct {
 	t          *testing.T
 	URL        string
 	SetupToken string
+	// App is the server itself, for tests that drive background work.
+	App *server.Server
 }
 
 // Start runs a server backed by SQLite in a temp dir until the test ends.
@@ -48,7 +50,11 @@ func Start(t *testing.T) *Server {
 	cfg.DataDir = t.TempDir()
 	cfg.Database.DSN = filepath.Join(cfg.DataDir, "tgp.db")
 	cfg.Repos.Root = filepath.Join(cfg.DataDir, "repos")
-	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	var logOut io.Writer = io.Discard
+	if os.Getenv("TGP_TEST_SERVER_LOG") != "" {
+		logOut = os.Stderr
+	}
+	log := slog.New(slog.NewTextHandler(logOut, nil))
 	ctx := context.Background()
 	d, err := db.Open(ctx, cfg.Database)
 	if err != nil {
@@ -83,7 +89,7 @@ func Start(t *testing.T) *Server {
 	ts := httptest.NewServer(srv.Handler())
 	t.Cleanup(ts.Close)
 	srv.SetInternalURL(ts.URL)
-	return &Server{t: t, URL: ts.URL, SetupToken: tok}
+	return &Server{t: t, URL: ts.URL, SetupToken: tok, App: srv}
 }
 
 // Client is a minimal API client for arranging test state.

@@ -1300,6 +1300,408 @@ export interface paths {
         patch: operations["updateMilestone"];
         trace?: never;
     };
+    "/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent workflow runs across every repository you can read */
+        get: operations["listAllRuns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List a repository's workflow runs */
+        get: operations["listRuns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/runs/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["RunNumber"];
+            };
+            cookie?: never;
+        };
+        /** Get a run with its jobs and steps */
+        get: operations["getRun"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/runs/{number}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["RunNumber"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a run (write access)
+         * @description Queued jobs are cancelled immediately; running jobs are stopped by their runner. Fails with `conflict` if the run already finished.
+         */
+        post: operations["cancelRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/runs/{number}/rerun": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["RunNumber"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Re-run a finished run (triage access, so testers can re-run)
+         * @description Starts a new attempt of the same run, with the same commit, workflow file and inputs. With `failed_only`, jobs that succeeded keep their results and only failed or cancelled jobs (and the jobs that depend on them) run again.
+         */
+        post: operations["rerunRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["JobID"];
+            };
+            cookie?: never;
+        };
+        /** Get a job with its steps */
+        get: operations["getJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/jobs/{id}/rerun": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["JobID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-run one job and the jobs that depend on it (triage access) */
+        post: operations["rerunJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/jobs/{id}/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["JobID"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Read a job's log
+         * @description Returns log lines after the `after` cursor (0 for the start). Poll with the
+         *     returned `next` until `complete` is true to follow a running job, or use
+         *     `GET /repos/{repo}/jobs/{id}/logs/stream` (server-sent events: `line` events
+         *     carry a `LogLine`, a final `end` event carries the job).
+         */
+        get: operations["getJobLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/workflows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List the workflow files at a ref, with validation errors */
+        get: operations["listWorkflows"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/workflows/{workflow}/dispatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                /** @description Workflow file name, e.g. `deploy.yml`. */
+                workflow: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run a workflow manually (write access)
+         * @description The workflow must have a `workflow_dispatch` trigger. Inputs are checked against its declared inputs.
+         */
+        post: operations["dispatchWorkflow"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/commits/{sha}/checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                /** @description Commit */
+                sha: string;
+            };
+            cookie?: never;
+        };
+        /** CI results for a commit (latest attempt of each job) */
+        get: operations["getCommitChecks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/secrets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List repository secrets (write access; values are never returned) */
+        get: operations["listRepoSecrets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/secrets/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                /** @description Letters, digits and _; not starting with a digit or TGP_/GITHUB_. Case-insensitive (stored upper-case). */
+                name: components["parameters"]["SecretName"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Create or update a repository secret (write access) */
+        put: operations["setRepoSecret"];
+        post?: never;
+        /** Delete a repository secret (write access) */
+        delete: operations["deleteRepoSecret"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/secrets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List organisation secrets, available to every repository (admin) */
+        get: operations["listOrgSecrets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/secrets/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Letters, digits and _; not starting with a digit or TGP_/GITHUB_. Case-insensitive (stored upper-case). */
+                name: components["parameters"]["SecretName"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Create or update an organisation secret (admin) */
+        put: operations["setOrgSecret"];
+        post?: never;
+        /** Delete an organisation secret (admin) */
+        delete: operations["deleteOrgSecret"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/runners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List runners with their status, load and running jobs (admin) */
+        get: operations["listRunners"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/runners/registration-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a one-time runner registration token (admin) */
+        post: operations["createRunnerToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/runners/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        /** Get a runner (admin) */
+        get: operations["getRunner"];
+        put?: never;
+        post?: never;
+        /**
+         * Remove a runner (admin)
+         * @description Its credentials stop working; jobs it was running fail.
+         */
+        delete: operations["deleteRunner"];
+        options?: never;
+        head?: never;
+        /**
+         * Disable, enable or rename a runner (admin)
+         * @description A disabled runner finishes the jobs it has but gets no new ones.
+         */
+        patch: operations["updateRunner"];
+        trace?: never;
+    };
+    "/admin/ci/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** CI resource limits and defaults (admin) */
+        get: operations["getCISettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change CI resource limits and defaults (admin) */
+        patch: operations["updateCISettings"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1748,7 +2150,7 @@ export interface components {
         };
         MergeBlocker: {
             /** @enum {string} */
-            code: "closed" | "merged" | "draft" | "head_missing" | "base_missing" | "conflict" | "permission" | "approvals" | "changes_requested" | "behind";
+            code: "closed" | "merged" | "draft" | "head_missing" | "base_missing" | "conflict" | "permission" | "approvals" | "changes_requested" | "behind" | "checks";
             message: string;
             /** @description An admin may merge anyway with `bypass_protection` (the rule allows admins to bypass it). */
             bypassable: boolean;
@@ -1802,6 +2204,7 @@ export interface components {
             blockers: components["schemas"]["MergeBlocker"][];
             /** @description You can merge now (blockers is empty). */
             can_merge: boolean;
+            checks: components["schemas"]["CheckSummary"];
             viewer_permission: components["schemas"]["Permission"];
             merged_by?: components["schemas"]["UserSummary"] | null;
             merge_commit?: string | null;
@@ -2035,6 +2438,8 @@ export interface components {
             allow_deletion: boolean;
             /** @description Admins may push directly and merge despite unmet requirements. */
             admins_bypass: boolean;
+            /** @description CI checks (`<workflow> / <job>`) that must pass on the head commit before merging. */
+            required_checks: string[];
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -2056,6 +2461,7 @@ export interface components {
             allow_deletion: boolean;
             /** @default false */
             admins_bypass: boolean;
+            required_checks?: string[];
         };
         BranchProtectionPatch: {
             pattern?: string;
@@ -2066,6 +2472,7 @@ export interface components {
             block_force_push?: boolean;
             allow_deletion?: boolean;
             admins_bypass?: boolean;
+            required_checks?: string[];
         };
         Label: {
             /** Format: int64 */
@@ -2207,6 +2614,318 @@ export interface components {
              */
             milestone?: number;
         };
+        /** @enum {string} */
+        RunEvent: "push" | "pull_request" | "workflow_dispatch";
+        /**
+         * @description `waiting`: held back by a concurrency group. `queued`: jobs waiting for a runner.
+         * @enum {string}
+         */
+        RunStatus: "waiting" | "queued" | "in_progress" | "completed";
+        /**
+         * @description `pending`: waiting for the jobs it needs (or its run's concurrency group). `queued`: ready, waiting for a runner.
+         * @enum {string}
+         */
+        JobStatus: "pending" | "queued" | "in_progress" | "completed";
+        /** @enum {string} */
+        Conclusion: "success" | "failure" | "cancelled" | "skipped" | "timed_out";
+        WorkflowRun: {
+            /** Format: int64 */
+            id: number;
+            /**
+             * Format: int64
+             * @description Run number
+             */
+            number: number;
+            repo: string;
+            /** @description e.g. `.tgp/workflows/ci.yml` */
+            workflow_path: string;
+            workflow_name: string;
+            /** @description Commit subject or pull request title. */
+            title: string;
+            event: components["schemas"]["RunEvent"];
+            /** @description Full ref: `refs/heads/main`, `refs/tags/v1`, `refs/pull/3/head`. */
+            ref: string;
+            head_branch?: string | null;
+            head_sha: string;
+            /** Format: int64 */
+            pull_number?: number | null;
+            actor?: components["schemas"]["UserSummary"] | null;
+            status: components["schemas"]["RunStatus"];
+            conclusion?: components["schemas"]["Conclusion"] | null;
+            /** @description Why the run ended the way it did when it isn't obvious, e.g. superseded by a newer push, queue full, invalid workflow. */
+            status_reason?: string | null;
+            attempt: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            started_at?: string | null;
+            /** Format: date-time */
+            completed_at?: string | null;
+        };
+        WorkflowRunDetail: components["schemas"]["WorkflowRun"] & {
+            jobs: components["schemas"]["Job"][];
+            inputs: {
+                [key: string]: string;
+            };
+            can_cancel: boolean;
+            can_rerun: boolean;
+        };
+        RunPage: {
+            runs: components["schemas"]["WorkflowRun"][];
+            total: number;
+        };
+        JobResources: {
+            cpus: number;
+            /** Format: int64 */
+            memory_bytes: number;
+            pids: number;
+        };
+        RunnerRef: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
+        Job: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            run_number: number;
+            attempt: number;
+            /** @description The job's id in the workflow file. */
+            key: string;
+            /** @description Display name, including matrix values. */
+            name: string;
+            /** @description `<workflow name> / <job name>`, the name used by required checks. */
+            check_name: string;
+            matrix?: {
+                [key: string]: unknown;
+            } | null;
+            needs: string[];
+            status: components["schemas"]["JobStatus"];
+            conclusion?: components["schemas"]["Conclusion"] | null;
+            /** @description Set when the job failed outside its steps, e.g. runner lost, timed out, image pull failed. */
+            failure_reason?: string | null;
+            /** @description Why a queued job hasn't started yet. */
+            wait_reason?: string | null;
+            runner?: components["schemas"]["RunnerRef"] | null;
+            /** @description Runner labels the job needs (runs-on). */
+            labels: string[];
+            image: string;
+            resources: components["schemas"]["JobResources"];
+            timeout_minutes: number;
+            steps: components["schemas"]["JobStep"][];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            queued_at?: string | null;
+            /** Format: date-time */
+            started_at?: string | null;
+            /** Format: date-time */
+            completed_at?: string | null;
+        };
+        JobStep: {
+            /** @description 1-based; step 0 is the job's setup (pulling images, starting services). */
+            number: number;
+            name: string;
+            /** @enum {string} */
+            status: "pending" | "in_progress" | "completed";
+            /** @enum {string|null} */
+            conclusion?: "success" | "failure" | "cancelled" | "skipped" | null;
+            /** Format: date-time */
+            started_at?: string | null;
+            /** Format: date-time */
+            completed_at?: string | null;
+        };
+        LogLine: {
+            /** @description Line number */
+            n: number;
+            /** @description Step number (0 = setup */
+            step: number;
+            /** Format: date-time */
+            t: string;
+            text: string;
+        };
+        JobLogs: {
+            lines: components["schemas"]["LogLine"][];
+            /** @description Pass as `after` to get the following lines. */
+            next: number;
+            /** @description The job has finished and every line has been returned. */
+            complete: boolean;
+            /** @description The log hit the size limit; later output was dropped. */
+            truncated: boolean;
+        };
+        WorkflowError: {
+            line?: number;
+            column?: number;
+            message: string;
+        };
+        DispatchInput: {
+            name: string;
+            description: string;
+            required: boolean;
+            default?: string | null;
+            /** @enum {string} */
+            type: "string" | "boolean" | "number" | "choice";
+            options?: string[];
+        };
+        Workflow: {
+            path: string;
+            /** @description File name, e.g. `ci.yml`; use it in dispatch and filters. */
+            file: string;
+            name: string;
+            valid: boolean;
+            errors: components["schemas"]["WorkflowError"][];
+            triggers: components["schemas"]["RunEvent"][];
+            dispatch_inputs: components["schemas"]["DispatchInput"][];
+            jobs: string[];
+        };
+        DispatchRequest: {
+            /** @description Branch or tag to run on. Defaults to the default branch. */
+            ref?: string;
+            inputs?: {
+                [key: string]: string;
+            };
+        };
+        RerunRequest: {
+            /** @default false */
+            failed_only: boolean;
+        };
+        Check: {
+            /** @description `<workflow> / <job>` */
+            name: string;
+            workflow: string;
+            job_name: string;
+            /** Format: int64 */
+            run_number: number;
+            /** Format: int64 */
+            job_id: number;
+            status: components["schemas"]["JobStatus"];
+            conclusion?: components["schemas"]["Conclusion"] | null;
+            /** @description Branch protection requires this check. */
+            required: boolean;
+            /** Format: date-time */
+            started_at?: string | null;
+            /** Format: date-time */
+            completed_at?: string | null;
+        };
+        CheckSummary: {
+            /**
+             * @description `failure` if any check failed, else `pending` if any is still running or a required check hasn't reported, else `success`; `none` without checks.
+             * @enum {string}
+             */
+            state: "none" | "pending" | "success" | "failure";
+            total: number;
+            succeeded: number;
+            failed: number;
+            pending: number;
+            skipped: number;
+            checks: components["schemas"]["Check"][];
+            /** @description Required checks that haven't reported for this commit. */
+            missing_required: string[];
+        };
+        Secret: {
+            name: string;
+            /** @enum {string} */
+            scope: "repo" | "org";
+            /** Format: date-time */
+            updated_at: string;
+            updated_by?: components["schemas"]["UserSummary"] | null;
+        };
+        SecretValue: {
+            value: string;
+        };
+        RunnerJob: {
+            /** Format: int64 */
+            id: number;
+            repo: string;
+            /** Format: int64 */
+            run_number: number;
+            name: string;
+        };
+        Runner: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            labels: string[];
+            /** @enum {string} */
+            status: "online" | "offline" | "disabled";
+            version: string;
+            os: string;
+            arch: string;
+            /** @description Jobs it runs at once. */
+            capacity: number;
+            /** @description Jobs it is running now. */
+            busy: number;
+            /** @description Host CPU load (load average ÷ cores) from the last heartbeat. */
+            cpu_percent?: number | null;
+            memory_percent?: number | null;
+            /** @description Load is above the limit */
+            overloaded?: boolean;
+            jobs: components["schemas"]["RunnerJob"][];
+            /** Format: date-time */
+            last_seen_at?: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        RunnerList: {
+            runners: components["schemas"]["Runner"][];
+            queued_jobs: number;
+            running_jobs: number;
+        };
+        RunnerRegistrationToken: {
+            token: string;
+            /** Format: date-time */
+            expires_at: string;
+            /** @description A ready-to-run tgp-runner register command. */
+            command: string;
+        };
+        CISettings: {
+            /** @description Jobs running at once across the instance; 0 = no limit beyond runner capacity. */
+            max_concurrent_jobs: number;
+            /** @description Jobs one repository may run at once; 0 = no limit. */
+            max_jobs_per_repo: number;
+            /** @description Unstarted runs a repository may have; older runs for the same branch are superseded first */
+            max_queued_runs_per_repo: number;
+            /** @description Runners reporting more CPU load than this get no new jobs; 0 = ignore load. */
+            runner_max_cpu_percent: number;
+            /** @description A runner silent this long is offline and its jobs fail. */
+            runner_offline_after_seconds: number;
+            /** @description Image for jobs without container. */
+            default_image: string;
+            default_cpus: number;
+            max_cpus: number;
+            default_memory_mb: number;
+            max_memory_mb: number;
+            default_pids: number;
+            max_pids: number;
+            default_timeout_minutes: number;
+            max_timeout_minutes: number;
+            /** @description Log size cap per job; output beyond it is dropped. */
+            max_log_mb: number;
+            /** @description Delete job logs older than this; 0 = keep. */
+            log_retention_days: number;
+            /** @description A new push to a branch or pull request cancels its older runs (not on the default branch or tags). */
+            cancel_superseded: boolean;
+        };
+        CISettingsPatch: {
+            max_concurrent_jobs?: number;
+            max_jobs_per_repo?: number;
+            max_queued_runs_per_repo?: number;
+            runner_max_cpu_percent?: number;
+            runner_offline_after_seconds?: number;
+            default_image?: string;
+            default_cpus?: number;
+            max_cpus?: number;
+            default_memory_mb?: number;
+            max_memory_mb?: number;
+            default_pids?: number;
+            max_pids?: number;
+            default_timeout_minutes?: number;
+            max_timeout_minutes?: number;
+            max_log_mb?: number;
+            log_retention_days?: number;
+            cancel_superseded?: boolean;
+        };
     };
     responses: {
         /** @description Error response */
@@ -2234,6 +2953,12 @@ export interface components {
         PerPage: number;
         IssueNumber: number;
         IssueStateParam: "open" | "closed" | "all";
+        RunNumber: number;
+        JobID: number;
+        /** @description Letters, digits and _; not starting with a digit or TGP_/GITHUB_. Case-insensitive (stored upper-case). */
+        SecretName: string;
+        /** @description A status, a conclusion, or `active` (not completed). */
+        RunStatusParam: "active" | "waiting" | "queued" | "in_progress" | "completed" | "success" | "failure" | "cancelled" | "skipped" | "timed_out";
     };
     requestBodies: never;
     headers: never;
@@ -4426,6 +5151,634 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Milestone"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listAllRuns: {
+        parameters: {
+            query?: {
+                /** @description A status, a conclusion, or `active` (not completed). */
+                status?: components["parameters"]["RunStatusParam"];
+                /** @description Username, or `@me`. */
+                actor?: string;
+                page?: components["parameters"]["Page"];
+                per_page?: components["parameters"]["PerPage"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Runs, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listRuns: {
+        parameters: {
+            query?: {
+                /** @description Workflow file name (e.g. `ci.yml`) or path. */
+                workflow?: string;
+                branch?: string;
+                event?: components["schemas"]["RunEvent"];
+                /** @description A status, a conclusion, or `active` (not completed). */
+                status?: components["parameters"]["RunStatusParam"];
+                /** @description Username, or `@me`. */
+                actor?: string;
+                /** @description Pull request number. */
+                pull?: number;
+                /** @description Full or abbreviated head commit. */
+                sha?: string;
+                page?: components["parameters"]["Page"];
+                per_page?: components["parameters"]["PerPage"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Runs, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["RunNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowRunDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    cancelRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["RunNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowRunDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    rerunRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                number: components["parameters"]["RunNumber"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RerunRequest"];
+            };
+        };
+        responses: {
+            /** @description Run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowRunDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["JobID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Job */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    rerunJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["JobID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowRunDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJobLogs: {
+        parameters: {
+            query?: {
+                /** @description Return lines numbered above this. */
+                after?: number;
+                limit?: number;
+                /** @description Only lines of this step number. */
+                step?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                id: components["parameters"]["JobID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Log lines */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobLogs"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listWorkflows: {
+        parameters: {
+            query?: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Workflows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Workflow"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    dispatchWorkflow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                /** @description Workflow file name, e.g. `deploy.yml`. */
+                workflow: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DispatchRequest"];
+            };
+        };
+        responses: {
+            /** @description The new run */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowRunDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCommitChecks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                /** @description Commit */
+                sha: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Checks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckSummary"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listRepoSecrets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Secrets */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Secret"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setRepoSecret: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                /** @description Letters, digits and _; not starting with a digit or TGP_/GITHUB_. Case-insensitive (stored upper-case). */
+                name: components["parameters"]["SecretName"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecretValue"];
+            };
+        };
+        responses: {
+            /** @description Secret */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Secret"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteRepoSecret: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                /** @description Letters, digits and _; not starting with a digit or TGP_/GITHUB_. Case-insensitive (stored upper-case). */
+                name: components["parameters"]["SecretName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listOrgSecrets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Secrets */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Secret"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setOrgSecret: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Letters, digits and _; not starting with a digit or TGP_/GITHUB_. Case-insensitive (stored upper-case). */
+                name: components["parameters"]["SecretName"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecretValue"];
+            };
+        };
+        responses: {
+            /** @description Secret */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Secret"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteOrgSecret: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Letters, digits and _; not starting with a digit or TGP_/GITHUB_. Case-insensitive (stored upper-case). */
+                name: components["parameters"]["SecretName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listRunners: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Runners */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunnerList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createRunnerToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @default 24 */
+                    expires_in_hours?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description The token. It is shown only once. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunnerRegistrationToken"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRunner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Runner */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Runner"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteRunner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateRunner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    disabled?: boolean;
+                    name?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Runner */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Runner"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCISettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CISettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateCISettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CISettingsPatch"];
+            };
+        };
+        responses: {
+            /** @description Settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CISettings"];
                 };
             };
             default: components["responses"]["Error"];

@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -25,6 +26,7 @@ import (
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/git"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/repos"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/secretbox"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/storage"
 )
 
 // Server is the tgp HTTP server.
@@ -51,6 +53,10 @@ type Server struct {
 	// hookSecret authenticates hook callbacks to /internal/hooks.
 	hookSecret string
 	hookURL    atomic.Value // string
+
+	// store holds blobs (CI logs).
+	store storage.Store
+	ci    ciState
 }
 
 // Options configures a Server.
@@ -66,6 +72,9 @@ type Options struct {
 	Git *git.Git
 	// HooksDir contains hook scripts (see githook.WriteScripts).
 	HooksDir string
+	// Storage holds blobs. If nil, local storage under the configured
+	// storage path is used.
+	Storage storage.Store
 }
 
 // New creates a Server.
@@ -83,6 +92,19 @@ func New(o Options) *Server {
 		hookSecret:  auth.RandomToken(32),
 	}
 	s.repos = &repos.Store{DB: o.DB, Git: o.Git, Root: o.Config.Repos.Root}
+	s.store = o.Storage
+	if s.store == nil {
+		p := o.Config.Storage.Local.Path
+		if p == "" {
+			p = filepath.Join(o.Config.DataDir, "storage")
+		}
+		st, err := storage.NewLocal(p)
+		if err != nil {
+			o.Logger.Error("can't create local storage", "path", p, "err", err)
+			st = &storage.Local{Root: p}
+		}
+		s.store = st
+	}
 	n := o.Config.Repos.MaxConcurrentGit
 	if n <= 0 {
 		n = 2 * runtime.NumCPU()
@@ -112,6 +134,7 @@ func (s *Server) Handler() http.Handler {
 	r.Route("/api", func(r chi.Router) {
 		r.Use(securityHeaders)
 		r.Get("/v1/openapi.json", serveSpec)
+		r.Mount("/runner/v1", s.runnerAPI())
 		r.Mount("/v1", s.apiV1())
 		r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 			apierr.Write(w, apierr.NotFound("no API route for %s %s", r.Method, r.URL.Path))
@@ -130,6 +153,7 @@ func (s *Server) apiV1() http.Handler {
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		apierr.Write(w, apierr.NotFound("no API route for %s %s", r.Method, r.URL.Path))
 	})
+	r.Get("/repos/{repo}/jobs/{id}/logs/stream", s.streamJobLogs)
 	r.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
 		apierr.Write(w, apierr.New(http.StatusMethodNotAllowed, apierr.CodeMethodNotAllowed, "method %s not allowed on %s", r.Method, r.URL.Path))
 	})
@@ -187,6 +211,7 @@ func (s *Server) Serve(ctx context.Context, ln net.Listener) error {
 		ErrorLog:          slog.NewLogLogger(s.log.Handler(), slog.LevelWarn),
 		BaseContext:       func(net.Listener) context.Context { return ctx },
 	}
+	s.StartBackground(ctx)
 	if v, _ := s.hookURL.Load().(string); v == "" {
 		s.SetInternalURL(loopbackURL(ln.Addr().String()))
 	}

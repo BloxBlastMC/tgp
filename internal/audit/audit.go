@@ -33,6 +33,13 @@ const (
 	RepoUpdate         = "repo.update"
 	RepoDelete         = "repo.delete"
 	UserRepoAccess     = "user.repo_access"
+	CISettingsUpdate   = "ci.settings_update"
+	SecretSet          = "secret.set"
+	SecretDelete       = "secret.delete"
+	RunnerTokenCreate  = "runner.token_create"
+	RunnerRegister     = "runner.register"
+	RunnerUpdate       = "runner.update"
+	RunnerDelete       = "runner.delete"
 )
 
 // Entry is one audit record.

@@ -4,6 +4,8 @@ import { Page } from '../../components/Page'
 const tabs = [
   { to: '/admin/users', label: 'Users' },
   { to: '/admin/org', label: 'Organization' },
+  { to: '/admin/runners', label: 'Runners' },
+  { to: '/admin/ci', label: 'CI settings' },
   { to: '/admin/audit', label: 'Audit log' },
 ] as const
 

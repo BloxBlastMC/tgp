@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { AlertTriangle, CheckCircle2, GitBranch, GitMerge, Loader2, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { api, errorMessage, unwrap, type PullRequest } from '../../api/client'
+import { ChecksRow } from '../../components/ci/Checks'
 import { useInvalidatePull } from '../../components/pulls/common'
 import { Alert, Button, Checkbox, cx, Input, Select, Textarea, Time } from '../../components/ui'
 import { canBypass, decisionInfo, defaultMergeMessage, loadMergeMethod, saveMergeMethod, type MergeMethod } from '../../lib/pulls'
@@ -105,11 +106,14 @@ function OpenMergeBox({ repo, pr, canWrite }: { repo: string; pr: PullRequest; c
   })
   const decision = decisionInfo(pr.review_decision)
   const behind = pr.behind_by ?? 0
-  const ruleBlockers = pr.blockers.filter((b) => !['conflict', 'permission', 'behind'].includes(b.code))
+  const ruleBlockers = pr.blockers.filter((b) => !['conflict', 'permission', 'behind', 'checks'].includes(b.code))
+  const checksBlocker = pr.blockers.find((b) => b.code === 'checks')
   const bypass = !pr.can_merge && pr.viewer_permission === 'admin' && canBypass(pr)
   return (
     <div className={cx('rounded-md border', pr.can_merge ? 'border-success/40' : 'border-border')} aria-label="Merge status">
       <ul className="divide-y divide-border px-4 py-1">
+        {pr.checks && <ChecksRow repo={repo} checks={pr.checks} blocker={checksBlocker} />}
+        {checksBlocker && pr.checks && pr.checks.total === 0 && pr.checks.missing_required.length === 0 && <StatusRow>{checksBlocker.message}</StatusRow>}
         {pr.mergeable === 'clean' && <StatusRow ok>This branch has no conflicts with {pr.base.branch}.</StatusRow>}
         {pr.mergeable === 'conflict' && (
           <StatusRow>
