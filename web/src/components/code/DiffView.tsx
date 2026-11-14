@@ -285,11 +285,11 @@ function Split({ file }: { file: DiffFile }) {
     // Context lines are commented on the new side only.
     const commentable = side === 'new' || l.type === 'del'
     return [
-      <td key="n" className={cx('relative w-1 px-2 text-right text-fg-faint select-none', tone)}>
+      <td key="n" className={cx('relative w-1 px-2 text-right align-top text-fg-faint tabular-nums select-none', tone)}>
         {commentable && <CommentButton file={file} line={l} />}
         {side === 'old' ? l.old_line : l.new_line}
       </td>,
-      <td key="c" className={cx('w-1/2 pr-3 whitespace-pre', tone)}>
+      <td key="c" className={cx('w-1/2 pr-3 align-top whitespace-pre-wrap [overflow-wrap:anywhere]', tone)}>
         {l.content}
       </td>,
     ]
