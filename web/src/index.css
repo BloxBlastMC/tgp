@@ -25,12 +25,12 @@
 
 :root {
   /* Surfaces, back to front. */
-  --bg: light-dark(#fcfcfd, #0a0b0d);
-  --bg-sidebar: light-dark(#f5f5f7, #0d0e11);
+  --bg: light-dark(#f9f9fb, #0a0b0d);
+  --bg-sidebar: light-dark(#f3f3f6, #0d0e11);
   --surface-1: light-dark(#ffffff, #111216);
   --surface-2: light-dark(#ffffff, #17181d);
   /* A faint tint for header bars, table heads and inset areas. */
-  --bg-subtle: light-dark(#f6f6f8, #111216);
+  --bg-subtle: light-dark(#f7f7f9, #111216);
   --bg-elevated: var(--surface-2);
   --bg-hover: light-dark(#f0f0f3, #1a1b21);
   --bg-active: light-dark(#e8e8ed, #23242b);

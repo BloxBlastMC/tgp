@@ -115,6 +115,7 @@ test('create, push, browse, history, blame, settings and access', async ({ page 
   // Rename, then delete with confirmation.
   await page.getByLabel('Rename').fill('skywars-legacy')
   await page.getByRole('button', { name: 'Rename' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Rename repository' }).click()
   await expect(page).toHaveURL(/\/skywars-legacy\/settings$/)
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
   await page.getByLabel('Repository name').fill('skywars-legacy')

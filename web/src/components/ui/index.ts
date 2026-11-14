@@ -1,6 +1,6 @@
 // The shared component library. Import from '…/components/ui'.
 export { cx } from './cx'
-export { Button, ButtonA, ButtonLink, IconButton, buttonClass, type ButtonProps, type ButtonSize, type ButtonVariant } from './Button'
+export { Button, ButtonA, ButtonLink, IconButton, IconLink, buttonClass, type ButtonProps, type ButtonSize, type ButtonVariant } from './Button'
 export { Checkbox, Field, Input, RadioCard, Select, Switch, Textarea } from './Form'
 export { Badge, Counter, Dot, Kbd, Pill, toneBg, toneText, type Tone } from './Badge'
 export { Alert, ErrorState } from './Alert'

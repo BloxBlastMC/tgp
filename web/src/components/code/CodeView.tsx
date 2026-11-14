@@ -37,16 +37,16 @@ export function CodeView({ code, path }: { code: string; path: string }) {
   }
 
   return (
-    <div className="overflow-x-auto font-mono text-code">
+    <div className="overflow-x-auto py-1.5 font-mono text-code">
       <table className="w-full border-collapse">
         <tbody>
           {lines.map((line, i) => {
             const n = i + 1
             const selected = sel && n >= sel[0] && n <= sel[1]
             return (
-              <tr key={i} id={`L${n}`} className={cx(selected && 'bg-warning/10')}>
+              <tr key={i} id={`L${n}`} className={cx('scroll-mt-24', selected ? 'bg-warning/12' : 'hover:bg-bg-hover/40')}>
                 <td
-                  className="w-1 cursor-pointer px-3 text-right align-top text-fg-faint select-none hover:text-fg"
+                  className={cx('w-1 cursor-pointer pr-4 pl-4 text-right align-top tabular-nums select-none hover:text-fg', selected ? 'text-fg' : 'text-fg-faint')}
                   onClick={(e) => select(n, e.shiftKey)}
                 >
                   {n}

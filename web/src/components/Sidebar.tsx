@@ -130,7 +130,7 @@ export function Sidebar({ openPalette, openShortcuts }: { openPalette: () => voi
           className="flex h-8 w-full items-center gap-2 rounded-md border border-border bg-bg px-2 text-fg-faint shadow-card transition-colors hover:border-border-strong hover:text-fg-muted"
         >
           <Search size={13} />
-          <span className="flex-1 text-left">Search or jump to…</span>
+          <span className="flex-1 text-left">Search…</span>
           <span className="flex gap-0.5">
             <Kbd>{isMac ? '⌘' : 'Ctrl'}</Kbd>
             <Kbd>K</Kbd>

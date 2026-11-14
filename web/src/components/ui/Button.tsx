@@ -1,4 +1,4 @@
-import { createLink } from '@tanstack/react-router'
+import { createLink, Link } from '@tanstack/react-router'
 import { Loader2 } from 'lucide-react'
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react'
 import { cx } from './cx'
@@ -116,6 +116,35 @@ export function IconButton({
   return (
     <Tooltip content={tooltip === true ? label : tooltip} describe={tooltip !== true}>
       {btn}
+    </Tooltip>
+  )
+}
+
+/** Square icon-only router link with a tooltip. */
+export function IconLink({
+  label,
+  children,
+  to,
+  params,
+  search,
+  hash,
+  size = 'md',
+  className,
+}: {
+  label: string
+  children: ReactNode
+  to: string
+  params?: Record<string, string>
+  search?: Record<string, unknown>
+  hash?: string
+  size?: ButtonSize
+  className?: string
+}) {
+  return (
+    <Tooltip content={label} describe={false}>
+      <Link to={to} params={params} search={search} hash={hash} aria-label={label} className={cx(buttonClass({ variant: 'ghost', size }), iconSizes[size], 'px-0', className)}>
+        {children}
+      </Link>
     </Tooltip>
   )
 }

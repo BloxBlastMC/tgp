@@ -42,7 +42,7 @@ export function Card({
       )}
     >
       {(title || actions) && (
-        <header className={cx('flex items-start justify-between gap-4 border-b px-4 py-3', tone === 'danger' ? 'border-danger/25' : 'border-border')}>
+        <header className={cx('flex justify-between gap-4 border-b px-4 py-3', description ? 'items-start' : 'items-center', tone === 'danger' ? 'border-danger/25' : 'border-border')}>
           <div className="flex min-w-0 items-start gap-2.5">
             {icon && <span className="mt-0.5 shrink-0 text-fg-muted">{icon}</span>}
             <div className="min-w-0">

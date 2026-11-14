@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { KeyRound, Plus } from 'lucide-react'
+import { KeyRound, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { api, errorMessage, unwrap, type Secret } from '../../api/client'
 import { orgSecretsQuery, repoSecretsQuery } from '../../api/queries'
-import { Alert, Button, Dialog, Field, Input, Section, Spinner, Textarea, Time } from '../ui'
+import { Alert, Button, Dialog, EmptyState, Field, IconButton, Input, Section, SkeletonRows, Textarea, Time, useConfirm, useToast } from '../ui'
 
 /** Upper-cases and keeps only characters valid in a secret name. */
 export function normalizeSecretName(s: string): string {
@@ -15,14 +15,20 @@ export function SecretsSection({ repo }: { repo?: string }) {
   const q = useQuery(repo ? repoSecretsQuery(repo) : orgSecretsQuery)
   const qc = useQueryClient()
   const [editing, setEditing] = useState<Secret | 'new' | null>(null)
+  const confirm = useConfirm()
+  const toast = useToast()
   const refresh = () => void qc.invalidateQueries({ queryKey: (repo ? repoSecretsQuery(repo) : orgSecretsQuery).queryKey })
   const del = useMutation({
     mutationFn: (name: string) =>
       repo ? unwrap(api.DELETE('/repos/{repo}/secrets/{name}', { params: { path: { repo, name } } })) : unwrap(api.DELETE('/admin/secrets/{name}', { params: { path: { name } } })),
-    onSuccess: refresh,
+    onSuccess: (_, name) => {
+      toast.success(`Deleted ${name}`)
+      refresh()
+    },
   })
   return (
     <Section
+      flush
       title={repo ? 'Secrets' : 'Organization secrets'}
       description={
         repo ? (
@@ -34,44 +40,65 @@ export function SecretsSection({ repo }: { repo?: string }) {
         )
       }
       actions={
-        <Button onClick={() => setEditing('new')}>
-          <Plus size={13} /> Add secret
+        <Button icon={<Plus size={13} />} onClick={() => setEditing('new')}>
+          Add secret
         </Button>
       }
     >
       {q.isPending ? (
-        <Spinner />
+        <SkeletonRows rows={2} />
       ) : q.isError ? (
-        <Alert>{errorMessage(q.error)}</Alert>
+        <div className="p-4">
+          <Alert>{errorMessage(q.error)}</Alert>
+        </div>
       ) : q.data.length === 0 ? (
-        <p className="text-fg-faint">No secrets yet.</p>
+        <EmptyState size="inline" icon={<KeyRound size={18} />} title="No secrets yet">
+          Add tokens and passwords your workflows need.
+        </EmptyState>
       ) : (
-        <ul className="-my-2 divide-y divide-border" aria-label={repo ? 'Repository secrets' : 'Organization secrets'}>
+        <ul aria-label={repo ? 'Repository secrets' : 'Organization secrets'}>
           {q.data.map((s) => (
-            <li key={s.name} className="flex items-center gap-3 py-2">
-              <KeyRound size={14} className="shrink-0 text-fg-faint" />
-              <span className="font-mono font-medium">{s.name}</span>
-              <span className="min-w-0 flex-1 truncate text-sm text-fg-faint">
-                updated <Time iso={s.updated_at} />
-                {s.updated_by && ` by ${s.updated_by.display_name}`}
+            <li key={s.name} className="flex items-center gap-3 border-b border-border px-4 py-2.5 last:border-0">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-bg-subtle text-fg-muted">
+                <KeyRound size={13} />
               </span>
-              <Button variant="ghost" onClick={() => setEditing(s)} aria-label={`Update ${s.name}`}>
-                Update
-              </Button>
-              <Button variant="ghost" className="hover:text-danger" loading={del.isPending && del.variables === s.name} onClick={() => window.confirm(`Delete the secret ${s.name}? Workflows using it will get an empty value.`) && del.mutate(s.name)} aria-label={`Delete ${s.name}`}>
-                Delete
-              </Button>
+              <div className="min-w-0 flex-1 leading-tight">
+                <div className="truncate font-mono font-medium">{s.name}</div>
+                <div className="truncate text-sm text-fg-faint">
+                  Updated <Time iso={s.updated_at} />
+                  {s.updated_by && ` by ${s.updated_by.display_name}`}
+                </div>
+              </div>
+              <IconButton label={`Update ${s.name}`} size="sm" onClick={() => setEditing(s)}>
+                <Pencil size={13} />
+              </IconButton>
+              <IconButton
+                label={`Delete ${s.name}`}
+                size="sm"
+                className="hover:bg-danger/10 hover:text-danger"
+                loading={del.isPending && del.variables === s.name}
+                onClick={async () => {
+                  if (await confirm({ title: `Delete the secret ${s.name}?`, description: 'Workflows that use it will get an empty value.', confirmLabel: 'Delete secret' })) del.mutate(s.name)
+                }}
+              >
+                <Trash2 size={13} />
+              </IconButton>
             </li>
           ))}
         </ul>
       )}
-      {del.isError && <Alert>{errorMessage(del.error)}</Alert>}
+      {del.isError && (
+        <div className="p-4 pt-0">
+          <Alert>{errorMessage(del.error)}</Alert>
+        </div>
+      )}
       {editing && <SecretDialog repo={repo} secret={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={refresh} />}
     </Section>
   )
 }
 
 function SecretDialog({ repo, secret, onClose, onSaved }: { repo?: string; secret: Secret | null; onClose: () => void; onSaved: () => void }) {
+  const toast = useToast()
   const [name, setName] = useState(secret?.name ?? '')
   const [value, setValue] = useState('')
   const save = useMutation({
@@ -80,6 +107,7 @@ function SecretDialog({ repo, secret, onClose, onSaved }: { repo?: string; secre
         ? unwrap(api.PUT('/repos/{repo}/secrets/{name}', { params: { path: { repo, name } }, body: { value } }))
         : unwrap(api.PUT('/admin/secrets/{name}', { params: { path: { name } }, body: { value } })),
     onSuccess: () => {
+      toast.success(secret ? `Updated ${name}` : `Added ${name}`)
       onSaved()
       onClose()
     },
