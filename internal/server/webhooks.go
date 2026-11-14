@@ -80,7 +80,7 @@ func (s *Server) hookSender() *webhook.Sender {
 			n = 4
 		}
 		s.hooks.sem = make(chan struct{}, n)
-		s.hooks.sender = &webhook.Sender{BlockPrivate: s.cfg.Webhooks.BlockPrivateNetworks, Timeout: s.cfg.Webhooks.Timeout.Duration,
+		s.hooks.sender = &webhook.Sender{BlockPrivate: s.cfg.WebhooksBlockPrivate(), Timeout: s.cfg.Webhooks.Timeout.Duration,
 			UserAgent: "tgp-hookshot/" + version.Version}
 	})
 	return s.hooks.sender

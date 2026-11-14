@@ -288,3 +288,20 @@ func contains(l []string, s string) bool {
 	}
 	return false
 }
+
+// With the default configuration, deliveries to loopback are refused.
+func TestWebhooksBlockLoopbackByDefault(t *testing.T) {
+	p := newPREnv(t)
+	p.srv.cfg.Webhooks.BlockPrivateNetworks = nil // the shipped default
+	rcv := newReceiver(t)
+	var hook apigen.Webhook
+	p.mia.mustDo("POST", "/repos/game/webhooks", map[string]any{"url": rcv.srv.URL}, 201).decode(t, &hook)
+	var d apigen.WebhookDelivery
+	p.mia.mustDo("POST", fmt.Sprintf("/webhooks/%d/ping", hook.Id), nil, 200).decode(t, &d)
+	if d.Status != "failed" || d.Error == nil || !strings.Contains(*d.Error, "not allowed") {
+		t.Fatalf("loopback delivery: %+v", d)
+	}
+	if got := rcv.events(); len(got) != 0 {
+		t.Fatalf("receiver got %v", got)
+	}
+}

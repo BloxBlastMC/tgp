@@ -54,6 +54,10 @@ running jobs fail with "The runner stopped responding". Runners can be
 renamed, disabled (they finish their current jobs, then get no new ones) and
 removed under Admin → Runners.
 
+Disabling is for draining a runner and doesn't revoke it: its token keeps
+working so running jobs can report back. If a runner host may be
+compromised, **remove** the runner; that invalidates its token at once.
+
 ## Resource management
 
 The scheduler starts a queued job only when **every** limit allows it. All

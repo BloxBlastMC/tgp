@@ -108,3 +108,32 @@ func TestExampleConfigLoads(t *testing.T) {
 		t.Fatalf("example config = %+v", cfg)
 	}
 }
+
+func TestWebhooksBlockPrivateDefault(t *testing.T) {
+	t.Setenv("TGP_WEBHOOKS_BLOCK_PRIVATE", "")
+	os.Unsetenv("TGP_WEBHOOKS_BLOCK_PRIVATE")
+	cfg, err := Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cfg.WebhooksBlockPrivate() {
+		t.Error("private webhook destinations should be blocked by default")
+	}
+	p := filepath.Join(t.TempDir(), "tgp.toml")
+	if err := os.WriteFile(p, []byte("[webhooks]\nblock_private_networks = false\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if cfg, err = Load(p); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.WebhooksBlockPrivate() {
+		t.Error("explicit block_private_networks = false should allow private destinations")
+	}
+	t.Setenv("TGP_WEBHOOKS_BLOCK_PRIVATE", "true")
+	if cfg, err = Load(p); err != nil {
+		t.Fatal(err)
+	}
+	if !cfg.WebhooksBlockPrivate() {
+		t.Error("env TGP_WEBHOOKS_BLOCK_PRIVATE=true should override the file")
+	}
+}
