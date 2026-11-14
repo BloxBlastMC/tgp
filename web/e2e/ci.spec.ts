@@ -36,7 +36,7 @@ async function loginAs(browser: Browser, username: string, password: string): Pr
   await page.getByLabel('Username or email').fill(username)
   await page.getByLabel('Password').fill(password)
   await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page.getByRole('heading', { name: 'Repositories' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
   return page
 }
 

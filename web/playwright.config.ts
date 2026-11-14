@@ -11,6 +11,8 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     headless: true,
+    // TGP_THEME=light runs (and screenshots) the light theme.
+    colorScheme: process.env.TGP_THEME === 'light' ? 'light' : 'dark',
     trace: 'retain-on-failure',
     launchOptions: process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {},
   },

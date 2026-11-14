@@ -108,6 +108,7 @@ test('create, push, browse, history, blame, settings and access', async ({ page 
   await page.getByLabel('Access to all repositories').uncheck()
   await page.getByRole('dialog').getByText('skywars').click()
   await page.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByRole('dialog', { name: 'Edit mia' })).toBeHidden()
   await page.goto(server.url + '/skywars/settings')
   await expect(page.getByRole('listitem').filter({ hasText: 'mia' }).getByText('Granted')).toBeVisible()
 

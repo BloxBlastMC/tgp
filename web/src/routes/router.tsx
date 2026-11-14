@@ -1,12 +1,14 @@
 import { type QueryClient, useQuery } from '@tanstack/react-query'
 import { createRootRouteWithContext, createRoute, createRouter, Outlet, redirect } from '@tanstack/react-router'
-import { useState } from 'react'
+import { FileQuestion } from 'lucide-react'
+import { useCallback, useState } from 'react'
 import { metaQuery, sessionQuery } from '../api/queries'
-import { CommandPalette } from '../components/CommandPalette'
+import { CommandPalette, shortcutGroups } from '../components/CommandPalette'
 import { EmptyState, Page } from '../components/Page'
-import { Sidebar } from '../components/Sidebar'
+import { isMac, Sidebar } from '../components/Sidebar'
+import { ButtonLink, Dialog, Kbd } from '../components/ui'
 import { useCommands } from '../lib/commands'
-import { useTheme } from '../lib/theme'
+import { HomePage } from '../pages/home/HomePage'
 import { AdminAuditPage } from '../pages/admin/AdminAuditPage'
 import { AdminLayout } from '../pages/admin/AdminLayout'
 import { AdminOrgPage } from '../pages/admin/AdminOrgPage'
@@ -58,18 +60,46 @@ import {
 
 type RouterContext = { queryClient: QueryClient }
 
+function ShortcutsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Dialog open={open} onClose={onClose} title="Keyboard shortcuts" width="max-w-lg">
+      <div className="grid gap-5 sm:grid-cols-2">
+        {shortcutGroups.map((g) => (
+          <div key={g.title} className={g.title === 'Go to' ? 'sm:row-span-2' : ''}>
+            <h3 className="mb-2 text-xs font-semibold tracking-wide text-fg-faint uppercase">{g.title}</h3>
+            <ul className="flex flex-col gap-1.5">
+              {g.items.map((it) => (
+                <li key={it.label} className="flex items-center justify-between gap-3">
+                  <span className="text-fg-muted">{it.label}</span>
+                  <span className="flex shrink-0 gap-0.5">
+                    {it.keys.map((k) => (
+                      <Kbd key={k}>{k === 'Ctrl' && isMac ? '⌘' : k}</Kbd>
+                    ))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </Dialog>
+  )
+}
+
 function AppLayout() {
   const session = useQuery(sessionQuery)
-  const [theme, toggleTheme] = useTheme()
   const [paletteOpen, setPaletteOpen] = useState(false)
-  const commands = useCommands(session.data, toggleTheme)
+  const [helpOpen, setHelpOpen] = useState(false)
+  const openShortcuts = useCallback(() => setHelpOpen(true), [])
+  const commands = useCommands(session.data, { openShortcuts })
   return (
     <div className="flex h-full">
-      <Sidebar theme={theme} toggleTheme={toggleTheme} openPalette={() => setPaletteOpen(true)} />
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <Sidebar openPalette={() => setPaletteOpen(true)} openShortcuts={openShortcuts} />
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-bg">
         <Outlet />
       </main>
-      <CommandPalette commands={commands} open={paletteOpen} setOpen={setPaletteOpen} />
+      <CommandPalette commands={commands} open={paletteOpen} setOpen={setPaletteOpen} onHelp={openShortcuts} />
+      <ShortcutsDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   )
 }
@@ -78,7 +108,17 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: Outlet,
   notFoundComponent: () => (
     <Page title="Not found">
-      <EmptyState title="Page not found">That page doesn't exist.</EmptyState>
+      <EmptyState
+        icon={<FileQuestion size={20} />}
+        title="Page not found"
+        action={
+          <ButtonLink to="/" variant="secondary">
+            Go home
+          </ButtonLink>
+        }
+      >
+        That page doesn't exist or has moved.
+      </EmptyState>
     </Page>
   ),
 })
@@ -187,7 +227,8 @@ const routeTree = rootRoute.addChildren([
   loginRoute,
   changePasswordRoute,
   appRoute.addChildren([
-    createRoute({ getParentRoute: () => appRoute, path: '/', component: ReposPage }),
+    createRoute({ getParentRoute: () => appRoute, path: '/', component: HomePage }),
+    createRoute({ getParentRoute: () => appRoute, path: '/repos', component: ReposPage }),
     repoRoute.addChildren(repoRoutes),
     createRoute({ getParentRoute: () => appRoute, path: '/pulls', validateSearch: validateGlobalPulls, component: GlobalPullsPage }),
     createRoute({ getParentRoute: () => appRoute, path: '/issues', validateSearch: validateGlobalIssues, component: GlobalIssuesPage }),

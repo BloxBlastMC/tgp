@@ -43,7 +43,7 @@ test('admin sees server health: status, checks, database, disks and repository u
   await page.getByLabel('Username or email').fill('owen')
   await page.getByLabel('Password').fill('owens-password-1')
   await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page.getByRole('heading', { name: 'Repositories' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible()
 
   await page.goto(server.url + '/admin')
   await page.getByRole('link', { name: 'Health', exact: true }).click()
