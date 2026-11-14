@@ -419,6 +419,326 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/repos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List repositories you can access */
+        get: operations["listRepos"];
+        put?: never;
+        /** Create a repository (admins) */
+        post: operations["createRepo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** Get a repository */
+        get: operations["getRepo"];
+        put?: never;
+        post?: never;
+        /** Permanently delete a repository (admins) */
+        delete: operations["deleteRepo"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a repository
+         * @description Maintainers can change the description and default branch. Renaming and archiving need an admin.
+         */
+        patch: operations["updateRepo"];
+        trace?: never;
+    };
+    "/repos/{repo}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** Who can access this repository, and how */
+        get: operations["listRepoAccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List branches, most recently updated first */
+        get: operations["listBranches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List tags, newest first */
+        get: operations["listTags"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/tree": {
+        parameters: {
+            query?: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path inside the repository; empty for the root. */
+                path?: components["parameters"]["PathParam"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List a directory */
+        get: operations["getTree"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/blob": {
+        parameters: {
+            query: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path of a file inside the repository. */
+                path: components["parameters"]["RequiredPathParam"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Get a file's content
+         * @description Text files up to 1 MiB are returned as UTF-8; binary files as base64 (up to 1 MiB). Use `raw` for full content.
+         */
+        get: operations["getBlob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/raw": {
+        parameters: {
+            query: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path of a file inside the repository. */
+                path: components["parameters"]["RequiredPathParam"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** Download a file's raw bytes */
+        get: operations["getRaw"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/readme": {
+        parameters: {
+            query?: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path inside the repository; empty for the root. */
+                path?: components["parameters"]["PathParam"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** The README of a directory, rendered to HTML */
+        get: operations["getReadme"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/commits": {
+        parameters: {
+            query?: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path inside the repository; empty for the root. */
+                path?: components["parameters"]["PathParam"];
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** Commit history, newest first */
+        get: operations["listCommits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/commits/{sha}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                /** @description Commit id or any ref. */
+                sha: string;
+            };
+            cookie?: never;
+        };
+        /** A commit with its diff */
+        get: operations["getCommit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/blame": {
+        parameters: {
+            query: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path of a file inside the repository. */
+                path: components["parameters"]["RequiredPathParam"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** Line-by-line authorship of a file */
+        get: operations["getBlame"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/markdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Render markdown to sanitised HTML */
+        post: operations["renderMarkdown"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{username}/repos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        /** A user's repository access */
+        get: operations["adminGetUserRepos"];
+        /**
+         * Set a user's repository access
+         * @description Sets `all_repos` and replaces the list of explicitly granted repositories.
+         */
+        put: operations["adminSetUserRepos"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -627,6 +947,189 @@ export interface components {
              */
             next_before?: number | null;
         };
+        /**
+         * @description `read`: clone and browse. `triage` (testers): plus issues, comments, reviews, CI re-runs.
+         *     `write` (maintainers): plus push and merge. `admin`: plus rename, archive, delete, access.
+         * @enum {string}
+         */
+        Permission: "none" | "read" | "triage" | "write" | "admin";
+        Repo: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            description: string;
+            default_branch: string;
+            /** @description True until the first push. */
+            empty: boolean;
+            /** @description Archived repositories are read-only. */
+            archived: boolean;
+            /** @example https://git.example.com/game.git */
+            clone_url: string;
+            permission: components["schemas"]["Permission"];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: date-time */
+            pushed_at?: string | null;
+        };
+        CreateRepoRequest: {
+            name: string;
+            description?: string;
+            /** @default main */
+            default_branch: string;
+            /**
+             * @description Create an initial commit with a README.
+             * @default false
+             */
+            auto_init: boolean;
+        };
+        UpdateRepoRequest: {
+            /** @description Rename (admins). The old clone URL stops working. */
+            name?: string;
+            description?: string;
+            /** @description Must be an existing branch. */
+            default_branch?: string;
+            /** @description Archive or unarchive (admins). */
+            archived?: boolean;
+        };
+        RepoAccess: {
+            user: components["schemas"]["UserSummary"];
+            permission: components["schemas"]["Permission"];
+            /**
+             * @description Why the user has access.
+             * @enum {string}
+             */
+            source: "admin" | "all_repos" | "grant";
+        };
+        UserRepoAccess: {
+            all_repos: boolean;
+            /** @description Explicitly granted repository names. */
+            repos: string[];
+        };
+        Ref: {
+            name: string;
+            /** @description Commit id the ref points to (tags are peeled). */
+            commit: string;
+            /** @description First line of the commit message. */
+            subject: string;
+            author: string;
+            /** Format: date-time */
+            date: string;
+            is_default?: boolean;
+        };
+        TreeEntry: {
+            name: string;
+            path: string;
+            /** @enum {string} */
+            type: "file" | "dir" | "symlink" | "submodule";
+            mode: string;
+            sha: string;
+            /** Format: int64 */
+            size: number;
+        };
+        Tree: {
+            ref: string;
+            commit: string;
+            path: string;
+            entries: components["schemas"]["TreeEntry"][];
+        };
+        Blob: {
+            ref: string;
+            commit: string;
+            path: string;
+            sha: string;
+            /** Format: int64 */
+            size: number;
+            binary: boolean;
+            /** @description Content was cut at 1 MiB. */
+            truncated: boolean;
+            /** @enum {string} */
+            encoding: "utf-8" | "base64";
+            content: string;
+        };
+        Readme: {
+            path: string;
+            /** @description Sanitised HTML. */
+            html: string;
+        };
+        Signature: {
+            name: string;
+            email: string;
+            /** Format: date-time */
+            date: string;
+        };
+        Commit: {
+            sha: string;
+            parents: string[];
+            author: components["schemas"]["Signature"];
+            committer: components["schemas"]["Signature"];
+            subject: string;
+            body: string;
+        };
+        CommitPage: {
+            commits: components["schemas"]["Commit"][];
+            has_more: boolean;
+        };
+        DiffLine: {
+            /** @enum {string} */
+            type: "context" | "add" | "del";
+            content: string;
+            /** @description Line number in the old file (absent for added lines). */
+            old_line?: number;
+            /** @description Line number in the new file (absent for deleted lines). */
+            new_line?: number;
+            no_newline?: boolean;
+        };
+        DiffHunk: {
+            header: string;
+            old_start: number;
+            old_lines: number;
+            new_start: number;
+            new_lines: number;
+            section?: string;
+            lines: components["schemas"]["DiffLine"][];
+        };
+        DiffFile: {
+            old_path: string;
+            new_path: string;
+            /** @enum {string} */
+            status: "added" | "deleted" | "modified" | "renamed" | "copied";
+            old_mode?: string;
+            new_mode?: string;
+            binary: boolean;
+            additions: number;
+            deletions: number;
+            hunks: components["schemas"]["DiffHunk"][];
+            /** @description Some hunks were omitted because the diff is too large. */
+            truncated: boolean;
+        };
+        Diff: {
+            files: components["schemas"]["DiffFile"][];
+            additions: number;
+            deletions: number;
+            truncated: boolean;
+        };
+        CommitDetail: {
+            commit: components["schemas"]["Commit"];
+            diff: components["schemas"]["Diff"];
+        };
+        BlameRange: {
+            commit: string;
+            author: string;
+            email: string;
+            /** Format: date-time */
+            date: string;
+            summary: string;
+            start_line: number;
+            lines: string[];
+        };
+        Blame: {
+            ref: string;
+            commit: string;
+            path: string;
+            ranges: components["schemas"]["BlameRange"][];
+        };
     };
     responses: {
         /** @description Error response */
@@ -639,7 +1142,16 @@ export interface components {
             };
         };
     };
-    parameters: never;
+    parameters: {
+        /** @description Repository name (case-insensitive). */
+        RepoName: string;
+        /** @description Branch, tag or commit. Defaults to the default branch. */
+        RefParam: string;
+        /** @description Path inside the repository; empty for the root. */
+        PathParam: string;
+        /** @description Path of a file inside the repository. */
+        RequiredPathParam: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -1244,6 +1756,489 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listRepos: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive substring filter on the name. */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Repositories, most recently pushed first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Repo"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    createRepo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRepoRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Repo"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRepo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Repository */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Repo"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteRepo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateRepo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRepoRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Repo"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listRepoAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Users with access */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepoAccess"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listBranches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Branches */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ref"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tags */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ref"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTree: {
+        parameters: {
+            query?: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path inside the repository; empty for the root. */
+                path?: components["parameters"]["PathParam"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Directory listing */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tree"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getBlob: {
+        parameters: {
+            query: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path of a file inside the repository. */
+                path: components["parameters"]["RequiredPathParam"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description File */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Blob"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRaw: {
+        parameters: {
+            query: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path of a file inside the repository. */
+                path: components["parameters"]["RequiredPathParam"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description File content */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getReadme: {
+        parameters: {
+            query?: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path inside the repository; empty for the root. */
+                path?: components["parameters"]["PathParam"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description README */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Readme"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listCommits: {
+        parameters: {
+            query?: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path inside the repository; empty for the root. */
+                path?: components["parameters"]["PathParam"];
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Commits */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCommit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+                /** @description Commit id or any ref. */
+                sha: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Commit */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitDetail"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getBlame: {
+        parameters: {
+            query: {
+                /** @description Branch, tag or commit. Defaults to the default branch. */
+                ref?: components["parameters"]["RefParam"];
+                /** @description Path of a file inside the repository. */
+                path: components["parameters"]["RequiredPathParam"];
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Blame */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Blame"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    renderMarkdown: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    text: string;
+                    /** @description Resolve relative links in this repository. */
+                    repo?: string;
+                    ref?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Rendered HTML */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        html: string;
+                    };
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    adminGetUserRepos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Access */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRepoAccess"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    adminSetUserRepos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    all_repos: boolean;
+                    /** @description Repository names. Kept even when all_repos is true */
+                    repos: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Updated access */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRepoAccess"];
                 };
             };
             default: components["responses"]["Error"];

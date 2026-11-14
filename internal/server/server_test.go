@@ -4,41 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"strings"
 	"testing"
-	"testing/fstest"
 
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/api/apigen"
-	"git.taile67276.ts.net/BloxBlast/tgp/internal/config"
-	"git.taile67276.ts.net/BloxBlast/tgp/internal/db"
 )
 
 func newTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
-	cfg := config.Default()
-	cfg.DataDir = t.TempDir()
-	cfg.Database.DSN = filepath.Join(cfg.DataDir, "tgp.db")
-	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	ctx := context.Background()
-	d, err := db.Open(ctx, cfg.Database)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { d.Close() })
-	if err := db.Migrate(ctx, d, log); err != nil {
-		t.Fatal(err)
-	}
-	web := SPAHandler(fstest.MapFS{
-		"index.html":        {Data: []byte("<html>app</html>")},
-		"assets/app-123.js": {Data: []byte("console.log(1)")},
-	})
-	ts := httptest.NewServer(New(Options{Config: cfg, DB: d, Logger: log, Web: web}).Handler())
-	t.Cleanup(ts.Close)
-	return ts
+	return newEnv(t).ts
 }
 
 func get(t *testing.T, url string) (*http.Response, string) {

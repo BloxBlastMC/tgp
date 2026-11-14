@@ -24,6 +24,11 @@ max_open_conns = 25
 # several server nodes. Defaults to <data_dir>/repos. (TGP_REPOS_ROOT)
 # root = "/var/lib/tgp/repos"
 git_binary = "git"                     # TGP_GIT_BINARY
+# Simultaneous clone/fetch/push operations. Extra requests wait up to 30s,
+# then get "server busy" (503). 0 = 2 × CPU cores.
+max_concurrent_git = 0
+# Largest single push accepted, in bytes. Default 2 GiB.
+max_push_bytes = 2147483648
 
 [storage]
 # Where CI logs, artifacts, caches and release assets go: "local" or "s3".

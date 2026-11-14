@@ -55,6 +55,11 @@ type ReposConfig struct {
 	Root string `toml:"root"`
 	// GitBinary is the git executable to use.
 	GitBinary string `toml:"git_binary"`
+	// MaxConcurrentGit caps simultaneous clone/fetch/push operations;
+	// extra requests wait up to 30s, then get 503. 0 = 2 × CPU cores.
+	MaxConcurrentGit int `toml:"max_concurrent_git"`
+	// MaxPushBytes caps the size of a single push. Default 2 GiB.
+	MaxPushBytes int64 `toml:"max_push_bytes"`
 }
 
 type StorageConfig struct {
@@ -118,7 +123,7 @@ func Default() *Config {
 			ShutdownTimeout: Duration{30 * time.Second},
 		},
 		Database: DatabaseConfig{Driver: "sqlite"},
-		Repos:    ReposConfig{GitBinary: "git"},
+		Repos:    ReposConfig{GitBinary: "git", MaxPushBytes: 2 << 30},
 		Storage:  StorageConfig{Type: "local"},
 		Log:      LogConfig{Level: "info", Format: "text"},
 	}

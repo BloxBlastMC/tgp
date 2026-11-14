@@ -15,6 +15,16 @@ import { ChangePasswordPage } from '../pages/ChangePasswordPage'
 import { LoginPage } from '../pages/LoginPage'
 import { SettingsPage } from '../pages/settings/SettingsPage'
 import { SetupPage } from '../pages/SetupPage'
+import { BlamePage } from '../pages/repos/BlamePage'
+import { BlobPage } from '../pages/repos/BlobPage'
+import { BranchesPage } from '../pages/repos/BranchesPage'
+import { CodePage } from '../pages/repos/CodePage'
+import { CommitPage } from '../pages/repos/CommitPage'
+import { CommitsPage } from '../pages/repos/CommitsPage'
+import { RepoLayout } from '../pages/repos/RepoLayout'
+import { RepoSettingsPage } from '../pages/repos/RepoSettingsPage'
+import { ReposPage } from '../pages/repos/ReposPage'
+import { validateCommits, validateRefPath } from '../pages/repos/search'
 
 type RouterContext = { queryClient: QueryClient }
 
@@ -118,12 +128,29 @@ const adminIndexRoute = createRoute({
   },
 })
 
+const repoRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/$repo',
+  component: RepoLayout,
+})
+
+const repoRoutes = [
+  createRoute({ getParentRoute: () => repoRoute, path: '/', validateSearch: validateRefPath, component: CodePage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/blob', validateSearch: validateRefPath, component: BlobPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/blame', validateSearch: validateRefPath, component: BlamePage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/commits', validateSearch: validateCommits, component: CommitsPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/commit/$sha', component: CommitPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/branches', component: BranchesPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/settings', component: RepoSettingsPage }),
+]
+
 const routeTree = rootRoute.addChildren([
   setupRoute,
   loginRoute,
   changePasswordRoute,
   appRoute.addChildren([
-    createRoute({ getParentRoute: () => appRoute, path: '/', component: placeholder('Repositories', 'Repositories arrive in the next milestone.') }),
+    createRoute({ getParentRoute: () => appRoute, path: '/', component: ReposPage }),
+    repoRoute.addChildren(repoRoutes),
     createRoute({ getParentRoute: () => appRoute, path: '/pulls', component: placeholder('Pull requests', 'Pull requests across all repositories you can access.') }),
     createRoute({ getParentRoute: () => appRoute, path: '/issues', component: placeholder('Issues', 'Issues across all repositories you can access.') }),
     createRoute({ getParentRoute: () => appRoute, path: '/ci', component: placeholder('CI', 'Workflow runs across all repositories.') }),

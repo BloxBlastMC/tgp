@@ -29,6 +29,10 @@ const (
 	UserResetPassword  = "user.reset_password"
 	UserResetTOTP      = "user.reset_totp"
 	OrgUpdate          = "org.update"
+	RepoCreate         = "repo.create"
+	RepoUpdate         = "repo.update"
+	RepoDelete         = "repo.delete"
+	UserRepoAccess     = "user.repo_access"
 )
 
 // Entry is one audit record.

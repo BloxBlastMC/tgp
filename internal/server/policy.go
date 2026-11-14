@@ -47,6 +47,10 @@ var operationAccess = map[string]access{
 	"AdminResetPassword": accessAdmin,
 	"AdminResetTotp":     accessAdmin,
 	"ListAuditLog":       accessAdmin,
+	"AdminGetUserRepos":  accessAdmin,
+	"AdminSetUserRepos":  accessAdmin,
+	"CreateRepo":         accessAdmin,
+	"DeleteRepo":         accessAdmin,
 }
 
 // allowedBeforeSetup lists operations that work while setup is pending.

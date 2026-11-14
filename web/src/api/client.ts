@@ -63,3 +63,8 @@ export function errorMessage(e: unknown): string {
   if (e instanceof Error) return e.message
   return String(e)
 }
+
+export type Repo = Schemas['Repo']
+export type Diff = Schemas['Diff']
+export type DiffFile = Schemas['DiffFile']
+export type Commit = Schemas['Commit']

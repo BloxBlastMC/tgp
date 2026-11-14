@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"runtime"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -19,6 +21,8 @@ import (
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/auth"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/config"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/db"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/git"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/repos"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/secretbox"
 )
 
@@ -36,6 +40,16 @@ type Server struct {
 
 	// setupDone caches setup completion; it never reverts once true.
 	setupDone atomic.Bool
+
+	git   *git.Git
+	repos *repos.Store
+	// gitSem bounds concurrent git transfers.
+	gitSem chan struct{}
+	// hooksDir holds the pre/post-receive scripts used by receive-pack.
+	hooksDir string
+	// hookSecret authenticates hook callbacks to /internal/hooks.
+	hookSecret string
+	hookURL    atomic.Value // string
 }
 
 // Options configures a Server.
@@ -47,11 +61,15 @@ type Options struct {
 	Web http.Handler
 	// Box encrypts secrets at rest with the master key.
 	Box *secretbox.Box
+	// Git runs git commands.
+	Git *git.Git
+	// HooksDir contains hook scripts (see githook.WriteScripts).
+	HooksDir string
 }
 
 // New creates a Server.
 func New(o Options) *Server {
-	return &Server{
+	s := &Server{
 		cfg:         o.Config,
 		db:          o.DB,
 		log:         o.Logger,
@@ -59,7 +77,17 @@ func New(o Options) *Server {
 		box:         o.Box,
 		userLimiter: auth.NewFailureLimiter(10, 15*time.Minute),
 		ipLimiter:   auth.NewFailureLimiter(50, 15*time.Minute),
+		git:         o.Git,
+		hooksDir:    o.HooksDir,
+		hookSecret:  auth.RandomToken(32),
 	}
+	s.repos = &repos.Store{DB: o.DB, Git: o.Git, Root: o.Config.Repos.Root}
+	n := o.Config.Repos.MaxConcurrentGit
+	if n <= 0 {
+		n = 2 * runtime.NumCPU()
+	}
+	s.gitSem = make(chan struct{}, n)
+	return s
 }
 
 // Handler builds the root HTTP handler.
@@ -71,12 +99,14 @@ func (s *Server) Handler() http.Handler {
 	}
 	r.Use(s.recoverer)
 	r.Use(s.requestLogger)
+	r.Use(s.gitRoutes)
 
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		_, _ = w.Write([]byte("ok\n"))
 	})
 	r.Get("/readyz", s.handleReady)
+	r.Post("/internal/hooks/{kind}", s.handleHook)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(securityHeaders)
@@ -155,6 +185,9 @@ func (s *Server) Serve(ctx context.Context, ln net.Listener) error {
 		ErrorLog:          slog.NewLogLogger(s.log.Handler(), slog.LevelWarn),
 		BaseContext:       func(net.Listener) context.Context { return ctx },
 	}
+	if v, _ := s.hookURL.Load().(string); v == "" {
+		s.SetInternalURL(loopbackURL(ln.Addr().String()))
+	}
 	errCh := make(chan error, 1)
 	go func() { errCh <- srv.Serve(ln) }()
 	s.log.Info("tgp-server listening", "addr", ln.Addr().String())
@@ -178,4 +211,17 @@ func (s *Server) Serve(ctx context.Context, ln net.Listener) error {
 		return err
 	}
 	return nil
+}
+
+// loopbackURL turns a listener address like "[::]:3000" or "0.0.0.0:3000"
+// into a URL reachable from the same host.
+func loopbackURL(addr string) string {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return "http://" + addr
+	}
+	if host == "" || host == "::" || host == "0.0.0.0" || strings.HasPrefix(host, "[") {
+		host = "127.0.0.1"
+	}
+	return "http://" + net.JoinHostPort(host, port)
 }

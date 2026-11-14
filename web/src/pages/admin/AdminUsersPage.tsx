@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { MoreHorizontal, Plus, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { api, errorMessage, unwrap, type Schemas, type User } from '../../api/client'
-import { adminUsersQuery, sessionQuery } from '../../api/queries'
+import { adminUsersQuery, sessionQuery, userReposQuery } from '../../api/queries'
+import { RepoAccessPicker } from '../../components/RepoAccessPicker'
 import { Alert, Badge, Button, Checkbox, Dialog, Field, Input, SecretValue, Select, Spinner, Time } from '../../components/ui'
 
 type Role = Schemas['Role']
@@ -135,12 +136,16 @@ function RoleFields({
   onRole,
   onAllRepos,
   disabled,
+  repos,
+  onRepos,
 }: {
   role: Role
   allRepos: boolean
   onRole: (r: Role) => void
   onAllRepos: (v: boolean) => void
   disabled?: boolean
+  repos: string[]
+  onRepos: (r: string[]) => void
 }) {
   const help: Record<Role, string> = {
     admin: 'Everything, including this admin panel and creating repositories.',
@@ -163,9 +168,10 @@ function RoleFields({
           checked={allRepos}
           onChange={onAllRepos}
           label="Access to all repositories"
-          hint="Otherwise they only see repositories they're granted."
+          hint="Including repositories created later."
         />
       )}
+      {role !== 'admin' && !allRepos && <RepoAccessPicker selected={repos} onChange={onRepos} />}
     </>
   )
 }
@@ -182,11 +188,19 @@ function CreateUserDialog({
   const qc = useQueryClient()
   const blank = { username: '', display_name: '', email: '', role: 'maintainer' as Role, all_repos: true }
   const [f, setF] = useState(blank)
+  const [repos, setRepos] = useState<string[]>([])
   const create = useMutation({
-    mutationFn: () => unwrap(api.POST('/admin/users', { body: f })),
+    mutationFn: async () => {
+      const r = await unwrap(api.POST('/admin/users', { body: f }))
+      if (!f.all_repos && f.role !== 'admin' && repos.length > 0) {
+        await unwrap(api.PUT('/admin/users/{username}/repos', { params: { path: { username: r.user.username } }, body: { all_repos: false, repos } }))
+      }
+      return r
+    },
     onSuccess: (r) => {
       void qc.invalidateQueries({ queryKey: adminUsersQuery.queryKey })
       setF(blank)
+      setRepos([])
       onCreated(r)
     },
   })
@@ -215,7 +229,14 @@ function CreateUserDialog({
         <Field label="Email" hint="Optional.">
           {(id) => <Input id={id} type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />}
         </Field>
-        <RoleFields role={f.role} allRepos={f.all_repos} onRole={(role) => setF({ ...f, role })} onAllRepos={(all_repos) => setF({ ...f, all_repos })} />
+        <RoleFields
+          role={f.role}
+          allRepos={f.all_repos}
+          onRole={(role) => setF({ ...f, role })}
+          onAllRepos={(all_repos) => setF({ ...f, all_repos })}
+          repos={repos}
+          onRepos={setRepos}
+        />
         {create.isError && <Alert>{errorMessage(create.error)}</Alert>}
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
@@ -251,9 +272,19 @@ function EditUserDialog({
   const [confirm, setConfirm] = useState<null | 'reset' | 'totp' | 'disable'>(null)
   const refresh = () => void qc.invalidateQueries({ queryKey: adminUsersQuery.queryKey })
   const path = { params: { path: { username: user.username } } }
+  const granted = useQuery(userReposQuery(user.username))
+  const [repos, setRepos] = useState<string[] | null>(null)
+  const selectedRepos = repos ?? granted.data?.repos ?? []
 
   const save = useMutation({
-    mutationFn: () => unwrap(api.PATCH('/admin/users/{username}', { ...path, body: f })),
+    mutationFn: async () => {
+      const { all_repos, ...profile } = f
+      await unwrap(api.PATCH('/admin/users/{username}', { ...path, body: profile }))
+      if (f.role !== 'admin') {
+        await unwrap(api.PUT('/admin/users/{username}/repos', { ...path, body: { all_repos, repos: selectedRepos } }))
+      }
+      void qc.invalidateQueries({ queryKey: userReposQuery(user.username).queryKey })
+    },
     onSuccess: () => {
       refresh()
       onClose()
@@ -335,6 +366,8 @@ function EditUserDialog({
             onRole={(role) => setF({ ...f, role })}
             onAllRepos={(all_repos) => setF({ ...f, all_repos })}
             disabled={isSelf}
+            repos={selectedRepos}
+            onRepos={setRepos}
           />
           {isSelf && <p className="text-[12px] text-fg-faint">You can't change your own role or disable yourself.</p>}
           <div className="flex flex-wrap gap-2 border-t border-border pt-3">
