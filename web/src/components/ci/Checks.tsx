@@ -27,7 +27,7 @@ export function ChecksRow({ repo, checks, blocker }: { repo: string; checks: Che
         {open ? <ChevronDown size={14} className="mt-0.5 text-fg-faint" /> : <ChevronRight size={14} className="mt-0.5 text-fg-faint" />}
       </button>
       {open && (
-        <ul className="mt-1.5 ml-6 flex flex-col rounded border border-border" aria-label="Check list">
+        <ul className="mt-1.5 ml-6 flex flex-col overflow-hidden rounded-md border border-border bg-surface-1" aria-label="Check list">
           {checks.checks.map((c) => (
             <li key={c.job_id} className="flex items-center gap-2 border-b border-border px-2.5 py-1.5 last:border-b-0">
               <StatusIcon status={c.status} conclusion={c.conclusion} size={14} />

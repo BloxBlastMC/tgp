@@ -187,7 +187,7 @@ export function HomePage() {
               hint={reviews.data?.total ? 'Waiting on you' : 'All caught up'}
               to="/pulls"
             />
-            <StatCard label="Your open pull requests" value={authored.data?.total ?? '–'} icon={<GitPullRequest size={15} />} to="/pulls" search={{ filter: 'authored' }} />
+            <StatCard label="Your open PRs" value={authored.data?.total ?? '–'} icon={<GitPullRequest size={15} />} to="/pulls" search={{ filter: 'authored' }} />
             <StatCard label="Assigned issues" value={assigned.data?.total ?? '–'} icon={<CircleDot size={15} />} to="/issues" />
             <StatCard
               label="Your CI runs"

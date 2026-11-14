@@ -13,12 +13,7 @@ export function FilterBar({ children, end, className }: { children: ReactNode; e
   return (
     <div className={cx('flex flex-wrap items-center gap-2 border-b border-border px-4 py-2', className)}>
       {children}
-      {end && (
-        <>
-          <span className="flex-1" />
-          <div className="flex items-center gap-2">{end}</div>
-        </>
-      )}
+      {end && <div className="ml-auto flex items-center gap-2">{end}</div>}
     </div>
   )
 }

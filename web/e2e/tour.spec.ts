@@ -210,4 +210,17 @@ test('tour', async ({ browser }) => {
     await snap(lp, theme, '64-login', '/login')
     await ctx.close()
   }
+
+  // A narrower laptop width for the densest pages.
+  const narrow = await login(browser, 'dark', 'owen', 'owens-password-1')
+  await narrow.setViewportSize({ width: 1024, height: 768 })
+  for (const [name, path] of [
+    ['70-narrow-home', '/'],
+    ['71-narrow-issues', '/game/issues'],
+    ['72-narrow-pull', `/game/pulls/${pr.number}`],
+    ['73-narrow-users', '/admin/users'],
+    ['74-narrow-run', '/game/ci/runs/1'],
+  ] as const)
+    await snap(narrow, 'dark', name, path)
+  await narrow.context().close()
 })

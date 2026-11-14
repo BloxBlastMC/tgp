@@ -466,7 +466,7 @@ function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; jo
         <ExpandContext.Provider value={expand}>
           <div className="flex flex-col gap-2 p-3">
             {job.failure_reason && <Alert>{job.failure_reason}</Alert>}
-            {job.status === 'queued' && <Alert tone="warning">{job.wait_reason ? `Waiting: ${job.wait_reason}` : 'Waiting for a runner to pick up this job…'}</Alert>}
+            {job.status === 'queued' && <Alert tone="warning">{job.wait_reason ? (/^waiting/i.test(job.wait_reason) ? job.wait_reason : `Waiting: ${job.wait_reason}`) : 'Waiting for a runner to pick up this job…'}</Alert>}
             {job.status === 'pending' && <Alert tone="info">{job.wait_reason ?? (job.needs.length ? `Waiting for ${job.needs.join(', ')} to finish.` : 'Waiting to start.')}</Alert>}
             {logs.error && !logs.live && <Alert tone="warning">Couldn't load logs: {logs.error}</Alert>}
             {logs.truncated && <Alert tone="warning">The log reached the size limit; later output was dropped.</Alert>}

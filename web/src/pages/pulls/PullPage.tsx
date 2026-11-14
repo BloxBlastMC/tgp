@@ -202,7 +202,7 @@ function Conversation({ repo, pr }: { repo: string; pr: PullRequest }) {
 
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-5 md:grid-cols-[minmax(0,1fr)_256px]">
-      <div className="relative flex min-w-0 flex-col gap-4 before:absolute before:top-4 before:bottom-24 before:left-[19px] before:w-px before:bg-border">
+      <div className="relative flex min-w-0 flex-col gap-4 before:absolute before:top-4 before:bottom-24 before:left-[19px] before:w-px before:bg-border [&>*]:relative">
         <BodyCard repo={repo} pr={pr} canEdit={v.canEdit} />
         {timeline.isPending ? (
           <SkeletonRows rows={3} />

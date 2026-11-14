@@ -89,7 +89,7 @@ function Kpis({ h }: { h: Health }) {
       <StatCard label="Queued jobs" value={ci.queued_jobs} icon={<Hourglass size={15} />} tone={ci.queued_jobs > 0 ? 'warning' : undefined} hint={ci.oldest_queued_at ? `oldest ${age(ci.oldest_queued_at)}` : 'nothing waiting'} />
       <StatCard label="Running jobs" value={ci.running_jobs} icon={<Play size={15} />} hint={`${ci.slots_busy} / ${ci.slots_total} slots busy`} />
       <StatCard label="Runners online" value={ci.runners_online} icon={<Cpu size={15} />} tone={ci.runners_online === 0 ? 'danger' : 'success'} hint={`${ci.runners_offline} offline`} />
-      <StatCard label="Failed deliveries" value={wh.failed_deliveries_24h} icon={<Webhook size={15} />} tone={wh.failed_deliveries_24h > 0 ? 'danger' : undefined} hint="last 24 hours" />
+      <StatCard label="Failed hooks" value={wh.failed_deliveries_24h} icon={<Webhook size={15} />} tone={wh.failed_deliveries_24h > 0 ? 'danger' : undefined} hint="last 24 hours" />
       <StatCard label="DB latency" value={`${db.latency_ms.toFixed(1)} ms`} icon={<Database size={15} />} tone={db.ok ? undefined : 'danger'} hint={db.driver} />
       <StatCard label="People" value={n.users} icon={<Users size={15} />} hint={`${n.sessions} sessions`} />
     </div>
@@ -99,9 +99,9 @@ function Kpis({ h }: { h: Health }) {
 function Checks({ checks }: { checks: Health['checks'] }) {
   return (
     <Card title="Checks" flush>
-      <ul aria-label="Health checks" className="grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-3">
+      <ul aria-label="Health checks" className="-mr-px -mb-px grid sm:grid-cols-2 xl:grid-cols-3">
         {sortChecks(checks).map((c) => (
-          <li key={c.name} className="flex items-start gap-3 bg-surface-1 px-4 py-3" data-testid="health-check">
+          <li key={c.name} className="flex items-start gap-3 px-4 py-3 shadow-[inset_-1px_-1px_0_var(--border)]" data-testid="health-check">
             <Dot tone={tone[c.status]} className="mt-1.5" label={c.status} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
