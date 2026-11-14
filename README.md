@@ -6,7 +6,7 @@ A self-hosted git platform for a single team: repositories, pull requests,
 issues, CI with strict resource limits, and an agent-friendly CLI.
 
 > **Status:** early development: setup, users, authentication, repositories,
-> git over HTTPS and code browsing work; the CLI comes next.
+> git over HTTPS, code browsing and the `tgp` CLI work; pull requests come next.
 > See [docs/roadmap.md](docs/roadmap.md).
 
 ## Components
@@ -49,6 +49,16 @@ Admins create repositories; clone and push over HTTPS with your username
 and a personal access token as the password. See
 [docs/repositories.md](docs/repositories.md).
 
+### CLI
+
+```sh
+tgp auth login --host git.example.com   # stores a token; offers to set up git
+tgp repo clone game-server              # git push/pull then use your tgp login
+tgp repo list --json=name,clone_url     # every command: --json, --jq, stable exit codes
+```
+
+See [docs/cli.md](docs/cli.md).
+
 The server also creates `master.key` in the data dir. It encrypts 2FA seeds
 (and later CI secrets): back it up with the database.
 
@@ -82,7 +92,8 @@ internal/
   server        HTTP server, routing, authn/authz policy, API handlers
   users         user creation and management shared by setup and admin
   servercmd     tgp-server CLI
-  cli           tgp CLI
+  cli           tgp CLI (commands, JSON/jq output, errors, credentials)
+  testserver    real in-process server for tests of other packages
   runnercmd     tgp-runner CLI
 web/            React + TypeScript UI, embedded into tgp-server at build time
 deploy/         example configuration and deployment files
