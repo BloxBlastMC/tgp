@@ -160,7 +160,7 @@ export function FilterMenu<T extends string>({
   )
 }
 
-/** Sticky bar at the bottom of a settings form while it has unsaved changes. */
+/** Floating bar pinned to the bottom of a settings form; highlights unsaved changes. */
 export function SaveBar({
   dirty,
   saving,
@@ -169,7 +169,9 @@ export function SaveBar({
   form,
   onSave,
   message,
+  disabled,
 }: {
+  disabled?: boolean
   dirty: boolean
   saving?: boolean
   onDiscard?: () => void
@@ -182,8 +184,8 @@ export function SaveBar({
   return (
     <div
       className={cx(
-        'sticky bottom-0 z-10 -mx-4 -mb-4 flex items-center gap-3 border-t px-4 py-2.5 backdrop-blur transition-colors',
-        dirty ? 'border-accent/40 bg-[color-mix(in_oklab,var(--accent)_7%,var(--surface-1))]' : 'border-border bg-bg-subtle',
+        'sticky bottom-4 z-10 flex items-center gap-3 rounded-lg border px-4 py-2.5 shadow-popover transition-colors',
+        dirty ? 'border-accent/50 bg-[color-mix(in_oklab,var(--accent)_8%,var(--surface-2))]' : 'border-border bg-surface-2',
       )}
     >
       <span className={cx('flex-1 text-sm', dirty ? 'text-fg' : 'text-fg-faint')}>{message ?? (dirty ? 'You have unsaved changes.' : 'All changes saved.')}</span>
@@ -192,7 +194,7 @@ export function SaveBar({
           Discard
         </Button>
       )}
-      <Button type={form || !onSave ? 'submit' : 'button'} form={form} variant="primary" loading={saving} disabled={!dirty} onClick={onSave}>
+      <Button type={form || !onSave ? 'submit' : 'button'} form={form} variant="primary" loading={saving} disabled={!dirty || disabled} onClick={onSave}>
         {saveLabel}
       </Button>
     </div>

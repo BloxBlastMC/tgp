@@ -1,91 +1,149 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MoreHorizontal, Plus, Search } from 'lucide-react'
+import { Pencil, Plus, SearchX } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { SubHeader } from '../../components/Page'
 import { api, errorMessage, unwrap, type Schemas, type User } from '../../api/client'
 import { adminUsersQuery, sessionQuery, userReposQuery } from '../../api/queries'
 import { RepoAccessPicker } from '../../components/RepoAccessPicker'
-import { Alert, Badge, Button, Checkbox, Dialog, Field, Input, SecretValue, Select, Spinner, Time } from '../../components/ui'
+import {
+  Alert,
+  Avatar,
+  Badge,
+  Button,
+  Checkbox,
+  DataTable,
+  Dialog,
+  EmptyState,
+  ErrorState,
+  Field,
+  FilterBar,
+  IconButton,
+  Input,
+  SearchInput,
+  SecretValue,
+  SegmentedControl,
+  Select,
+  Time,
+  useToast,
+  type Column,
+} from '../../components/ui'
 
 type Role = Schemas['Role']
 
 const roleTone = { admin: 'warning', maintainer: 'accent', tester: 'neutral' } as const
 
+type AccessFilter = 'all' | Role
+
 export function AdminUsersPage() {
   const users = useQuery(adminUsersQuery)
   const me = useQuery(sessionQuery).data?.user
   const [filter, setFilter] = useState('')
+  const [access, setAccess] = useState<AccessFilter>('all')
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<User | null>(null)
   const [temp, setTemp] = useState<{ username: string; password: string; expires: string } | null>(null)
 
   const shown = useMemo(() => {
-    const f = filter.toLowerCase()
-    return (users.data ?? []).filter((u) => !f || u.username.includes(f) || u.display_name.toLowerCase().includes(f) || u.email.includes(f))
-  }, [users.data, filter])
+    const f = filter.trim().toLowerCase()
+    return (users.data ?? []).filter(
+      (u) =>
+        (access === 'all' || u.role === access) &&
+        (!f || u.username.toLowerCase().includes(f) || u.display_name.toLowerCase().includes(f) || u.email.toLowerCase().includes(f)),
+    )
+  }, [users.data, filter, access])
+  const count = (r: Role) => users.data?.filter((u) => u.role === r).length
+
+  const columns: Column<User>[] = [
+    {
+      id: 'user',
+      header: 'User',
+      sortValue: (u) => u.display_name.toLowerCase(),
+      cell: (u) => (
+        <button type="button" className="flex min-w-0 items-center gap-2.5 text-left" onClick={() => setEditing(u)}>
+          <Avatar user={u} size={28} />
+          <span className="min-w-0 leading-tight">
+            <span className="block truncate font-medium hover:text-accent">
+              {u.display_name}
+              {u.id === me?.id && <span className="ml-1.5 text-xs font-normal text-fg-faint">(you)</span>}
+            </span>
+            <span className="block truncate font-mono text-sm text-fg-faint">{u.username}</span>
+          </span>
+        </button>
+      ),
+    },
+    { id: 'email', header: 'Email', sortValue: (u) => u.email, cell: (u) => (u.email ? <span className="text-fg-muted">{u.email}</span> : <span className="text-fg-faint">—</span>), className: 'hidden lg:table-cell', headerClassName: 'hidden lg:table-cell' },
+    { id: 'role', header: 'Role', sortValue: (u) => u.role, cell: (u) => <Badge tone={roleTone[u.role]}>{u.role}</Badge> },
+    { id: 'repos', header: 'Repositories', cell: (u) => <span className="text-fg-muted">{u.role === 'admin' ? 'All (admin)' : u.all_repos ? 'All' : 'Selected'}</span> },
+    {
+      id: 'status',
+      header: 'Status',
+      cell: (u) => (
+        <div className="flex flex-wrap gap-1">
+          {u.disabled ? <Badge tone="danger">disabled</Badge> : !u.must_change_password && <Badge tone="success">active</Badge>}
+          {u.must_change_password && <Badge tone="warning">temp password</Badge>}
+          {u.totp_enabled && <Badge tone="info">2FA</Badge>}
+        </div>
+      ),
+    },
+    { id: 'login', header: 'Last sign-in', sortValue: (u) => u.last_login_at ?? '', cell: (u) => <span className="text-fg-muted"><Time iso={u.last_login_at} /></span> },
+    {
+      id: 'actions',
+      header: <span className="sr-only">Actions</span>,
+      align: 'right',
+      cell: (u) => (
+        <IconButton label={`Edit ${u.username}`} size="sm" onClick={() => setEditing(u)}>
+          <Pencil size={13} />
+        </IconButton>
+      ),
+    },
+  ]
 
   return (
     <div className="flex flex-col">
-      <div className="flex items-center gap-2 border-b border-border px-4 py-2">
-        <div className="relative max-w-xs flex-1">
-          <Search size={13} className="absolute top-1/2 left-2 -translate-y-1/2 text-fg-faint" />
-          <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter users" className="h-7 pl-7" aria-label="Filter users" />
-        </div>
-        <span className="flex-1 text-sm text-fg-faint">{users.data ? `${users.data.length} users` : ''}</span>
-        <Button variant="primary" onClick={() => setCreating(true)}>
-          <Plus size={14} /> New user
-        </Button>
+      <div className="px-5 pt-6">
+        <SubHeader title="Users" as="h2" description="Everyone who can sign in, their role and repository access." className="mb-4" />
       </div>
-      {users.isPending ? (
-        <Spinner />
-      ) : users.isError ? (
-        <div className="p-4">
-          <Alert>{errorMessage(users.error)}</Alert>
-        </div>
+      <FilterBar
+        className="border-t px-5"
+        end={
+          <>
+            {users.data && <span className="text-sm text-fg-faint tabular-nums">{users.data.length} people</span>}
+            <Button variant="primary" icon={<Plus size={14} />} onClick={() => setCreating(true)}>
+              New user
+            </Button>
+          </>
+        }
+      >
+        <SearchInput value={filter} onChange={setFilter} label="Filter users" placeholder="Filter by name, username or email…" shortcut />
+        <SegmentedControl
+          label="Filter by access"
+          value={access}
+          onChange={setAccess}
+          options={[
+            { value: 'all', label: 'Everyone', count: users.data?.length },
+            { value: 'admin', label: 'Admins', count: count('admin') },
+            { value: 'maintainer', label: 'Maintainers', count: count('maintainer') },
+            { value: 'tester', label: 'Testers', count: count('tester') },
+          ]}
+        />
+      </FilterBar>
+      {users.isError ? (
+        <ErrorState error={users.error} />
       ) : (
-        <table className="w-full text-left">
-          <thead className="text-xs tracking-wide text-fg-faint uppercase">
-            <tr className="border-b border-border">
-              <th className="px-4 py-1.5 font-medium">User</th>
-              <th className="px-2 py-1.5 font-medium">Role</th>
-              <th className="px-2 py-1.5 font-medium">Repositories</th>
-              <th className="px-2 py-1.5 font-medium">Status</th>
-              <th className="px-2 py-1.5 font-medium">Last login</th>
-              <th className="w-10" />
-            </tr>
-          </thead>
-          <tbody>
-            {shown.map((u) => (
-              <tr key={u.id} className="h-10 border-b border-border hover:bg-bg-subtle">
-                <td className="px-4">
-                  <button type="button" className="text-left" onClick={() => setEditing(u)}>
-                    <span className="font-medium">{u.display_name}</span>
-                    <span className="ml-2 font-mono text-sm text-fg-faint">{u.username}</span>
-                    {u.id === me?.id && <span className="ml-2 text-xs text-fg-faint">(you)</span>}
-                  </button>
-                </td>
-                <td className="px-2">
-                  <Badge tone={roleTone[u.role]}>{u.role}</Badge>
-                </td>
-                <td className="px-2 text-fg-muted">{u.all_repos ? 'All' : 'Selected'}</td>
-                <td className="px-2">
-                  <div className="flex gap-1">
-                    {u.disabled && <Badge tone="danger">disabled</Badge>}
-                    {u.must_change_password && <Badge tone="warning">temp password</Badge>}
-                    {u.totp_enabled && <Badge tone="success">2FA</Badge>}
-                  </div>
-                </td>
-                <td className="px-2 text-fg-muted">
-                  <Time iso={u.last_login_at} />
-                </td>
-                <td className="pr-2">
-                  <Button variant="ghost" aria-label={`Edit ${u.username}`} onClick={() => setEditing(u)}>
-                    <MoreHorizontal size={14} />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable
+          aria-label="Users"
+          columns={columns}
+          rows={users.data ? shown : undefined}
+          loading={users.isPending}
+          rowKey={(u) => u.id}
+          rowProps={(u) => ({ className: u.disabled ? 'opacity-60' : undefined })}
+          defaultSort={{ id: 'user', dir: 'asc' }}
+          empty={
+            <EmptyState size="inline" icon={<SearchX size={18} />} title="No matching people">
+              Try a different name or filter.
+            </EmptyState>
+          }
+        />
       )}
 
       <CreateUserDialog
@@ -111,10 +169,10 @@ export function AdminUsersPage() {
       <Dialog open={temp !== null} onClose={() => setTemp(null)} title="Temporary password">
         {temp && (
           <>
-            <p>
-              Give <strong>{temp.username}</strong> this temporary password. They'll choose their own password when they first sign in.
+            <p className="text-fg-muted">
+              Give <strong className="text-fg">{temp.username}</strong> this temporary password. They'll choose their own password when they first sign in.
             </p>
-            <SecretValue value={temp.password} label="Temporary password" />
+            <SecretValue value={temp.password} label={`Temporary password for ${temp.username}`} />
             <Alert tone="warning">
               It's shown only once and expires <Time iso={temp.expires} />.
             </Alert>
@@ -263,6 +321,7 @@ function EditUserDialog({
   onTempPassword: (r: Schemas['UserWithTempPassword']) => void
 }) {
   const qc = useQueryClient()
+  const toast = useToast()
   const [f, setF] = useState({
     display_name: user.display_name,
     email: user.email,
@@ -287,13 +346,15 @@ function EditUserDialog({
     },
     onSuccess: () => {
       refresh()
+      toast.success(`Saved ${user.username}`)
       onClose()
     },
   })
   const setDisabled = useMutation({
     mutationFn: (disabled: boolean) => unwrap(api.PATCH('/admin/users/{username}', { ...path, body: { disabled } })),
-    onSuccess: () => {
+    onSuccess: (_, disabled) => {
       refresh()
+      toast.success(disabled ? `Disabled ${user.username}` : `Enabled ${user.username}`)
       onClose()
     },
   })
@@ -314,7 +375,7 @@ function EditUserDialog({
   const error = save.error ?? setDisabled.error ?? reset.error ?? resetTotp.error
 
   return (
-    <Dialog open onClose={onClose} title={`Edit ${user.username}`}>
+    <Dialog open onClose={onClose} title={`Edit ${user.username}`} width="max-w-lg" icon={<Avatar user={user} size={32} />}>
       {confirm ? (
         <>
           <p>
@@ -370,16 +431,17 @@ function EditUserDialog({
             onRepos={setRepos}
           />
           {isSelf && <p className="text-sm text-fg-faint">You can't change your own role or disable yourself.</p>}
-          <div className="flex flex-wrap gap-2 border-t border-border pt-3">
-            {!isSelf && <Button onClick={() => setConfirm('reset')}>Reset password</Button>}
-            {user.totp_enabled && <Button onClick={() => setConfirm('totp')}>Reset 2FA</Button>}
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-bg-subtle p-3">
+            <span className="mr-auto text-sm font-medium text-fg-muted">Account</span>
+            {!isSelf && <Button size="sm" onClick={() => setConfirm('reset')}>Reset password</Button>}
+            {user.totp_enabled && <Button size="sm" onClick={() => setConfirm('totp')}>Reset 2FA</Button>}
             {!isSelf &&
               (user.disabled ? (
-                <Button onClick={() => setDisabled.mutate(false)} loading={setDisabled.isPending}>
+                <Button size="sm" onClick={() => setDisabled.mutate(false)} loading={setDisabled.isPending}>
                   Enable user
                 </Button>
               ) : (
-                <Button variant="danger" onClick={() => setConfirm('disable')}>
+                <Button size="sm" variant="danger" onClick={() => setConfirm('disable')}>
                   Disable user
                 </Button>
               ))}

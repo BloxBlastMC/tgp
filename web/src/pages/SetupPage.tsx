@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { Check, Plus, Trash2 } from 'lucide-react'
+import { ArrowRight, Check, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { api, ApiRequestError, ensureCsrf, errorMessage, unwrap, type Schemas } from '../api/client'
 import { AuthCard } from '../components/AuthCard'
-import { Alert, Badge, Button, Checkbox, cx, Field, Input, SecretValue, Select } from '../components/ui'
+import { Alert, Avatar, Badge, Button, Checkbox, cx, Field, FileDrop, IconButton, Input, SecretValue, Select } from '../components/ui'
+import { errorText, uploadLogo } from '../lib/upload'
 
 type Role = Schemas['Role']
 type NewUser = { username: string; display_name: string; email: string; role: Role; all_repos: boolean }
@@ -21,6 +22,8 @@ export function SetupPage() {
   const [logo, setLogo] = useState<File | null>(null)
   const [users, setUsers] = useState<NewUser[]>([])
   const [logoError, setLogoError] = useState('')
+  // Field errors show once you've tried to continue (or as soon as a confirmation mismatches).
+  const [tried, setTried] = useState(-1)
   const logoUrl = useMemo(() => (logo ? URL.createObjectURL(logo) : ''), [logo])
   useEffect(() => () => URL.revokeObjectURL(logoUrl), [logoUrl])
 
@@ -39,15 +42,11 @@ export function SetupPage() {
       )
       // Setup logged us in as the admin, so the logo can be uploaded now.
       if (logo) {
-        const r = await fetch('/api/v1/admin/org/logo', {
-          method: 'PUT',
-          body: logo,
-          headers: {
-            'Content-Type': 'application/octet-stream',
-            'X-CSRF-Token': document.cookie.match(/(?:^|; )tgp_csrf=([^;]*)/)?.[1] ?? '',
-          },
-        })
-        if (!r.ok) setLogoError((await r.json().catch(() => null))?.error?.message ?? 'Logo upload failed')
+        try {
+          await uploadLogo(logo)
+        } catch (e) {
+          setLogoError(e instanceof Error ? e.message : errorText('', 'Logo upload failed'))
+        }
       }
       return res
     },
@@ -73,7 +72,8 @@ export function SetupPage() {
               <div className="flex flex-col gap-3">
                 {submit.data.users.map((u) => (
                   <div key={u.user.id}>
-                    <div className="mb-1 flex items-center gap-2">
+                    <div className="mb-1.5 flex items-center gap-2">
+                      <Avatar user={u.user} size={20} />
                       <span className="font-medium">{u.user.username}</span>
                       <Badge>{u.user.role}</Badge>
                     </div>
@@ -83,7 +83,7 @@ export function SetupPage() {
               </div>
             </>
           )}
-          <Button variant="primary" className="h-8" onClick={() => void navigate({ to: '/' })}>
+          <Button variant="primary" size="lg" iconRight={<ArrowRight size={15} />} onClick={() => void navigate({ to: '/' })}>
             Continue to {org.name}
           </Button>
         </div>
@@ -91,33 +91,61 @@ export function SetupPage() {
     )
   }
 
-  const adminValid = admin.username.trim() !== '' && admin.password.length >= 10 && admin.password === admin.confirm
+  const adminErrors = {
+    username: !admin.username.trim() ? 'Choose a username.' : null,
+    password: admin.password.length < 10 ? 'Use at least 10 characters.' : null,
+    confirm: admin.password !== admin.confirm ? "The passwords don't match." : null,
+  }
+  const adminValid = !adminErrors.username && !adminErrors.password && !adminErrors.confirm
   const canNext = [token.trim() !== '', adminValid, org.name.trim() !== '', true, true][step]
+  const show = tried === step
+  const go = (to: number) => {
+    setTried(-1)
+    setStep(to)
+  }
 
   return (
     <AuthCard title="Set up tgp" subtitle="Create the first admin and configure your team's server." wide>
-      <ol className="mb-5 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-        {steps.map((s, i) => (
-          <li key={s} className={cx('flex items-center gap-1.5', i === step ? 'text-fg' : 'text-fg-faint')}>
-            <span
-              className={cx(
-                'flex size-4 items-center justify-center rounded-full text-2xs',
-                i < step ? 'bg-success/20 text-success' : i === step ? 'bg-accent-solid text-accent-fg' : 'bg-bg-hover',
-              )}
-            >
-              {i < step ? <Check size={10} /> : i + 1}
-            </span>
-            {s}
-          </li>
-        ))}
+      <ol className="mb-6 flex items-center" aria-label="Setup steps">
+        {steps.map((s, i) => {
+          const done = i < step
+          const current = i === step
+          return (
+            <li key={s} className={cx('flex items-center', i < steps.length - 1 && 'flex-1')} aria-current={current ? 'step' : undefined}>
+              <button
+                type="button"
+                disabled={!done}
+                onClick={() => go(i)}
+                className={cx('flex flex-col items-center gap-1.5 text-xs font-medium sm:flex-row sm:gap-2', current ? 'text-fg' : done ? 'cursor-pointer text-fg-muted hover:text-fg' : 'text-fg-faint')}
+              >
+                <span
+                  className={cx(
+                    'flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-colors',
+                    done ? 'border-transparent bg-success text-white' : current ? 'border-transparent bg-accent-solid text-accent-fg' : 'border-border-strong bg-surface-1',
+                  )}
+                >
+                  {done ? <Check size={12} /> : i + 1}
+                </span>
+                <span className="hidden whitespace-nowrap md:inline">{s}</span>
+              </button>
+              {i < steps.length - 1 && <span className={cx('mx-2 h-px flex-1', done ? 'bg-success/60' : 'bg-border')} aria-hidden />}
+            </li>
+          )
+        })}
       </ol>
+      <p className="mb-4 text-xs font-semibold tracking-wide text-fg-faint uppercase md:hidden">
+        Step {step + 1} of {steps.length}: {steps[step]}
+      </p>
 
       <form
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault()
-          if (!canNext) return
-          if (step < steps.length - 1) setStep(step + 1)
+          if (!canNext) {
+            setTried(step)
+            return
+          }
+          if (step < steps.length - 1) go(step + 1)
           else submit.mutate()
         }}
       >
@@ -127,7 +155,7 @@ export function SetupPage() {
               When tgp-server starts for the first time it prints a one-time <strong className="text-fg">setup token</strong> in its log. This
               proves you run the server.
             </p>
-            <Field label="Setup token" hint="Restarting the server prints a new token.">
+            <Field label="Setup token" hint="Restarting the server prints a new token." error={show && !token.trim() ? 'Paste the setup token from the server log.' : undefined}>
               {(id) => <Input id={id} value={token} onChange={(e) => setToken(e.target.value)} className="font-mono" autoFocus autoComplete="off" />}
             </Field>
           </>
@@ -136,7 +164,7 @@ export function SetupPage() {
         {step === 1 && (
           <>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Username">
+              <Field label="Username" error={show ? adminErrors.username : undefined}>
                 {(id) => <Input id={id} value={admin.username} onChange={(e) => setAdmin({ ...admin, username: e.target.value.toLowerCase() })} autoComplete="username" autoFocus />}
               </Field>
               <Field label="Display name">
@@ -147,20 +175,19 @@ export function SetupPage() {
               {(id) => <Input id={id} type="email" value={admin.email} onChange={(e) => setAdmin({ ...admin, email: e.target.value })} autoComplete="email" />}
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Password" hint="At least 10 characters.">
+              <Field label="Password" hint="At least 10 characters." error={show ? adminErrors.password : undefined}>
                 {(id) => <Input id={id} type="password" value={admin.password} onChange={(e) => setAdmin({ ...admin, password: e.target.value })} autoComplete="new-password" />}
               </Field>
-              <Field label="Confirm password">
+              <Field label="Confirm password" error={(show || admin.confirm !== '') && admin.confirm !== admin.password ? adminErrors.confirm : undefined}>
                 {(id) => <Input id={id} type="password" value={admin.confirm} onChange={(e) => setAdmin({ ...admin, confirm: e.target.value })} autoComplete="new-password" />}
               </Field>
             </div>
-            {admin.confirm !== '' && admin.password !== admin.confirm && <Alert tone="warning">Passwords don't match.</Alert>}
           </>
         )}
 
         {step === 2 && (
           <>
-            <Field label="Organization name">
+            <Field label="Organization name" error={show && !org.name.trim() ? 'Name your organization.' : undefined}>
               {(id) => <Input id={id} value={org.name} onChange={(e) => setOrg({ ...org, name: e.target.value })} placeholder="BloxBlast" autoFocus />}
             </Field>
             <Field label="Description" hint="Optional.">
@@ -169,20 +196,20 @@ export function SetupPage() {
             <Field label="Base URL" hint="The public address people use to reach this server. Used in clone URLs and webhooks.">
               {(id) => <Input id={id} value={org.base_url} onChange={(e) => setOrg({ ...org, base_url: e.target.value })} placeholder="https://git.example.com" />}
             </Field>
-            <Field label="Logo" hint="Optional. PNG, JPEG, GIF or WebP, up to 512 KiB.">
-              {(id) => (
-                <div className="flex items-center gap-3">
-                  {logoUrl && <img src={logoUrl} alt="" className="size-8 rounded object-cover" />}
-                  <input
-                    id={id}
-                    type="file"
-                    accept="image/png,image/jpeg,image/gif,image/webp"
-                    onChange={(e) => setLogo(e.target.files?.[0] ?? null)}
-                    className="text-sm text-fg-muted file:mr-2 file:h-7 file:rounded file:border file:border-border-strong file:bg-bg-elevated file:px-2.5 file:text-fg"
-                  />
-                </div>
-              )}
-            </Field>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium">Logo</span>
+              <div className="flex items-center gap-3">
+                {logoUrl && <img src={logoUrl} alt="" className="size-10 rounded-lg border border-border object-cover" />}
+                <FileDrop compact className="flex-1" label="Logo" accept="image/png,image/jpeg,image/gif,image/webp" onFiles={(f) => setLogo(f[0] ?? null)} hint="Optional. PNG, JPEG, GIF or WebP, up to 512 KiB.">
+                  <span className="font-medium text-fg">{logo ? logo.name : 'Drop an image or browse'}</span>
+                </FileDrop>
+                {logo && (
+                  <IconButton label="Remove logo" onClick={() => setLogo(null)}>
+                    <Trash2 size={14} />
+                  </IconButton>
+                )}
+              </div>
+            </div>
           </>
         )}
 
@@ -194,7 +221,7 @@ export function SetupPage() {
             </p>
             <div className="flex flex-col gap-2">
               {users.map((u, i) => (
-                <div key={i} className="flex flex-col gap-2 rounded border border-border bg-bg p-3">
+                <div key={i} className="flex flex-col gap-2.5 rounded-lg border border-border bg-bg-subtle p-3">
                   <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
                     <Input
                       aria-label="Username"
@@ -211,9 +238,9 @@ export function SetupPage() {
                       <option value="tester">Tester</option>
                       <option value="admin">Admin</option>
                     </Select>
-                    <Button variant="ghost" aria-label="Remove" onClick={() => setUsers(users.filter((_, j) => j !== i))}>
+                    <IconButton label="Remove" onClick={() => setUsers(users.filter((_, j) => j !== i))} className="hover:bg-danger/10 hover:text-danger">
                       <Trash2 size={14} />
-                    </Button>
+                    </IconButton>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
@@ -241,53 +268,67 @@ export function SetupPage() {
               ))}
               <Button
                 className="self-start"
+                icon={<Plus size={14} />}
                 onClick={() => setUsers([...users, { username: '', display_name: '', email: '', role: 'maintainer', all_repos: true }])}
               >
-                <Plus size={14} /> Add person
+                Add person
               </Button>
             </div>
           </>
         )}
 
         {step === 4 && (
-          <dl className="grid grid-cols-[140px_1fr] gap-x-4 gap-y-2">
-            <dt className="text-fg-muted">Admin</dt>
-            <dd>
-              {admin.username}
-              {admin.email && <span className="text-fg-muted"> · {admin.email}</span>}
-            </dd>
-            <dt className="text-fg-muted">Organization</dt>
-            <dd>{org.name}</dd>
-            <dt className="text-fg-muted">Base URL</dt>
-            <dd>{org.base_url || <span className="text-fg-faint">not set</span>}</dd>
-            <dt className="text-fg-muted">Logo</dt>
-            <dd>{logo ? logo.name : <span className="text-fg-faint">none</span>}</dd>
-            <dt className="text-fg-muted">Team members</dt>
-            <dd>
-              {users.filter((u) => u.username).length === 0 ? (
-                <span className="text-fg-faint">none yet</span>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {users
-                    .filter((u) => u.username)
-                    .map((u) => (
-                      <span key={u.username} className="inline-flex items-center gap-1">
-                        {u.username} <Badge>{u.role}</Badge>
-                      </span>
-                    ))}
-                </div>
-              )}
-            </dd>
-          </dl>
+          <div className="overflow-hidden rounded-lg border border-border">
+            {(
+              [
+                [
+                  1,
+                  'Admin',
+                  <>
+                    {admin.username}
+                    {admin.email && <span className="text-fg-muted"> · {admin.email}</span>}
+                  </>,
+                ],
+                [2, 'Organization', org.name],
+                [2, 'Base URL', org.base_url || <span className="text-fg-faint">not set</span>],
+                [2, 'Logo', logo ? logo.name : <span className="text-fg-faint">none</span>],
+                [
+                  3,
+                  'Team members',
+                  users.filter((u) => u.username).length === 0 ? (
+                    <span className="text-fg-faint">none yet</span>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {users
+                        .filter((u) => u.username)
+                        .map((u) => (
+                          <span key={u.username} className="inline-flex items-center gap-1">
+                            {u.username} <Badge>{u.role}</Badge>
+                          </span>
+                        ))}
+                    </div>
+                  ),
+                ],
+              ] as const
+            ).map(([to, term, detail]) => (
+              <div key={term} className="flex items-start gap-3 border-b border-border px-4 py-2.5 last:border-0">
+                <span className="w-28 shrink-0 text-fg-muted">{term}</span>
+                <span className="min-w-0 flex-1 break-words">{detail}</span>
+                <IconButton label={`Edit ${term.toLowerCase()}`} size="xs" onClick={() => go(to)}>
+                  <Pencil size={12} />
+                </IconButton>
+              </div>
+            ))}
+          </div>
         )}
 
         {submit.isError && <Alert>{errorMessage(submit.error)}</Alert>}
 
-        <div className="mt-1 flex justify-between">
-          <Button variant="ghost" onClick={() => setStep(step - 1)} disabled={step === 0}>
+        <div className="mt-2 flex justify-between border-t border-border pt-4">
+          <Button variant="ghost" onClick={() => go(step - 1)} disabled={step === 0}>
             Back
           </Button>
-          <Button type="submit" variant="primary" disabled={!canNext} loading={submit.isPending}>
+          <Button type="submit" variant="primary" size="lg" loading={submit.isPending}>
             {step === steps.length - 1 ? 'Complete setup' : step === 3 && users.length === 0 ? 'Skip' : 'Continue'}
           </Button>
         </div>
