@@ -51,7 +51,22 @@ type Triggers struct {
 	Push        *PushTrigger     `json:"push,omitempty"`
 	PullRequest *PullTrigger     `json:"pull_request,omitempty"`
 	Dispatch    *DispatchTrigger `json:"workflow_dispatch,omitempty"`
+	Release     *ReleaseTrigger  `json:"release,omitempty"`
 }
+
+// ReleaseTrigger runs when a release is published.
+type ReleaseTrigger struct {
+	Types []string `json:"types,omitempty"`
+}
+
+// ReleaseTypes are the supported release activity types: published (any
+// release is published), released (a non-prerelease is published) and
+// prereleased (a prerelease is published).
+var ReleaseTypes = []string{"published", "released", "prereleased"}
+
+// DefaultReleaseTypes trigger when types: isn't given. (GitHub runs for
+// every type, which starts duplicate runs for one release; tgp doesn't.)
+var DefaultReleaseTypes = []string{"published"}
 
 // PushTrigger filters push events.
 type PushTrigger struct {
@@ -196,6 +211,15 @@ type Builtin struct {
 // actions/checkout@v4 are accepted as aliases.
 var Builtins = map[string]Builtin{
 	"checkout": {Name: "checkout", With: map[string]bool{"ref": false, "fetch-depth": false, "path": false}},
+	"upload-artifact": {Name: "upload-artifact", With: map[string]bool{
+		"name": false, "path": true, "if-no-files-found": false, "retention-days": false, "overwrite": false,
+		"include-hidden-files": false, "compression-level": false,
+	}},
+	"download-artifact": {Name: "download-artifact", With: map[string]bool{"name": false, "path": false, "pattern": false, "merge-multiple": false}},
+	"cache": {Name: "cache", With: map[string]bool{
+		"key": true, "path": true, "restore-keys": false, "fail-on-cache-miss": false, "lookup-only": false,
+		"enableCrossOsArchive": false,
+	}},
 }
 
 // builtinName normalises a uses: value: "checkout", "actions/checkout@v4"
@@ -477,7 +501,7 @@ func (d *decoder) workflow(n *yaml.Node) *Workflow {
 		}
 	})
 	if onNode == nil {
-		d.errorf(n, "missing \"on\": say which events run this workflow (push, pull_request, workflow_dispatch)")
+		d.errorf(n, "missing \"on\": say which events run this workflow (push, pull_request, workflow_dispatch, release)")
 	}
 	if jobsNode == nil {
 		d.errorf(n, "missing \"jobs\"")
@@ -572,10 +596,22 @@ func (d *decoder) triggers(n *yaml.Node) Triggers {
 			}
 		case "workflow_dispatch":
 			t.Dispatch = d.dispatch(v)
-		case "schedule", "pull_request_target", "release", "issues", "workflow_run", "workflow_call":
-			d.errorf(k, "on: the %q event isn't supported (supported: push, pull_request, workflow_dispatch)", name)
+		case "release":
+			t.Release = &ReleaseTrigger{}
+			if v != nil && !(v.Kind == yaml.ScalarNode && v.Tag == "!!null") {
+				d.fields(v, "on.release", []string{"types"}, func(_ string, _, v *yaml.Node) {
+					t.Release.Types = d.strList(v, "on.release.types")
+					for _, ty := range t.Release.Types {
+						if !contains(ReleaseTypes, ty) {
+							d.errorf(v, "on.release.types: unknown type %q (supported: %s)", ty, strings.Join(ReleaseTypes, ", "))
+						}
+					}
+				})
+			}
+		case "schedule", "pull_request_target", "issues", "workflow_run", "workflow_call":
+			d.errorf(k, "on: the %q event isn't supported (supported: push, pull_request, workflow_dispatch, release)", name)
 		default:
-			d.errorf(k, "on: unknown event %q (supported: push, pull_request, workflow_dispatch)", name)
+			d.errorf(k, "on: unknown event %q (supported: push, pull_request, workflow_dispatch, release)", name)
 		}
 	}
 	switch n.Kind {

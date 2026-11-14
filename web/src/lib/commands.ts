@@ -56,6 +56,8 @@ export function useCommands(session: Session | null | undefined, toggleTheme: ()
     }
     if (current) {
       const repo = current.name
+      cmds.unshift({ id: 'repo-caches', label: `${repo}: CI caches`, group: 'Repository', run: () => void navigate({ to: '/$repo/ci/caches', params: { repo } }) })
+      cmds.unshift({ id: 'repo-releases', label: `${repo}: Releases`, group: 'Repository', run: () => void navigate({ to: '/$repo/releases', params: { repo } }) })
       cmds.unshift({ id: 'repo-ci', label: `${repo}: CI runs`, group: 'Repository', run: () => void navigate({ to: '/$repo/ci', params: { repo } }) })
       cmds.unshift({ id: 'repo-pulls', label: `${repo}: Pull requests`, group: 'Repository', run: () => void navigate({ to: '/$repo/pulls', params: { repo } }) })
       cmds.unshift({ id: 'repo-milestones', label: `${repo}: Milestones`, group: 'Repository', run: () => void navigate({ to: '/$repo/milestones', params: { repo } }) })
@@ -63,6 +65,8 @@ export function useCommands(session: Session | null | undefined, toggleTheme: ()
       cmds.unshift({ id: 'repo-issues', label: `${repo}: Issues`, group: 'Repository', run: () => void navigate({ to: '/$repo/issues', params: { repo } }) })
       if (current.permission !== 'read')
         cmds.unshift({ id: 'repo-new-issue', label: `${repo}: New issue`, group: 'Repository', run: () => void navigate({ to: '/$repo/issues/new', params: { repo } }) })
+      if (current.permission === 'write' || current.permission === 'admin')
+        cmds.unshift({ id: 'repo-new-release', label: `${repo}: New release`, group: 'Repository', run: () => void navigate({ to: '/$repo/releases/new', params: { repo } }) })
       if (current.permission === 'write' || current.permission === 'admin')
         cmds.unshift({ id: 'repo-new-pull', label: `${repo}: New pull request`, group: 'Repository', run: () => void navigate({ to: '/$repo/compare/$', params: { repo, _splat: '' } }) })
     }

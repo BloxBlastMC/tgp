@@ -114,6 +114,15 @@ func (e *hostEnv) CopyIn(ctx context.Context, hostDir, dir string) error {
 	return nil
 }
 
+func (e *hostEnv) CopyOut(_ context.Context, p string) (io.ReadCloser, error) { return TarPath(p) }
+
+func (e *hostEnv) CopyInTar(_ context.Context, dir string, r io.Reader) error {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	return Untar(r, dir)
+}
+
 func (e *hostEnv) Close(context.Context) error { return os.RemoveAll(e.root) }
 
 // ---- helpers ----

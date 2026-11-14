@@ -38,6 +38,7 @@ tags:
   - name: pulls
   - name: issues
   - name: ci
+  - name: releases
 paths:
   /meta:
     get:
@@ -1858,8 +1859,321 @@ paths:
               schema: { $ref: "#/components/schemas/CISettings" }
         default: { $ref: "#/components/responses/Error" }
 
+  /repos/{repo}/runs/{number}/artifacts:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/RunNumber"
+    get:
+      operationId: listRunArtifacts
+      tags: [ci]
+      summary: List a run's artifacts
+      description: Artifacts uploaded by every attempt of the run that haven't expired, newest first.
+      responses:
+        "200":
+          description: Artifacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Artifact" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/artifacts:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listArtifacts
+      tags: [ci]
+      summary: List a repository's artifacts
+      parameters:
+        - { name: name, in: query, description: Only artifacts with this name., schema: { type: string } }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Artifacts, newest first
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ArtifactPage" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/artifacts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/ArtifactID"
+    get:
+      operationId: getArtifact
+      tags: [ci]
+      summary: Get an artifact
+      responses:
+        "200":
+          description: Artifact
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Artifact" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteArtifact
+      tags: [ci]
+      summary: Delete an artifact (write access)
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/artifacts/{id}/zip:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/ArtifactID"
+    get:
+      operationId: downloadArtifact
+      tags: [ci]
+      summary: Download an artifact as a zip file
+      responses:
+        "200":
+          description: Zip archive of the artifact's files
+          content:
+            application/zip:
+              schema: { type: string, format: binary }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/caches:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listCaches
+      tags: [ci]
+      summary: List a repository's CI caches
+      parameters:
+        - { name: key, in: query, description: Only caches whose key starts with this., schema: { type: string } }
+        - { name: ref, in: query, description: "Only caches saved from this ref (e.g. `refs/heads/main`).", schema: { type: string } }
+        - { name: sort, in: query, schema: { type: string, enum: [last_used, created, size], default: last_used } }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Caches
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CachePage" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteCaches
+      tags: [ci]
+      summary: Delete caches by key (write access)
+      description: Deletes every cache with exactly this key (optionally only for one ref). Without key, deletes all of the repository's caches.
+      parameters:
+        - { name: key, in: query, schema: { type: string } }
+        - { name: ref, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Number deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeletedCount" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/caches/{id}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+    delete:
+      operationId: deleteCache
+      tags: [ci]
+      summary: Delete one cache (write access)
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/archive:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: getArchive
+      tags: [code]
+      summary: Download the source code at a ref as an archive
+      parameters:
+        - { name: ref, in: query, required: true, description: Branch, tag or commit., schema: { type: string } }
+        - { name: format, in: query, schema: { type: string, enum: [zip, tar.gz], default: tar.gz } }
+      responses:
+        "200":
+          description: Archive with every file under a `<repo>-<ref>/` directory
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/releases:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listReleases
+      tags: [releases]
+      summary: List releases, newest first
+      description: Drafts are only listed for users with write access.
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PerPage"
+      responses:
+        "200":
+          description: Releases
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReleasePage" }
+        default: { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createRelease
+      tags: [releases]
+      summary: Create a release (write access)
+      description: If the tag doesn't exist it's created at `target` (a branch or commit; default the default branch) when the release is published. Drafts don't create tags.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateRelease" }
+      responses:
+        "201":
+          description: Release
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Release" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/releases/latest:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: getLatestRelease
+      tags: [releases]
+      summary: The newest published release that isn't a prerelease
+      responses:
+        "200":
+          description: Release
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Release" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/releases/tags/{tag}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: tag, in: path, required: true, description: "Tag name (URL-encode `/`).", schema: { type: string } }
+    get:
+      operationId: getReleaseByTag
+      tags: [releases]
+      summary: Get a release by its tag
+      responses:
+        "200":
+          description: Release
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Release" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/releases/{id}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/ReleaseID"
+    get:
+      operationId: getRelease
+      tags: [releases]
+      summary: Get a release
+      responses:
+        "200":
+          description: Release
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Release" }
+        default: { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: updateRelease
+      tags: [releases]
+      summary: Edit or publish a release (write access)
+      description: Setting `draft` to false publishes the release, creating its tag if needed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateRelease" }
+      responses:
+        "200":
+          description: Release
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Release" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteRelease
+      tags: [releases]
+      summary: Delete a release and its assets (write access)
+      description: The tag stays unless `delete_tag` is set.
+      parameters:
+        - { name: delete_tag, in: query, schema: { type: boolean, default: false } }
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/releases/{id}/assets:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/ReleaseID"
+    post:
+      operationId: uploadReleaseAsset
+      tags: [releases]
+      summary: Upload a file to a release (write access)
+      description: The request body is the raw file. The size limit is the admin's `release_asset_max_mb` setting.
+      parameters:
+        - { name: name, in: query, required: true, description: File name shown on the release., schema: { type: string } }
+        - { name: label, in: query, description: Optional display label., schema: { type: string } }
+        - { name: overwrite, in: query, description: Replace an existing asset with the same name., schema: { type: boolean, default: false } }
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        "201":
+          description: Asset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReleaseAsset" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/releases/{id}/assets/{asset_id}:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - $ref: "#/components/parameters/ReleaseID"
+      - { name: asset_id, in: path, required: true, schema: { type: integer, format: int64 } }
+    get:
+      operationId: downloadReleaseAsset
+      tags: [releases]
+      summary: Download a release asset
+      responses:
+        "200":
+          description: The file
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteReleaseAsset
+      tags: [releases]
+      summary: Delete a release asset (write access)
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
 components:
   parameters:
+    ArtifactID:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    ReleaseID:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
     RepoName:
       name: repo
       in: path
@@ -2945,7 +3259,7 @@ components:
 
     RunEvent:
       type: string
-      enum: [push, pull_request, workflow_dispatch]
+      enum: [push, pull_request, workflow_dispatch, release]
 
     RunStatus:
       type: string
@@ -3225,7 +3539,7 @@ components:
 
     CISettings:
       type: object
-      required: [max_concurrent_jobs, max_jobs_per_repo, max_queued_runs_per_repo, runner_max_cpu_percent, runner_offline_after_seconds, default_image, default_cpus, max_cpus, default_memory_mb, max_memory_mb, default_pids, max_pids, default_timeout_minutes, max_timeout_minutes, max_log_mb, log_retention_days, cancel_superseded]
+      required: [max_concurrent_jobs, max_jobs_per_repo, max_queued_runs_per_repo, runner_max_cpu_percent, runner_offline_after_seconds, default_image, default_cpus, max_cpus, default_memory_mb, max_memory_mb, default_pids, max_pids, default_timeout_minutes, max_timeout_minutes, max_log_mb, log_retention_days, cancel_superseded, artifact_max_mb, artifact_retention_days, cache_quota_mb, cache_retention_days, release_asset_max_mb]
       properties:
         max_concurrent_jobs: { type: integer, minimum: 0, description: Jobs running at once across the instance; 0 = no limit beyond runner capacity. }
         max_jobs_per_repo: { type: integer, minimum: 0, description: Jobs one repository may run at once; 0 = no limit. }
@@ -3244,6 +3558,11 @@ components:
         max_log_mb: { type: integer, minimum: 1, description: Log size cap per job; output beyond it is dropped. }
         log_retention_days: { type: integer, minimum: 0, description: Delete job logs older than this; 0 = keep. }
         cancel_superseded: { type: boolean, description: A new push to a branch or pull request cancels its older runs (not on the default branch or tags). }
+        artifact_max_mb: { type: integer, minimum: 1, description: Largest artifact a job may upload (zipped). }
+        artifact_retention_days: { type: integer, minimum: 1, description: Artifacts are deleted this long after upload; workflows may ask for less with retention-days. }
+        cache_quota_mb: { type: integer, minimum: 0, description: CI cache space per repository; the least recently used caches are evicted above it. 0 = no limit. }
+        cache_retention_days: { type: integer, minimum: 1, description: Caches not used for this long are deleted. }
+        release_asset_max_mb: { type: integer, minimum: 1, description: Largest file that can be attached to a release. }
 
     CISettingsPatch:
       type: object
@@ -3265,3 +3584,123 @@ components:
         max_log_mb: { type: integer, minimum: 1, maximum: 1024 }
         log_retention_days: { type: integer, minimum: 0 }
         cancel_superseded: { type: boolean }
+        artifact_max_mb: { type: integer, minimum: 1 }
+        artifact_retention_days: { type: integer, minimum: 1, maximum: 3650 }
+        cache_quota_mb: { type: integer, minimum: 0 }
+        cache_retention_days: { type: integer, minimum: 1, maximum: 3650 }
+        release_asset_max_mb: { type: integer, minimum: 1 }
+
+    Artifact:
+      type: object
+      required: [id, name, size_bytes, sha256, run_number, attempt, job_name, created_at, expires_at]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        size_bytes: { type: integer, format: int64, description: Size of the zip file. }
+        sha256: { type: string, description: SHA-256 of the zip file. }
+        run_number: { type: integer, format: int64 }
+        attempt: { type: integer }
+        job_id: { type: integer, format: int64, nullable: true }
+        job_name: { type: string }
+        created_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+
+    ArtifactPage:
+      type: object
+      required: [artifacts, total, total_bytes]
+      properties:
+        artifacts: { type: array, items: { $ref: "#/components/schemas/Artifact" } }
+        total: { type: integer }
+        total_bytes: { type: integer, format: int64, description: Size of all the repository's artifacts. }
+
+    CacheEntry:
+      type: object
+      required: [id, key, version, ref, size_bytes, created_at, last_used_at]
+      properties:
+        id: { type: integer, format: int64 }
+        key: { type: string }
+        version: { type: string, description: Hash of the cached paths; a cache only restores into a step with the same paths. }
+        ref: { type: string, description: Ref of the run that saved it; runs read caches from their own ref, then the base and default branches. }
+        size_bytes: { type: integer, format: int64 }
+        created_at: { type: string, format: date-time }
+        last_used_at: { type: string, format: date-time }
+
+    CachePage:
+      type: object
+      required: [caches, total, total_bytes, quota_bytes]
+      properties:
+        caches: { type: array, items: { $ref: "#/components/schemas/CacheEntry" } }
+        total: { type: integer }
+        total_bytes: { type: integer, format: int64 }
+        quota_bytes: { type: integer, format: int64, description: The repository's cache quota; least recently used caches are evicted above it. 0 = no limit. }
+
+    DeletedCount:
+      type: object
+      required: [deleted]
+      properties:
+        deleted: { type: integer }
+
+    ReleaseAsset:
+      type: object
+      required: [id, name, label, content_type, size_bytes, sha256, download_count, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        label: { type: string }
+        content_type: { type: string }
+        size_bytes: { type: integer, format: int64 }
+        sha256: { type: string }
+        download_count: { type: integer, format: int64 }
+        uploader:
+          allOf: [{ $ref: "#/components/schemas/UserSummary" }]
+          nullable: true
+        created_at: { type: string, format: date-time }
+
+    Release:
+      type: object
+      required: [id, tag, name, body, body_html, draft, prerelease, latest, target, created_at, assets]
+      properties:
+        id: { type: integer, format: int64 }
+        tag: { type: string }
+        name: { type: string, description: Title; empty means the tag is shown. }
+        body: { type: string, description: Release notes (Markdown). }
+        body_html: { type: string }
+        draft: { type: boolean }
+        prerelease: { type: boolean }
+        latest: { type: boolean, description: The newest published release that isn't a prerelease. }
+        target: { type: string, description: Branch or commit the tag is created at if it doesn't exist. }
+        sha: { type: string, nullable: true, description: Commit the tag points to (null for drafts whose tag doesn't exist yet). }
+        author:
+          allOf: [{ $ref: "#/components/schemas/UserSummary" }]
+          nullable: true
+        created_at: { type: string, format: date-time }
+        published_at: { type: string, format: date-time, nullable: true }
+        assets: { type: array, items: { $ref: "#/components/schemas/ReleaseAsset" } }
+
+    ReleasePage:
+      type: object
+      required: [releases, total]
+      properties:
+        releases: { type: array, items: { $ref: "#/components/schemas/Release" } }
+        total: { type: integer }
+
+    CreateRelease:
+      type: object
+      required: [tag]
+      properties:
+        tag: { type: string, maxLength: 200 }
+        target: { type: string, description: Branch or commit for a new tag (default the default branch). }
+        name: { type: string, maxLength: 200 }
+        body: { type: string, maxLength: 200000 }
+        draft: { type: boolean, default: false }
+        prerelease: { type: boolean, default: false }
+
+    UpdateRelease:
+      type: object
+      properties:
+        tag: { type: string, maxLength: 200 }
+        target: { type: string }
+        name: { type: string, maxLength: 200 }
+        body: { type: string, maxLength: 200000 }
+        draft: { type: boolean }
+        prerelease: { type: boolean }

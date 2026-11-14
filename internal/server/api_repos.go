@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -226,6 +227,12 @@ func (a *api) DeleteRepo(ctx context.Context, req apigen.DeleteRepoRequestObject
 	for _, id := range jobIDs { // CI logs live outside the database
 		if err := s.store.DeletePrefix(ctx, logPrefix(id)); err != nil {
 			s.log.Warn("delete CI logs", "job", id, "err", err)
+		}
+	}
+	// Artifacts, caches and release assets are stored under the repo's ID.
+	for _, prefix := range []string{"artifacts", "caches", "releases"} {
+		if err := s.store.DeletePrefix(ctx, prefix+"/"+strconv.FormatInt(repo.ID, 10)); err != nil {
+			s.log.Warn("delete repository blobs", "prefix", prefix, "repo", repo.ID, "err", err)
 		}
 	}
 	_ = audit.Record(ctx, s.db, audit.Entry{Actor: mustPrincipal(ctx).User, Action: audit.RepoDelete, TargetType: "repo", Target: repo.Name, IP: clientIP(r)})

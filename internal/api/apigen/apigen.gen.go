@@ -763,6 +763,7 @@ func (e Role) Valid() bool {
 const (
 	RunEventPullRequest      RunEvent = "pull_request"
 	RunEventPush             RunEvent = "push"
+	RunEventRelease          RunEvent = "release"
 	RunEventWorkflowDispatch RunEvent = "workflow_dispatch"
 )
 
@@ -772,6 +773,8 @@ func (e RunEvent) Valid() bool {
 	case RunEventPullRequest:
 		return true
 	case RunEventPush:
+		return true
+	case RunEventRelease:
 		return true
 	case RunEventWorkflowDispatch:
 		return true
@@ -1140,6 +1143,45 @@ func (e ListMyPullsParamsState) Valid() bool {
 	}
 }
 
+// Defines values for GetArchiveParamsFormat.
+const (
+	TarGz GetArchiveParamsFormat = "tar.gz"
+	Zip   GetArchiveParamsFormat = "zip"
+)
+
+// Valid indicates whether the value is a known member of the GetArchiveParamsFormat enum.
+func (e GetArchiveParamsFormat) Valid() bool {
+	switch e {
+	case TarGz:
+		return true
+	case Zip:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListCachesParamsSort.
+const (
+	ListCachesParamsSortCreated  ListCachesParamsSort = "created"
+	ListCachesParamsSortLastUsed ListCachesParamsSort = "last_used"
+	ListCachesParamsSortSize     ListCachesParamsSort = "size"
+)
+
+// Valid indicates whether the value is a known member of the ListCachesParamsSort enum.
+func (e ListCachesParamsSort) Valid() bool {
+	switch e {
+	case ListCachesParamsSortCreated:
+		return true
+	case ListCachesParamsSortLastUsed:
+		return true
+	case ListCachesParamsSortSize:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListIssuesParamsState.
 const (
 	ListIssuesParamsStateAll    ListIssuesParamsState = "all"
@@ -1324,6 +1366,33 @@ type AccessToken struct {
 	Scopes []TokenScope `json:"scopes"`
 }
 
+// Artifact defines model for Artifact.
+type Artifact struct {
+	Attempt   int       `json:"attempt"`
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
+	Id        int64     `json:"id"`
+	JobId     *int64    `json:"job_id,omitempty"`
+	JobName   string    `json:"job_name"`
+	Name      string    `json:"name"`
+	RunNumber int64     `json:"run_number"`
+
+	// Sha256 SHA-256 of the zip file.
+	Sha256 string `json:"sha256"`
+
+	// SizeBytes Size of the zip file.
+	SizeBytes int64 `json:"size_bytes"`
+}
+
+// ArtifactPage defines model for ArtifactPage.
+type ArtifactPage struct {
+	Artifacts []Artifact `json:"artifacts"`
+	Total     int        `json:"total"`
+
+	// TotalBytes Size of all the repository's artifacts.
+	TotalBytes int64 `json:"total_bytes"`
+}
+
 // AuditEntry defines model for AuditEntry.
 type AuditEntry struct {
 	// Action Example: user.create
@@ -1443,6 +1512,18 @@ type BranchProtectionPatch struct {
 
 // CISettings defines model for CISettings.
 type CISettings struct {
+	// ArtifactMaxMb Largest artifact a job may upload (zipped).
+	ArtifactMaxMb int `json:"artifact_max_mb"`
+
+	// ArtifactRetentionDays Artifacts are deleted this long after upload; workflows may ask for less with retention-days.
+	ArtifactRetentionDays int `json:"artifact_retention_days"`
+
+	// CacheQuotaMb CI cache space per repository; the least recently used caches are evicted above it. 0 = no limit.
+	CacheQuotaMb int `json:"cache_quota_mb"`
+
+	// CacheRetentionDays Caches not used for this long are deleted.
+	CacheRetentionDays int `json:"cache_retention_days"`
+
 	// CancelSuperseded A new push to a branch or pull request cancels its older runs (not on the default branch or tags).
 	CancelSuperseded bool    `json:"cancel_superseded"`
 	DefaultCpus      float32 `json:"default_cpus"`
@@ -1472,6 +1553,9 @@ type CISettings struct {
 	MaxQueuedRunsPerRepo int `json:"max_queued_runs_per_repo"`
 	MaxTimeoutMinutes    int `json:"max_timeout_minutes"`
 
+	// ReleaseAssetMaxMb Largest file that can be attached to a release.
+	ReleaseAssetMaxMb int `json:"release_asset_max_mb"`
+
 	// RunnerMaxCpuPercent Runners reporting more CPU load than this get no new jobs; 0 = ignore load.
 	RunnerMaxCpuPercent int `json:"runner_max_cpu_percent"`
 
@@ -1481,6 +1565,10 @@ type CISettings struct {
 
 // CISettingsPatch defines model for CISettingsPatch.
 type CISettingsPatch struct {
+	ArtifactMaxMb             *int     `json:"artifact_max_mb,omitempty"`
+	ArtifactRetentionDays     *int     `json:"artifact_retention_days,omitempty"`
+	CacheQuotaMb              *int     `json:"cache_quota_mb,omitempty"`
+	CacheRetentionDays        *int     `json:"cache_retention_days,omitempty"`
 	CancelSuperseded          *bool    `json:"cancel_superseded,omitempty"`
 	DefaultCpus               *float32 `json:"default_cpus,omitempty"`
 	DefaultImage              *string  `json:"default_image,omitempty"`
@@ -1496,8 +1584,34 @@ type CISettingsPatch struct {
 	MaxPids                   *int     `json:"max_pids,omitempty"`
 	MaxQueuedRunsPerRepo      *int     `json:"max_queued_runs_per_repo,omitempty"`
 	MaxTimeoutMinutes         *int     `json:"max_timeout_minutes,omitempty"`
+	ReleaseAssetMaxMb         *int     `json:"release_asset_max_mb,omitempty"`
 	RunnerMaxCpuPercent       *int     `json:"runner_max_cpu_percent,omitempty"`
 	RunnerOfflineAfterSeconds *int     `json:"runner_offline_after_seconds,omitempty"`
+}
+
+// CacheEntry defines model for CacheEntry.
+type CacheEntry struct {
+	CreatedAt  time.Time `json:"created_at"`
+	Id         int64     `json:"id"`
+	Key        string    `json:"key"`
+	LastUsedAt time.Time `json:"last_used_at"`
+
+	// Ref Ref of the run that saved it; runs read caches from their own ref
+	Ref       string `json:"ref"`
+	SizeBytes int64  `json:"size_bytes"`
+
+	// Version Hash of the cached paths; a cache only restores into a step with the same paths.
+	Version string `json:"version"`
+}
+
+// CachePage defines model for CachePage.
+type CachePage struct {
+	Caches []CacheEntry `json:"caches"`
+
+	// QuotaBytes The repository's cache quota; least recently used caches are evicted above it. 0 = no limit.
+	QuotaBytes int64 `json:"quota_bytes"`
+	Total      int   `json:"total"`
+	TotalBytes int64 `json:"total_bytes"`
 }
 
 // ChangePasswordRequest defines model for ChangePasswordRequest.
@@ -1681,6 +1795,18 @@ type CreatePullRequest struct {
 	Title     string    `json:"title"`
 }
 
+// CreateRelease defines model for CreateRelease.
+type CreateRelease struct {
+	Body       *string `json:"body,omitempty"`
+	Draft      *bool   `json:"draft,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	Prerelease *bool   `json:"prerelease,omitempty"`
+	Tag        string  `json:"tag"`
+
+	// Target Branch or commit for a new tag (default the default branch).
+	Target *string `json:"target,omitempty"`
+}
+
 // CreateRepoRequest defines model for CreateRepoRequest.
 type CreateRepoRequest struct {
 	// AutoInit Create an initial commit with a README.
@@ -1736,6 +1862,11 @@ type CreatedToken struct {
 
 	// Token The secret. Shown only once.
 	Token string `json:"token"`
+}
+
+// DeletedCount defines model for DeletedCount.
+type DeletedCount struct {
+	Deleted int `json:"deleted"`
 }
 
 // Diff defines model for Diff.
@@ -2324,6 +2455,53 @@ type Ref struct {
 	Subject string `json:"subject"`
 }
 
+// Release defines model for Release.
+type Release struct {
+	Assets []ReleaseAsset `json:"assets"`
+	Author *UserSummary   `json:"author,omitempty"`
+
+	// Body Release notes (Markdown).
+	Body      string    `json:"body"`
+	BodyHtml  string    `json:"body_html"`
+	CreatedAt time.Time `json:"created_at"`
+	Draft     bool      `json:"draft"`
+	Id        int64     `json:"id"`
+
+	// Latest The newest published release that isn't a prerelease.
+	Latest bool `json:"latest"`
+
+	// Name Title; empty means the tag is shown.
+	Name        string     `json:"name"`
+	Prerelease  bool       `json:"prerelease"`
+	PublishedAt *time.Time `json:"published_at,omitempty"`
+
+	// Sha Commit the tag points to (null for drafts whose tag doesn't exist yet).
+	Sha *string `json:"sha,omitempty"`
+	Tag string  `json:"tag"`
+
+	// Target Branch or commit the tag is created at if it doesn't exist.
+	Target string `json:"target"`
+}
+
+// ReleaseAsset defines model for ReleaseAsset.
+type ReleaseAsset struct {
+	ContentType   string       `json:"content_type"`
+	CreatedAt     time.Time    `json:"created_at"`
+	DownloadCount int64        `json:"download_count"`
+	Id            int64        `json:"id"`
+	Label         string       `json:"label"`
+	Name          string       `json:"name"`
+	Sha256        string       `json:"sha256"`
+	SizeBytes     int64        `json:"size_bytes"`
+	Uploader      *UserSummary `json:"uploader,omitempty"`
+}
+
+// ReleasePage defines model for ReleasePage.
+type ReleasePage struct {
+	Releases []Release `json:"releases"`
+	Total    int       `json:"total"`
+}
+
 // Repo defines model for Repo.
 type Repo struct {
 	// Archived Archived repositories are read-only.
@@ -2654,6 +2832,16 @@ type UpdatePullRequest struct {
 // UpdatePullRequestState Close or reopen.
 type UpdatePullRequestState string
 
+// UpdateRelease defines model for UpdateRelease.
+type UpdateRelease struct {
+	Body       *string `json:"body,omitempty"`
+	Draft      *bool   `json:"draft,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	Prerelease *bool   `json:"prerelease,omitempty"`
+	Tag        *string `json:"tag,omitempty"`
+	Target     *string `json:"target,omitempty"`
+}
+
 // UpdateRepoRequest defines model for UpdateRepoRequest.
 type UpdateRepoRequest struct {
 	// Archived Archive or unarchive (admins).
@@ -2826,6 +3014,9 @@ type WorkflowRunDetail struct {
 	WorkflowPath string `json:"workflow_path"`
 }
 
+// ArtifactID defines model for ArtifactID.
+type ArtifactID = int64
+
 // IssueNumber defines model for IssueNumber.
 type IssueNumber = int64
 
@@ -2852,6 +3043,9 @@ type PullStateParam string
 
 // RefParam defines model for RefParam.
 type RefParam = string
+
+// ReleaseID defines model for ReleaseID.
+type ReleaseID = int64
 
 // RepoName defines model for RepoName.
 type RepoName = string
@@ -2952,6 +3146,24 @@ type ListReposParams struct {
 	Q *string `form:"q,omitempty" json:"q,omitempty"`
 }
 
+// GetArchiveParams defines parameters for GetArchive.
+type GetArchiveParams struct {
+	// Ref Branch
+	Ref    string                  `form:"ref" json:"ref"`
+	Format *GetArchiveParamsFormat `form:"format,omitempty" json:"format,omitempty"`
+}
+
+// GetArchiveParamsFormat defines parameters for GetArchive.
+type GetArchiveParamsFormat string
+
+// ListArtifactsParams defines parameters for ListArtifacts.
+type ListArtifactsParams struct {
+	// Name Only artifacts with this name.
+	Name    *string  `form:"name,omitempty" json:"name,omitempty"`
+	Page    *Page    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
 // GetBlameParams defines parameters for GetBlame.
 type GetBlameParams struct {
 	// Ref Branch, tag or commit. Defaults to the default branch.
@@ -2977,6 +3189,27 @@ type DeleteBranchJSONBody struct {
 	// Sha Only delete if the branch still points at this commit.
 	Sha *string `json:"sha,omitempty"`
 }
+
+// DeleteCachesParams defines parameters for DeleteCaches.
+type DeleteCachesParams struct {
+	Key *string `form:"key,omitempty" json:"key,omitempty"`
+	Ref *string `form:"ref,omitempty" json:"ref,omitempty"`
+}
+
+// ListCachesParams defines parameters for ListCaches.
+type ListCachesParams struct {
+	// Key Only caches whose key starts with this.
+	Key *string `form:"key,omitempty" json:"key,omitempty"`
+
+	// Ref Only caches saved from this ref (e.g. `refs/heads/main`).
+	Ref     *string               `form:"ref,omitempty" json:"ref,omitempty"`
+	Sort    *ListCachesParamsSort `form:"sort,omitempty" json:"sort,omitempty"`
+	Page    *Page                 `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPage              `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListCachesParamsSort defines parameters for ListCaches.
+type ListCachesParamsSort string
 
 // UpdateCommentJSONBody defines parameters for UpdateComment.
 type UpdateCommentJSONBody struct {
@@ -3107,6 +3340,29 @@ type GetReadmeParams struct {
 
 	// Path Path inside the repository; empty for the root.
 	Path *PathParam `form:"path,omitempty" json:"path,omitempty"`
+}
+
+// ListReleasesParams defines parameters for ListReleases.
+type ListReleasesParams struct {
+	Page    *Page    `form:"page,omitempty" json:"page,omitempty"`
+	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// DeleteReleaseParams defines parameters for DeleteRelease.
+type DeleteReleaseParams struct {
+	DeleteTag *bool `form:"delete_tag,omitempty" json:"delete_tag,omitempty"`
+}
+
+// UploadReleaseAssetParams defines parameters for UploadReleaseAsset.
+type UploadReleaseAssetParams struct {
+	// Name File name shown on the release.
+	Name string `form:"name" json:"name"`
+
+	// Label Optional display label.
+	Label *string `form:"label,omitempty" json:"label,omitempty"`
+
+	// Overwrite Replace an existing asset with the same name.
+	Overwrite *bool `form:"overwrite,omitempty" json:"overwrite,omitempty"`
 }
 
 // ListRunsParams defines parameters for ListRuns.
@@ -3267,6 +3523,12 @@ type DismissReviewJSONRequestBody DismissReviewJSONBody
 
 // UpdatePullBranchJSONRequestBody defines body for UpdatePullBranch for application/json ContentType.
 type UpdatePullBranchJSONRequestBody UpdatePullBranchJSONBody
+
+// CreateReleaseJSONRequestBody defines body for CreateRelease for application/json ContentType.
+type CreateReleaseJSONRequestBody = CreateRelease
+
+// UpdateReleaseJSONRequestBody defines body for UpdateRelease for application/json ContentType.
+type UpdateReleaseJSONRequestBody = UpdateRelease
 
 // RerunRunJSONRequestBody defines body for RerunRun for application/json ContentType.
 type RerunRunJSONRequestBody = RerunRequest
@@ -3772,6 +4034,31 @@ type ClientInterface interface {
 	// Corresponds with GET /repos/{repo}/access (the `ListRepoAccess` operationId).
 	ListRepoAccess(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetArchive Download the source code at a ref as an archive
+	//
+	// Corresponds with GET /repos/{repo}/archive (the `GetArchive` operationId).
+	GetArchive(ctx context.Context, repo RepoName, params *GetArchiveParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListArtifacts List a repository's artifacts
+	//
+	// Corresponds with GET /repos/{repo}/artifacts (the `ListArtifacts` operationId).
+	ListArtifacts(ctx context.Context, repo RepoName, params *ListArtifactsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteArtifact Delete an artifact (write access)
+	//
+	// Corresponds with DELETE /repos/{repo}/artifacts/{id} (the `DeleteArtifact` operationId).
+	DeleteArtifact(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetArtifact Get an artifact
+	//
+	// Corresponds with GET /repos/{repo}/artifacts/{id} (the `GetArtifact` operationId).
+	GetArtifact(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DownloadArtifact Download an artifact as a zip file
+	//
+	// Corresponds with GET /repos/{repo}/artifacts/{id}/zip (the `DownloadArtifact` operationId).
+	DownloadArtifact(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetBlame Line-by-line authorship of a file
 	//
 	// Corresponds with GET /repos/{repo}/blame (the `GetBlame` operationId).
@@ -3808,6 +4095,23 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /repos/{repo}/branches/delete (the `DeleteBranch` operationId).
 	DeleteBranch(ctx context.Context, repo RepoName, body DeleteBranchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteCaches Delete caches by key (write access)
+	//
+	// Deletes every cache with exactly this key (optionally only for one ref). Without key, deletes all of the repository's caches.
+	//
+	// Corresponds with DELETE /repos/{repo}/caches (the `DeleteCaches` operationId).
+	DeleteCaches(ctx context.Context, repo RepoName, params *DeleteCachesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListCaches List a repository's CI caches
+	//
+	// Corresponds with GET /repos/{repo}/caches (the `ListCaches` operationId).
+	ListCaches(ctx context.Context, repo RepoName, params *ListCachesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteCache Delete one cache (write access)
+	//
+	// Corresponds with DELETE /repos/{repo}/caches/{id} (the `DeleteCache` operationId).
+	DeleteCache(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteComment Delete a comment (its author or an admin)
 	//
@@ -4228,6 +4532,90 @@ type ClientInterface interface {
 	// Corresponds with GET /repos/{repo}/readme (the `GetReadme` operationId).
 	GetReadme(ctx context.Context, repo RepoName, params *GetReadmeParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListReleases List releases, newest first
+	//
+	// Drafts are only listed for users with write access.
+	//
+	// Corresponds with GET /repos/{repo}/releases (the `ListReleases` operationId).
+	ListReleases(ctx context.Context, repo RepoName, params *ListReleasesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateReleaseWithBody Create a release (write access)
+	//
+	// If the tag doesn't exist it's created at `target` (a branch or commit; default the default branch) when the release is published. Drafts don't create tags.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/releases (the `CreateRelease` operationId).
+	CreateReleaseWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateRelease Create a release (write access)
+	//
+	// If the tag doesn't exist it's created at `target` (a branch or commit; default the default branch) when the release is published. Drafts don't create tags.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /repos/{repo}/releases (the `CreateRelease` operationId).
+	CreateRelease(ctx context.Context, repo RepoName, body CreateReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetLatestRelease The newest published release that isn't a prerelease
+	//
+	// Corresponds with GET /repos/{repo}/releases/latest (the `GetLatestRelease` operationId).
+	GetLatestRelease(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetReleaseByTag Get a release by its tag
+	//
+	// Corresponds with GET /repos/{repo}/releases/tags/{tag} (the `GetReleaseByTag` operationId).
+	GetReleaseByTag(ctx context.Context, repo RepoName, tag string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteRelease Delete a release and its assets (write access)
+	//
+	// The tag stays unless `delete_tag` is set.
+	//
+	// Corresponds with DELETE /repos/{repo}/releases/{id} (the `DeleteRelease` operationId).
+	DeleteRelease(ctx context.Context, repo RepoName, id ReleaseID, params *DeleteReleaseParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetRelease Get a release
+	//
+	// Corresponds with GET /repos/{repo}/releases/{id} (the `GetRelease` operationId).
+	GetRelease(ctx context.Context, repo RepoName, id ReleaseID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateReleaseWithBody Edit or publish a release (write access)
+	//
+	// Setting `draft` to false publishes the release, creating its tag if needed.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/releases/{id} (the `UpdateRelease` operationId).
+	UpdateReleaseWithBody(ctx context.Context, repo RepoName, id ReleaseID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateRelease Edit or publish a release (write access)
+	//
+	// Setting `draft` to false publishes the release, creating its tag if needed.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /repos/{repo}/releases/{id} (the `UpdateRelease` operationId).
+	UpdateRelease(ctx context.Context, repo RepoName, id ReleaseID, body UpdateReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UploadReleaseAssetWithBody Upload a file to a release (write access)
+	//
+	// The request body is the raw file. The size limit is the admin's `release_asset_max_mb` setting.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /repos/{repo}/releases/{id}/assets (the `UploadReleaseAsset` operationId).
+	UploadReleaseAssetWithBody(ctx context.Context, repo RepoName, id ReleaseID, params *UploadReleaseAssetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteReleaseAsset Delete a release asset (write access)
+	//
+	// Corresponds with DELETE /repos/{repo}/releases/{id}/assets/{asset_id} (the `DeleteReleaseAsset` operationId).
+	DeleteReleaseAsset(ctx context.Context, repo RepoName, id ReleaseID, assetId int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DownloadReleaseAsset Download a release asset
+	//
+	// Corresponds with GET /repos/{repo}/releases/{id}/assets/{asset_id} (the `DownloadReleaseAsset` operationId).
+	DownloadReleaseAsset(ctx context.Context, repo RepoName, id ReleaseID, assetId int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListRuns List a repository's workflow runs
 	//
 	// Corresponds with GET /repos/{repo}/runs (the `ListRuns` operationId).
@@ -4237,6 +4625,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /repos/{repo}/runs/{number} (the `GetRun` operationId).
 	GetRun(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListRunArtifacts List a run's artifacts
+	//
+	// Artifacts uploaded by every attempt of the run that haven't expired, newest first.
+	//
+	// Corresponds with GET /repos/{repo}/runs/{number}/artifacts (the `ListRunArtifacts` operationId).
+	ListRunArtifacts(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CancelRun Cancel a run (write access)
 	//
@@ -5395,6 +5790,81 @@ func (c *Client) ListRepoAccess(ctx context.Context, repo RepoName, reqEditors .
 	return c.Client.Do(req)
 }
 
+// GetArchive Download the source code at a ref as an archive
+//
+// Corresponds with GET /repos/{repo}/archive (the `GetArchive` operationId).
+func (c *Client) GetArchive(ctx context.Context, repo RepoName, params *GetArchiveParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetArchiveRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListArtifacts List a repository's artifacts
+//
+// Corresponds with GET /repos/{repo}/artifacts (the `ListArtifacts` operationId).
+func (c *Client) ListArtifacts(ctx context.Context, repo RepoName, params *ListArtifactsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListArtifactsRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteArtifact Delete an artifact (write access)
+//
+// Corresponds with DELETE /repos/{repo}/artifacts/{id} (the `DeleteArtifact` operationId).
+func (c *Client) DeleteArtifact(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteArtifactRequest(c.Server, repo, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetArtifact Get an artifact
+//
+// Corresponds with GET /repos/{repo}/artifacts/{id} (the `GetArtifact` operationId).
+func (c *Client) GetArtifact(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetArtifactRequest(c.Server, repo, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DownloadArtifact Download an artifact as a zip file
+//
+// Corresponds with GET /repos/{repo}/artifacts/{id}/zip (the `DownloadArtifact` operationId).
+func (c *Client) DownloadArtifact(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDownloadArtifactRequest(c.Server, repo, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetBlame Line-by-line authorship of a file
 //
 // Corresponds with GET /repos/{repo}/blame (the `GetBlame` operationId).
@@ -5472,6 +5942,53 @@ func (c *Client) DeleteBranchWithBody(ctx context.Context, repo RepoName, conten
 // Corresponds with POST /repos/{repo}/branches/delete (the `DeleteBranch` operationId).
 func (c *Client) DeleteBranch(ctx context.Context, repo RepoName, body DeleteBranchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteBranchRequest(c.Server, repo, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteCaches Delete caches by key (write access)
+//
+// Deletes every cache with exactly this key (optionally only for one ref). Without key, deletes all of the repository's caches.
+//
+// Corresponds with DELETE /repos/{repo}/caches (the `DeleteCaches` operationId).
+func (c *Client) DeleteCaches(ctx context.Context, repo RepoName, params *DeleteCachesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteCachesRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListCaches List a repository's CI caches
+//
+// Corresponds with GET /repos/{repo}/caches (the `ListCaches` operationId).
+func (c *Client) ListCaches(ctx context.Context, repo RepoName, params *ListCachesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListCachesRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteCache Delete one cache (write access)
+//
+// Corresponds with DELETE /repos/{repo}/caches/{id} (the `DeleteCache` operationId).
+func (c *Client) DeleteCache(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteCacheRequest(c.Server, repo, id)
 	if err != nil {
 		return nil, err
 	}
@@ -6521,6 +7038,210 @@ func (c *Client) GetReadme(ctx context.Context, repo RepoName, params *GetReadme
 	return c.Client.Do(req)
 }
 
+// ListReleases List releases, newest first
+//
+// Drafts are only listed for users with write access.
+//
+// Corresponds with GET /repos/{repo}/releases (the `ListReleases` operationId).
+func (c *Client) ListReleases(ctx context.Context, repo RepoName, params *ListReleasesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListReleasesRequest(c.Server, repo, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateReleaseWithBody Create a release (write access)
+//
+// If the tag doesn't exist it's created at `target` (a branch or commit; default the default branch) when the release is published. Drafts don't create tags.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/releases (the `CreateRelease` operationId).
+func (c *Client) CreateReleaseWithBody(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateReleaseRequestWithBody(c.Server, repo, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateRelease Create a release (write access)
+//
+// If the tag doesn't exist it's created at `target` (a branch or commit; default the default branch) when the release is published. Drafts don't create tags.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /repos/{repo}/releases (the `CreateRelease` operationId).
+func (c *Client) CreateRelease(ctx context.Context, repo RepoName, body CreateReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateReleaseRequest(c.Server, repo, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetLatestRelease The newest published release that isn't a prerelease
+//
+// Corresponds with GET /repos/{repo}/releases/latest (the `GetLatestRelease` operationId).
+func (c *Client) GetLatestRelease(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLatestReleaseRequest(c.Server, repo)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetReleaseByTag Get a release by its tag
+//
+// Corresponds with GET /repos/{repo}/releases/tags/{tag} (the `GetReleaseByTag` operationId).
+func (c *Client) GetReleaseByTag(ctx context.Context, repo RepoName, tag string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetReleaseByTagRequest(c.Server, repo, tag)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteRelease Delete a release and its assets (write access)
+//
+// The tag stays unless `delete_tag` is set.
+//
+// Corresponds with DELETE /repos/{repo}/releases/{id} (the `DeleteRelease` operationId).
+func (c *Client) DeleteRelease(ctx context.Context, repo RepoName, id ReleaseID, params *DeleteReleaseParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteReleaseRequest(c.Server, repo, id, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetRelease Get a release
+//
+// Corresponds with GET /repos/{repo}/releases/{id} (the `GetRelease` operationId).
+func (c *Client) GetRelease(ctx context.Context, repo RepoName, id ReleaseID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetReleaseRequest(c.Server, repo, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateReleaseWithBody Edit or publish a release (write access)
+//
+// Setting `draft` to false publishes the release, creating its tag if needed.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /repos/{repo}/releases/{id} (the `UpdateRelease` operationId).
+func (c *Client) UpdateReleaseWithBody(ctx context.Context, repo RepoName, id ReleaseID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateReleaseRequestWithBody(c.Server, repo, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateRelease Edit or publish a release (write access)
+//
+// Setting `draft` to false publishes the release, creating its tag if needed.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /repos/{repo}/releases/{id} (the `UpdateRelease` operationId).
+func (c *Client) UpdateRelease(ctx context.Context, repo RepoName, id ReleaseID, body UpdateReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateReleaseRequest(c.Server, repo, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UploadReleaseAssetWithBody Upload a file to a release (write access)
+//
+// The request body is the raw file. The size limit is the admin's `release_asset_max_mb` setting.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /repos/{repo}/releases/{id}/assets (the `UploadReleaseAsset` operationId).
+func (c *Client) UploadReleaseAssetWithBody(ctx context.Context, repo RepoName, id ReleaseID, params *UploadReleaseAssetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUploadReleaseAssetRequestWithBody(c.Server, repo, id, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteReleaseAsset Delete a release asset (write access)
+//
+// Corresponds with DELETE /repos/{repo}/releases/{id}/assets/{asset_id} (the `DeleteReleaseAsset` operationId).
+func (c *Client) DeleteReleaseAsset(ctx context.Context, repo RepoName, id ReleaseID, assetId int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteReleaseAssetRequest(c.Server, repo, id, assetId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DownloadReleaseAsset Download a release asset
+//
+// Corresponds with GET /repos/{repo}/releases/{id}/assets/{asset_id} (the `DownloadReleaseAsset` operationId).
+func (c *Client) DownloadReleaseAsset(ctx context.Context, repo RepoName, id ReleaseID, assetId int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDownloadReleaseAssetRequest(c.Server, repo, id, assetId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListRuns List a repository's workflow runs
 //
 // Corresponds with GET /repos/{repo}/runs (the `ListRuns` operationId).
@@ -6541,6 +7262,23 @@ func (c *Client) ListRuns(ctx context.Context, repo RepoName, params *ListRunsPa
 // Corresponds with GET /repos/{repo}/runs/{number} (the `GetRun` operationId).
 func (c *Client) GetRun(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetRunRequest(c.Server, repo, number)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListRunArtifacts List a run's artifacts
+//
+// Artifacts uploaded by every attempt of the run that haven't expired, newest first.
+//
+// Corresponds with GET /repos/{repo}/runs/{number}/artifacts (the `ListRunArtifacts` operationId).
+func (c *Client) ListRunArtifacts(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListRunArtifactsRequest(c.Server, repo, number)
 	if err != nil {
 		return nil, err
 	}
@@ -8595,6 +9333,283 @@ func NewListRepoAccessRequest(server string, repo RepoName) (*http.Request, erro
 	return req, nil
 }
 
+// NewGetArchiveRequest constructs an http.Request for the GetArchive method
+func NewGetArchiveRequest(server string, repo RepoName, params *GetArchiveParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/archive", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "ref", params.Ref, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if params.Format != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "format", *params.Format, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListArtifactsRequest constructs an http.Request for the ListArtifacts method
+func NewListArtifactsRequest(server string, repo RepoName, params *ListArtifactsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/artifacts", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Name != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "name", *params.Name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteArtifactRequest constructs an http.Request for the DeleteArtifact method
+func NewDeleteArtifactRequest(server string, repo RepoName, id ArtifactID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/artifacts/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetArtifactRequest constructs an http.Request for the GetArtifact method
+func NewGetArtifactRequest(server string, repo RepoName, id ArtifactID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/artifacts/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDownloadArtifactRequest constructs an http.Request for the DownloadArtifact method
+func NewDownloadArtifactRequest(server string, repo RepoName, id ArtifactID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/artifacts/%s/zip", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetBlameRequest constructs an http.Request for the GetBlame method
 func NewGetBlameRequest(server string, repo RepoName, params *GetBlameParams) (*http.Request, error) {
 	var err error
@@ -8810,6 +9825,229 @@ func NewDeleteBranchRequestWithBody(server string, repo RepoName, contentType st
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteCachesRequest constructs an http.Request for the DeleteCaches method
+func NewDeleteCachesRequest(server string, repo RepoName, params *DeleteCachesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/caches", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Key != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "key", *params.Key, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Ref != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "ref", *params.Ref, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListCachesRequest constructs an http.Request for the ListCaches method
+func NewListCachesRequest(server string, repo RepoName, params *ListCachesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/caches", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Key != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "key", *params.Key, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Ref != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "ref", *params.Ref, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort", *params.Sort, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteCacheRequest constructs an http.Request for the DeleteCache method
+func NewDeleteCacheRequest(server string, repo RepoName, id int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/caches/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -11269,6 +12507,550 @@ func NewGetReadmeRequest(server string, repo RepoName, params *GetReadmeParams) 
 	return req, nil
 }
 
+// NewListReleasesRequest constructs an http.Request for the ListReleases method
+func NewListReleasesRequest(server string, repo RepoName, params *ListReleasesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/releases", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateReleaseRequest calls the generic CreateRelease builder with application/json body
+func NewCreateReleaseRequest(server string, repo RepoName, body CreateReleaseJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateReleaseRequestWithBody(server, repo, "application/json", bodyReader)
+}
+
+// NewCreateReleaseRequestWithBody constructs an http.Request for the CreateRelease method, with any body, and a specified content type
+func NewCreateReleaseRequestWithBody(server string, repo RepoName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/releases", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetLatestReleaseRequest constructs an http.Request for the GetLatestRelease method
+func NewGetLatestReleaseRequest(server string, repo RepoName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/releases/latest", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetReleaseByTagRequest constructs an http.Request for the GetReleaseByTag method
+func NewGetReleaseByTagRequest(server string, repo RepoName, tag string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "tag", tag, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/releases/tags/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteReleaseRequest constructs an http.Request for the DeleteRelease method
+func NewDeleteReleaseRequest(server string, repo RepoName, id ReleaseID, params *DeleteReleaseParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/releases/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.DeleteTag != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "delete_tag", *params.DeleteTag, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetReleaseRequest constructs an http.Request for the GetRelease method
+func NewGetReleaseRequest(server string, repo RepoName, id ReleaseID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/releases/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateReleaseRequest calls the generic UpdateRelease builder with application/json body
+func NewUpdateReleaseRequest(server string, repo RepoName, id ReleaseID, body UpdateReleaseJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateReleaseRequestWithBody(server, repo, id, "application/json", bodyReader)
+}
+
+// NewUpdateReleaseRequestWithBody constructs an http.Request for the UpdateRelease method, with any body, and a specified content type
+func NewUpdateReleaseRequestWithBody(server string, repo RepoName, id ReleaseID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/releases/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewUploadReleaseAssetRequestWithBody constructs an http.Request for the UploadReleaseAsset method, with any body, and a specified content type
+func NewUploadReleaseAssetRequestWithBody(server string, repo RepoName, id ReleaseID, params *UploadReleaseAssetParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/releases/%s/assets", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "name", params.Name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if params.Label != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "label", *params.Label, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Overwrite != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "overwrite", *params.Overwrite, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteReleaseAssetRequest constructs an http.Request for the DeleteReleaseAsset method
+func NewDeleteReleaseAssetRequest(server string, repo RepoName, id ReleaseID, assetId int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "asset_id", assetId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/releases/%s/assets/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDownloadReleaseAssetRequest constructs an http.Request for the DownloadReleaseAsset method
+func NewDownloadReleaseAssetRequest(server string, repo RepoName, id ReleaseID, assetId int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "asset_id", assetId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/releases/%s/assets/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListRunsRequest constructs an http.Request for the ListRuns method
 func NewListRunsRequest(server string, repo RepoName, params *ListRunsParams) (*http.Request, error) {
 	var err error
@@ -11450,6 +13232,47 @@ func NewGetRunRequest(server string, repo RepoName, number RunNumber) (*http.Req
 	}
 
 	operationPath := fmt.Sprintf("/repos/%s/runs/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListRunArtifactsRequest constructs an http.Request for the ListRunArtifacts method
+func NewListRunArtifactsRequest(server string, repo RepoName, number RunNumber) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repo", repo, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "number", number, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/repos/%s/runs/%s/artifacts", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -12586,6 +14409,41 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /repos/{repo}/access (the `ListRepoAccess` operationId).
 	ListRepoAccessWithResponse(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*ListRepoAccessResponse, error)
 
+	// GetArchiveWithResponse Download the source code at a ref as an archive
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/archive (the `GetArchive` operationId).
+	GetArchiveWithResponse(ctx context.Context, repo RepoName, params *GetArchiveParams, reqEditors ...RequestEditorFn) (*GetArchiveResponse, error)
+
+	// ListArtifactsWithResponse List a repository's artifacts
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/artifacts (the `ListArtifacts` operationId).
+	ListArtifactsWithResponse(ctx context.Context, repo RepoName, params *ListArtifactsParams, reqEditors ...RequestEditorFn) (*ListArtifactsResponse, error)
+
+	// DeleteArtifactWithResponse Delete an artifact (write access)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /repos/{repo}/artifacts/{id} (the `DeleteArtifact` operationId).
+	DeleteArtifactWithResponse(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*DeleteArtifactResponse, error)
+
+	// GetArtifactWithResponse Get an artifact
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/artifacts/{id} (the `GetArtifact` operationId).
+	GetArtifactWithResponse(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*GetArtifactResponse, error)
+
+	// DownloadArtifactWithResponse Download an artifact as a zip file
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/artifacts/{id}/zip (the `DownloadArtifact` operationId).
+	DownloadArtifactWithResponse(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*DownloadArtifactResponse, error)
+
 	// GetBlameWithResponse Line-by-line authorship of a file
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -12628,6 +14486,29 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /repos/{repo}/branches/delete (the `DeleteBranch` operationId).
 	DeleteBranchWithResponse(ctx context.Context, repo RepoName, body DeleteBranchJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteBranchResponse, error)
+
+	// DeleteCachesWithResponse Delete caches by key (write access)
+	//
+	// Deletes every cache with exactly this key (optionally only for one ref). Without key, deletes all of the repository's caches.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /repos/{repo}/caches (the `DeleteCaches` operationId).
+	DeleteCachesWithResponse(ctx context.Context, repo RepoName, params *DeleteCachesParams, reqEditors ...RequestEditorFn) (*DeleteCachesResponse, error)
+
+	// ListCachesWithResponse List a repository's CI caches
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/caches (the `ListCaches` operationId).
+	ListCachesWithResponse(ctx context.Context, repo RepoName, params *ListCachesParams, reqEditors ...RequestEditorFn) (*ListCachesResponse, error)
+
+	// DeleteCacheWithResponse Delete one cache (write access)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /repos/{repo}/caches/{id} (the `DeleteCache` operationId).
+	DeleteCacheWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*DeleteCacheResponse, error)
 
 	// DeleteCommentWithResponse Delete a comment (its author or an admin)
 	//
@@ -13104,6 +14985,104 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /repos/{repo}/readme (the `GetReadme` operationId).
 	GetReadmeWithResponse(ctx context.Context, repo RepoName, params *GetReadmeParams, reqEditors ...RequestEditorFn) (*GetReadmeResponse, error)
 
+	// ListReleasesWithResponse List releases, newest first
+	//
+	// Drafts are only listed for users with write access.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/releases (the `ListReleases` operationId).
+	ListReleasesWithResponse(ctx context.Context, repo RepoName, params *ListReleasesParams, reqEditors ...RequestEditorFn) (*ListReleasesResponse, error)
+
+	// CreateReleaseWithBodyWithResponse Create a release (write access)
+	//
+	// If the tag doesn't exist it's created at `target` (a branch or commit; default the default branch) when the release is published. Drafts don't create tags.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/releases (the `CreateRelease` operationId).
+	CreateReleaseWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateReleaseResponse, error)
+
+	// CreateReleaseWithResponse Create a release (write access)
+	//
+	// If the tag doesn't exist it's created at `target` (a branch or commit; default the default branch) when the release is published. Drafts don't create tags.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/releases (the `CreateRelease` operationId).
+	CreateReleaseWithResponse(ctx context.Context, repo RepoName, body CreateReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateReleaseResponse, error)
+
+	// GetLatestReleaseWithResponse The newest published release that isn't a prerelease
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/releases/latest (the `GetLatestRelease` operationId).
+	GetLatestReleaseWithResponse(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*GetLatestReleaseResponse, error)
+
+	// GetReleaseByTagWithResponse Get a release by its tag
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/releases/tags/{tag} (the `GetReleaseByTag` operationId).
+	GetReleaseByTagWithResponse(ctx context.Context, repo RepoName, tag string, reqEditors ...RequestEditorFn) (*GetReleaseByTagResponse, error)
+
+	// DeleteReleaseWithResponse Delete a release and its assets (write access)
+	//
+	// The tag stays unless `delete_tag` is set.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /repos/{repo}/releases/{id} (the `DeleteRelease` operationId).
+	DeleteReleaseWithResponse(ctx context.Context, repo RepoName, id ReleaseID, params *DeleteReleaseParams, reqEditors ...RequestEditorFn) (*DeleteReleaseResponse, error)
+
+	// GetReleaseWithResponse Get a release
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/releases/{id} (the `GetRelease` operationId).
+	GetReleaseWithResponse(ctx context.Context, repo RepoName, id ReleaseID, reqEditors ...RequestEditorFn) (*GetReleaseResponse, error)
+
+	// UpdateReleaseWithBodyWithResponse Edit or publish a release (write access)
+	//
+	// Setting `draft` to false publishes the release, creating its tag if needed.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/releases/{id} (the `UpdateRelease` operationId).
+	UpdateReleaseWithBodyWithResponse(ctx context.Context, repo RepoName, id ReleaseID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateReleaseResponse, error)
+
+	// UpdateReleaseWithResponse Edit or publish a release (write access)
+	//
+	// Setting `draft` to false publishes the release, creating its tag if needed.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /repos/{repo}/releases/{id} (the `UpdateRelease` operationId).
+	UpdateReleaseWithResponse(ctx context.Context, repo RepoName, id ReleaseID, body UpdateReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateReleaseResponse, error)
+
+	// UploadReleaseAssetWithBodyWithResponse Upload a file to a release (write access)
+	//
+	// The request body is the raw file. The size limit is the admin's `release_asset_max_mb` setting.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /repos/{repo}/releases/{id}/assets (the `UploadReleaseAsset` operationId).
+	UploadReleaseAssetWithBodyWithResponse(ctx context.Context, repo RepoName, id ReleaseID, params *UploadReleaseAssetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadReleaseAssetResponse, error)
+
+	// DeleteReleaseAssetWithResponse Delete a release asset (write access)
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /repos/{repo}/releases/{id}/assets/{asset_id} (the `DeleteReleaseAsset` operationId).
+	DeleteReleaseAssetWithResponse(ctx context.Context, repo RepoName, id ReleaseID, assetId int64, reqEditors ...RequestEditorFn) (*DeleteReleaseAssetResponse, error)
+
+	// DownloadReleaseAssetWithResponse Download a release asset
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/releases/{id}/assets/{asset_id} (the `DownloadReleaseAsset` operationId).
+	DownloadReleaseAssetWithResponse(ctx context.Context, repo RepoName, id ReleaseID, assetId int64, reqEditors ...RequestEditorFn) (*DownloadReleaseAssetResponse, error)
+
 	// ListRunsWithResponse List a repository's workflow runs
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -13117,6 +15096,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /repos/{repo}/runs/{number} (the `GetRun` operationId).
 	GetRunWithResponse(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*GetRunResponse, error)
+
+	// ListRunArtifactsWithResponse List a run's artifacts
+	//
+	// Artifacts uploaded by every attempt of the run that haven't expired, newest first.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /repos/{repo}/runs/{number}/artifacts (the `ListRunArtifacts` operationId).
+	ListRunArtifactsWithResponse(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*ListRunArtifactsResponse, error)
 
 	// CancelRunWithResponse Cancel a run (write access)
 	//
@@ -15361,6 +17349,225 @@ func (r ListRepoAccessResponse) ContentType() string {
 	return ""
 }
 
+type GetArchiveResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetArchiveResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetArchiveResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetArchiveResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetArchiveResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetArchiveResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListArtifactsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ArtifactPage
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListArtifactsResponse) GetJSON200() *ArtifactPage {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListArtifactsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListArtifactsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListArtifactsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListArtifactsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListArtifactsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteArtifactResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteArtifactResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteArtifactResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteArtifactResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteArtifactResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteArtifactResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetArtifactResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Artifact
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetArtifactResponse) GetJSON200() *Artifact {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetArtifactResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetArtifactResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetArtifactResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetArtifactResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetArtifactResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DownloadArtifactResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DownloadArtifactResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DownloadArtifactResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DownloadArtifactResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DownloadArtifactResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DownloadArtifactResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetBlameResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -15540,6 +17747,143 @@ func (r DeleteBranchResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r DeleteBranchResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteCachesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DeletedCount
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r DeleteCachesResponse) GetJSON200() *DeletedCount {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteCachesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteCachesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteCachesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteCachesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteCachesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListCachesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *CachePage
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListCachesResponse) GetJSON200() *CachePage {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListCachesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListCachesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListCachesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListCachesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListCachesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteCacheResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteCacheResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteCacheResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteCacheResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteCacheResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteCacheResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17671,6 +20015,465 @@ func (r GetReadmeResponse) ContentType() string {
 	return ""
 }
 
+type ListReleasesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ReleasePage
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListReleasesResponse) GetJSON200() *ReleasePage {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListReleasesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListReleasesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListReleasesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListReleasesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListReleasesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateReleaseResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *Release
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateReleaseResponse) GetJSON201() *Release {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CreateReleaseResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateReleaseResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateReleaseResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateReleaseResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateReleaseResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetLatestReleaseResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Release
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetLatestReleaseResponse) GetJSON200() *Release {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetLatestReleaseResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetLatestReleaseResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLatestReleaseResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLatestReleaseResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetLatestReleaseResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetReleaseByTagResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Release
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetReleaseByTagResponse) GetJSON200() *Release {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetReleaseByTagResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetReleaseByTagResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetReleaseByTagResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetReleaseByTagResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetReleaseByTagResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteReleaseResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteReleaseResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteReleaseResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteReleaseResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteReleaseResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteReleaseResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetReleaseResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Release
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetReleaseResponse) GetJSON200() *Release {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetReleaseResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetReleaseResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetReleaseResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetReleaseResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetReleaseResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateReleaseResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Release
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateReleaseResponse) GetJSON200() *Release {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdateReleaseResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateReleaseResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateReleaseResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateReleaseResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateReleaseResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UploadReleaseAssetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *ReleaseAsset
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r UploadReleaseAssetResponse) GetJSON201() *ReleaseAsset {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UploadReleaseAssetResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UploadReleaseAssetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UploadReleaseAssetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UploadReleaseAssetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UploadReleaseAssetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteReleaseAssetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteReleaseAssetResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteReleaseAssetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteReleaseAssetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteReleaseAssetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteReleaseAssetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DownloadReleaseAssetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DownloadReleaseAssetResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DownloadReleaseAssetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DownloadReleaseAssetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DownloadReleaseAssetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DownloadReleaseAssetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListRunsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -17761,6 +20564,54 @@ func (r GetRunResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetRunResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListRunArtifactsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]Artifact
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListRunArtifactsResponse) GetJSON200() *[]Artifact {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListRunArtifactsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListRunArtifactsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListRunArtifactsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListRunArtifactsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListRunArtifactsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -19180,6 +22031,71 @@ func (c *ClientWithResponses) ListRepoAccessWithResponse(ctx context.Context, re
 	return ParseListRepoAccessResponse(rsp)
 }
 
+// GetArchiveWithResponse Download the source code at a ref as an archive
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/archive (the `GetArchive` operationId).
+func (c *ClientWithResponses) GetArchiveWithResponse(ctx context.Context, repo RepoName, params *GetArchiveParams, reqEditors ...RequestEditorFn) (*GetArchiveResponse, error) {
+	rsp, err := c.GetArchive(ctx, repo, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetArchiveResponse(rsp)
+}
+
+// ListArtifactsWithResponse List a repository's artifacts
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/artifacts (the `ListArtifacts` operationId).
+func (c *ClientWithResponses) ListArtifactsWithResponse(ctx context.Context, repo RepoName, params *ListArtifactsParams, reqEditors ...RequestEditorFn) (*ListArtifactsResponse, error) {
+	rsp, err := c.ListArtifacts(ctx, repo, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListArtifactsResponse(rsp)
+}
+
+// DeleteArtifactWithResponse Delete an artifact (write access)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /repos/{repo}/artifacts/{id} (the `DeleteArtifact` operationId).
+func (c *ClientWithResponses) DeleteArtifactWithResponse(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*DeleteArtifactResponse, error) {
+	rsp, err := c.DeleteArtifact(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteArtifactResponse(rsp)
+}
+
+// GetArtifactWithResponse Get an artifact
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/artifacts/{id} (the `GetArtifact` operationId).
+func (c *ClientWithResponses) GetArtifactWithResponse(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*GetArtifactResponse, error) {
+	rsp, err := c.GetArtifact(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetArtifactResponse(rsp)
+}
+
+// DownloadArtifactWithResponse Download an artifact as a zip file
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/artifacts/{id}/zip (the `DownloadArtifact` operationId).
+func (c *ClientWithResponses) DownloadArtifactWithResponse(ctx context.Context, repo RepoName, id ArtifactID, reqEditors ...RequestEditorFn) (*DownloadArtifactResponse, error) {
+	rsp, err := c.DownloadArtifact(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDownloadArtifactResponse(rsp)
+}
+
 // GetBlameWithResponse Line-by-line authorship of a file
 //
 // Returns a wrapper object for the known response body format(s).
@@ -19251,6 +22167,47 @@ func (c *ClientWithResponses) DeleteBranchWithResponse(ctx context.Context, repo
 		return nil, err
 	}
 	return ParseDeleteBranchResponse(rsp)
+}
+
+// DeleteCachesWithResponse Delete caches by key (write access)
+//
+// Deletes every cache with exactly this key (optionally only for one ref). Without key, deletes all of the repository's caches.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /repos/{repo}/caches (the `DeleteCaches` operationId).
+func (c *ClientWithResponses) DeleteCachesWithResponse(ctx context.Context, repo RepoName, params *DeleteCachesParams, reqEditors ...RequestEditorFn) (*DeleteCachesResponse, error) {
+	rsp, err := c.DeleteCaches(ctx, repo, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteCachesResponse(rsp)
+}
+
+// ListCachesWithResponse List a repository's CI caches
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/caches (the `ListCaches` operationId).
+func (c *ClientWithResponses) ListCachesWithResponse(ctx context.Context, repo RepoName, params *ListCachesParams, reqEditors ...RequestEditorFn) (*ListCachesResponse, error) {
+	rsp, err := c.ListCaches(ctx, repo, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListCachesResponse(rsp)
+}
+
+// DeleteCacheWithResponse Delete one cache (write access)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /repos/{repo}/caches/{id} (the `DeleteCache` operationId).
+func (c *ClientWithResponses) DeleteCacheWithResponse(ctx context.Context, repo RepoName, id int64, reqEditors ...RequestEditorFn) (*DeleteCacheResponse, error) {
+	rsp, err := c.DeleteCache(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteCacheResponse(rsp)
 }
 
 // DeleteCommentWithResponse Delete a comment (its author or an admin)
@@ -20100,6 +23057,176 @@ func (c *ClientWithResponses) GetReadmeWithResponse(ctx context.Context, repo Re
 	return ParseGetReadmeResponse(rsp)
 }
 
+// ListReleasesWithResponse List releases, newest first
+//
+// Drafts are only listed for users with write access.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/releases (the `ListReleases` operationId).
+func (c *ClientWithResponses) ListReleasesWithResponse(ctx context.Context, repo RepoName, params *ListReleasesParams, reqEditors ...RequestEditorFn) (*ListReleasesResponse, error) {
+	rsp, err := c.ListReleases(ctx, repo, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListReleasesResponse(rsp)
+}
+
+// CreateReleaseWithBodyWithResponse Create a release (write access)
+//
+// If the tag doesn't exist it's created at `target` (a branch or commit; default the default branch) when the release is published. Drafts don't create tags.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/releases (the `CreateRelease` operationId).
+func (c *ClientWithResponses) CreateReleaseWithBodyWithResponse(ctx context.Context, repo RepoName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateReleaseResponse, error) {
+	rsp, err := c.CreateReleaseWithBody(ctx, repo, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateReleaseResponse(rsp)
+}
+
+// CreateReleaseWithResponse Create a release (write access)
+//
+// If the tag doesn't exist it's created at `target` (a branch or commit; default the default branch) when the release is published. Drafts don't create tags.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/releases (the `CreateRelease` operationId).
+func (c *ClientWithResponses) CreateReleaseWithResponse(ctx context.Context, repo RepoName, body CreateReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateReleaseResponse, error) {
+	rsp, err := c.CreateRelease(ctx, repo, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateReleaseResponse(rsp)
+}
+
+// GetLatestReleaseWithResponse The newest published release that isn't a prerelease
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/releases/latest (the `GetLatestRelease` operationId).
+func (c *ClientWithResponses) GetLatestReleaseWithResponse(ctx context.Context, repo RepoName, reqEditors ...RequestEditorFn) (*GetLatestReleaseResponse, error) {
+	rsp, err := c.GetLatestRelease(ctx, repo, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLatestReleaseResponse(rsp)
+}
+
+// GetReleaseByTagWithResponse Get a release by its tag
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/releases/tags/{tag} (the `GetReleaseByTag` operationId).
+func (c *ClientWithResponses) GetReleaseByTagWithResponse(ctx context.Context, repo RepoName, tag string, reqEditors ...RequestEditorFn) (*GetReleaseByTagResponse, error) {
+	rsp, err := c.GetReleaseByTag(ctx, repo, tag, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetReleaseByTagResponse(rsp)
+}
+
+// DeleteReleaseWithResponse Delete a release and its assets (write access)
+//
+// The tag stays unless `delete_tag` is set.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /repos/{repo}/releases/{id} (the `DeleteRelease` operationId).
+func (c *ClientWithResponses) DeleteReleaseWithResponse(ctx context.Context, repo RepoName, id ReleaseID, params *DeleteReleaseParams, reqEditors ...RequestEditorFn) (*DeleteReleaseResponse, error) {
+	rsp, err := c.DeleteRelease(ctx, repo, id, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteReleaseResponse(rsp)
+}
+
+// GetReleaseWithResponse Get a release
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/releases/{id} (the `GetRelease` operationId).
+func (c *ClientWithResponses) GetReleaseWithResponse(ctx context.Context, repo RepoName, id ReleaseID, reqEditors ...RequestEditorFn) (*GetReleaseResponse, error) {
+	rsp, err := c.GetRelease(ctx, repo, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetReleaseResponse(rsp)
+}
+
+// UpdateReleaseWithBodyWithResponse Edit or publish a release (write access)
+//
+// Setting `draft` to false publishes the release, creating its tag if needed.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/releases/{id} (the `UpdateRelease` operationId).
+func (c *ClientWithResponses) UpdateReleaseWithBodyWithResponse(ctx context.Context, repo RepoName, id ReleaseID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateReleaseResponse, error) {
+	rsp, err := c.UpdateReleaseWithBody(ctx, repo, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateReleaseResponse(rsp)
+}
+
+// UpdateReleaseWithResponse Edit or publish a release (write access)
+//
+// Setting `draft` to false publishes the release, creating its tag if needed.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /repos/{repo}/releases/{id} (the `UpdateRelease` operationId).
+func (c *ClientWithResponses) UpdateReleaseWithResponse(ctx context.Context, repo RepoName, id ReleaseID, body UpdateReleaseJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateReleaseResponse, error) {
+	rsp, err := c.UpdateRelease(ctx, repo, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateReleaseResponse(rsp)
+}
+
+// UploadReleaseAssetWithBodyWithResponse Upload a file to a release (write access)
+//
+// The request body is the raw file. The size limit is the admin's `release_asset_max_mb` setting.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /repos/{repo}/releases/{id}/assets (the `UploadReleaseAsset` operationId).
+func (c *ClientWithResponses) UploadReleaseAssetWithBodyWithResponse(ctx context.Context, repo RepoName, id ReleaseID, params *UploadReleaseAssetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UploadReleaseAssetResponse, error) {
+	rsp, err := c.UploadReleaseAssetWithBody(ctx, repo, id, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUploadReleaseAssetResponse(rsp)
+}
+
+// DeleteReleaseAssetWithResponse Delete a release asset (write access)
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /repos/{repo}/releases/{id}/assets/{asset_id} (the `DeleteReleaseAsset` operationId).
+func (c *ClientWithResponses) DeleteReleaseAssetWithResponse(ctx context.Context, repo RepoName, id ReleaseID, assetId int64, reqEditors ...RequestEditorFn) (*DeleteReleaseAssetResponse, error) {
+	rsp, err := c.DeleteReleaseAsset(ctx, repo, id, assetId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteReleaseAssetResponse(rsp)
+}
+
+// DownloadReleaseAssetWithResponse Download a release asset
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/releases/{id}/assets/{asset_id} (the `DownloadReleaseAsset` operationId).
+func (c *ClientWithResponses) DownloadReleaseAssetWithResponse(ctx context.Context, repo RepoName, id ReleaseID, assetId int64, reqEditors ...RequestEditorFn) (*DownloadReleaseAssetResponse, error) {
+	rsp, err := c.DownloadReleaseAsset(ctx, repo, id, assetId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDownloadReleaseAssetResponse(rsp)
+}
+
 // ListRunsWithResponse List a repository's workflow runs
 //
 // Returns a wrapper object for the known response body format(s).
@@ -20124,6 +23251,21 @@ func (c *ClientWithResponses) GetRunWithResponse(ctx context.Context, repo RepoN
 		return nil, err
 	}
 	return ParseGetRunResponse(rsp)
+}
+
+// ListRunArtifactsWithResponse List a run's artifacts
+//
+// Artifacts uploaded by every attempt of the run that haven't expired, newest first.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /repos/{repo}/runs/{number}/artifacts (the `ListRunArtifacts` operationId).
+func (c *ClientWithResponses) ListRunArtifactsWithResponse(ctx context.Context, repo RepoName, number RunNumber, reqEditors ...RequestEditorFn) (*ListRunArtifactsResponse, error) {
+	rsp, err := c.ListRunArtifacts(ctx, repo, number, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListRunArtifactsResponse(rsp)
 }
 
 // CancelRunWithResponse Cancel a run (write access)
@@ -21808,6 +24950,153 @@ func ParseListRepoAccessResponse(rsp *http.Response) (*ListRepoAccessResponse, e
 	return response, nil
 }
 
+// ParseGetArchiveResponse parses an HTTP response from a GetArchiveWithResponse call
+func ParseGetArchiveResponse(rsp *http.Response) (*GetArchiveResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetArchiveResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListArtifactsResponse parses an HTTP response from a ListArtifactsWithResponse call
+func ParseListArtifactsResponse(rsp *http.Response) (*ListArtifactsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListArtifactsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ArtifactPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteArtifactResponse parses an HTTP response from a DeleteArtifactWithResponse call
+func ParseDeleteArtifactResponse(rsp *http.Response) (*DeleteArtifactResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteArtifactResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetArtifactResponse parses an HTTP response from a GetArtifactWithResponse call
+func ParseGetArtifactResponse(rsp *http.Response) (*GetArtifactResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetArtifactResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Artifact
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDownloadArtifactResponse parses an HTTP response from a DownloadArtifactWithResponse call
+func ParseDownloadArtifactResponse(rsp *http.Response) (*DownloadArtifactResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DownloadArtifactResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetBlameResponse parses an HTTP response from a GetBlameWithResponse call
 func ParseGetBlameResponse(rsp *http.Response) (*GetBlameResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -21916,6 +25205,101 @@ func ParseDeleteBranchResponse(rsp *http.Response) (*DeleteBranchResponse, error
 	}
 
 	response := &DeleteBranchResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteCachesResponse parses an HTTP response from a DeleteCachesWithResponse call
+func ParseDeleteCachesResponse(rsp *http.Response) (*DeleteCachesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteCachesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DeletedCount
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListCachesResponse parses an HTTP response from a ListCachesWithResponse call
+func ParseListCachesResponse(rsp *http.Response) (*ListCachesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListCachesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CachePage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteCacheResponse parses an HTTP response from a DeleteCacheWithResponse call
+func ParseDeleteCacheResponse(rsp *http.Response) (*DeleteCacheResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteCacheResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -23398,6 +26782,321 @@ func ParseGetReadmeResponse(rsp *http.Response) (*GetReadmeResponse, error) {
 	return response, nil
 }
 
+// ParseListReleasesResponse parses an HTTP response from a ListReleasesWithResponse call
+func ParseListReleasesResponse(rsp *http.Response) (*ListReleasesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListReleasesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ReleasePage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateReleaseResponse parses an HTTP response from a CreateReleaseWithResponse call
+func ParseCreateReleaseResponse(rsp *http.Response) (*CreateReleaseResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateReleaseResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Release
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetLatestReleaseResponse parses an HTTP response from a GetLatestReleaseWithResponse call
+func ParseGetLatestReleaseResponse(rsp *http.Response) (*GetLatestReleaseResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLatestReleaseResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Release
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetReleaseByTagResponse parses an HTTP response from a GetReleaseByTagWithResponse call
+func ParseGetReleaseByTagResponse(rsp *http.Response) (*GetReleaseByTagResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetReleaseByTagResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Release
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteReleaseResponse parses an HTTP response from a DeleteReleaseWithResponse call
+func ParseDeleteReleaseResponse(rsp *http.Response) (*DeleteReleaseResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteReleaseResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetReleaseResponse parses an HTTP response from a GetReleaseWithResponse call
+func ParseGetReleaseResponse(rsp *http.Response) (*GetReleaseResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetReleaseResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Release
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateReleaseResponse parses an HTTP response from a UpdateReleaseWithResponse call
+func ParseUpdateReleaseResponse(rsp *http.Response) (*UpdateReleaseResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateReleaseResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Release
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUploadReleaseAssetResponse parses an HTTP response from a UploadReleaseAssetWithResponse call
+func ParseUploadReleaseAssetResponse(rsp *http.Response) (*UploadReleaseAssetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UploadReleaseAssetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ReleaseAsset
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteReleaseAssetResponse parses an HTTP response from a DeleteReleaseAssetWithResponse call
+func ParseDeleteReleaseAssetResponse(rsp *http.Response) (*DeleteReleaseAssetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteReleaseAssetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDownloadReleaseAssetResponse parses an HTTP response from a DownloadReleaseAssetWithResponse call
+func ParseDownloadReleaseAssetResponse(rsp *http.Response) (*DownloadReleaseAssetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DownloadReleaseAssetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListRunsResponse parses an HTTP response from a ListRunsWithResponse call
 func ParseListRunsResponse(rsp *http.Response) (*ListRunsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -23447,6 +27146,39 @@ func ParseGetRunResponse(rsp *http.Response) (*GetRunResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest WorkflowRunDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListRunArtifactsResponse parses an HTTP response from a ListRunArtifactsWithResponse call
+func ParseListRunArtifactsResponse(rsp *http.Response) (*ListRunArtifactsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListRunArtifactsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []Artifact
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -23993,6 +27725,21 @@ type ServerInterface interface {
 	// ListRepoAccess Who can access this repository, and how
 	// (GET /repos/{repo}/access)
 	ListRepoAccess(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// GetArchive Download the source code at a ref as an archive
+	// (GET /repos/{repo}/archive)
+	GetArchive(w http.ResponseWriter, r *http.Request, repo RepoName, params GetArchiveParams)
+	// ListArtifacts List a repository's artifacts
+	// (GET /repos/{repo}/artifacts)
+	ListArtifacts(w http.ResponseWriter, r *http.Request, repo RepoName, params ListArtifactsParams)
+	// DeleteArtifact Delete an artifact (write access)
+	// (DELETE /repos/{repo}/artifacts/{id})
+	DeleteArtifact(w http.ResponseWriter, r *http.Request, repo RepoName, id ArtifactID)
+	// GetArtifact Get an artifact
+	// (GET /repos/{repo}/artifacts/{id})
+	GetArtifact(w http.ResponseWriter, r *http.Request, repo RepoName, id ArtifactID)
+	// DownloadArtifact Download an artifact as a zip file
+	// (GET /repos/{repo}/artifacts/{id}/zip)
+	DownloadArtifact(w http.ResponseWriter, r *http.Request, repo RepoName, id ArtifactID)
 	// GetBlame Line-by-line authorship of a file
 	// (GET /repos/{repo}/blame)
 	GetBlame(w http.ResponseWriter, r *http.Request, repo RepoName, params GetBlameParams)
@@ -24005,6 +27752,15 @@ type ServerInterface interface {
 	// DeleteBranch Delete a branch
 	// (POST /repos/{repo}/branches/delete)
 	DeleteBranch(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// DeleteCaches Delete caches by key (write access)
+	// (DELETE /repos/{repo}/caches)
+	DeleteCaches(w http.ResponseWriter, r *http.Request, repo RepoName, params DeleteCachesParams)
+	// ListCaches List a repository's CI caches
+	// (GET /repos/{repo}/caches)
+	ListCaches(w http.ResponseWriter, r *http.Request, repo RepoName, params ListCachesParams)
+	// DeleteCache Delete one cache (write access)
+	// (DELETE /repos/{repo}/caches/{id})
+	DeleteCache(w http.ResponseWriter, r *http.Request, repo RepoName, id int64)
 	// DeleteComment Delete a comment (its author or an admin)
 	// (DELETE /repos/{repo}/comments/{id})
 	DeleteComment(w http.ResponseWriter, r *http.Request, repo RepoName, id int64)
@@ -24140,12 +27896,45 @@ type ServerInterface interface {
 	// GetReadme The README of a directory, rendered to HTML
 	// (GET /repos/{repo}/readme)
 	GetReadme(w http.ResponseWriter, r *http.Request, repo RepoName, params GetReadmeParams)
+	// ListReleases List releases, newest first
+	// (GET /repos/{repo}/releases)
+	ListReleases(w http.ResponseWriter, r *http.Request, repo RepoName, params ListReleasesParams)
+	// CreateRelease Create a release (write access)
+	// (POST /repos/{repo}/releases)
+	CreateRelease(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// GetLatestRelease The newest published release that isn't a prerelease
+	// (GET /repos/{repo}/releases/latest)
+	GetLatestRelease(w http.ResponseWriter, r *http.Request, repo RepoName)
+	// GetReleaseByTag Get a release by its tag
+	// (GET /repos/{repo}/releases/tags/{tag})
+	GetReleaseByTag(w http.ResponseWriter, r *http.Request, repo RepoName, tag string)
+	// DeleteRelease Delete a release and its assets (write access)
+	// (DELETE /repos/{repo}/releases/{id})
+	DeleteRelease(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, params DeleteReleaseParams)
+	// GetRelease Get a release
+	// (GET /repos/{repo}/releases/{id})
+	GetRelease(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID)
+	// UpdateRelease Edit or publish a release (write access)
+	// (PATCH /repos/{repo}/releases/{id})
+	UpdateRelease(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID)
+	// UploadReleaseAsset Upload a file to a release (write access)
+	// (POST /repos/{repo}/releases/{id}/assets)
+	UploadReleaseAsset(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, params UploadReleaseAssetParams)
+	// DeleteReleaseAsset Delete a release asset (write access)
+	// (DELETE /repos/{repo}/releases/{id}/assets/{asset_id})
+	DeleteReleaseAsset(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, assetId int64)
+	// DownloadReleaseAsset Download a release asset
+	// (GET /repos/{repo}/releases/{id}/assets/{asset_id})
+	DownloadReleaseAsset(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, assetId int64)
 	// ListRuns List a repository's workflow runs
 	// (GET /repos/{repo}/runs)
 	ListRuns(w http.ResponseWriter, r *http.Request, repo RepoName, params ListRunsParams)
 	// GetRun Get a run with its jobs and steps
 	// (GET /repos/{repo}/runs/{number})
 	GetRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber)
+	// ListRunArtifacts List a run's artifacts
+	// (GET /repos/{repo}/runs/{number}/artifacts)
+	ListRunArtifacts(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber)
 	// CancelRun Cancel a run (write access)
 	// (POST /repos/{repo}/runs/{number}/cancel)
 	CancelRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber)
@@ -24458,6 +28247,36 @@ func (_ Unimplemented) ListRepoAccess(w http.ResponseWriter, r *http.Request, re
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// GetArchive Download the source code at a ref as an archive
+// (GET /repos/{repo}/archive)
+func (_ Unimplemented) GetArchive(w http.ResponseWriter, r *http.Request, repo RepoName, params GetArchiveParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListArtifacts List a repository's artifacts
+// (GET /repos/{repo}/artifacts)
+func (_ Unimplemented) ListArtifacts(w http.ResponseWriter, r *http.Request, repo RepoName, params ListArtifactsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteArtifact Delete an artifact (write access)
+// (DELETE /repos/{repo}/artifacts/{id})
+func (_ Unimplemented) DeleteArtifact(w http.ResponseWriter, r *http.Request, repo RepoName, id ArtifactID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetArtifact Get an artifact
+// (GET /repos/{repo}/artifacts/{id})
+func (_ Unimplemented) GetArtifact(w http.ResponseWriter, r *http.Request, repo RepoName, id ArtifactID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DownloadArtifact Download an artifact as a zip file
+// (GET /repos/{repo}/artifacts/{id}/zip)
+func (_ Unimplemented) DownloadArtifact(w http.ResponseWriter, r *http.Request, repo RepoName, id ArtifactID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetBlame Line-by-line authorship of a file
 // (GET /repos/{repo}/blame)
 func (_ Unimplemented) GetBlame(w http.ResponseWriter, r *http.Request, repo RepoName, params GetBlameParams) {
@@ -24479,6 +28298,24 @@ func (_ Unimplemented) ListBranches(w http.ResponseWriter, r *http.Request, repo
 // DeleteBranch Delete a branch
 // (POST /repos/{repo}/branches/delete)
 func (_ Unimplemented) DeleteBranch(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteCaches Delete caches by key (write access)
+// (DELETE /repos/{repo}/caches)
+func (_ Unimplemented) DeleteCaches(w http.ResponseWriter, r *http.Request, repo RepoName, params DeleteCachesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListCaches List a repository's CI caches
+// (GET /repos/{repo}/caches)
+func (_ Unimplemented) ListCaches(w http.ResponseWriter, r *http.Request, repo RepoName, params ListCachesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteCache Delete one cache (write access)
+// (DELETE /repos/{repo}/caches/{id})
+func (_ Unimplemented) DeleteCache(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -24752,6 +28589,66 @@ func (_ Unimplemented) GetReadme(w http.ResponseWriter, r *http.Request, repo Re
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListReleases List releases, newest first
+// (GET /repos/{repo}/releases)
+func (_ Unimplemented) ListReleases(w http.ResponseWriter, r *http.Request, repo RepoName, params ListReleasesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateRelease Create a release (write access)
+// (POST /repos/{repo}/releases)
+func (_ Unimplemented) CreateRelease(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetLatestRelease The newest published release that isn't a prerelease
+// (GET /repos/{repo}/releases/latest)
+func (_ Unimplemented) GetLatestRelease(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetReleaseByTag Get a release by its tag
+// (GET /repos/{repo}/releases/tags/{tag})
+func (_ Unimplemented) GetReleaseByTag(w http.ResponseWriter, r *http.Request, repo RepoName, tag string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteRelease Delete a release and its assets (write access)
+// (DELETE /repos/{repo}/releases/{id})
+func (_ Unimplemented) DeleteRelease(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, params DeleteReleaseParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetRelease Get a release
+// (GET /repos/{repo}/releases/{id})
+func (_ Unimplemented) GetRelease(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateRelease Edit or publish a release (write access)
+// (PATCH /repos/{repo}/releases/{id})
+func (_ Unimplemented) UpdateRelease(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UploadReleaseAsset Upload a file to a release (write access)
+// (POST /repos/{repo}/releases/{id}/assets)
+func (_ Unimplemented) UploadReleaseAsset(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, params UploadReleaseAssetParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteReleaseAsset Delete a release asset (write access)
+// (DELETE /repos/{repo}/releases/{id}/assets/{asset_id})
+func (_ Unimplemented) DeleteReleaseAsset(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, assetId int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DownloadReleaseAsset Download a release asset
+// (GET /repos/{repo}/releases/{id}/assets/{asset_id})
+func (_ Unimplemented) DownloadReleaseAsset(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, assetId int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ListRuns List a repository's workflow runs
 // (GET /repos/{repo}/runs)
 func (_ Unimplemented) ListRuns(w http.ResponseWriter, r *http.Request, repo RepoName, params ListRunsParams) {
@@ -24761,6 +28658,12 @@ func (_ Unimplemented) ListRuns(w http.ResponseWriter, r *http.Request, repo Rep
 // GetRun Get a run with its jobs and steps
 // (GET /repos/{repo}/runs/{number})
 func (_ Unimplemented) GetRun(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListRunArtifacts List a run's artifacts
+// (GET /repos/{repo}/runs/{number}/artifacts)
+func (_ Unimplemented) ListRunArtifacts(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -25860,6 +29763,234 @@ func (siw *ServerInterfaceWrapper) ListRepoAccess(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
+// GetArchive operation middleware
+func (siw *ServerInterfaceWrapper) GetArchive(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetArchiveParams
+
+	// ------------- Required query parameter "ref" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "ref", r.URL.Query(), &params.Ref, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "ref"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "ref", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "format" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "format", r.URL.Query(), &params.Format, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "format"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "format", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetArchive(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListArtifacts operation middleware
+func (siw *ServerInterfaceWrapper) ListArtifacts(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListArtifactsParams
+
+	// ------------- Optional query parameter "name" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "name", r.URL.Query(), &params.Name, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "name"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", r.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "per_page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "per_page", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListArtifacts(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteArtifact operation middleware
+func (siw *ServerInterfaceWrapper) DeleteArtifact(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id ArtifactID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteArtifact(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetArtifact operation middleware
+func (siw *ServerInterfaceWrapper) GetArtifact(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id ArtifactID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetArtifact(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DownloadArtifact operation middleware
+func (siw *ServerInterfaceWrapper) DownloadArtifact(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id ArtifactID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DownloadArtifact(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetBlame operation middleware
 func (siw *ServerInterfaceWrapper) GetBlame(w http.ResponseWriter, r *http.Request) {
 
@@ -26013,6 +30144,190 @@ func (siw *ServerInterfaceWrapper) DeleteBranch(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DeleteBranch(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteCaches operation middleware
+func (siw *ServerInterfaceWrapper) DeleteCaches(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteCachesParams
+
+	// ------------- Optional query parameter "key" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "key", r.URL.Query(), &params.Key, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "key"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "key", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "ref" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "ref", r.URL.Query(), &params.Ref, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "ref"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "ref", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteCaches(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListCaches operation middleware
+func (siw *ServerInterfaceWrapper) ListCaches(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListCachesParams
+
+	// ------------- Optional query parameter "key" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "key", r.URL.Query(), &params.Key, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "key"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "key", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "ref" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "ref", r.URL.Query(), &params.Ref, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "ref"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "ref", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sort", r.URL.Query(), &params.Sort, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sort"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", r.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "per_page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "per_page", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListCaches(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteCache operation middleware
+func (siw *ServerInterfaceWrapper) DeleteCache(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteCache(w, r, repo, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -27907,6 +32222,434 @@ func (siw *ServerInterfaceWrapper) GetReadme(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// ListReleases operation middleware
+func (siw *ServerInterfaceWrapper) ListReleases(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListReleasesParams
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "per_page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "per_page", r.URL.Query(), &params.PerPage, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "per_page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "per_page", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListReleases(w, r, repo, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateRelease operation middleware
+func (siw *ServerInterfaceWrapper) CreateRelease(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateRelease(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetLatestRelease operation middleware
+func (siw *ServerInterfaceWrapper) GetLatestRelease(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetLatestRelease(w, r, repo)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetReleaseByTag operation middleware
+func (siw *ServerInterfaceWrapper) GetReleaseByTag(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "tag" -------------
+	var tag string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "tag", chi.URLParam(r, "tag"), &tag, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tag", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetReleaseByTag(w, r, repo, tag)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteRelease operation middleware
+func (siw *ServerInterfaceWrapper) DeleteRelease(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id ReleaseID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteReleaseParams
+
+	// ------------- Optional query parameter "delete_tag" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "delete_tag", r.URL.Query(), &params.DeleteTag, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "delete_tag"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "delete_tag", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteRelease(w, r, repo, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetRelease operation middleware
+func (siw *ServerInterfaceWrapper) GetRelease(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id ReleaseID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRelease(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateRelease operation middleware
+func (siw *ServerInterfaceWrapper) UpdateRelease(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id ReleaseID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateRelease(w, r, repo, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UploadReleaseAsset operation middleware
+func (siw *ServerInterfaceWrapper) UploadReleaseAsset(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id ReleaseID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params UploadReleaseAssetParams
+
+	// ------------- Required query parameter "name" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "name", r.URL.Query(), &params.Name, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "name"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "label" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "label", r.URL.Query(), &params.Label, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "label"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "label", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "overwrite" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "overwrite", r.URL.Query(), &params.Overwrite, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "overwrite"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "overwrite", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UploadReleaseAsset(w, r, repo, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteReleaseAsset operation middleware
+func (siw *ServerInterfaceWrapper) DeleteReleaseAsset(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id ReleaseID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "asset_id" -------------
+	var assetId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "asset_id", chi.URLParam(r, "asset_id"), &assetId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "asset_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteReleaseAsset(w, r, repo, id, assetId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DownloadReleaseAsset operation middleware
+func (siw *ServerInterfaceWrapper) DownloadReleaseAsset(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id ReleaseID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "asset_id" -------------
+	var assetId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "asset_id", chi.URLParam(r, "asset_id"), &assetId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "asset_id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DownloadReleaseAsset(w, r, repo, id, assetId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListRuns operation middleware
 func (siw *ServerInterfaceWrapper) ListRuns(w http.ResponseWriter, r *http.Request) {
 
@@ -28079,6 +32822,41 @@ func (siw *ServerInterfaceWrapper) GetRun(w http.ResponseWriter, r *http.Request
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetRun(w, r, repo, number)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListRunArtifacts operation middleware
+func (siw *ServerInterfaceWrapper) ListRunArtifacts(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repo" -------------
+	var repo RepoName
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repo", chi.URLParam(r, "repo"), &repo, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repo", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number RunNumber
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListRunArtifacts(w, r, repo, number)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -28948,6 +33726,63 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Patch(options.BaseURL+"/admin/ci/settings", wrapper.UpdateCISettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/runs/{number}/artifacts", wrapper.ListRunArtifacts)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/artifacts", wrapper.ListArtifacts)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/repos/{repo}/artifacts/{id}", wrapper.DeleteArtifact)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/artifacts/{id}", wrapper.GetArtifact)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/artifacts/{id}/zip", wrapper.DownloadArtifact)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/repos/{repo}/caches", wrapper.DeleteCaches)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/caches", wrapper.ListCaches)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/repos/{repo}/caches/{id}", wrapper.DeleteCache)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/archive", wrapper.GetArchive)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/releases", wrapper.ListReleases)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/releases", wrapper.CreateRelease)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/releases/latest", wrapper.GetLatestRelease)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/releases/tags/{tag}", wrapper.GetReleaseByTag)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/repos/{repo}/releases/{id}", wrapper.DeleteRelease)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/releases/{id}", wrapper.GetRelease)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/repos/{repo}/releases/{id}", wrapper.UpdateRelease)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/repos/{repo}/releases/{id}/assets", wrapper.UploadReleaseAsset)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/repos/{repo}/releases/{id}/assets/{asset_id}", wrapper.DeleteReleaseAsset)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/repos/{repo}/releases/{id}/assets/{asset_id}", wrapper.DownloadReleaseAsset)
 	})
 
 	return r
@@ -30670,6 +35505,212 @@ func (response ListRepoAccessdefaultJSONResponse) VisitListRepoAccessResponse(w 
 	return err
 }
 
+type GetArchiveRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Params GetArchiveParams
+}
+
+type GetArchiveResponseObject interface {
+	VisitGetArchiveResponse(w http.ResponseWriter) error
+}
+
+type GetArchive200ApplicationoctetStreamResponse struct {
+	Body          io.Reader
+	ContentLength int64
+}
+
+func (response GetArchive200ApplicationoctetStreamResponse) VisitGetArchiveResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type GetArchivedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetArchivedefaultJSONResponse) VisitGetArchiveResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListArtifactsRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Params ListArtifactsParams
+}
+
+type ListArtifactsResponseObject interface {
+	VisitListArtifactsResponse(w http.ResponseWriter) error
+}
+
+type ListArtifacts200JSONResponse ArtifactPage
+
+func (response ListArtifacts200JSONResponse) VisitListArtifactsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListArtifactsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListArtifactsdefaultJSONResponse) VisitListArtifactsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteArtifactRequestObject struct {
+	Repo RepoName   `json:"repo"`
+	Id   ArtifactID `json:"id"`
+}
+
+type DeleteArtifactResponseObject interface {
+	VisitDeleteArtifactResponse(w http.ResponseWriter) error
+}
+
+type DeleteArtifact204Response struct {
+}
+
+func (response DeleteArtifact204Response) VisitDeleteArtifactResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteArtifactdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteArtifactdefaultJSONResponse) VisitDeleteArtifactResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetArtifactRequestObject struct {
+	Repo RepoName   `json:"repo"`
+	Id   ArtifactID `json:"id"`
+}
+
+type GetArtifactResponseObject interface {
+	VisitGetArtifactResponse(w http.ResponseWriter) error
+}
+
+type GetArtifact200JSONResponse Artifact
+
+func (response GetArtifact200JSONResponse) VisitGetArtifactResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetArtifactdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetArtifactdefaultJSONResponse) VisitGetArtifactResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DownloadArtifactRequestObject struct {
+	Repo RepoName   `json:"repo"`
+	Id   ArtifactID `json:"id"`
+}
+
+type DownloadArtifactResponseObject interface {
+	VisitDownloadArtifactResponse(w http.ResponseWriter) error
+}
+
+type DownloadArtifact200ApplicationzipResponse struct {
+	Body          io.Reader
+	ContentLength int64
+}
+
+func (response DownloadArtifact200ApplicationzipResponse) VisitDownloadArtifactResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "application/zip")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type DownloadArtifactdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DownloadArtifactdefaultJSONResponse) VisitDownloadArtifactResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetBlameRequestObject struct {
 	Repo   RepoName `json:"repo"`
 	Params GetBlameParams
@@ -30812,6 +35853,120 @@ type DeleteBranchdefaultJSONResponse struct {
 }
 
 func (response DeleteBranchdefaultJSONResponse) VisitDeleteBranchResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteCachesRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Params DeleteCachesParams
+}
+
+type DeleteCachesResponseObject interface {
+	VisitDeleteCachesResponse(w http.ResponseWriter) error
+}
+
+type DeleteCaches200JSONResponse DeletedCount
+
+func (response DeleteCaches200JSONResponse) VisitDeleteCachesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteCachesdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteCachesdefaultJSONResponse) VisitDeleteCachesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListCachesRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Params ListCachesParams
+}
+
+type ListCachesResponseObject interface {
+	VisitListCachesResponse(w http.ResponseWriter) error
+}
+
+type ListCaches200JSONResponse CachePage
+
+func (response ListCaches200JSONResponse) VisitListCachesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListCachesdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListCachesdefaultJSONResponse) VisitListCachesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteCacheRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Id   int64    `json:"id"`
+}
+
+type DeleteCacheResponseObject interface {
+	VisitDeleteCacheResponse(w http.ResponseWriter) error
+}
+
+type DeleteCache204Response struct {
+}
+
+func (response DeleteCache204Response) VisitDeleteCacheResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteCachedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteCachedefaultJSONResponse) VisitDeleteCacheResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -32617,6 +37772,405 @@ func (response GetReadmedefaultJSONResponse) VisitGetReadmeResponse(w http.Respo
 	return err
 }
 
+type ListReleasesRequestObject struct {
+	Repo   RepoName `json:"repo"`
+	Params ListReleasesParams
+}
+
+type ListReleasesResponseObject interface {
+	VisitListReleasesResponse(w http.ResponseWriter) error
+}
+
+type ListReleases200JSONResponse ReleasePage
+
+func (response ListReleases200JSONResponse) VisitListReleasesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListReleasesdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListReleasesdefaultJSONResponse) VisitListReleasesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateReleaseRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Body *CreateReleaseJSONRequestBody
+}
+
+type CreateReleaseResponseObject interface {
+	VisitCreateReleaseResponse(w http.ResponseWriter) error
+}
+
+type CreateRelease201JSONResponse Release
+
+func (response CreateRelease201JSONResponse) VisitCreateReleaseResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateReleasedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response CreateReleasedefaultJSONResponse) VisitCreateReleaseResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLatestReleaseRequestObject struct {
+	Repo RepoName `json:"repo"`
+}
+
+type GetLatestReleaseResponseObject interface {
+	VisitGetLatestReleaseResponse(w http.ResponseWriter) error
+}
+
+type GetLatestRelease200JSONResponse Release
+
+func (response GetLatestRelease200JSONResponse) VisitGetLatestReleaseResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLatestReleasedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetLatestReleasedefaultJSONResponse) VisitGetLatestReleaseResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetReleaseByTagRequestObject struct {
+	Repo RepoName `json:"repo"`
+	Tag  string   `json:"tag"`
+}
+
+type GetReleaseByTagResponseObject interface {
+	VisitGetReleaseByTagResponse(w http.ResponseWriter) error
+}
+
+type GetReleaseByTag200JSONResponse Release
+
+func (response GetReleaseByTag200JSONResponse) VisitGetReleaseByTagResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetReleaseByTagdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetReleaseByTagdefaultJSONResponse) VisitGetReleaseByTagResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteReleaseRequestObject struct {
+	Repo   RepoName  `json:"repo"`
+	Id     ReleaseID `json:"id"`
+	Params DeleteReleaseParams
+}
+
+type DeleteReleaseResponseObject interface {
+	VisitDeleteReleaseResponse(w http.ResponseWriter) error
+}
+
+type DeleteRelease204Response struct {
+}
+
+func (response DeleteRelease204Response) VisitDeleteReleaseResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteReleasedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteReleasedefaultJSONResponse) VisitDeleteReleaseResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetReleaseRequestObject struct {
+	Repo RepoName  `json:"repo"`
+	Id   ReleaseID `json:"id"`
+}
+
+type GetReleaseResponseObject interface {
+	VisitGetReleaseResponse(w http.ResponseWriter) error
+}
+
+type GetRelease200JSONResponse Release
+
+func (response GetRelease200JSONResponse) VisitGetReleaseResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetReleasedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response GetReleasedefaultJSONResponse) VisitGetReleaseResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateReleaseRequestObject struct {
+	Repo RepoName  `json:"repo"`
+	Id   ReleaseID `json:"id"`
+	Body *UpdateReleaseJSONRequestBody
+}
+
+type UpdateReleaseResponseObject interface {
+	VisitUpdateReleaseResponse(w http.ResponseWriter) error
+}
+
+type UpdateRelease200JSONResponse Release
+
+func (response UpdateRelease200JSONResponse) VisitUpdateReleaseResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateReleasedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UpdateReleasedefaultJSONResponse) VisitUpdateReleaseResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadReleaseAssetRequestObject struct {
+	Repo   RepoName  `json:"repo"`
+	Id     ReleaseID `json:"id"`
+	Params UploadReleaseAssetParams
+	Body   io.Reader
+}
+
+type UploadReleaseAssetResponseObject interface {
+	VisitUploadReleaseAssetResponse(w http.ResponseWriter) error
+}
+
+type UploadReleaseAsset201JSONResponse ReleaseAsset
+
+func (response UploadReleaseAsset201JSONResponse) VisitUploadReleaseAssetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UploadReleaseAssetdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response UploadReleaseAssetdefaultJSONResponse) VisitUploadReleaseAssetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteReleaseAssetRequestObject struct {
+	Repo    RepoName  `json:"repo"`
+	Id      ReleaseID `json:"id"`
+	AssetId int64     `json:"asset_id"`
+}
+
+type DeleteReleaseAssetResponseObject interface {
+	VisitDeleteReleaseAssetResponse(w http.ResponseWriter) error
+}
+
+type DeleteReleaseAsset204Response struct {
+}
+
+func (response DeleteReleaseAsset204Response) VisitDeleteReleaseAssetResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteReleaseAssetdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DeleteReleaseAssetdefaultJSONResponse) VisitDeleteReleaseAssetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DownloadReleaseAssetRequestObject struct {
+	Repo    RepoName  `json:"repo"`
+	Id      ReleaseID `json:"id"`
+	AssetId int64     `json:"asset_id"`
+}
+
+type DownloadReleaseAssetResponseObject interface {
+	VisitDownloadReleaseAssetResponse(w http.ResponseWriter) error
+}
+
+type DownloadReleaseAsset200ApplicationoctetStreamResponse struct {
+	Body          io.Reader
+	ContentLength int64
+}
+
+func (response DownloadReleaseAsset200ApplicationoctetStreamResponse) VisitDownloadReleaseAssetResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type DownloadReleaseAssetdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response DownloadReleaseAssetdefaultJSONResponse) VisitDownloadReleaseAssetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListRunsRequestObject struct {
 	Repo   RepoName `json:"repo"`
 	Params ListRunsParams
@@ -32686,6 +38240,46 @@ type GetRundefaultJSONResponse struct {
 }
 
 func (response GetRundefaultJSONResponse) VisitGetRunResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListRunArtifactsRequestObject struct {
+	Repo   RepoName  `json:"repo"`
+	Number RunNumber `json:"number"`
+}
+
+type ListRunArtifactsResponseObject interface {
+	VisitListRunArtifactsResponse(w http.ResponseWriter) error
+}
+
+type ListRunArtifacts200JSONResponse []Artifact
+
+func (response ListRunArtifacts200JSONResponse) VisitListRunArtifactsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListRunArtifactsdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response ListRunArtifactsdefaultJSONResponse) VisitListRunArtifactsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -33305,6 +38899,21 @@ type StrictServerInterface interface {
 	// ListRepoAccess Who can access this repository, and how
 	// (GET /repos/{repo}/access)
 	ListRepoAccess(ctx context.Context, request ListRepoAccessRequestObject) (ListRepoAccessResponseObject, error)
+	// GetArchive Download the source code at a ref as an archive
+	// (GET /repos/{repo}/archive)
+	GetArchive(ctx context.Context, request GetArchiveRequestObject) (GetArchiveResponseObject, error)
+	// ListArtifacts List a repository's artifacts
+	// (GET /repos/{repo}/artifacts)
+	ListArtifacts(ctx context.Context, request ListArtifactsRequestObject) (ListArtifactsResponseObject, error)
+	// DeleteArtifact Delete an artifact (write access)
+	// (DELETE /repos/{repo}/artifacts/{id})
+	DeleteArtifact(ctx context.Context, request DeleteArtifactRequestObject) (DeleteArtifactResponseObject, error)
+	// GetArtifact Get an artifact
+	// (GET /repos/{repo}/artifacts/{id})
+	GetArtifact(ctx context.Context, request GetArtifactRequestObject) (GetArtifactResponseObject, error)
+	// DownloadArtifact Download an artifact as a zip file
+	// (GET /repos/{repo}/artifacts/{id}/zip)
+	DownloadArtifact(ctx context.Context, request DownloadArtifactRequestObject) (DownloadArtifactResponseObject, error)
 	// GetBlame Line-by-line authorship of a file
 	// (GET /repos/{repo}/blame)
 	GetBlame(ctx context.Context, request GetBlameRequestObject) (GetBlameResponseObject, error)
@@ -33317,6 +38926,15 @@ type StrictServerInterface interface {
 	// DeleteBranch Delete a branch
 	// (POST /repos/{repo}/branches/delete)
 	DeleteBranch(ctx context.Context, request DeleteBranchRequestObject) (DeleteBranchResponseObject, error)
+	// DeleteCaches Delete caches by key (write access)
+	// (DELETE /repos/{repo}/caches)
+	DeleteCaches(ctx context.Context, request DeleteCachesRequestObject) (DeleteCachesResponseObject, error)
+	// ListCaches List a repository's CI caches
+	// (GET /repos/{repo}/caches)
+	ListCaches(ctx context.Context, request ListCachesRequestObject) (ListCachesResponseObject, error)
+	// DeleteCache Delete one cache (write access)
+	// (DELETE /repos/{repo}/caches/{id})
+	DeleteCache(ctx context.Context, request DeleteCacheRequestObject) (DeleteCacheResponseObject, error)
 	// DeleteComment Delete a comment (its author or an admin)
 	// (DELETE /repos/{repo}/comments/{id})
 	DeleteComment(ctx context.Context, request DeleteCommentRequestObject) (DeleteCommentResponseObject, error)
@@ -33452,12 +39070,45 @@ type StrictServerInterface interface {
 	// GetReadme The README of a directory, rendered to HTML
 	// (GET /repos/{repo}/readme)
 	GetReadme(ctx context.Context, request GetReadmeRequestObject) (GetReadmeResponseObject, error)
+	// ListReleases List releases, newest first
+	// (GET /repos/{repo}/releases)
+	ListReleases(ctx context.Context, request ListReleasesRequestObject) (ListReleasesResponseObject, error)
+	// CreateRelease Create a release (write access)
+	// (POST /repos/{repo}/releases)
+	CreateRelease(ctx context.Context, request CreateReleaseRequestObject) (CreateReleaseResponseObject, error)
+	// GetLatestRelease The newest published release that isn't a prerelease
+	// (GET /repos/{repo}/releases/latest)
+	GetLatestRelease(ctx context.Context, request GetLatestReleaseRequestObject) (GetLatestReleaseResponseObject, error)
+	// GetReleaseByTag Get a release by its tag
+	// (GET /repos/{repo}/releases/tags/{tag})
+	GetReleaseByTag(ctx context.Context, request GetReleaseByTagRequestObject) (GetReleaseByTagResponseObject, error)
+	// DeleteRelease Delete a release and its assets (write access)
+	// (DELETE /repos/{repo}/releases/{id})
+	DeleteRelease(ctx context.Context, request DeleteReleaseRequestObject) (DeleteReleaseResponseObject, error)
+	// GetRelease Get a release
+	// (GET /repos/{repo}/releases/{id})
+	GetRelease(ctx context.Context, request GetReleaseRequestObject) (GetReleaseResponseObject, error)
+	// UpdateRelease Edit or publish a release (write access)
+	// (PATCH /repos/{repo}/releases/{id})
+	UpdateRelease(ctx context.Context, request UpdateReleaseRequestObject) (UpdateReleaseResponseObject, error)
+	// UploadReleaseAsset Upload a file to a release (write access)
+	// (POST /repos/{repo}/releases/{id}/assets)
+	UploadReleaseAsset(ctx context.Context, request UploadReleaseAssetRequestObject) (UploadReleaseAssetResponseObject, error)
+	// DeleteReleaseAsset Delete a release asset (write access)
+	// (DELETE /repos/{repo}/releases/{id}/assets/{asset_id})
+	DeleteReleaseAsset(ctx context.Context, request DeleteReleaseAssetRequestObject) (DeleteReleaseAssetResponseObject, error)
+	// DownloadReleaseAsset Download a release asset
+	// (GET /repos/{repo}/releases/{id}/assets/{asset_id})
+	DownloadReleaseAsset(ctx context.Context, request DownloadReleaseAssetRequestObject) (DownloadReleaseAssetResponseObject, error)
 	// ListRuns List a repository's workflow runs
 	// (GET /repos/{repo}/runs)
 	ListRuns(ctx context.Context, request ListRunsRequestObject) (ListRunsResponseObject, error)
 	// GetRun Get a run with its jobs and steps
 	// (GET /repos/{repo}/runs/{number})
 	GetRun(ctx context.Context, request GetRunRequestObject) (GetRunResponseObject, error)
+	// ListRunArtifacts List a run's artifacts
+	// (GET /repos/{repo}/runs/{number}/artifacts)
+	ListRunArtifacts(ctx context.Context, request ListRunArtifactsRequestObject) (ListRunArtifactsResponseObject, error)
 	// CancelRun Cancel a run (write access)
 	// (POST /repos/{repo}/runs/{number}/cancel)
 	CancelRun(ctx context.Context, request CancelRunRequestObject) (CancelRunResponseObject, error)
@@ -34779,6 +40430,141 @@ func (sh *strictHandler) ListRepoAccess(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
+// GetArchive operation middleware
+func (sh *strictHandler) GetArchive(w http.ResponseWriter, r *http.Request, repo RepoName, params GetArchiveParams) {
+	var request GetArchiveRequestObject
+
+	request.Repo = repo
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetArchive(ctx, request.(GetArchiveRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetArchive")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetArchiveResponseObject); ok {
+		if err := validResponse.VisitGetArchiveResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListArtifacts operation middleware
+func (sh *strictHandler) ListArtifacts(w http.ResponseWriter, r *http.Request, repo RepoName, params ListArtifactsParams) {
+	var request ListArtifactsRequestObject
+
+	request.Repo = repo
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListArtifacts(ctx, request.(ListArtifactsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListArtifacts")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListArtifactsResponseObject); ok {
+		if err := validResponse.VisitListArtifactsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteArtifact operation middleware
+func (sh *strictHandler) DeleteArtifact(w http.ResponseWriter, r *http.Request, repo RepoName, id ArtifactID) {
+	var request DeleteArtifactRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteArtifact(ctx, request.(DeleteArtifactRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteArtifact")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteArtifactResponseObject); ok {
+		if err := validResponse.VisitDeleteArtifactResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetArtifact operation middleware
+func (sh *strictHandler) GetArtifact(w http.ResponseWriter, r *http.Request, repo RepoName, id ArtifactID) {
+	var request GetArtifactRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetArtifact(ctx, request.(GetArtifactRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetArtifact")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetArtifactResponseObject); ok {
+		if err := validResponse.VisitGetArtifactResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DownloadArtifact operation middleware
+func (sh *strictHandler) DownloadArtifact(w http.ResponseWriter, r *http.Request, repo RepoName, id ArtifactID) {
+	var request DownloadArtifactRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DownloadArtifact(ctx, request.(DownloadArtifactRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DownloadArtifact")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DownloadArtifactResponseObject); ok {
+		if err := validResponse.VisitDownloadArtifactResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetBlame operation middleware
 func (sh *strictHandler) GetBlame(w http.ResponseWriter, r *http.Request, repo RepoName, params GetBlameParams) {
 	var request GetBlameRequestObject
@@ -34885,6 +40671,87 @@ func (sh *strictHandler) DeleteBranch(w http.ResponseWriter, r *http.Request, re
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(DeleteBranchResponseObject); ok {
 		if err := validResponse.VisitDeleteBranchResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteCaches operation middleware
+func (sh *strictHandler) DeleteCaches(w http.ResponseWriter, r *http.Request, repo RepoName, params DeleteCachesParams) {
+	var request DeleteCachesRequestObject
+
+	request.Repo = repo
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteCaches(ctx, request.(DeleteCachesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteCaches")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteCachesResponseObject); ok {
+		if err := validResponse.VisitDeleteCachesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListCaches operation middleware
+func (sh *strictHandler) ListCaches(w http.ResponseWriter, r *http.Request, repo RepoName, params ListCachesParams) {
+	var request ListCachesRequestObject
+
+	request.Repo = repo
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListCaches(ctx, request.(ListCachesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListCaches")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListCachesResponseObject); ok {
+		if err := validResponse.VisitListCachesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteCache operation middleware
+func (sh *strictHandler) DeleteCache(w http.ResponseWriter, r *http.Request, repo RepoName, id int64) {
+	var request DeleteCacheRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteCache(ctx, request.(DeleteCacheRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteCache")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteCacheResponseObject); ok {
+		if err := validResponse.VisitDeleteCacheResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -36227,6 +42094,294 @@ func (sh *strictHandler) GetReadme(w http.ResponseWriter, r *http.Request, repo 
 	}
 }
 
+// ListReleases operation middleware
+func (sh *strictHandler) ListReleases(w http.ResponseWriter, r *http.Request, repo RepoName, params ListReleasesParams) {
+	var request ListReleasesRequestObject
+
+	request.Repo = repo
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListReleases(ctx, request.(ListReleasesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListReleases")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListReleasesResponseObject); ok {
+		if err := validResponse.VisitListReleasesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateRelease operation middleware
+func (sh *strictHandler) CreateRelease(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	var request CreateReleaseRequestObject
+
+	request.Repo = repo
+
+	var body CreateReleaseJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateRelease(ctx, request.(CreateReleaseRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateRelease")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateReleaseResponseObject); ok {
+		if err := validResponse.VisitCreateReleaseResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetLatestRelease operation middleware
+func (sh *strictHandler) GetLatestRelease(w http.ResponseWriter, r *http.Request, repo RepoName) {
+	var request GetLatestReleaseRequestObject
+
+	request.Repo = repo
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetLatestRelease(ctx, request.(GetLatestReleaseRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetLatestRelease")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetLatestReleaseResponseObject); ok {
+		if err := validResponse.VisitGetLatestReleaseResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetReleaseByTag operation middleware
+func (sh *strictHandler) GetReleaseByTag(w http.ResponseWriter, r *http.Request, repo RepoName, tag string) {
+	var request GetReleaseByTagRequestObject
+
+	request.Repo = repo
+	request.Tag = tag
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetReleaseByTag(ctx, request.(GetReleaseByTagRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetReleaseByTag")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetReleaseByTagResponseObject); ok {
+		if err := validResponse.VisitGetReleaseByTagResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteRelease operation middleware
+func (sh *strictHandler) DeleteRelease(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, params DeleteReleaseParams) {
+	var request DeleteReleaseRequestObject
+
+	request.Repo = repo
+	request.Id = id
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteRelease(ctx, request.(DeleteReleaseRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteRelease")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteReleaseResponseObject); ok {
+		if err := validResponse.VisitDeleteReleaseResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetRelease operation middleware
+func (sh *strictHandler) GetRelease(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID) {
+	var request GetReleaseRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRelease(ctx, request.(GetReleaseRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRelease")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetReleaseResponseObject); ok {
+		if err := validResponse.VisitGetReleaseResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateRelease operation middleware
+func (sh *strictHandler) UpdateRelease(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID) {
+	var request UpdateReleaseRequestObject
+
+	request.Repo = repo
+	request.Id = id
+
+	var body UpdateReleaseJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateRelease(ctx, request.(UpdateReleaseRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateRelease")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateReleaseResponseObject); ok {
+		if err := validResponse.VisitUpdateReleaseResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UploadReleaseAsset operation middleware
+func (sh *strictHandler) UploadReleaseAsset(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, params UploadReleaseAssetParams) {
+	var request UploadReleaseAssetRequestObject
+
+	request.Repo = repo
+	request.Id = id
+	request.Params = params
+
+	request.Body = r.Body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UploadReleaseAsset(ctx, request.(UploadReleaseAssetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UploadReleaseAsset")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UploadReleaseAssetResponseObject); ok {
+		if err := validResponse.VisitUploadReleaseAssetResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteReleaseAsset operation middleware
+func (sh *strictHandler) DeleteReleaseAsset(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, assetId int64) {
+	var request DeleteReleaseAssetRequestObject
+
+	request.Repo = repo
+	request.Id = id
+	request.AssetId = assetId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteReleaseAsset(ctx, request.(DeleteReleaseAssetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteReleaseAsset")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteReleaseAssetResponseObject); ok {
+		if err := validResponse.VisitDeleteReleaseAssetResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DownloadReleaseAsset operation middleware
+func (sh *strictHandler) DownloadReleaseAsset(w http.ResponseWriter, r *http.Request, repo RepoName, id ReleaseID, assetId int64) {
+	var request DownloadReleaseAssetRequestObject
+
+	request.Repo = repo
+	request.Id = id
+	request.AssetId = assetId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DownloadReleaseAsset(ctx, request.(DownloadReleaseAssetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DownloadReleaseAsset")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DownloadReleaseAssetResponseObject); ok {
+		if err := validResponse.VisitDownloadReleaseAssetResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListRuns operation middleware
 func (sh *strictHandler) ListRuns(w http.ResponseWriter, r *http.Request, repo RepoName, params ListRunsParams) {
 	var request ListRunsRequestObject
@@ -36274,6 +42429,33 @@ func (sh *strictHandler) GetRun(w http.ResponseWriter, r *http.Request, repo Rep
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetRunResponseObject); ok {
 		if err := validResponse.VisitGetRunResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListRunArtifacts operation middleware
+func (sh *strictHandler) ListRunArtifacts(w http.ResponseWriter, r *http.Request, repo RepoName, number RunNumber) {
+	var request ListRunArtifactsRequestObject
+
+	request.Repo = repo
+	request.Number = number
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListRunArtifacts(ctx, request.(ListRunArtifactsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListRunArtifacts")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListRunArtifactsResponseObject); ok {
+		if err := validResponse.VisitListRunArtifactsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -36635,294 +42817,331 @@ func (sh *strictHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
-	"9nn9AbLO+gO8wNR+W7+U2gPua1RVn3AQQv+/AQA=",
+	"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",
+	"7wA=",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

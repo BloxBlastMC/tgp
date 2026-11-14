@@ -146,3 +146,11 @@ func (s *IOStreams) Bold(t string) string { return s.paint("1", t) }
 
 // SuccessIcon is a green check mark.
 func (s *IOStreams) SuccessIcon() string { return s.Green("✓") }
+
+// Progressf prints a progress note on stderr when stdout is a terminal
+// (so scripts and agents reading JSON don't see it).
+func (s *IOStreams) Progressf(format string, args ...any) {
+	if s.stdoutTTY {
+		fmt.Fprintf(s.ErrOut, format+"\n", args...)
+	}
+}

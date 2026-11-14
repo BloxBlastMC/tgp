@@ -1,6 +1,6 @@
-// Package storage stores blobs (CI logs now; artifacts, caches and release
-// assets later) behind an interface so a deployment can use local disk or,
-// later, S3-compatible object storage.
+// Package storage stores blobs (CI logs, artifacts, caches and release
+// assets) behind an interface so a deployment can use local disk or
+// S3-compatible object storage.
 package storage
 
 import (
@@ -19,7 +19,9 @@ var ErrNotFound = errors.New("storage: not found")
 
 // Store is a flat key/value blob store. Keys are slash-separated paths.
 type Store interface {
-	Put(ctx context.Context, key string, r io.Reader) error
+	// Put stores r under key, replacing any existing blob. size is the
+	// number of bytes r yields, or -1 if unknown.
+	Put(ctx context.Context, key string, r io.Reader, size int64) error
 	Get(ctx context.Context, key string) (io.ReadCloser, error)
 	Delete(ctx context.Context, key string) error
 	// DeletePrefix removes every key starting with prefix + "/".
@@ -46,7 +48,7 @@ func (l *Local) path(key string) (string, error) {
 }
 
 // Put writes the blob atomically (temp file + rename).
-func (l *Local) Put(_ context.Context, key string, r io.Reader) error {
+func (l *Local) Put(_ context.Context, key string, r io.Reader, _ int64) error {
 	p, err := l.path(key)
 	if err != nil {
 		return err

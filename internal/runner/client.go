@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -164,4 +166,109 @@ func (c *Client) Update(ctx context.Context, job int64, req runnerapi.UpdateRequ
 func (c *Client) Complete(ctx context.Context, job int64, req runnerapi.CompleteRequest) error {
 	_, err := c.do(ctx, fmt.Sprintf("/jobs/%d/complete", job), req, nil)
 	return err
+}
+
+// raw sends a request with a raw body (nil for none) and returns the
+// response for 2xx statuses. The caller closes the body.
+func (c *Client) raw(ctx context.Context, method, path string, body io.Reader, size int64, timeout time.Duration) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, method, c.BaseURL+runnerapi.Prefix+path, body)
+	if err != nil {
+		return nil, err
+	}
+	if body != nil {
+		req.ContentLength = size
+		req.Header.Set("Content-Type", "application/octet-stream")
+	}
+	if c.Token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.Token)
+	}
+	// Transfers can take long; the default client's timeout covers the
+	// whole body, so use one without it (ctx still applies).
+	hc := *c.HTTP
+	hc.Timeout = timeout
+	resp, err := hc.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 300 {
+		defer resp.Body.Close()
+		data, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+		var e struct {
+			Error APIError `json:"error"`
+		}
+		_ = json.Unmarshal(data, &e)
+		e.Error.Status = resp.StatusCode
+		if e.Error.Message == "" {
+			e.Error.Message = strings.TrimSpace(string(data))
+		}
+		return nil, &e.Error
+	}
+	return resp, nil
+}
+
+func (c *Client) rawJSON(ctx context.Context, method, path string, body io.Reader, size int64, out any) error {
+	resp, err := c.raw(ctx, method, path, body, size, 0)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if out == nil {
+		return nil
+	}
+	return json.NewDecoder(io.LimitReader(resp.Body, 8<<20)).Decode(out)
+}
+
+// UploadArtifact uploads a zip of size bytes.
+func (c *Client) UploadArtifact(ctx context.Context, job int64, name string, retentionDays int, overwrite bool, zip io.Reader, size int64) (*runnerapi.Artifact, error) {
+	q := url.Values{"name": {name}}
+	if retentionDays > 0 {
+		q.Set("retention_days", strconv.Itoa(retentionDays))
+	}
+	if overwrite {
+		q.Set("overwrite", "1")
+	}
+	var out runnerapi.Artifact
+	err := c.rawJSON(ctx, http.MethodPut, fmt.Sprintf("/jobs/%d/artifacts?%s", job, q.Encode()), zip, size, &out)
+	return &out, err
+}
+
+// ListArtifacts lists the artifacts of the job's run.
+func (c *Client) ListArtifacts(ctx context.Context, job int64) ([]runnerapi.Artifact, error) {
+	var out runnerapi.ArtifactList
+	err := c.rawJSON(ctx, http.MethodGet, fmt.Sprintf("/jobs/%d/artifacts", job), nil, 0, &out)
+	return out.Artifacts, err
+}
+
+// DownloadArtifact streams an artifact's zip.
+func (c *Client) DownloadArtifact(ctx context.Context, job, id int64) (io.ReadCloser, error) {
+	resp, err := c.raw(ctx, http.MethodGet, fmt.Sprintf("/jobs/%d/artifacts/%d", job, id), nil, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Body, nil
+}
+
+// LookupCache finds a cache for the job.
+func (c *Client) LookupCache(ctx context.Context, job int64, req runnerapi.CacheLookupRequest) (*runnerapi.CacheLookupResponse, error) {
+	var out runnerapi.CacheLookupResponse
+	_, err := c.do(ctx, fmt.Sprintf("/jobs/%d/caches/lookup", job), req, &out)
+	return &out, err
+}
+
+// DownloadCache streams a cache archive.
+func (c *Client) DownloadCache(ctx context.Context, job, id int64) (io.ReadCloser, error) {
+	resp, err := c.raw(ctx, http.MethodGet, fmt.Sprintf("/jobs/%d/caches/%d", job, id), nil, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Body, nil
+}
+
+// SaveCache uploads a cache archive. A 409 APIError means another job
+// saved the key first.
+func (c *Client) SaveCache(ctx context.Context, job int64, key, version string, archive io.Reader, size int64) (*runnerapi.CacheEntry, error) {
+	q := url.Values{"key": {key}, "version": {version}}
+	var out runnerapi.CacheEntry
+	err := c.rawJSON(ctx, http.MethodPut, fmt.Sprintf("/jobs/%d/caches?%s", job, q.Encode()), archive, size, &out)
+	return &out, err
 }

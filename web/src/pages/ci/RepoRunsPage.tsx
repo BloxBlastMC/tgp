@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useNavigate, useSearch } from '@tanstack/react-router'
-import { AlertTriangle, FileCode2, Play, X } from 'lucide-react'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { AlertTriangle, Database, FileCode2, Play, X } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { api, errorMessage, unwrap, type Workflow } from '../../api/client'
 import { branchesQuery, repoQuery, runsQuery, workflowsQuery } from '../../api/queries'
@@ -92,6 +92,10 @@ export function RepoRunsPage() {
             </div>
           ))
         )}
+        <h2 className="mt-3 px-2 py-1 text-[11px] font-semibold tracking-wide text-fg-faint uppercase">Management</h2>
+        <Link to="/$repo/ci/caches" params={{ repo: name }} search={{}} className="flex h-7 items-center gap-2 rounded px-2 text-fg-muted hover:bg-bg-hover hover:text-fg">
+          <Database size={13} /> Caches
+        </Link>
       </aside>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
@@ -116,6 +120,7 @@ export function RepoRunsPage() {
             <option value="push">Push</option>
             <option value="pull_request">Pull request</option>
             <option value="workflow_dispatch">Manual</option>
+            <option value="release">Release</option>
           </FilterSelect>
           {filtered && (
             <button type="button" className="flex items-center gap-1 text-[12px] text-fg-muted hover:text-fg" onClick={() => void navigate({ to: '/$repo/ci', params: { repo: name }, search: {} })}>

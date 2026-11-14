@@ -31,8 +31,10 @@ max_concurrent_git = 0
 max_push_bytes = 2147483648
 
 [storage]
-# Where CI logs, artifacts, caches and release assets go. Only "local" works
-# for now; "s3" arrives with artifacts (milestone 8).
+# Where CI logs, artifacts, caches and release assets go: "local" (a
+# directory) or "s3" (any S3-compatible object store: AWS S3, MinIO, Ceph,
+# Cloudflare R2, Backblaze B2...). With several server nodes, use s3 or a
+# shared directory. The server checks the bucket at startup.
 type = "local"                         # TGP_STORAGE_TYPE
 
 [storage.local]
@@ -40,13 +42,16 @@ type = "local"                         # TGP_STORAGE_TYPE
 # path = "/var/lib/tgp/storage"
 
 [storage.s3]
+# Empty endpoint = AWS for the region. The keys need list, get, put and
+# delete on the bucket (or prefix).
 # endpoint = "https://s3.example.com"  # TGP_S3_ENDPOINT
 # region = "us-east-1"                 # TGP_S3_REGION
 # bucket = "tgp"                       # TGP_S3_BUCKET
 # prefix = ""                          # TGP_S3_PREFIX
 # access_key = ""                      # TGP_S3_ACCESS_KEY
 # secret_key = ""                      # TGP_S3_SECRET_KEY
-# use_path_style = true
+# use_path_style = true                # bucket in the path (MinIO and most self-hosted servers)
+# insecure = false                     # skip TLS certificate checks
 
 [security]
 # 32-byte key that encrypts CI secrets and 2FA seeds. Generated on first

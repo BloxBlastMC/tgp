@@ -6,7 +6,7 @@ export type ApiError = Schemas['Error']['error']
 export type User = Schemas['User']
 export type Session = Schemas['Session']
 
-function readCookie(name: string): string {
+export function readCookie(name: string): string {
   const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'))
   return m ? decodeURIComponent(m[1] ?? '') : ''
 }
@@ -92,3 +92,7 @@ export type Check = Schemas['Check']
 export type Secret = Schemas['Secret']
 export type Runner = Schemas['Runner']
 export type CISettings = Schemas['CISettings']
+export type Release = Schemas['Release']
+export type ReleaseAsset = Schemas['ReleaseAsset']
+export type Artifact = Schemas['Artifact']
+export type CacheEntry = Schemas['CacheEntry']

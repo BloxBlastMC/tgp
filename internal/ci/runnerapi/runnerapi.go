@@ -11,6 +11,15 @@
 //	POST /jobs/{id}/update    UpdateRequest    → UpdateResponse
 //	POST /jobs/{id}/complete  CompleteRequest  → 204
 //
+// Artifacts and caches move as raw bodies (the job must be running):
+//
+//	PUT  /jobs/{id}/artifacts?name=N&retention_days=D&overwrite=1  zip → 201 Artifact
+//	GET  /jobs/{id}/artifacts                  → ArtifactList (the run's artifacts so far)
+//	GET  /jobs/{id}/artifacts/{artifact}       → zip
+//	POST /jobs/{id}/caches/lookup              CacheLookupRequest → CacheLookupResponse
+//	GET  /jobs/{id}/caches/{cache}             → tar.gz
+//	PUT  /jobs/{id}/caches?key=K&version=V     tar.gz → 201 CacheEntry, 409 if it exists
+//
 // Errors use the API's error shape: {"error": {"code", "message"}}. A 401
 // means the runner was removed; a 404 or 409 on a job endpoint means the
 // server no longer considers the job running on this runner, and the runner
@@ -220,3 +229,49 @@ type CompleteRequest struct {
 	Outputs       map[string]string `json:"outputs,omitempty"`
 	Steps         []StepUpdate      `json:"steps,omitempty"`
 }
+
+// Artifact is an artifact of the job's run.
+type Artifact struct {
+	ID      int64  `json:"id"`
+	Name    string `json:"name"`
+	Size    int64  `json:"size"`
+	SHA256  string `json:"sha256"`
+	Attempt int    `json:"attempt"`
+	JobName string `json:"job_name"`
+}
+
+// ArtifactList lists the newest artifact of each name uploaded by this or
+// an earlier attempt of the run.
+type ArtifactList struct {
+	Artifacts []Artifact `json:"artifacts"`
+}
+
+// CacheLookupRequest finds a cache: an exact Key match first, then the
+// newest cache whose key starts with each RestoreKeys prefix in order. The
+// job's ref is searched first, then the pull request's base branch and the
+// default branch. Version must match exactly.
+type CacheLookupRequest struct {
+	Key         string   `json:"key"`
+	RestoreKeys []string `json:"restore_keys,omitempty"`
+	Version     string   `json:"version"`
+}
+
+type CacheEntry struct {
+	ID   int64  `json:"id"`
+	Key  string `json:"key"`
+	Ref  string `json:"ref"`
+	Size int64  `json:"size"`
+}
+
+// CacheLookupResponse has Entry nil on a miss; Exact is true when the
+// key matched exactly (so the job doesn't save it again).
+type CacheLookupResponse struct {
+	Entry *CacheEntry `json:"entry"`
+	Exact bool        `json:"exact"`
+}
+
+// Limits on names.
+const (
+	MaxArtifactName = 256
+	MaxCacheKey     = 512
+)

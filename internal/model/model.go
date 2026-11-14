@@ -493,3 +493,72 @@ type Secret struct {
 	UpdatedAt   time.Time `bun:"updated_at"`
 	UpdatedByID *int64    `bun:"updated_by_id"`
 }
+
+// Artifact is a zip file uploaded by a job (upload-artifact).
+type Artifact struct {
+	bun.BaseModel `bun:"table:artifacts,alias:art"`
+
+	ID        int64     `bun:"id,pk,autoincrement"`
+	RepoID    int64     `bun:"repo_id"`
+	RunID     int64     `bun:"run_id"`
+	JobID     *int64    `bun:"job_id"`
+	JobName   string    `bun:"job_name"`
+	Attempt   int       `bun:"attempt"`
+	Name      string    `bun:"name"`
+	Size      int64     `bun:"size"`
+	SHA256    string    `bun:"sha256"`
+	BlobKey   string    `bun:"blob_key"`
+	CreatedAt time.Time `bun:"created_at"`
+	ExpiresAt time.Time `bun:"expires_at"`
+}
+
+// CacheEntry is a CI cache archive (the cache built-in step).
+type CacheEntry struct {
+	bun.BaseModel `bun:"table:ci_caches,alias:cc"`
+
+	ID         int64     `bun:"id,pk,autoincrement"`
+	RepoID     int64     `bun:"repo_id"`
+	Ref        string    `bun:"ref"`
+	Key        string    `bun:"key"`
+	Version    string    `bun:"version"`
+	Size       int64     `bun:"size"`
+	BlobKey    string    `bun:"blob_key"`
+	CreatedAt  time.Time `bun:"created_at"`
+	LastUsedAt time.Time `bun:"last_used_at"`
+}
+
+// Release is a named, tagged version with notes and files.
+type Release struct {
+	bun.BaseModel `bun:"table:releases,alias:rel"`
+
+	ID          int64      `bun:"id,pk,autoincrement"`
+	RepoID      int64      `bun:"repo_id"`
+	Tag         string     `bun:"tag"`
+	Target      string     `bun:"target"`
+	Name        string     `bun:"name"`
+	Body        string     `bun:"body"`
+	Draft       bool       `bun:"draft"`
+	Prerelease  bool       `bun:"prerelease"`
+	AuthorID    *int64     `bun:"author_id"`
+	CreatedAt   time.Time  `bun:"created_at"`
+	UpdatedAt   time.Time  `bun:"updated_at"`
+	PublishedAt *time.Time `bun:"published_at"`
+}
+
+// ReleaseAsset is a file attached to a release.
+type ReleaseAsset struct {
+	bun.BaseModel `bun:"table:release_assets,alias:ra"`
+
+	ID          int64     `bun:"id,pk,autoincrement"`
+	ReleaseID   int64     `bun:"release_id"`
+	RepoID      int64     `bun:"repo_id"`
+	Name        string    `bun:"name"`
+	Label       string    `bun:"label"`
+	ContentType string    `bun:"content_type"`
+	Size        int64     `bun:"size"`
+	SHA256      string    `bun:"sha256"`
+	BlobKey     string    `bun:"blob_key"`
+	Downloads   int64     `bun:"downloads"`
+	UploaderID  *int64    `bun:"uploader_id"`
+	CreatedAt   time.Time `bun:"created_at"`
+}

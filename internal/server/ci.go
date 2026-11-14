@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/uptrace/bun"
@@ -32,6 +33,8 @@ type ciState struct {
 	assignMu sync.Mutex
 	// now is the clock (tests replace it).
 	now func() time.Time
+	// lastRetention is when storage retention last ran (UnixNano).
+	lastRetention atomic.Int64
 }
 
 func (s *Server) now() time.Time {

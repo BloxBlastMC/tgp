@@ -108,7 +108,7 @@ export type RunListSearch = {
   workflow?: string
   branch?: string
   status?: string
-  event?: 'push' | 'pull_request' | 'workflow_dispatch'
+  event?: 'push' | 'pull_request' | 'workflow_dispatch' | 'release'
   page?: number
 }
 
@@ -123,7 +123,7 @@ export function validateRunList(s: Record<string, unknown>): RunListSearch {
   const br = str(s.branch)
   if (br) out.branch = br
   if (typeof s.status === 'string' && (runStatusFilters as readonly string[]).includes(s.status)) out.status = s.status
-  if (s.event === 'push' || s.event === 'pull_request' || s.event === 'workflow_dispatch') out.event = s.event
+  if (s.event === 'push' || s.event === 'pull_request' || s.event === 'workflow_dispatch' || s.event === 'release') out.event = s.event
   const p = Number(s.page)
   if (Number.isInteger(p) && p > 1) out.page = p
   return out

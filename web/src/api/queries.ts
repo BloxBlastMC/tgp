@@ -259,7 +259,7 @@ export type RunFilters = {
   workflow?: string
   branch?: string
   status?: string
-  event?: 'push' | 'pull_request' | 'workflow_dispatch'
+  event?: 'push' | 'pull_request' | 'workflow_dispatch' | 'release'
   actor?: string
   page?: number
   per_page?: number
@@ -318,3 +318,32 @@ export const ciSettingsQuery = queryOptions({
   queryKey: ['admin', 'ci', 'settings'],
   queryFn: () => unwrap(api.GET('/admin/ci/settings')),
 })
+
+export const runArtifactsQuery = (repo: string, n: number) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'run', n, 'artifacts'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/runs/{number}/artifacts', { params: { path: { repo, number: n } } })),
+  })
+
+export type CacheFilters = { key?: string; sort?: 'last_used' | 'created' | 'size'; page?: number }
+
+export const cachesQuery = (repo: string, f: CacheFilters) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'caches', f],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/caches', { params: { path: { repo }, query: { per_page: 50, ...f } } })),
+  })
+
+// --- releases ---
+
+export const releasesQuery = (repo: string, page = 1) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'releases', 'list', page],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/releases', { params: { path: { repo }, query: { page, per_page: 10 } } })),
+  })
+
+export const releaseByTagQuery = (repo: string, tag: string) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'releases', 'tag', tag],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/releases/tags/{tag}', { params: { path: { repo, tag } } })),
+    retry: false,
+  })

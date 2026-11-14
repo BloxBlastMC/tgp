@@ -109,6 +109,16 @@ const cliSchemas = `{
       "t": {"type": "string", "format": "date-time"}, "text": {"type": "string"}
     }
   },
+  "DownloadedFile": {
+    "type": "object",
+    "required": ["name", "path", "size_bytes"],
+    "properties": {"name": {"type": "string"}, "path": {"type": "string", "description": "Where the file was saved."}, "size_bytes": {"type": "integer"}}
+  },
+  "DownloadedArtifact": {
+    "type": "object",
+    "required": ["name", "directory", "files"],
+    "properties": {"name": {"type": "string"}, "directory": {"type": "string", "description": "Where the files were unpacked."}, "files": {"type": "integer"}}
+  },
   "Deleted": {
     "type": "object",
     "required": ["name", "deleted"],

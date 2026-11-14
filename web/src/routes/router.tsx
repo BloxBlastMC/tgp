@@ -43,6 +43,9 @@ import { RunPage } from '../pages/ci/RunPage'
 import { GlobalRunsPage, validateGlobalRuns } from '../pages/ci/GlobalRunsPage'
 import { AdminRunnersPage } from '../pages/admin/AdminRunnersPage'
 import { AdminCIPage } from '../pages/admin/AdminCIPage'
+import { CachesPage, validateCaches } from '../pages/ci/CachesPage'
+import { ReleaseDetailPage, ReleasesPage, validateReleases } from '../pages/releases/ReleasesPage'
+import { EditReleasePage, NewReleasePage } from '../pages/releases/ReleaseFormPage'
 
 type RouterContext = { queryClient: QueryClient }
 
@@ -159,6 +162,11 @@ const repoRoutes = [
   createRoute({ getParentRoute: () => repoRoute, path: '/compare/$', component: ComparePage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/ci', validateSearch: validateRunList, component: RepoRunsPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/ci/runs/$number', validateSearch: validateRunPage, component: RunPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/ci/caches', validateSearch: validateCaches, component: CachesPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/releases', validateSearch: validateReleases, component: ReleasesPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/releases/new', component: NewReleasePage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/releases/edit/$id', component: EditReleasePage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/releases/tag/$', component: ReleaseDetailPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/settings', component: RepoSettingsPage }),
 ]
 

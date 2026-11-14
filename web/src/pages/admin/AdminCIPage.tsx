@@ -85,6 +85,15 @@ export function AdminCIPage() {
             <NumField f={f} set={set} k="log_retention_days" label="Keep logs (days)" hint="0 = keep forever" />
           </div>
         </Section>
+        <Section title="Storage & retention" description="Artifacts, caches and release files. Expired artifacts and unused caches are deleted automatically.">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <NumField f={f} set={set} k="artifact_max_mb" label="Max artifact size (MB)" hint="Zipped size of one upload" />
+            <NumField f={f} set={set} k="artifact_retention_days" label="Keep artifacts (days)" hint="Workflows may ask for less with retention-days" />
+            <NumField f={f} set={set} k="release_asset_max_mb" label="Max release file size (MB)" />
+            <NumField f={f} set={set} k="cache_quota_mb" label="Cache quota per repository (MB)" hint="Least recently used caches are evicted above it. 0 = no limit" />
+            <NumField f={f} set={set} k="cache_retention_days" label="Delete unused caches after (days)" />
+          </div>
+        </Section>
         {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
         {save.isSuccess && <Alert tone="success">Saved.</Alert>}
         <div className="flex gap-2">

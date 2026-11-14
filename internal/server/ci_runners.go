@@ -36,7 +36,8 @@ func runnerFrom(ctx context.Context) *model.Runner {
 // runnerAPI serves the protocol in internal/ci/runnerapi.
 func (s *Server) runnerAPI() http.Handler {
 	r := chi.NewRouter()
-	r.Use(limitBody(8 << 20))
+	// Artifact and cache uploads enforce their own size limits.
+	r.Use(limitBody(8<<20, func(r *http.Request) bool { return r.Method == http.MethodPut }))
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		apierr.Write(w, apierr.NotFound("no runner API route for %s %s", r.Method, r.URL.Path))
 	})
@@ -48,6 +49,12 @@ func (s *Server) runnerAPI() http.Handler {
 		r.Post("/jobs/{id}/logs", s.handleRunnerLogs)
 		r.Post("/jobs/{id}/update", s.handleRunnerUpdate)
 		r.Post("/jobs/{id}/complete", s.handleRunnerComplete)
+		r.Put("/jobs/{id}/artifacts", s.handleRunnerUploadArtifact)
+		r.Get("/jobs/{id}/artifacts", s.handleRunnerListArtifacts)
+		r.Get("/jobs/{id}/artifacts/{artifact}", s.handleRunnerDownloadArtifact)
+		r.Post("/jobs/{id}/caches/lookup", s.handleRunnerCacheLookup)
+		r.Get("/jobs/{id}/caches/{cache}", s.handleRunnerCacheDownload)
+		r.Put("/jobs/{id}/caches", s.handleRunnerCacheUpload)
 	})
 	return r
 }

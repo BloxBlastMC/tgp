@@ -37,6 +37,11 @@ type ciSettings struct {
 	MaxLogMB                  int     `json:"max_log_mb"`
 	LogRetentionDays          int     `json:"log_retention_days"`
 	CancelSuperseded          bool    `json:"cancel_superseded"`
+	ArtifactMaxMB             int     `json:"artifact_max_mb"`
+	ArtifactRetentionDays     int     `json:"artifact_retention_days"`
+	CacheQuotaMB              int     `json:"cache_quota_mb"`
+	CacheRetentionDays        int     `json:"cache_retention_days"`
+	ReleaseAssetMaxMB         int     `json:"release_asset_max_mb"`
 }
 
 func defaultCISettings() ciSettings {
@@ -58,12 +63,19 @@ func defaultCISettings() ciSettings {
 		MaxLogMB:                  32,
 		LogRetentionDays:          90,
 		CancelSuperseded:          true,
+		ArtifactMaxMB:             2048,
+		ArtifactRetentionDays:     90,
+		CacheQuotaMB:              10240,
+		CacheRetentionDays:        7,
+		ReleaseAssetMaxMB:         2048,
 	}
 }
 
 func (c ciSettings) limits() scheduler.Limits {
 	return scheduler.Limits{MaxConcurrent: c.MaxConcurrentJobs, MaxPerRepo: c.MaxJobsPerRepo, MaxCPUPercent: float64(c.RunnerMaxCPUPercent)}
 }
+
+func mb(n int) int64 { return int64(n) << 20 }
 
 func (c ciSettings) offlineAfter() time.Duration {
 	return time.Duration(max(c.RunnerOfflineAfterSeconds, 20)) * time.Second
@@ -81,6 +93,12 @@ func (c ciSettings) validate() error {
 		return apierr.Validation("default_timeout_minutes (%d) can't exceed max_timeout_minutes (%d)", c.DefaultTimeoutMinutes, c.MaxTimeoutMinutes)
 	case c.DefaultImage == "":
 		return apierr.Validation("default_image can't be empty")
+	case c.ArtifactMaxMB < 1 || c.ReleaseAssetMaxMB < 1:
+		return apierr.Validation("artifact_max_mb and release_asset_max_mb must be at least 1")
+	case c.ArtifactRetentionDays < 1 || c.CacheRetentionDays < 1:
+		return apierr.Validation("artifact_retention_days and cache_retention_days must be at least 1")
+	case c.CacheQuotaMB < 0:
+		return apierr.Validation("cache_quota_mb can't be negative")
 	}
 	return nil
 }
@@ -126,6 +144,8 @@ func toAPICISettings(c ciSettings) apigen.CISettings {
 		DefaultMemoryMb: c.DefaultMemoryMB, MaxMemoryMb: c.MaxMemoryMB, DefaultPids: c.DefaultPids, MaxPids: c.MaxPids,
 		DefaultTimeoutMinutes: c.DefaultTimeoutMinutes, MaxTimeoutMinutes: c.MaxTimeoutMinutes,
 		MaxLogMb: c.MaxLogMB, LogRetentionDays: c.LogRetentionDays, CancelSuperseded: c.CancelSuperseded,
+		ArtifactMaxMb: c.ArtifactMaxMB, ArtifactRetentionDays: c.ArtifactRetentionDays, CacheQuotaMb: c.CacheQuotaMB,
+		CacheRetentionDays: c.CacheRetentionDays, ReleaseAssetMaxMb: c.ReleaseAssetMaxMB,
 	}
 }
 
@@ -163,6 +183,11 @@ func (a *api) UpdateCISettings(ctx context.Context, req apigen.UpdateCISettingsR
 	setInt(&c.MaxTimeoutMinutes, p.MaxTimeoutMinutes)
 	setInt(&c.MaxLogMB, p.MaxLogMb)
 	setInt(&c.LogRetentionDays, p.LogRetentionDays)
+	setInt(&c.ArtifactMaxMB, p.ArtifactMaxMb)
+	setInt(&c.ArtifactRetentionDays, p.ArtifactRetentionDays)
+	setInt(&c.CacheQuotaMB, p.CacheQuotaMb)
+	setInt(&c.CacheRetentionDays, p.CacheRetentionDays)
+	setInt(&c.ReleaseAssetMaxMB, p.ReleaseAssetMaxMb)
 	if p.DefaultImage != nil {
 		c.DefaultImage = *p.DefaultImage
 	}

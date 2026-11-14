@@ -39,6 +39,9 @@ type jobRun struct {
 	addedEnv map[string]string // from $TGP_ENV files
 	addPath  []string          // from $TGP_PATH files
 	failed   bool
+
+	home       string      // $HOME in the environment (lazily read)
+	cacheSaves []cacheSave // caches to save after the steps
 }
 
 func (j *jobRun) printf(step int, format string, args ...any) {
@@ -80,7 +83,7 @@ func (j *jobRun) exprContext(ctx context.Context, env map[string]string) *expr.C
 		ws, tmp = j.env.Workspace(), j.env.TempDir()
 	}
 	c["runner"] = map[string]any{"os": "Linux", "arch": runtime.GOARCH, "name": j.r.cfg.Name, "temp": tmp, "workspace": ws}
-	return &expr.Context{Contexts: c, Status: func(fn string) bool {
+	return &expr.Context{Contexts: c, HashFiles: func(p []string) string { return j.hashFiles(ctx, p) }, Status: func(fn string) bool {
 		switch fn {
 		case "success":
 			return !j.failed && ctx.Err() == nil
@@ -183,6 +186,7 @@ func (j *jobRun) execute(ctx context.Context) (conclusion, reason string, output
 	for _, st := range spec.Steps {
 		j.runStep(ctx, st)
 	}
+	j.saveCaches(ctx)
 
 	// Job outputs, evaluated after all steps.
 	outputs = map[string]string{}
@@ -275,7 +279,7 @@ func (j *jobRun) runStep(ctx context.Context, st runnerapi.Step) {
 	}
 	var outputs map[string]string
 	if st.Uses != "" {
-		err = j.builtin(sctx, st)
+		outputs, err = j.builtin(sctx, st)
 	} else {
 		outputs, err = j.runScript(sctx, st)
 	}
@@ -489,22 +493,28 @@ func parseEnvFile(s string) map[string]string {
 	return out
 }
 
-// builtin runs a uses: step.
-func (j *jobRun) builtin(ctx context.Context, st runnerapi.Step) error {
+// builtin runs a uses: step and returns its outputs.
+func (j *jobRun) builtin(ctx context.Context, st runnerapi.Step) (map[string]string, error) {
 	with := map[string]string{}
 	c := j.exprContext(ctx, j.mergedEnv(nil))
 	for k, v := range st.With {
 		s, err := expr.Interpolate(v, c)
 		if err != nil {
-			return fmt.Errorf("with.%s: %w", k, err)
+			return nil, fmt.Errorf("with.%s: %w", k, err)
 		}
 		with[k] = s
 	}
 	switch st.Uses {
 	case "checkout":
-		return j.checkout(ctx, st.Number, with)
+		return nil, j.checkout(ctx, st.Number, with)
+	case "upload-artifact":
+		return nil, j.uploadArtifact(ctx, st.Number, with)
+	case "download-artifact":
+		return nil, j.downloadArtifact(ctx, st.Number, with)
+	case "cache":
+		return j.cache(ctx, st.Number, with)
 	}
-	return fmt.Errorf("unknown built-in step %q (this runner may be older than the server)", st.Uses)
+	return nil, fmt.Errorf("unknown built-in step %q (this runner may be older than the server)", st.Uses)
 }
 
 // checkout clones the repository on the runner host with the job token and
