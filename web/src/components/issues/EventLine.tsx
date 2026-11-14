@@ -20,7 +20,7 @@ import type { ComponentType } from 'react'
 import type { PullEvent } from '../../api/client'
 import { issueEventText } from '../../lib/issues'
 import { eventText } from '../../lib/pulls'
-import { cx, Time } from '../ui'
+import { Time } from '../ui'
 import { LabelChip } from './meta'
 
 type Icon = ComponentType<{ size?: number; className?: string }>
@@ -60,8 +60,10 @@ export function EventLine({ repo, event, isIssue }: { repo: string; event: PullE
   }
   const text = issueEventText(event) ?? eventText(event)
   return (
-    <div className="flex items-center gap-2 px-3 text-sm text-fg-muted" data-testid="event">
-      <Icon size={14} className={cx('shrink-0', tone)} />
+    <div className="relative flex items-center gap-2.5 py-0.5 pl-2.5 text-sm text-fg-muted" data-testid="event">
+      <span className="flex size-[18px] shrink-0 items-center justify-center rounded-full bg-bg ring-4 ring-bg">
+        <Icon size={13} className={tone} />
+      </span>
       <span className="flex min-w-0 flex-wrap items-center gap-1">
         <span className="font-medium text-fg">{event.actor?.display_name ?? 'Someone'}</span> {text}
         {(event.type === 'labeled' || event.type === 'unlabeled') && <LabelChip label={{ name: String(d.label ?? ''), color: String(d.color ?? 'cfd3d7') }} />}

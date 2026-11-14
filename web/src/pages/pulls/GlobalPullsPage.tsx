@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { errorMessage } from '../../api/client'
+import { GitPullRequest, Inbox, SearchX } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { myPullsQuery, type MyPullsFilter, type PullState } from '../../api/queries'
 import { EmptyState, Page } from '../../components/Page'
-import { Alert, Spinner } from '../../components/ui'
-import { PullRows, pullStates, Segmented } from './PullList'
+import { ErrorState, FilterBar, SearchInput, SegmentedControl, SkeletonRows } from '../../components/ui'
+import { PullRows, pullStates } from './PullList'
 
 export type GlobalPullsSearch = { filter?: MyPullsFilter; state?: PullState }
 
@@ -32,26 +33,34 @@ export function GlobalPullsPage() {
   const navigate = useNavigate()
   const filter = search.filter ?? 'review_requested'
   const state = search.state ?? 'open'
-  const pulls = useQuery(myPullsQuery(filter, state))
+  const [q, setQ] = useState('')
+  const pulls = useQuery({ ...myPullsQuery(filter, state), placeholderData: (prev) => prev })
   const set = (s: GlobalPullsSearch) => void navigate({ to: '/pulls', search: { ...search, ...s } })
+  const shown = useMemo(() => {
+    const f = q.trim().toLowerCase()
+    return (pulls.data?.pulls ?? []).filter((p) => !f || p.title.toLowerCase().includes(f) || p.repo.toLowerCase().includes(f) || `#${p.number}` === f)
+  }, [pulls.data, q])
   return (
-    <Page title="Pull requests">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
-        <Segmented label="Filter" value={filter} options={filters} onChange={(f) => set({ filter: f === 'review_requested' ? undefined : f })} />
-        <Segmented label="State" value={state} options={pullStates} onChange={(s) => set({ state: s === 'open' ? undefined : s })} />
-        <div className="flex-1" />
-        {pulls.data && <span className="text-sm text-fg-faint">{pulls.data.total} total</span>}
-      </div>
+    <Page title="Pull requests" icon={GitPullRequest} description={pulls.data ? `${pulls.data.total} total` : undefined}>
+      <FilterBar className="px-5">
+        <SegmentedControl label="Filter" value={filter} options={filters} onChange={(f) => set({ filter: f === 'review_requested' ? undefined : f })} />
+        <SegmentedControl label="State" value={state} options={pullStates} onChange={(s) => set({ state: s === 'open' ? undefined : s })} />
+        <SearchInput value={q} onChange={setQ} placeholder="Filter by title or repository…" label="Filter pull requests" shortcut />
+      </FilterBar>
       {pulls.isPending ? (
-        <Spinner />
+        <SkeletonRows rows={6} />
       ) : pulls.isError ? (
-        <div className="p-4">
-          <Alert>{errorMessage(pulls.error)}</Alert>
-        </div>
-      ) : pulls.data.pulls.length === 0 ? (
-        <EmptyState title="Nothing here">{state === 'open' ? emptyText[filter] : 'No matching pull requests.'}</EmptyState>
+        <ErrorState error={pulls.error} />
+      ) : shown.length === 0 ? (
+        q ? (
+          <EmptyState icon={<SearchX size={20} />} title="No matching pull requests" />
+        ) : (
+          <EmptyState icon={<Inbox size={20} />} title={filter === 'review_requested' && state === 'open' ? "You're all caught up" : 'Nothing here'}>
+            {state === 'open' ? emptyText[filter] : 'No matching pull requests.'}
+          </EmptyState>
+        )
       ) : (
-        <PullRows pulls={pulls.data.pulls} showRepo />
+        <PullRows pulls={shown} showRepo />
       )}
     </Page>
   )

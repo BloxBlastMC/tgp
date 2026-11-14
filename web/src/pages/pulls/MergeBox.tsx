@@ -1,15 +1,15 @@
 import { useMutation } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, GitBranch, GitMerge, Loader2, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, GitBranch, GitMerge, GitPullRequestClosed, Loader2, ShieldAlert, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { api, errorMessage, unwrap, type PullRequest } from '../../api/client'
 import { ChecksRow } from '../../components/ci/Checks'
 import { useInvalidatePull } from '../../components/pulls/common'
-import { Alert, Button, Checkbox, cx, Input, Select, Textarea, Time } from '../../components/ui'
+import { Alert, Button, Checkbox, cx, Input, Select, Textarea, Time, useConfirm } from '../../components/ui'
 import { canBypass, decisionInfo, defaultMergeMessage, loadMergeMethod, saveMergeMethod, type MergeMethod } from '../../lib/pulls'
 
 function StatusRow({ ok, warn, children }: { ok?: boolean; warn?: boolean; children: React.ReactNode }) {
   return (
-    <li className="flex items-start gap-2 py-1.5">
+    <li className="flex items-start gap-2.5 py-2">
       {ok ? (
         <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-success" />
       ) : warn ? (
@@ -38,8 +38,10 @@ export function MergeBox({ repo, pr }: { repo: string; pr: PullRequest }) {
 
   if (pr.state === 'merged') {
     return (
-      <div className="flex items-center gap-3 rounded-md border border-done/40 bg-done/10 px-4 py-3">
-        <GitMerge size={18} className="shrink-0 text-done" />
+      <div className="flex items-center gap-3 rounded-lg border border-done/35 bg-done/8 px-4 py-3">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-done text-white">
+          <GitMerge size={16} />
+        </span>
         <div className="min-w-0 flex-1">
           <p className="font-medium">Merged</p>
           <p className="text-sm text-fg-muted">
@@ -55,8 +57,8 @@ export function MergeBox({ repo, pr }: { repo: string; pr: PullRequest }) {
           {deleteBranch.isError && <Alert>{errorMessage(deleteBranch.error)}</Alert>}
         </div>
         {pr.head.exists && canWrite && (
-          <Button onClick={() => deleteBranch.mutate()} loading={deleteBranch.isPending}>
-            <GitBranch size={13} /> Delete branch
+          <Button onClick={() => deleteBranch.mutate()} loading={deleteBranch.isPending} icon={<GitBranch size={13} />}>
+            Delete branch
           </Button>
         )}
         {!pr.head.exists && <span className="text-sm text-fg-faint">Branch {pr.head.branch} deleted</span>}
@@ -65,9 +67,14 @@ export function MergeBox({ repo, pr }: { repo: string; pr: PullRequest }) {
   }
   if (pr.state === 'closed') {
     return (
-      <div className="flex items-center gap-3 rounded-md border border-danger/40 bg-danger/10 px-4 py-3">
-        <XCircle size={18} className="text-danger" />
-        <p>This pull request was closed without merging.</p>
+      <div className="flex items-center gap-3 rounded-lg border border-danger/35 bg-danger/8 px-4 py-3">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-danger text-white">
+          <GitPullRequestClosed size={16} />
+        </span>
+        <div>
+          <p className="font-medium">Closed</p>
+          <p className="text-sm text-fg-muted">This pull request was closed without merging.</p>
+        </div>
       </div>
     )
   }
@@ -109,8 +116,20 @@ function OpenMergeBox({ repo, pr, canWrite }: { repo: string; pr: PullRequest; c
   const ruleBlockers = pr.blockers.filter((b) => !['conflict', 'permission', 'behind', 'checks'].includes(b.code))
   const checksBlocker = pr.blockers.find((b) => b.code === 'checks')
   const bypass = !pr.can_merge && pr.viewer_permission === 'admin' && canBypass(pr)
+  const confirm = useConfirm()
+  const ready = pr.can_merge
+  const conflict = pr.mergeable === 'conflict'
   return (
-    <div className={cx('rounded-md border', pr.can_merge ? 'border-success/40' : 'border-border')} aria-label="Merge status">
+    <div className={cx('overflow-hidden rounded-lg border bg-surface-1 shadow-card', ready ? 'border-success/40' : conflict ? 'border-danger/35' : 'border-border')} aria-label="Merge status">
+      <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+        <span className={cx('flex size-8 shrink-0 items-center justify-center rounded-full text-white', ready ? 'bg-success' : conflict ? 'bg-danger' : 'bg-fg-faint')}>
+          {ready ? <GitMerge size={16} /> : conflict ? <XCircle size={16} /> : <ShieldAlert size={16} />}
+        </span>
+        <div className="min-w-0">
+          <p className="font-semibold">{ready ? 'Ready to merge' : conflict ? 'This branch has conflicts' : pr.draft ? 'This pull request is a draft' : 'Merging is blocked'}</p>
+          <p className="text-sm text-fg-muted">{ready ? 'All requirements are met.' : 'Resolve the items below before merging.'}</p>
+        </div>
+      </div>
       <ul className="divide-y divide-border px-4 py-1">
         {pr.checks && <ChecksRow repo={repo} checks={pr.checks} blocker={checksBlocker} />}
         {checksBlocker && pr.checks && pr.checks.total === 0 && pr.checks.missing_required.length === 0 && <StatusRow>{checksBlocker.message}</StatusRow>}
@@ -168,7 +187,7 @@ function OpenMergeBox({ repo, pr, canWrite }: { repo: string; pr: PullRequest; c
       {canWrite && (
         <div className="flex flex-col gap-2 border-t border-border bg-bg-subtle px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={method} onChange={(e) => setMethod(e.target.value as MergeMethod)} className="h-7 w-52" aria-label="Merge method">
+            <Select size="sm" value={method} onChange={(e) => setMethod(e.target.value as MergeMethod)} className="w-56" aria-label="Merge method">
               {(Object.keys(methodLabel) as MergeMethod[]).map((m) => (
                 <option key={m} value={m}>
                   {methodLabel[m]}
@@ -185,11 +204,22 @@ function OpenMergeBox({ repo, pr, canWrite }: { repo: string; pr: PullRequest; c
           )}
           {merge.isError && <Alert>{errorMessage(merge.error)}</Alert>}
           <div className="flex gap-2">
-            <Button variant="primary" disabled={!pr.can_merge} loading={merge.isPending && !merge.variables} onClick={() => merge.mutate(false)}>
-              <GitMerge size={14} /> {methodLabel[method]}
+            <Button variant="primary" disabled={!pr.can_merge} loading={merge.isPending && !merge.variables} onClick={() => merge.mutate(false)} icon={<GitMerge size={14} />}>
+              {methodLabel[method]}
             </Button>
             {bypass && (
-              <Button variant="danger" loading={merge.isPending && merge.variables} onClick={() => window.confirm('Merge without meeting the branch protection requirements? This is recorded in the audit log.') && merge.mutate(true)}>
+              <Button
+                variant="danger"
+                loading={merge.isPending && merge.variables}
+                onClick={async () => {
+                  const ok = await confirm({
+                    title: 'Merge without meeting the requirements?',
+                    description: 'This bypasses branch protection and is recorded in the audit log.',
+                    confirmLabel: 'Merge anyway',
+                  })
+                  if (ok) merge.mutate(true)
+                }}
+              >
                 Merge without requirements
               </Button>
             )}

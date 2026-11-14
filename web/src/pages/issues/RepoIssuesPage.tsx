@@ -1,158 +1,178 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { CheckCircle2, ChevronDown, CircleDot, Milestone as MilestoneIcon, Plus, Search, Tag, X } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
-import { errorMessage } from '../../api/client'
+import { useNavigate, useSearch } from '@tanstack/react-router'
+import { ArrowUpDown, CheckCircle2, ChevronDown, CircleDot, Milestone as MilestoneIcon, Plus, SearchX, Tag, User, UserPen, X } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { issuesQuery, milestonesQuery, repoQuery, usersQuery, type IssueFilters } from '../../api/queries'
 import { LabelPicker } from '../../components/issues/meta'
 import { EmptyState } from '../../components/Page'
-import { Alert, Button, cx, Input, Select, Spinner } from '../../components/ui'
+import { Avatar, Button, ButtonLink, ErrorState, FilterBar, FilterMenu, IconLink, Pagination, Picker, SearchInput, SegmentedControl, SkeletonRows, type SelectItem } from '../../components/ui'
 import { hasFilters, splitLabels, toggleLabel, type IssueListSearch } from '../../lib/issues'
+import { canTriage } from '../../lib/permissions'
 import { useRepoName } from '../repos/RepoLayout'
 import { IssueRows } from './IssueList'
 
-export function canTriage(permission: string): boolean {
-  return permission === 'triage' || permission === 'write' || permission === 'admin'
-}
+export { canTriage }
 
-/** A compact filter dropdown (Select is full-width by default). */
-function FilterSelect({ label, value, onChange, width, children }: { label: string; value: string; onChange: (v: string) => void; width: string; children: ReactNode }) {
+/** A single-choice filter as a searchable popover; the trigger shows the choice. */
+function FilterPicker({ title, icon, value, items, onChange }: { title: string; icon: ReactNode; value?: string; items: SelectItem[]; onChange: (v: string | undefined) => void }) {
+  const current = items.find((i) => i.key === value)
   return (
-    <div className={cx('shrink-0', width)}>
-      <Select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} className="h-7 text-sm">
-        {children}
-      </Select>
-    </div>
+    <Picker
+      title={`Filter by ${title.toLowerCase()}`}
+      items={items}
+      value={value ? [value] : []}
+      onChange={(keys) => onChange(keys[0])}
+      placement="bottom-start"
+      width="w-64"
+      trigger={(t) => (
+        <Button {...t} size="sm" icon={icon} iconRight={<ChevronDown size={12} className="text-fg-faint" />} aria-label={`${title}: ${current?.label ?? 'any'}`} className={value ? 'border-accent/50 text-fg' : ''}>
+          {current ? (
+            <>
+              <span className="text-fg-muted">{title}:</span> <span className="max-w-28 truncate">{current.label}</span>
+            </>
+          ) : (
+            title
+          )}
+        </Button>
+      )}
+    />
   )
 }
+
+const PER_PAGE = 50
 
 export function RepoIssuesPage() {
   const name = useRepoName()
   const repo = useQuery(repoQuery(name)).data!
-  const search = useSearch({ strict: false }) as IssueListSearch
+  const search = useSearch({ strict: false }) as IssueListSearch & { page?: number }
   const navigate = useNavigate()
-  const set = (s: Partial<IssueListSearch>) => void navigate({ to: '/$repo/issues', params: { repo: name }, search: { ...search, ...s } })
-  const [q, setQ] = useState(search.q ?? '')
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      if ((search.q ?? '') !== q) void navigate({ to: '/$repo/issues', params: { repo: name }, search: { ...search, q: q || undefined }, replace: true })
-    }, 250)
-    return () => window.clearTimeout(t)
-  }, [q, search, name, navigate])
+  const set = (s: Partial<IssueListSearch & { page?: number }>, replace = false) =>
+    void navigate({ to: '/$repo/issues', params: { repo: name }, search: { ...search, page: undefined, ...s }, replace })
 
   const state = search.state ?? 'open'
+  const page = search.page ?? 1
   const filters: IssueFilters = { labels: search.labels, milestone: search.milestone, assignee: search.assignee, author: search.author, q: search.q }
-  const issues = useQuery(issuesQuery(name, { ...filters, state, sort: search.sort }))
-  const openCount = useQuery(issuesQuery(name, { ...filters, state: 'open', per_page: 1 }))
-  const closedCount = useQuery(issuesQuery(name, { ...filters, state: 'closed', per_page: 1 }))
+  const issues = useQuery({ ...issuesQuery(name, { ...filters, state, sort: search.sort, page }), placeholderData: (prev) => prev })
+  const openCount = useQuery({ ...issuesQuery(name, { ...filters, state: 'open', per_page: 1 }), placeholderData: (prev) => prev })
+  const closedCount = useQuery({ ...issuesQuery(name, { ...filters, state: 'closed', per_page: 1 }), placeholderData: (prev) => prev })
   const milestones = useQuery(milestonesQuery(name, 'all'))
   const users = useQuery(usersQuery)
   const labels = splitLabels(search.labels)
-  const counts = { open: openCount.data?.total, closed: closedCount.data?.total }
+  const filtered = hasFilters(search)
+  const canNew = canTriage(repo.permission) && !repo.archived
+
+  const people = (users.data ?? []).map<SelectItem>((u) => ({
+    key: u.username,
+    label: u.display_name,
+    search: u.username,
+    render: (
+      <span className="flex min-w-0 flex-1 items-center gap-2">
+        <Avatar user={u} size={18} />
+        <span className="truncate">{u.display_name}</span>
+      </span>
+    ),
+  }))
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
-        <div className="flex rounded border border-border-strong" role="group" aria-label="State">
-          {(['open', 'closed'] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => set({ state: s === 'open' ? undefined : s })}
-              aria-pressed={state === s}
-              className={cx('flex h-7 items-center gap-1.5 px-2.5 text-sm', state === s ? 'bg-bg-hover text-fg' : 'text-fg-muted hover:text-fg')}
-            >
-              {s === 'open' ? <CircleDot size={13} /> : <CheckCircle2 size={13} />}
-              {counts[s] ?? ''} {s === 'open' ? 'Open' : 'Closed'}
-            </button>
-          ))}
-        </div>
-        <div className="relative w-56">
-          <Search size={13} className="absolute top-1/2 left-2 -translate-y-1/2 text-fg-faint" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search titles" className="h-7 pl-7" aria-label="Search issues" />
-        </div>
+      <FilterBar
+        className="px-5"
+        end={
+          <>
+            <IconLink to="/$repo/labels" params={{ repo: name }} label="Labels" size="sm">
+              <Tag size={13} />
+            </IconLink>
+            <IconLink to="/$repo/milestones" params={{ repo: name }} label="Milestones" size="sm">
+              <MilestoneIcon size={13} />
+            </IconLink>
+            {canNew && (
+              <ButtonLink to="/$repo/issues/new" params={{ repo: name }} variant="primary" icon={<Plus size={14} />}>
+                New issue
+              </ButtonLink>
+            )}
+          </>
+        }
+      >
+        <SegmentedControl
+          label="State"
+          value={state === 'closed' ? 'closed' : 'open'}
+          onChange={(s) => set({ state: s === 'open' ? undefined : s })}
+          options={[
+            { value: 'open', label: 'Open', icon: <CircleDot size={12} />, count: openCount.data?.total },
+            { value: 'closed', label: 'Closed', icon: <CheckCircle2 size={12} />, count: closedCount.data?.total },
+          ]}
+        />
+        <SearchInput value={search.q ?? ''} onChange={(q) => set({ q: q || undefined }, true)} debounce={250} placeholder="Search titles…" label="Search issues" shortcut className="max-w-56" />
         <LabelPicker
           repo={name}
           value={labels}
           onChange={(l) => set({ labels: l.length ? l.join(',') : undefined })}
           trigger={
             <>
-              <Tag size={12} /> Labels{labels.length > 0 && ` (${labels.length})`} <ChevronDown size={12} />
+              <Tag size={12} /> Labels{labels.length > 0 && ` (${labels.length})`}
             </>
           }
         />
-        <FilterSelect label="Milestone" width="w-36" value={search.milestone ?? ''} onChange={(v) => set({ milestone: v || undefined })}>
-          <option value="">Any milestone</option>
-          <option value="*">Has a milestone</option>
-          <option value="none">No milestone</option>
-          {(milestones.data ?? []).map((m) => (
-            <option key={m.id} value={m.title}>
-              {m.title}
-              {m.state === 'closed' ? ' (closed)' : ''}
-            </option>
-          ))}
-        </FilterSelect>
-        <FilterSelect label="Assignee" width="w-36" value={search.assignee ?? ''} onChange={(v) => set({ assignee: v || undefined })}>
-          <option value="">Any assignee</option>
-          <option value="none">Unassigned</option>
-          {(users.data ?? []).map((u) => (
-            <option key={u.id} value={u.username}>
-              {u.display_name}
-            </option>
-          ))}
-        </FilterSelect>
-        <FilterSelect label="Author" width="w-32" value={search.author ?? ''} onChange={(v) => set({ author: v || undefined })}>
-          <option value="">Any author</option>
-          {(users.data ?? []).map((u) => (
-            <option key={u.id} value={u.username}>
-              {u.display_name}
-            </option>
-          ))}
-        </FilterSelect>
-        <FilterSelect label="Sort" width="w-28" value={search.sort ?? 'updated'} onChange={(v) => set({ sort: v === 'updated' ? undefined : (v as IssueListSearch['sort']) })}>
-          <option value="updated">Updated</option>
-          <option value="created">Newest</option>
-          <option value="comments">Comments</option>
-        </FilterSelect>
-        {hasFilters(search) && (
-          <button
-            type="button"
-            className="flex items-center gap-1 text-sm text-fg-muted hover:text-fg"
-            onClick={() => {
-              setQ('')
-              void navigate({ to: '/$repo/issues', params: { repo: name }, search: { state: search.state } })
-            }}
-          >
-            <X size={12} /> Clear filters
-          </button>
+        <FilterPicker
+          title="Milestone"
+          icon={<MilestoneIcon size={12} />}
+          value={search.milestone}
+          onChange={(v) => set({ milestone: v })}
+          items={[
+            { key: '*', label: 'Has a milestone' },
+            { key: 'none', label: 'No milestone' },
+            ...(milestones.data ?? []).map((m) => ({ key: m.title, label: m.state === 'closed' ? `${m.title} (closed)` : m.title, group: 'Milestones' })),
+          ]}
+        />
+        <FilterPicker title="Assignee" icon={<User size={12} />} value={search.assignee} onChange={(v) => set({ assignee: v })} items={[{ key: 'none', label: 'Unassigned' }, ...people]} />
+        <FilterPicker title="Author" icon={<UserPen size={12} />} value={search.author} onChange={(v) => set({ author: v })} items={people} />
+        <FilterMenu
+          label="Sort"
+          icon={<ArrowUpDown size={12} />}
+          value={search.sort ?? 'updated'}
+          onChange={(v) => set({ sort: v === 'updated' ? undefined : v })}
+          options={[
+            { value: 'updated', label: 'Recently updated' },
+            { value: 'created', label: 'Newest' },
+            { value: 'comments', label: 'Most commented' },
+          ]}
+        />
+        {filtered && (
+          <Button variant="ghost" size="sm" icon={<X size={12} />} onClick={() => void navigate({ to: '/$repo/issues', params: { repo: name }, search: { state: search.state } })}>
+            Clear filters
+          </Button>
         )}
-        <div className="flex-1" />
-        <Link to="/$repo/labels" params={{ repo: name }} className="flex items-center gap-1 text-sm text-fg-muted hover:text-fg">
-          <Tag size={12} /> Labels
-        </Link>
-        <Link to="/$repo/milestones" params={{ repo: name }} className="flex items-center gap-1 text-sm text-fg-muted hover:text-fg">
-          <MilestoneIcon size={12} /> Milestones
-        </Link>
-        {canTriage(repo.permission) && (
-          <Link to="/$repo/issues/new" params={{ repo: name }}>
-            <Button variant="primary">
-              <Plus size={14} /> New issue
-            </Button>
-          </Link>
-        )}
-      </div>
+      </FilterBar>
       {issues.isPending ? (
-        <Spinner />
+        <SkeletonRows rows={6} />
       ) : issues.isError ? (
-        <div className="p-4">
-          <Alert>{errorMessage(issues.error)}</Alert>
-        </div>
+        <ErrorState error={issues.error} />
       ) : issues.data.issues.length === 0 ? (
-        <EmptyState title={hasFilters(search) ? 'No matching issues' : `No ${state} issues`}>
-          {state === 'open' && !hasFilters(search) && canTriage(repo.permission) && 'Report a bug or suggest an idea with “New issue”.'}
-        </EmptyState>
+        filtered ? (
+          <EmptyState icon={<SearchX size={20} />} title="No matching issues">
+            Try different filters.
+          </EmptyState>
+        ) : (
+          <EmptyState
+            icon={state === 'closed' ? <CheckCircle2 size={20} /> : <CircleDot size={20} />}
+            title={`No ${state} issues`}
+            action={
+              state === 'open' &&
+              canNew && (
+                <ButtonLink to="/$repo/issues/new" params={{ repo: name }} variant="secondary" icon={<Plus size={14} />}>
+                  Report an issue
+                </ButtonLink>
+              )
+            }
+          >
+            {state === 'open' && canNew && 'Report a bug or suggest an idea.'}
+          </EmptyState>
+        )
       ) : (
-        <IssueRows issues={issues.data.issues} onLabel={(l) => set({ labels: toggleLabel(search.labels, l) })} />
+        <>
+          <IssueRows issues={issues.data.issues} onLabel={(l) => set({ labels: toggleLabel(search.labels, l) })} />
+          <Pagination page={page} total={issues.data.total} perPage={PER_PAGE} onPage={(p) => set({ page: p > 1 ? p : undefined })} />
+        </>
       )}
     </div>
   )

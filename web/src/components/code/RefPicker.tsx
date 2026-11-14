@@ -47,7 +47,7 @@ export function RefPicker({
       >
         <GitBranch size={13} className="shrink-0 text-fg-muted" />
         {prefix && <span className="text-sm text-fg-faint">{prefix}</span>}
-        <span className="truncate font-mono text-sm">{refDisplay(current)}</span>
+        {current ? <span className="truncate font-mono text-sm">{refDisplay(current)}</span> : <span className="truncate text-sm text-fg-faint">Choose a branch…</span>}
         <ChevronDown size={13} className="shrink-0 text-fg-faint" />
       </button>
       <FloatingPanel open={p.open} onClose={p.close} anchor={p.anchor} id={p.id} className="w-80 max-w-[calc(100vw-16px)] overflow-hidden">

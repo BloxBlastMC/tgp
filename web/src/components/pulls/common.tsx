@@ -1,23 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, CircleDot, GitMerge, GitPullRequestClosed, GitPullRequestDraft, MoreHorizontal, XCircle } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { api, errorMessage, unwrap, type Comment, type PullRequest, type PullSummary, type UserSummary } from '../../api/client'
+import { CheckCircle2, CircleDot, GitMerge, GitPullRequest, GitPullRequestClosed, GitPullRequestDraft, MoreHorizontal, Pencil, SquarePen, Trash2, XCircle } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import { api, errorMessage, unwrap, type Comment, type PullRequest, type PullSummary } from '../../api/client'
 import { pullKeyPrefix, sessionQuery } from '../../api/queries'
 import { decisionInfo, type Thread } from '../../lib/pulls'
-import { Alert, Badge, Button, cx, Textarea, Time } from '../ui'
+import { pullState } from '../../lib/states'
+import { Alert, Avatar, Badge, Button, cx, IconButton, Menu, MenuItem, Pill, Textarea, Time, useConfirm } from '../ui'
 
-export function Avatar({ user, size = 20 }: { user: Pick<UserSummary, 'display_name' | 'username'>; size?: number }) {
-  return (
-    <span
-      className="inline-flex shrink-0 items-center justify-center rounded-full bg-accent-subtle font-semibold text-accent uppercase"
-      style={{ width: size, height: size, fontSize: Math.round(size * 0.45) }}
-      title={user.username}
-      aria-hidden
-    >
-      {(user.display_name || user.username).slice(0, 1)}
-    </span>
-  )
-}
+export { Avatar }
 
 type StateLike = Pick<PullSummary, 'state' | 'draft'>
 
@@ -25,23 +15,16 @@ export function PullStateIcon({ pr, size = 15 }: { pr: StateLike; size?: number 
   if (pr.state === 'merged') return <GitMerge size={size} className="shrink-0 text-done" aria-label="merged" />
   if (pr.state === 'closed') return <GitPullRequestClosed size={size} className="shrink-0 text-danger" aria-label="closed" />
   if (pr.draft) return <GitPullRequestDraft size={size} className="shrink-0 text-fg-faint" aria-label="draft" />
-  return <CircleDot size={size} className="shrink-0 text-success" aria-label="open" />
+  return <GitPullRequest size={size} className="shrink-0 text-success" aria-label="open" />
 }
 
 export function PullStateBadge({ pr }: { pr: StateLike }) {
-  const label = pr.state === 'open' && pr.draft ? 'Draft' : pr.state[0]!.toUpperCase() + pr.state.slice(1)
-  const tone =
-    pr.state === 'merged'
-      ? 'bg-done/15 text-done'
-      : pr.state === 'closed'
-        ? 'bg-danger/15 text-danger'
-        : pr.draft
-          ? 'bg-bg-hover text-fg-muted'
-          : 'bg-success/15 text-success'
+  const st = pullState(pr)
+  const Icon = st.key === 'merged' ? GitMerge : st.key === 'closed' ? GitPullRequestClosed : st.key === 'draft' ? GitPullRequestDraft : GitPullRequest
   return (
-    <span className={cx('inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium', tone)}>
-      <PullStateIcon pr={pr} size={13} /> {label}
-    </span>
+    <Pill tone={st.tone} icon={<Icon size={13} />}>
+      {st.label}
+    </Pill>
   )
 }
 
@@ -52,7 +35,7 @@ export function DecisionBadge({ decision }: { decision: PullRequest['review_deci
 }
 
 export function BranchName({ children }: { children: ReactNode }) {
-  return <code className="rounded bg-accent-subtle px-1.5 py-0.5 font-mono text-sm text-accent">{children}</code>
+  return <code className="rounded-md bg-accent-subtle px-1.5 py-0.5 font-mono text-sm text-accent">{children}</code>
 }
 
 /** Textarea with Write / Preview tabs; preview is rendered by the server. */
@@ -83,21 +66,26 @@ export function MarkdownEditor({
     staleTime: Infinity,
   })
   return (
-    <div className="overflow-hidden rounded border border-border-strong bg-bg focus-within:border-accent">
-      <div className="flex border-b border-border bg-bg-subtle text-sm">
+    <div className="overflow-hidden rounded-lg border border-border-strong bg-bg transition-[border-color,box-shadow] focus-within:border-accent focus-within:shadow-[0_0_0_3px_var(--accent-subtle)]">
+      <div className="flex items-center gap-0.5 border-b border-border bg-bg-subtle px-1.5 pt-1.5 text-sm">
         {(['write', 'preview'] as const).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={cx('px-3 py-1 capitalize', tab === t ? 'bg-bg text-fg' : 'text-fg-muted hover:text-fg')}
+            className={cx(
+              '-mb-px rounded-t-md border border-b-0 px-3 py-1 font-medium capitalize',
+              tab === t ? 'border-border bg-bg text-fg' : 'border-transparent text-fg-muted hover:text-fg',
+            )}
             aria-pressed={tab === t}
           >
             {t}
           </button>
         ))}
         <span className="flex-1" />
-        <span className="self-center px-2 text-xs text-fg-faint">Markdown</span>
+        <span className="flex items-center gap-1 self-center px-1.5 pb-1 text-xs text-fg-faint">
+          <SquarePen size={11} /> Markdown supported{onSubmit && ' · Ctrl+Enter to submit'}
+        </span>
       </div>
       {tab === 'write' ? (
         <Textarea
@@ -113,10 +101,10 @@ export function MarkdownEditor({
               onSubmit()
             }
           }}
-          className="rounded-none border-0 focus:border-0"
+          className="rounded-none border-0 bg-transparent focus:border-0 focus:shadow-none"
         />
       ) : (
-        <div className="min-h-20 px-3 py-2">
+        <div className="min-h-20 px-3 py-2.5">
           {value.trim() === '' ? (
             <p className="text-fg-faint">Nothing to preview.</p>
           ) : preview.data ? (
@@ -149,40 +137,25 @@ export function useInvalidatePull(repo: string, number: number) {
   }
 }
 
-function Menu({ items }: { items: { label: string; onClick: () => void; danger?: boolean }[] }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (!open) return
-    const onDoc = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false)
-    document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [open])
+function CommentMenu({ items }: { items: { label: string; onClick: () => void; danger?: boolean; icon?: ReactNode }[] }) {
   if (items.length === 0) return null
   return (
-    <div className="relative" ref={ref}>
-      <button type="button" onClick={() => setOpen(!open)} className="rounded p-0.5 text-fg-faint hover:bg-bg-hover hover:text-fg" aria-label="Comment actions">
-        <MoreHorizontal size={14} />
-      </button>
-      {open && (
-        <ul className="absolute right-0 z-20 mt-1 w-32 rounded-md border border-border-strong bg-bg-elevated p-1 shadow-xl">
-          {items.map((it) => (
-            <li key={it.label}>
-              <button
-                type="button"
-                onClick={() => {
-                  setOpen(false)
-                  it.onClick()
-                }}
-                className={cx('flex h-7 w-full items-center rounded px-2 text-left hover:bg-bg-hover', it.danger && 'text-danger')}
-              >
-                {it.label}
-              </button>
-            </li>
-          ))}
-        </ul>
+    <Menu
+      placement="bottom-end"
+      label="Comment actions"
+      className="min-w-36"
+      trigger={(t) => (
+        <IconButton {...t} label="Comment actions" size="xs" tooltip={false}>
+          <MoreHorizontal size={14} />
+        </IconButton>
       )}
-    </div>
+    >
+      {items.map((it) => (
+        <MenuItem key={it.label} onSelect={it.onClick} tone={it.danger ? 'danger' : undefined} icon={it.icon}>
+          {it.label}
+        </MenuItem>
+      ))}
+    </Menu>
   )
 }
 
@@ -190,6 +163,7 @@ function Menu({ items }: { items: { label: string; onClick: () => void; danger?:
 export function CommentCard({ repo, number, comment, isRepoAdmin, compact }: { repo: string; number: number; comment: Comment; isRepoAdmin: boolean; compact?: boolean }) {
   const me = useQuery(sessionQuery).data?.user
   const invalidate = useInvalidatePull(repo, number)
+  const confirm = useConfirm()
   const [editing, setEditing] = useState(false)
   const [body, setBody] = useState(comment.body)
   const save = useMutation({
@@ -205,14 +179,23 @@ export function CommentCard({ repo, number, comment, isRepoAdmin, compact }: { r
   })
   const mine = me?.id === comment.author.id
   const items = [
-    ...(mine ? [{ label: 'Edit', onClick: () => (setBody(comment.body), setEditing(true)) }] : []),
+    ...(mine ? [{ label: 'Edit', icon: <Pencil size={13} />, onClick: () => (setBody(comment.body), setEditing(true)) }] : []),
     ...(mine || isRepoAdmin
-      ? [{ label: 'Delete', danger: true, onClick: () => window.confirm('Delete this comment?') && del.mutate() }]
+      ? [
+          {
+            label: 'Delete',
+            danger: true,
+            icon: <Trash2 size={13} />,
+            onClick: async () => {
+              if (await confirm({ title: 'Delete this comment?', description: "It's removed for everyone. This can't be undone.", confirmLabel: 'Delete comment' })) del.mutate()
+            },
+          },
+        ]
       : []),
   ]
   return (
-    <div className={cx('flex gap-2.5', compact ? '' : 'rounded-md border border-border bg-bg')} data-testid="comment">
-      {compact && <Avatar user={comment.author} />}
+    <div className={cx('flex gap-2.5', compact ? '' : 'overflow-hidden rounded-lg border border-border bg-surface-1 shadow-card')} data-testid="comment">
+      {compact && <Avatar user={comment.author} size={22} />}
       <div className="min-w-0 flex-1">
         <div className={cx('flex items-center gap-2 text-sm text-fg-muted', !compact && 'border-b border-border bg-bg-subtle px-3 py-1.5')}>
           {!compact && <Avatar user={comment.author} size={18} />}
@@ -222,9 +205,9 @@ export function CommentCard({ repo, number, comment, isRepoAdmin, compact }: { r
             {comment.edited && ' · edited'}
           </span>
           <span className="flex-1" />
-          <Menu items={items} />
+          <CommentMenu items={items} />
         </div>
-        <div className={cx(compact ? 'mt-0.5' : 'px-3 py-2')}>
+        <div className={cx(compact ? 'mt-0.5' : 'px-4 py-3')}>
           {editing ? (
             <div className="flex flex-col gap-2">
               <MarkdownEditor value={body} onChange={setBody} repo={repo} label="Edit comment" autoFocus onSubmit={() => save.mutate()} />
@@ -305,7 +288,7 @@ export function ThreadView({
     },
   })
   return (
-    <div className="overflow-hidden rounded-md border border-border bg-bg" data-testid="thread">
+    <div className="overflow-hidden rounded-lg border border-border bg-surface-1 shadow-card" data-testid="thread">
       {showContext && (
         <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-sm">
           <span className="min-w-0 truncate font-mono">{root.path}</span>
@@ -357,7 +340,7 @@ export function ThreadView({
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => setReplying(true)} className="h-7 flex-1 rounded border border-border bg-bg-subtle px-2 text-left text-fg-faint hover:border-border-strong">
+                  <button type="button" onClick={() => setReplying(true)} className="h-7 flex-1 rounded-md border border-border bg-bg px-2.5 text-left text-fg-faint transition-colors hover:border-border-strong">
                     Reply…
                   </button>
                   <Button variant="ghost" loading={resolve.isPending} onClick={() => resolve.mutate(!root.resolved)}>

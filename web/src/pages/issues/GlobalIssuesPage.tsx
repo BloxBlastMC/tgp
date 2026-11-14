@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { errorMessage } from '../../api/client'
+import { CircleDot, Inbox, SearchX } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { myIssuesQuery, type MyIssuesFilter } from '../../api/queries'
 import { EmptyState, Page } from '../../components/Page'
-import { Alert, Spinner } from '../../components/ui'
-import { Segmented } from '../pulls/PullList'
+import { ErrorState, FilterBar, SearchInput, SegmentedControl, SkeletonRows } from '../../components/ui'
 import { IssueRows } from './IssueList'
 
 type State = 'open' | 'closed' | 'all'
@@ -40,26 +40,34 @@ export function GlobalIssuesPage() {
   const navigate = useNavigate()
   const filter = search.filter ?? 'assigned'
   const state = search.state ?? 'open'
-  const issues = useQuery(myIssuesQuery(filter, state))
+  const [q, setQ] = useState('')
+  const issues = useQuery({ ...myIssuesQuery(filter, state), placeholderData: (prev) => prev })
   const set = (s: GlobalIssuesSearch) => void navigate({ to: '/issues', search: { ...search, ...s } })
+  const shown = useMemo(() => {
+    const f = q.trim().toLowerCase()
+    return (issues.data?.issues ?? []).filter((i) => !f || i.title.toLowerCase().includes(f) || i.repo.toLowerCase().includes(f))
+  }, [issues.data, q])
   return (
-    <Page title="Issues">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
-        <Segmented label="Filter" value={filter} options={filters} onChange={(f) => set({ filter: f === 'assigned' ? undefined : f })} />
-        <Segmented label="State" value={state} options={states} onChange={(s) => set({ state: s === 'open' ? undefined : s })} />
-        <div className="flex-1" />
-        {issues.data && <span className="text-sm text-fg-faint">{issues.data.total} total</span>}
-      </div>
+    <Page title="Issues" icon={CircleDot} description={issues.data ? `${issues.data.total} total` : undefined}>
+      <FilterBar className="px-5">
+        <SegmentedControl label="Filter" value={filter} options={filters} onChange={(f) => set({ filter: f === 'assigned' ? undefined : f })} />
+        <SegmentedControl label="State" value={state} options={states} onChange={(s) => set({ state: s === 'open' ? undefined : s })} />
+        <SearchInput value={q} onChange={setQ} placeholder="Filter by title or repository…" label="Filter issues" shortcut />
+      </FilterBar>
       {issues.isPending ? (
-        <Spinner />
+        <SkeletonRows rows={6} />
       ) : issues.isError ? (
-        <div className="p-4">
-          <Alert>{errorMessage(issues.error)}</Alert>
-        </div>
-      ) : issues.data.issues.length === 0 ? (
-        <EmptyState title="Nothing here">{state === 'open' ? emptyText[filter] : 'No matching issues.'}</EmptyState>
+        <ErrorState error={issues.error} />
+      ) : shown.length === 0 ? (
+        q ? (
+          <EmptyState icon={<SearchX size={20} />} title="No matching issues" />
+        ) : (
+          <EmptyState icon={<Inbox size={20} />} title={filter === 'assigned' && state === 'open' ? 'Nothing assigned to you' : 'Nothing here'}>
+            {state === 'open' ? emptyText[filter] : 'No matching issues.'}
+          </EmptyState>
+        )
       ) : (
-        <IssueRows issues={issues.data.issues} showRepo />
+        <IssueRows issues={shown} showRepo />
       )}
     </Page>
   )

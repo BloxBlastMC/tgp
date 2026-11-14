@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Eye,
   FileDiff,
+  GitPullRequest,
   GitPullRequestClosed,
   History,
   MessageSquare,
@@ -16,6 +17,7 @@ import { useMemo, useState, type ComponentType, type ReactNode } from 'react'
 import { api, ApiRequestError, errorMessage, unwrap, type Comment, type PullRequest, type Review } from '../../api/client'
 import { pullCommentsQuery, pullCommitsQuery, pullFilesQuery, pullQuery, pullTimelineQuery, sessionQuery } from '../../api/queries'
 import { DiffView, type DiffAnnotations } from '../../components/code/DiffView'
+import { CommitList } from '../../components/code/CommitList'
 import { EmptyState } from '../../components/Page'
 import {
   Avatar,
@@ -28,12 +30,13 @@ import {
   useInvalidatePull,
 } from '../../components/pulls/common'
 import { ReviewerPicker } from '../../components/pulls/ReviewerPicker'
-import { Alert, Badge, Button, cx, Dialog, Input, Spinner, Time } from '../../components/ui'
+import { Alert, Badge, Button, CopyButton, Counter, cx, Dialog, ErrorState, IconButton, Input, MetaSection, PageSkeleton, RadioCard, SkeletonRows, Time, useToast } from '../../components/ui'
+import { DiffStat } from '../../components/code/DiffView'
+import { canTriage as canTriagePerm, canWrite as canWritePerm, isRepoAdmin } from '../../lib/permissions'
 import { anchorThreads, groupThreads, lineKey, type Thread } from '../../lib/pulls'
 import { EventLine } from '../../components/issues/EventLine'
 import { MetaSections, type MetaPatch } from '../../components/issues/meta'
 import { useRepoName } from '../repos/RepoLayout'
-import { CommitList } from './ComparePage'
 import { MergeBox } from './MergeBox'
 
 type Tab = 'conversation' | 'commits' | 'files'
@@ -56,17 +59,18 @@ export function PullPage() {
   const [pending, setPending] = useState<Pending[]>([])
   const [reviewOpen, setReviewOpen] = useState(false)
 
-  if (!Number.isInteger(number) || number <= 0) return <EmptyState title="Pull request not found" />
-  if (pr.isPending) return <Spinner />
+  if (!Number.isInteger(number) || number <= 0) return <EmptyState icon={<GitPullRequest size={20} />} title="Pull request not found" />
+  if (pr.isPending) return <PageSkeleton rows={3} />
   if (pr.isError) {
     if (pr.error instanceof ApiRequestError && pr.error.status === 404 && pr.error.details?.is_issue)
       return <Navigate to="/$repo/issues/$number" params={{ repo, number: String(number) }} replace />
-    if (pr.error instanceof ApiRequestError && pr.error.status === 404) return <EmptyState title="Pull request not found">#{number} doesn't exist in {repo}.</EmptyState>
-    return (
-      <div className="p-4">
-        <Alert>{errorMessage(pr.error)}</Alert>
-      </div>
-    )
+    if (pr.error instanceof ApiRequestError && pr.error.status === 404)
+      return (
+        <EmptyState icon={<GitPullRequest size={20} />} title="Pull request not found">
+          #{number} doesn't exist in {repo}.
+        </EmptyState>
+      )
+    return <ErrorState error={pr.error} />
   }
   const p = pr.data
   return (
@@ -83,10 +87,10 @@ export function PullPage() {
 function useViewer(pr: PullRequest) {
   const me = useQuery(sessionQuery).data!.user
   const perm = pr.viewer_permission
-  const canWrite = perm === 'write' || perm === 'admin'
-  const canTriage = canWrite || perm === 'triage'
+  const canWrite = canWritePerm(perm)
+  const canTriage = canTriagePerm(perm)
   const isAuthor = me.id === pr.author.id
-  return { me, canWrite, canTriage, isAuthor, canEdit: canWrite || (canTriage && isAuthor), isRepoAdmin: perm === 'admin' }
+  return { me, canWrite, canTriage, isAuthor, canEdit: canWrite || (canTriage && isAuthor), isRepoAdmin: isRepoAdmin(perm) }
 }
 
 function PullHeader({ repo, pr, tab, pendingCount, onReview }: { repo: string; pr: PullRequest; tab: Tab; pendingCount: number; onReview: () => void }) {
@@ -101,13 +105,13 @@ function PullHeader({ repo, pr, tab, pendingCount, onReview }: { repo: string; p
       invalidate()
     },
   })
-  const tabs: { id: Tab; label: string; icon: ComponentType<{ size?: number }>; count: number }[] = [
+  const tabs: { id: Tab; label: string; icon: ComponentType<{ size?: number; className?: string }>; count: number }[] = [
     { id: 'conversation', label: 'Conversation', icon: MessageSquare, count: pr.comments },
     { id: 'commits', label: 'Commits', icon: History, count: pr.commits },
     { id: 'files', label: 'Files changed', icon: FileDiff, count: pr.changed_files },
   ]
   return (
-    <div className="border-b border-border px-4 pt-3">
+    <div className="border-b border-border px-6 pt-4">
       {editing ? (
         <form
           className="flex items-center gap-2"
@@ -116,7 +120,7 @@ function PullHeader({ repo, pr, tab, pendingCount, onReview }: { repo: string; p
             save.mutate()
           }}
         >
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} aria-label="Title" autoFocus className="text-lg" />
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} aria-label="Title" autoFocus size="lg" className="text-lg font-semibold" />
           <Button type="submit" variant="primary" loading={save.isPending} disabled={!title.trim()}>
             Save
           </Button>
@@ -126,51 +130,63 @@ function PullHeader({ repo, pr, tab, pendingCount, onReview }: { repo: string; p
         </form>
       ) : (
         <div className="flex items-start gap-2">
-          <h2 className="min-w-0 flex-1 text-xl font-semibold">
+          <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
             {pr.title} <span className="font-normal text-fg-faint">#{pr.number}</span>
-          </h2>
+          </h1>
           {v.canEdit && (
             <Button
               variant="ghost"
+              icon={<Pencil size={13} />}
               onClick={() => {
                 setTitle(pr.title)
                 setEditing(true)
               }}
             >
-              <Pencil size={13} /> Edit
+              Edit
             </Button>
           )}
         </div>
       )}
       {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
-      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-fg-muted">
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-fg-muted">
         <PullStateBadge pr={pr} />
-        <span>
+        <span className="flex flex-wrap items-center gap-1">
+          <Avatar user={pr.author} size={18} />
           <span className="font-medium text-fg">{pr.author.display_name}</span> {pr.state === 'merged' ? 'merged' : 'wants to merge'} {pr.commits} commit
           {pr.commits === 1 ? '' : 's'} into <BranchName>{pr.base.branch}</BranchName> from <BranchName>{pr.head.branch}</BranchName>
-          {!pr.head.exists && pr.state !== 'merged' && <span className="ml-1 text-danger">(deleted)</span>}
+          <CopyButton value={pr.head.branch} label="Copy branch name" size="xs" />
+          {!pr.head.exists && pr.state !== 'merged' && <span className="text-danger">(deleted)</span>}
         </span>
       </div>
-      <nav className="mt-2 -mb-px flex items-center gap-1">
-        {tabs.map(({ id, label, icon: Icon, count }) => (
-          <Link
-            key={id}
-            to="/$repo/pulls/$number"
-            params={{ repo, number: String(pr.number) }}
-            search={id === 'conversation' ? {} : { tab: id }}
-            className={cx('flex h-8 items-center gap-1.5 border-b-2 px-2', tab === id ? 'border-accent text-fg' : 'border-transparent text-fg-muted hover:text-fg')}
-            aria-current={tab === id ? 'page' : undefined}
-          >
-            <Icon size={14} /> {label} <span className="rounded-full bg-bg-hover px-1.5 text-xs">{count}</span>
-          </Link>
-        ))}
+      <div className="mt-3 -mb-px flex items-end gap-1">
+        <nav className="flex gap-0.5" aria-label="Pull request">
+          {tabs.map(({ id, label, icon: Icon, count }) => (
+            <Link
+              key={id}
+              to="/$repo/pulls/$number"
+              params={{ repo, number: String(pr.number) }}
+              search={id === 'conversation' ? {} : { tab: id }}
+              className={cx(
+                'relative flex h-9 items-center gap-1.5 px-2.5 transition-colors',
+                tab === id ? 'font-medium text-fg' : 'text-fg-muted hover:text-fg',
+              )}
+              aria-current={tab === id ? 'page' : undefined}
+            >
+              <Icon size={14} className="text-fg-faint" /> {label} <Counter>{count}</Counter>
+              <span className={cx('absolute inset-x-1.5 bottom-0 h-0.5 rounded-full', tab === id ? 'bg-accent' : 'bg-transparent')} />
+            </Link>
+          ))}
+        </nav>
         <div className="flex-1" />
+        <span className="hidden pb-2.5 text-sm md:block">
+          <DiffStat additions={pr.additions} deletions={pr.deletions} bar />
+        </span>
         {pr.state === 'open' && v.canTriage && (
-          <Button variant={pendingCount > 0 ? 'primary' : 'secondary'} className="mb-1" onClick={onReview}>
-            <Eye size={13} /> Review{pendingCount > 0 && ` (${pendingCount} pending)`}
+          <Button variant={pendingCount > 0 ? 'primary' : 'secondary'} className="mb-1.5 ml-2" onClick={onReview} icon={<Eye size={13} />}>
+            Review{pendingCount > 0 && ` (${pendingCount} pending)`}
           </Button>
         )}
-      </nav>
+      </div>
     </div>
   )
 }
@@ -185,11 +201,11 @@ function Conversation({ repo, pr }: { repo: string; pr: PullRequest }) {
   const threadOf = (c: Comment): Thread => threads.get(c.id) ?? { root: c, replies: [] }
 
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-6 p-4 md:grid-cols-[minmax(0,1fr)_240px]">
-      <div className="flex min-w-0 flex-col gap-3">
+    <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-5 md:grid-cols-[minmax(0,1fr)_256px]">
+      <div className="relative flex min-w-0 flex-col gap-4 before:absolute before:top-4 before:bottom-24 before:left-[19px] before:w-px before:bg-border">
         <BodyCard repo={repo} pr={pr} canEdit={v.canEdit} />
         {timeline.isPending ? (
-          <Spinner />
+          <SkeletonRows rows={3} />
         ) : timeline.isError ? (
           <Alert>{errorMessage(timeline.error)}</Alert>
         ) : (
@@ -223,26 +239,26 @@ function BodyCard({ repo, pr, canEdit }: { repo: string; pr: PullRequest; canEdi
     },
   })
   return (
-    <div className="rounded-md border border-border">
+    <div className="relative overflow-hidden rounded-lg border border-border bg-surface-1 shadow-card">
       <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-sm text-fg-muted">
         <Avatar user={pr.author} size={18} />
         <span className="font-medium text-fg">{pr.author.display_name}</span> opened this <Time iso={pr.created_at} />
+        <Badge>Author</Badge>
         <span className="flex-1" />
         {canEdit && !editing && (
-          <button
-            type="button"
-            className="rounded p-0.5 hover:bg-bg-hover hover:text-fg"
-            aria-label="Edit description"
+          <IconButton
+            label="Edit description"
+            size="xs"
             onClick={() => {
               setBody(pr.body)
               setEditing(true)
             }}
           >
             <Pencil size={12} />
-          </button>
+          </IconButton>
         )}
       </div>
-      <div className="px-3 py-2">
+      <div className="px-4 py-3">
         {editing ? (
           <div className="flex flex-col gap-2">
             <MarkdownEditor value={body} onChange={setBody} repo={repo} label="Description" autoFocus minRows={6} />
@@ -298,21 +314,22 @@ function ReviewCard({
   })
   const border = review.dismissed ? 'border-border' : review.state === 'approved' ? 'border-success/40' : review.state === 'changes_requested' ? 'border-danger/40' : 'border-border'
   return (
-    <div className={cx('rounded-md border', border)} data-testid="review">
+    <div className={cx('relative overflow-hidden rounded-lg border bg-surface-1 shadow-card', border)} data-testid="review">
       <div className="flex flex-wrap items-center gap-2 bg-bg-subtle px-3 py-1.5 text-sm text-fg-muted">
+        <Avatar user={review.author} size={18} />
         <ReviewStateIcon state={review.dismissed ? 'dismissed' : review.state} />
         <span className="font-medium text-fg">{review.author.display_name}</span> {reviewVerb[review.state]} <Time iso={review.created_at} />
         {review.stale && !review.dismissed && review.state !== 'commented' && <Badge tone="warning">outdated</Badge>}
         {review.dismissed && <Badge>dismissed</Badge>}
         <span className="flex-1" />
         {viewer.canWrite && pr.state === 'open' && !review.dismissed && review.state !== 'commented' && (
-          <button type="button" className="hover:text-fg" onClick={() => setDismissing(true)}>
+          <Button variant="ghost" size="xs" onClick={() => setDismissing(true)}>
             Dismiss
-          </button>
+          </Button>
         )}
       </div>
       {(review.body_html || review.comments.length > 0 || review.dismissed) && (
-        <div className="flex flex-col gap-2 border-t border-border px-3 py-2">
+        <div className="flex flex-col gap-2 border-t border-border px-4 py-3">
           {review.dismissed && review.dismiss_message && (
             <p className="text-sm text-fg-muted">
               Dismissed by {review.dismissed_by?.display_name}: {review.dismiss_message}
@@ -349,6 +366,8 @@ function ReviewCard({
 
 function CommentComposer({ repo, pr, canEdit }: { repo: string; pr: PullRequest; canEdit: boolean }) {
   const invalidate = useInvalidatePull(repo, pr.number)
+  const toast = useToast()
+  const me = useQuery(sessionQuery).data!.user
   const [body, setBody] = useState('')
   const send = useMutation({
     mutationFn: () => unwrap(api.POST('/repos/{repo}/pulls/{number}/comments', { params: { path: { repo, number: pr.number } }, body: { body, side: 'new' } })),
@@ -360,16 +379,21 @@ function CommentComposer({ repo, pr, canEdit }: { repo: string; pr: PullRequest;
   const setState = useMutation({
     mutationFn: (state: 'open' | 'closed') =>
       unwrap(api.PATCH('/repos/{repo}/pulls/{number}', { params: { path: { repo, number: pr.number } }, body: { state } })),
-    onSuccess: invalidate,
+    onSuccess: (_, state) => {
+      invalidate()
+      if (state === 'closed') toast.info(`Closed #${pr.number}`, { action: pr.head.exists ? { label: 'Reopen', onClick: () => setState.mutate('open') } : undefined })
+    },
   })
   return (
-    <div className="mt-2 flex flex-col gap-2 border-t border-border pt-4">
+    <div className="relative mt-2 flex gap-3 border-t border-border pt-5">
+      <Avatar user={me} size={28} className="mt-1 hidden ring-4 ring-bg sm:inline-flex" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
       <MarkdownEditor value={body} onChange={setBody} repo={repo} label="Comment" placeholder="Leave a comment" onSubmit={() => body.trim() && send.mutate()} />
       {(send.isError || setState.isError) && <Alert>{errorMessage(send.error ?? setState.error)}</Alert>}
       <div className="flex justify-end gap-2">
         {canEdit && pr.state === 'open' && (
-          <Button onClick={() => setState.mutate('closed')} loading={setState.isPending}>
-            <GitPullRequestClosed size={13} className="text-danger" /> Close pull request
+          <Button onClick={() => setState.mutate('closed')} loading={setState.isPending} icon={<GitPullRequestClosed size={13} className="text-danger" />}>
+            Close pull request
           </Button>
         )}
         {canEdit && pr.state === 'closed' && (
@@ -381,21 +405,12 @@ function CommentComposer({ repo, pr, canEdit }: { repo: string; pr: PullRequest;
           Comment
         </Button>
       </div>
+      </div>
     </div>
   )
 }
 
-function SidebarSection({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
-  return (
-    <section className="border-b border-border pb-3">
-      <div className="mb-1.5 flex items-center justify-between text-sm font-medium text-fg-muted">
-        {title}
-        {action}
-      </div>
-      {children}
-    </section>
-  )
-}
+const SidebarSection = MetaSection
 
 function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; viewer: ReturnType<typeof useViewer> }) {
   const invalidate = useInvalidatePull(repo, pr.number)
@@ -414,7 +429,7 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
     requested: 'Review requested',
   }
   return (
-    <aside className="flex flex-col gap-3 text-base">
+    <aside className="flex flex-col gap-4 text-base md:sticky md:top-5 md:self-start">
       <SidebarSection
         title="Reviewers"
         action={pr.state === 'open' && viewer.canTriage && <ReviewerPicker value={requested} exclude={[pr.author.username]} onChange={(r) => patch.mutate({ reviewers: r })} />}
@@ -422,10 +437,10 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
         {pr.reviewers.length === 0 ? (
           <p className="text-sm text-fg-faint">No reviews yet.</p>
         ) : (
-          <ul className="flex flex-col gap-1.5" aria-label="Reviewers">
+          <ul className="flex flex-col gap-2" aria-label="Reviewers">
             {pr.reviewers.map((r) => (
               <li key={r.user.id} className="flex items-center gap-2" title={stateLabel[r.state]}>
-                <Avatar user={r.user} size={18} />
+                <Avatar user={r.user} size={20} />
                 <span className="min-w-0 flex-1 truncate">{r.user.display_name}</span>
                 {r.stale && r.state !== 'requested' && <span className="text-2xs text-fg-faint">older commit</span>}
                 <ReviewStateIcon state={r.state} />
@@ -464,19 +479,19 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
       {pr.state === 'open' && viewer.canEdit && (
         <SidebarSection title="Status">
           {pr.draft ? (
-            <Button className="w-full" onClick={() => patch.mutate({ draft: false })} loading={patch.isPending}>
-              <Check size={13} /> Ready for review
+            <Button className="w-full" onClick={() => patch.mutate({ draft: false })} loading={patch.isPending} icon={<Check size={13} />}>
+              Ready for review
             </Button>
           ) : (
-            <button type="button" className="text-sm text-fg-muted hover:text-fg" onClick={() => patch.mutate({ draft: true })}>
+            <Button variant="ghost" size="sm" className="-ml-2" onClick={() => patch.mutate({ draft: true })} loading={patch.isPending}>
               Convert to draft
-            </button>
+            </Button>
           )}
         </SidebarSection>
       )}
       <SidebarSection title="Changes">
-        <p className="text-sm text-fg-muted">
-          {pr.changed_files} file{pr.changed_files === 1 ? '' : 's'} · <span className="text-success">+{pr.additions}</span> <span className="text-danger">−{pr.deletions}</span>
+        <p className="flex items-center gap-2 text-sm text-fg-muted">
+          {pr.changed_files} file{pr.changed_files === 1 ? '' : 's'} <DiffStat additions={pr.additions} deletions={pr.deletions} bar />
         </p>
       </SidebarSection>
     </aside>
@@ -488,8 +503,8 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
 function CommitsTab({ repo, pr }: { repo: string; pr: PullRequest }) {
   const commits = useQuery(pullCommitsQuery(repo, pr.number))
   return (
-    <div className="mx-auto w-full max-w-5xl p-4">
-      {commits.isPending ? <Spinner /> : commits.isError ? <Alert>{errorMessage(commits.error)}</Alert> : <CommitList repo={repo} commits={commits.data} />}
+    <div className="mx-auto w-full max-w-5xl px-6 py-5">
+      {commits.isPending ? <SkeletonRows rows={4} avatar /> : commits.isError ? <Alert>{errorMessage(commits.error)}</Alert> : <CommitList repo={repo} commits={commits.data} />}
     </div>
   )
 }
@@ -536,19 +551,19 @@ function FilesTab({ repo, pr, pending, setPending }: { repo: string; pr: PullReq
             <ThreadView key={t.root.id} repo={repo} number={pr.number} thread={t} canTriage={v.canTriage} isRepoAdmin={v.isRepoAdmin} />
           ))}
           {mine.map((p) => (
-            <div key={p.body + p.line} className="rounded-md border border-warning/40 bg-bg px-3 py-2">
+            <div key={p.body + p.line} className="rounded-lg border border-warning/40 bg-surface-1 px-3 py-2 shadow-card">
               <div className="mb-1 flex items-center gap-2 text-sm text-fg-muted">
                 <Badge tone="warning">pending</Badge> Part of your review
                 <span className="flex-1" />
-                <button type="button" className="hover:text-danger" onClick={() => setPending(pending.filter((x) => x !== p))}>
+                <Button variant="ghost" size="xs" className="hover:text-danger" onClick={() => setPending(pending.filter((x) => x !== p))}>
                   Remove
-                </button>
+                </Button>
               </div>
               <p className="whitespace-pre-wrap">{p.body}</p>
             </div>
           ))}
           {open && composer && (
-            <div className="flex flex-col gap-2 rounded-md border border-border bg-bg p-2">
+            <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface-1 p-2 shadow-card">
               <MarkdownEditor value={draft} onChange={setDraft} repo={repo} label="Line comment" placeholder="Comment on this line" autoFocus minRows={3} />
               {single.isError && <Alert>{errorMessage(single.error)}</Alert>}
               <div className="flex justify-end gap-2">
@@ -578,13 +593,13 @@ function FilesTab({ repo, pr, pending, setPending }: { repo: string; pr: PullReq
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 p-4">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-6 py-5">
       {outdatedCount > 0 && (
-        <p className="text-sm text-fg-muted">
+        <Alert tone="info">
           {outdatedCount} comment thread{outdatedCount === 1 ? ' is' : 's are'} on code that changed since; see the Conversation tab.
-        </p>
+        </Alert>
       )}
-      {files.isPending ? <Spinner /> : files.isError ? <Alert>{errorMessage(files.error)}</Alert> : <DiffView diff={files.data} annotations={annotations} />}
+      {files.isPending ? <SkeletonRows rows={4} /> : files.isError ? <Alert>{errorMessage(files.error)}</Alert> : <DiffView diff={files.data} annotations={annotations} />}
     </div>
   )
 }
@@ -656,14 +671,7 @@ function ReviewDialog({
       <fieldset className="flex flex-col gap-1.5">
         <legend className="sr-only">Verdict</legend>
         {options.map((o) => (
-          <label key={o.value} className={cx('flex cursor-pointer items-start gap-2 rounded border px-2.5 py-1.5', state === o.value ? 'border-accent bg-accent-subtle' : 'border-border hover:bg-bg-hover')}>
-            <input type="radio" name="verdict" value={o.value} checked={state === o.value} onChange={() => setState(o.value)} className="mt-1 accent-[var(--accent)]" />
-            <span className="mt-0.5">{o.icon}</span>
-            <span>
-              <span className="font-medium">{o.label}</span>
-              <span className="block text-sm text-fg-faint">{o.hint}</span>
-            </span>
-          </label>
+          <RadioCard key={o.value} name="verdict" value={o.value} checked={state === o.value} onChange={() => setState(o.value)} icon={o.icon} title={o.label} description={o.hint} />
         ))}
       </fieldset>
       {v.isAuthor && <p className="text-sm text-fg-faint">You can't approve or request changes on your own pull request.</p>}
