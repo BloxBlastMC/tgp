@@ -85,12 +85,7 @@ export function durationText(start?: string | null, end?: string | null, now = D
   return ms == null ? '' : formatDuration(ms)
 }
 
-export function formatBytes(n: number): string {
-  if (n >= 1 << 30) return `${+(n / 2 ** 30).toFixed(1)} GiB`
-  if (n >= 1 << 20) return `${+(n / 2 ** 20).toFixed(0)} MiB`
-  if (n >= 1 << 10) return `${+(n / 1024).toFixed(0)} KiB`
-  return `${n} B`
-}
+export { formatBytes } from './format'
 
 /** "main", "#12" or "v1.0" for a ref. */
 export function refLabel(ref: string, pull?: number | null): string {
