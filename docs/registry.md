@@ -48,7 +48,9 @@ Failed logins count against the same per-IP limit as web logins.
 `TGP_TOKEN`, `TGP_REGISTRY` and `TGP_IMAGE`, and `uses: registry-login`
 logs Docker in. A job token pulls from its own repository on any run, and
 pushes only on trusted runs (pushes to the default branch, manual
-dispatches, releases). See [ci.md](ci.md#job-tokens).
+dispatches, releases). See [ci.md](ci.md#job-tokens). If a runner's Docker
+daemon can't reach the public host name, set `registry` in its
+`runner.toml` (see [ci.md](ci.md)).
 
 ## Browsing and deleting
 
