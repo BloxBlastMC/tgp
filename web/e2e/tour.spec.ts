@@ -58,6 +58,7 @@ async function pushImage(path: string, tag: string, token: string, platforms?: s
   const children = []
   for (const p of platforms) {
     const [os, arch] = p.split('/')
+    if (!os || !arch) throw new Error(`bad platform ${p}, want os/arch`)
     children.push({ ...(await image(undefined, os, arch)), platform: { os, architecture: arch } })
   }
   return manifest(tag, 'application/vnd.oci.image.index.v1+json', {
