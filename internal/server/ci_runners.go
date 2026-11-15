@@ -165,7 +165,7 @@ func (s *Server) handleRunnerRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 // touchRunner records a runner's report.
-func (s *Server) touchRunner(ctx context.Context, rn *model.Runner, capacity int, load runnerapi.Load, labels []string, version string) error {
+func (s *Server) touchRunner(ctx context.Context, rn *model.Runner, capacity int, load runnerapi.Load, labels []string, version, hostMode string) error {
 	now := s.now()
 	rn.LastSeenAt = &now
 	cpu, mem := load.CPUPercent, load.MemoryPercent
@@ -178,6 +178,13 @@ func (s *Server) touchRunner(ctx context.Context, rn *model.Runner, capacity int
 	if labels != nil {
 		rn.Labels = mustJSON(cleanLabels(labels))
 		cols = append(cols, "labels")
+		// Fetches always report the host mode; older runners don't send
+		// one and never run host jobs.
+		if !runnerapi.ValidHostMode(hostMode) {
+			hostMode = runnerapi.HostOff
+		}
+		rn.HostMode = hostMode
+		cols = append(cols, "host_mode")
 	}
 	if version != "" {
 		rn.Version = version
@@ -199,7 +206,7 @@ func (s *Server) handleRunnerFetch(w http.ResponseWriter, r *http.Request) {
 	defer deadline.Stop()
 	for {
 		wake := s.ci.wake.wait()
-		if err := s.touchRunner(ctx, rn, req.Capacity, req.Load, req.Labels, req.Version); err != nil {
+		if err := s.touchRunner(ctx, rn, req.Capacity, req.Load, req.Labels, req.Version, req.HostMode); err != nil {
 			apierr.Write(w, apierr.From(err))
 			return
 		}
@@ -234,7 +241,7 @@ func (s *Server) handleRunnerHeartbeat(w http.ResponseWriter, r *http.Request) {
 		apierr.Write(w, apierr.From(err))
 		return
 	}
-	if err := s.touchRunner(ctx, rn, req.Capacity, req.Load, nil, ""); err != nil {
+	if err := s.touchRunner(ctx, rn, req.Capacity, req.Load, nil, "", ""); err != nil {
 		apierr.Write(w, apierr.From(err))
 		return
 	}

@@ -60,7 +60,7 @@ func TestCollectAndCommonRoot(t *testing.T) {
 		_ = os.MkdirAll(filepath.Dir(p), 0o755)
 		_ = os.WriteFile(p, []byte(content), 0o644)
 	}
-	env := &hostEnv{root: filepath.Dir(ws)}
+	env := &hostEnv{h: &Host{}, root: filepath.Dir(ws)}
 	ps, _ := parsePaths("dist\n!**/*.map\nREADME\nmissing/", ws, "/h")
 	var got []string
 	n, err := collect(t.Context(), env, ps, false, func(full string, hdr *tar.Header, _ io.Reader) error {

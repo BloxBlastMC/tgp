@@ -3,9 +3,10 @@
 // (matrix strategies) into concrete job instances.
 //
 // The format follows GitHub Actions closely so existing knowledge carries
-// over; differences are documented in docs/ci.md. Every job runs in a Docker
-// container, steps are shell commands or one of tgp's built-in steps, and
-// jobs can request CPU, memory and process limits under resources:.
+// over; differences are documented in docs/ci.md. Jobs run in a Docker
+// container, or directly on an opted-in runner host (container: none);
+// steps are shell commands or one of tgp's built-in steps, and jobs can
+// request CPU, memory and process limits under resources:.
 package workflow
 
 import (
@@ -14,6 +15,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.yaml.in/yaml/v3"
 
@@ -40,7 +42,9 @@ type Workflow struct {
 	Env         map[string]string `json:"env,omitempty"`
 	Concurrency *Concurrency      `json:"concurrency,omitempty"`
 	Defaults    Defaults          `json:"defaults"`
-	Jobs        map[string]*Job   `json:"jobs"`
+	// Packages is the workflow's permissions.packages.
+	Packages string          `json:"packages,omitempty"`
+	Jobs     map[string]*Job `json:"jobs"`
 	// JobOrder lists job keys in file order.
 	JobOrder []string `json:"job_order"`
 }
@@ -126,7 +130,30 @@ type Defaults struct {
 type Container struct {
 	Image string            `json:"image"`
 	Env   map[string]string `json:"env,omitempty"`
+	// Healthcheck (services only) is checked before the job's steps start.
+	Healthcheck *Healthcheck `json:"healthcheck,omitempty"`
 }
+
+// Healthcheck is a service readiness check, run inside the service
+// container. The job's steps start once every service reports healthy.
+type Healthcheck struct {
+	// Cmd is run with the container's shell (sh -c).
+	Cmd         string `json:"cmd"`
+	Interval    int    `json:"interval_seconds,omitempty"`
+	Timeout     int    `json:"timeout_seconds,omitempty"`
+	Retries     int    `json:"retries,omitempty"`
+	StartPeriod int    `json:"start_period_seconds,omitempty"`
+}
+
+// HostLabel is the runs-on label of runners that accept host jobs.
+const HostLabel = "host"
+
+// Packages permission levels (permissions: packages:).
+const (
+	PackagesNone  = "none"
+	PackagesRead  = "read"
+	PackagesWrite = "write"
+)
 
 // Resources are the container limits a job asks for. Zero means "use the
 // instance default".
@@ -161,10 +188,16 @@ type Job struct {
 	TimeoutMinutes  int                  `json:"timeout_minutes,omitempty"`
 	ContinueOnError bool                 `json:"continue_on_error,omitempty"`
 	Resources       Resources            `json:"resources"`
-	Outputs         map[string]string    `json:"outputs,omitempty"`
-	Defaults        Defaults             `json:"defaults"`
-	Steps           []Step               `json:"steps"`
-	Line            int                  `json:"-"`
+	// Host jobs (container: none) run their steps directly on a runner
+	// that allows host jobs, with the host's Docker available.
+	Host bool `json:"host,omitempty"`
+	// Packages is the job's permissions.packages (job overrides workflow);
+	// empty means the default (write on trusted runs).
+	Packages string            `json:"packages,omitempty"`
+	Outputs  map[string]string `json:"outputs,omitempty"`
+	Defaults Defaults          `json:"defaults"`
+	Steps    []Step            `json:"steps"`
+	Line     int               `json:"-"`
 }
 
 // Step is one step of a job.
@@ -220,6 +253,9 @@ var Builtins = map[string]Builtin{
 		"key": true, "path": true, "restore-keys": false, "fail-on-cache-miss": false, "lookup-only": false,
 		"enableCrossOsArchive": false,
 	}},
+	// registry-login logs Docker in to tgp's container registry with the
+	// job token (host jobs, or any job whose image has the docker CLI).
+	"registry-login": {Name: "registry-login", With: map[string]bool{}},
 }
 
 // builtinName normalises a uses: value: "checkout", "actions/checkout@v4"
@@ -277,12 +313,12 @@ var (
 
 // contexts usable in each place (beyond literals).
 var (
-	ctxWorkflowEnv = []string{"github", "inputs", "vars"}
-	ctxJob         = []string{"github", "inputs", "vars", "matrix", "needs", "strategy"}
-	ctxJobIf       = []string{"github", "inputs", "vars", "needs"}
-	ctxStep        = []string{"github", "inputs", "vars", "matrix", "needs", "strategy", "env", "secrets", "steps", "job", "runner"}
-	ctxJobOutputs  = []string{"github", "inputs", "vars", "matrix", "needs", "strategy", "env", "secrets", "steps", "job", "runner"}
-	ctxConcurrency = []string{"github", "inputs", "vars"}
+	ctxWorkflowEnv = []string{"github", "tgp", "inputs", "vars"}
+	ctxJob         = []string{"github", "tgp", "inputs", "vars", "matrix", "needs", "strategy"}
+	ctxJobIf       = []string{"github", "tgp", "inputs", "vars", "needs"}
+	ctxStep        = []string{"github", "tgp", "inputs", "vars", "matrix", "needs", "strategy", "env", "secrets", "steps", "job", "runner"}
+	ctxJobOutputs  = []string{"github", "tgp", "inputs", "vars", "matrix", "needs", "strategy", "env", "secrets", "steps", "job", "runner"}
+	ctxConcurrency = []string{"github", "tgp", "inputs", "vars"}
 )
 
 // Parse parses and validates a workflow file. file is the path used in
@@ -346,6 +382,15 @@ func (d *decoder) fields(n *yaml.Node, what string, allowed []string, f func(key
 		}
 		f(key, k, v)
 	}
+}
+
+func containsFold(list []string, s string) bool {
+	for _, x := range list {
+		if strings.EqualFold(strings.TrimSpace(x), s) {
+			return true
+		}
+	}
+	return false
 }
 
 func contains(list []string, s string) bool {
@@ -496,8 +541,10 @@ func (d *decoder) workflow(n *yaml.Node) *Workflow {
 		case "jobs":
 			jobsNode = v
 		case "permissions":
-			// Accepted for compatibility with GitHub workflows; tgp job tokens
-			// are always read-only for the repository.
+			// Accepted for compatibility with GitHub workflows. Only
+			// packages: has an effect (registry push with the job token);
+			// job tokens are otherwise always read-only.
+			w.Packages = d.permissions(v, "permissions")
 		}
 	})
 	if onNode == nil {
@@ -524,7 +571,40 @@ func (d *decoder) workflow(n *yaml.Node) *Workflow {
 		d.errorf(jobsNode, "jobs: at most %d jobs per workflow", MaxJobs)
 	}
 	d.checkNeeds(w, jobsNode)
+	for _, j := range w.Jobs {
+		if j.Packages == "" {
+			j.Packages = w.Packages
+		}
+	}
 	return w
+}
+
+// permissions parses a GitHub-style permissions block and returns the
+// packages level: read-all, write-all, or a mapping of scopes. As on
+// GitHub, a mapping that doesn't list packages gives packages: none.
+func (d *decoder) permissions(n *yaml.Node, what string) string {
+	if n.Kind == yaml.ScalarNode {
+		switch n.Value {
+		case "read-all":
+			return PackagesRead
+		case "write-all":
+			return PackagesWrite
+		}
+		d.errorf(n, "%s must be read-all, write-all or a mapping", what)
+		return ""
+	}
+	pkg := PackagesNone
+	d.fields(n, what, nil, func(key string, _, v *yaml.Node) {
+		val := d.str(v, what+"."+key)
+		if val != PackagesRead && val != PackagesWrite && val != PackagesNone {
+			d.errorf(v, "%s.%s must be read, write or none", what, key)
+			return
+		}
+		if key == "packages" {
+			pkg = val
+		}
+	})
+	return pkg
 }
 
 func (d *decoder) triggers(n *yaml.Node) Triggers {
@@ -753,12 +833,16 @@ func (d *decoder) shell(n *yaml.Node, what string) string {
 	return s
 }
 
-func (d *decoder) container(n *yaml.Node, what string, allowed []string) Container {
+func (d *decoder) container(n *yaml.Node, what string, allowed []string, service bool) Container {
 	var c Container
+	keys := []string{"image", "env"}
+	if service {
+		keys = append(keys, "healthcheck")
+	}
 	if n.Kind == yaml.ScalarNode {
 		c.Image = n.Value
 	} else {
-		d.fields(n, what, []string{"image", "env"}, func(key string, _, v *yaml.Node) {
+		d.fields(n, what, keys, func(key string, _, v *yaml.Node) {
 			switch key {
 			case "image":
 				c.Image = d.str(v, what+".image")
@@ -767,6 +851,8 @@ func (d *decoder) container(n *yaml.Node, what string, allowed []string) Contain
 				for k, val := range c.Env {
 					d.checkExpr(v, what+".env."+k, val, ctxStep)
 				}
+			case "healthcheck":
+				c.Healthcheck = d.healthcheck(v, what+".healthcheck")
 			}
 		})
 	}
@@ -775,6 +861,56 @@ func (d *decoder) container(n *yaml.Node, what string, allowed []string) Contain
 	}
 	d.checkExpr(n, what+".image", c.Image, allowed)
 	return c
+}
+
+// healthcheck parses a service healthcheck:
+//
+//	healthcheck:
+//	  cmd: mysqladmin ping -h 127.0.0.1   # or a list, joined with spaces
+//	  interval: 2s
+//	  timeout: 5s
+//	  retries: 30
+//	  start-period: 10s
+func (d *decoder) healthcheck(n *yaml.Node, what string) *Healthcheck {
+	h := &Healthcheck{}
+	if n.Kind == yaml.ScalarNode {
+		h.Cmd = d.str(n, what)
+	} else {
+		d.fields(n, what, []string{"cmd", "interval", "timeout", "retries", "start-period"}, func(key string, _, v *yaml.Node) {
+			switch key {
+			case "cmd":
+				h.Cmd = strings.Join(d.strList(v, what+".cmd"), " ")
+			case "interval":
+				h.Interval = d.seconds(v, what+".interval")
+			case "timeout":
+				h.Timeout = d.seconds(v, what+".timeout")
+			case "retries":
+				h.Retries = d.integer(v, what+".retries", 1, 1000)
+			case "start-period":
+				h.StartPeriod = d.seconds(v, what+".start-period")
+			}
+		})
+	}
+	if strings.TrimSpace(h.Cmd) == "" {
+		d.errorf(n, "%s: cmd is required", what)
+	}
+	return h
+}
+
+// seconds parses a duration like 5s, 2m or 1m30s (or a plain number of
+// seconds), between 1 second and 1 hour.
+func (d *decoder) seconds(n *yaml.Node, what string) int {
+	if n.Kind == yaml.ScalarNode {
+		v := strings.TrimSpace(n.Value)
+		if i, err := strconv.Atoi(v); err == nil {
+			v = strconv.Itoa(i) + "s"
+		}
+		if dur, err := time.ParseDuration(v); err == nil && dur >= time.Second && dur <= time.Hour {
+			return int(dur / time.Second)
+		}
+	}
+	d.errorf(n, "%s must be a duration between 1s and 1h, like 5s or 2m", what)
+	return 0
 }
 
 // ParseMemory parses a Docker-style memory size like 512m, 2g or 1.5GiB.
@@ -826,7 +962,7 @@ func (d *decoder) resources(n *yaml.Node, what string) Resources {
 func (d *decoder) job(key string, n *yaml.Node) *Job {
 	j := &Job{Key: key}
 	what := "jobs." + key
-	var stepsNode *yaml.Node
+	var stepsNode, containerNode, servicesNode *yaml.Node
 	d.fields(n, what, []string{"name", "runs-on", "container", "services", "needs", "if", "strategy", "env",
 		"timeout-minutes", "continue-on-error", "resources", "outputs", "defaults", "steps", "permissions"}, func(field string, _, v *yaml.Node) {
 		switch field {
@@ -839,16 +975,22 @@ func (d *decoder) job(key string, n *yaml.Node) *Job {
 				d.checkExpr(v, what+".runs-on", l, ctxJob)
 			}
 		case "container":
-			c := d.container(v, what+".container", ctxJob)
+			containerNode = v
+			if v.Kind == yaml.ScalarNode && v.Value == "none" {
+				j.Host = true
+				return
+			}
+			c := d.container(v, what+".container", ctxJob, false)
 			j.Container = &c
 		case "services":
+			servicesNode = v
 			j.Services = map[string]Container{}
 			d.fields(v, what+".services", nil, func(name string, k, v *yaml.Node) {
 				if !idRe.MatchString(name) {
 					d.errorf(k, "service name %q must start with a letter or _ and contain only letters, digits, - and _", name)
 					return
 				}
-				j.Services[name] = d.container(v, what+".services."+name, ctxJob)
+				j.Services[name] = d.container(v, what+".services."+name, ctxJob, true)
 			})
 			if len(j.Services) > MaxServices {
 				d.errorf(v, "%s.services: at most %d services", what, MaxServices)
@@ -878,10 +1020,23 @@ func (d *decoder) job(key string, n *yaml.Node) *Job {
 			}
 		case "defaults":
 			j.Defaults = d.defaults(v)
+		case "permissions":
+			j.Packages = d.permissions(v, what+".permissions")
 		case "steps":
 			stepsNode = v
 		}
 	})
+	if containerNode == nil && containsFold(j.RunsOn, HostLabel) {
+		j.Host = true
+	}
+	if j.Host {
+		if !containsFold(j.RunsOn, HostLabel) {
+			j.RunsOn = append(j.RunsOn, HostLabel)
+		}
+		if servicesNode != nil {
+			d.errorf(servicesNode, "%s: host jobs (container: none) can't have services; start them with docker in a step", what)
+		}
+	}
 	if stepsNode == nil {
 		d.errorf(n, "%s: steps are required", what)
 		return j

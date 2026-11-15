@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
 	"testing"
 	"time"
 
@@ -26,104 +25,37 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// hostExec runs jobs directly on the host in temp directories. It stands
-// in for Docker in tests (this environment has no Docker daemon); the
-// Docker executor itself is covered by TestDockerExecutor when
-// TGP_DOCKER_TESTS=1.
-type hostExec struct {
+// recExec runs every job with the real host executor (container jobs too:
+// this environment has no Docker daemon; the Docker executor is covered by
+// TestDockerExecutor when TGP_DOCKER_TESTS=1). It records the specs it
+// prepared and can fail setup on demand.
+type recExec struct {
+	h        *Host
 	mu       sync.Mutex
 	prepared []*runnerapi.JobSpec
+	envs     []Env
 	fail     error
 }
 
-func (h *hostExec) Cleanup(context.Context) error { return nil }
+func (x *recExec) Cleanup(ctx context.Context) error { return x.h.Cleanup(ctx) }
 
-func (h *hostExec) Prepare(_ context.Context, spec *runnerapi.JobSpec, _ map[string]string, log io.Writer) (Env, error) {
-	h.mu.Lock()
-	h.prepared = append(h.prepared, spec)
-	h.mu.Unlock()
-	if h.fail != nil {
-		return nil, h.fail
+func (x *recExec) Prepare(ctx context.Context, spec *runnerapi.JobSpec, env map[string]string, log io.Writer) (Env, error) {
+	x.mu.Lock()
+	x.prepared = append(x.prepared, spec)
+	fail := x.fail
+	x.mu.Unlock()
+	if fail != nil {
+		return nil, fail
 	}
-	root, err := os.MkdirTemp("", "tgp-hostexec-")
-	if err != nil {
-		return nil, err
+	if !spec.Host {
+		fmt.Fprintf(log, "Host executor standing in for Docker (image %s ignored)\n", spec.Image)
 	}
-	e := &hostEnv{root: root}
-	for _, d := range []string{e.Workspace(), e.TempDir()} {
-		if err := os.MkdirAll(d, 0o755); err != nil {
-			return nil, err
-		}
-	}
-	fmt.Fprintf(log, "Host executor ready (image %s ignored)\n", spec.Image)
-	return e, nil
+	e, err := x.h.Prepare(ctx, spec, env, log)
+	x.mu.Lock()
+	x.envs = append(x.envs, e)
+	x.mu.Unlock()
+	return e, err
 }
-
-type hostEnv struct{ root string }
-
-func (e *hostEnv) Workspace() string { return filepath.Join(e.root, "workspace") }
-func (e *hostEnv) TempDir() string   { return filepath.Join(e.root, "tmp") }
-
-func (e *hostEnv) Exec(ctx context.Context, o ExecOptions) (int, error) {
-	c := exec.CommandContext(ctx, o.Cmd[0], o.Cmd[1:]...)
-	c.Dir = o.Dir
-	if c.Dir != "" {
-		_ = os.MkdirAll(c.Dir, 0o755)
-	}
-	c.Env = []string{"PATH=" + os.Getenv("PATH"), "HOME=" + e.root}
-	for k, v := range o.Env {
-		c.Env = append(c.Env, k+"="+v)
-	}
-	c.Stdin, c.Stdout, c.Stderr = o.Stdin, o.Output, o.Output
-	c.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	c.Cancel = func() error { return syscall.Kill(-c.Process.Pid, syscall.SIGKILL) }
-	c.WaitDelay = time.Second
-	err := c.Run()
-	if ee, ok := err.(*exec.ExitError); ok && ctx.Err() == nil {
-		return ee.ExitCode(), nil
-	}
-	if err != nil {
-		return -1, err
-	}
-	return 0, nil
-}
-
-func (e *hostEnv) WriteFile(_ context.Context, path string, data []byte) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return err
-	}
-	return os.WriteFile(path, data, 0o644)
-}
-
-func (e *hostEnv) ReadFile(_ context.Context, path string) ([]byte, error) {
-	b, err := os.ReadFile(path)
-	if os.IsNotExist(err) {
-		return nil, nil
-	}
-	return b, err
-}
-
-func (e *hostEnv) CopyIn(ctx context.Context, hostDir, dir string) error {
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
-	}
-	out, err := exec.CommandContext(ctx, "cp", "-a", hostDir+"/.", dir).CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("cp: %v: %s", err, out)
-	}
-	return nil
-}
-
-func (e *hostEnv) CopyOut(_ context.Context, p string) (io.ReadCloser, error) { return TarPath(p) }
-
-func (e *hostEnv) CopyInTar(_ context.Context, dir string, r io.Reader) error {
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
-	}
-	return Untar(r, dir)
-}
-
-func (e *hostEnv) Close(context.Context) error { return os.RemoveAll(e.root) }
 
 // ---- helpers ----
 
@@ -179,21 +111,30 @@ func (e *ciEnv) push(branch, msg string, files map[string]string) string {
 }
 
 // startRunner registers a runner and runs it until the test ends.
-func (e *ciEnv) startRunner(name string, capacity int, labels ...string) *hostExec {
+func (e *ciEnv) startRunner(name string, capacity int, labels ...string) *recExec {
+	return e.startRunnerCfg(Config{Name: name, Capacity: capacity, Labels: labels})
+}
+
+// startRunnerCfg registers a runner with cfg's name, capacity, labels and
+// host settings and runs it until the test ends.
+func (e *ciEnv) startRunnerCfg(cfg Config) *recExec {
 	e.t.Helper()
 	var tok struct {
 		Token string `json:"token"`
 	}
 	e.admin.Do(http.MethodPost, "/admin/runners/registration-tokens", map[string]any{}, &tok)
-	if len(labels) == 0 {
-		labels = DefaultLabels()
+	if len(cfg.Labels) == 0 {
+		cfg.Labels = DefaultLabels()
 	}
-	reg, err := NewClient(e.srv.URL, "").Register(context.Background(), runnerapi.RegisterRequest{Token: tok.Token, Name: name, Labels: labels, Capacity: capacity})
+	reg, err := NewClient(e.srv.URL, "").Register(context.Background(), runnerapi.RegisterRequest{Token: tok.Token, Name: cfg.Name, Labels: cfg.Labels, Capacity: cfg.Capacity})
 	if err != nil {
 		e.t.Fatal(err)
 	}
-	h := &hostExec{}
-	cfg := Config{URL: e.srv.URL, Token: reg.Token, ID: reg.ID, Name: name, Labels: labels, Capacity: capacity, WorkDir: e.t.TempDir()}
+	cfg.URL, cfg.Token, cfg.ID = e.srv.URL, reg.Token, reg.ID
+	if cfg.WorkDir == "" {
+		cfg.WorkDir = e.t.TempDir()
+	}
+	h := &recExec{h: &Host{WorkDir: cfg.WorkDir, Docker: "docker"}}
 	r := New(cfg, h, slog.New(slog.NewTextHandler(testLogOut(), nil)), "test")
 	r.loadFn = func() runnerapi.Load { return runnerapi.Load{CPUPercent: 5, MemoryPercent: 20} }
 	ctx, cancel := context.WithCancel(context.Background())

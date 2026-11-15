@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -17,6 +18,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/ci/runnerapi"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/ci/workflow"
 )
 
 // Config is the runner's configuration file (written by register).
@@ -37,6 +39,41 @@ type Config struct {
 	Docker string `toml:"docker"`
 	// Pull is "missing" or "always".
 	Pull string `toml:"pull"`
+	// AllowHostJobs says which host jobs (container: none) this runner
+	// runs directly on its machine: "off" (default), "trusted" (pushes to
+	// the default branch, manual dispatches and releases) or "all" (pull
+	// requests too; use a throwaway machine). Host jobs can use the host's
+	// Docker daemon and run alone on the runner.
+	AllowHostJobs string `toml:"allow_host_jobs,omitempty"`
+	// DockerJobs = false makes a runner that only runs host jobs (no
+	// Docker daemon needed). Default true.
+	DockerJobs *bool `toml:"docker_jobs,omitempty"`
+}
+
+// HostMode is the effective allow_host_jobs value.
+func (c *Config) HostMode() string {
+	if c.AllowHostJobs == "" {
+		return runnerapi.HostOff
+	}
+	return c.AllowHostJobs
+}
+
+// RunsDockerJobs reports whether the runner runs container jobs.
+func (c *Config) RunsDockerJobs() bool { return c.DockerJobs == nil || *c.DockerJobs }
+
+// EffectiveLabels are the labels reported to the server: the configured
+// ones plus "host" when the runner accepts host jobs.
+func (c *Config) EffectiveLabels() []string {
+	out := append([]string{}, c.Labels...)
+	if c.HostMode() != runnerapi.HostOff {
+		for _, l := range out {
+			if strings.EqualFold(l, workflow.HostLabel) {
+				return out
+			}
+		}
+		out = append(out, workflow.HostLabel)
+	}
+	return out
 }
 
 // DefaultLabels are given to runners registered without --labels.
@@ -63,6 +100,12 @@ func LoadConfig(path string) (*Config, error) {
 	}
 	if c.WorkDir == "" {
 		c.WorkDir = filepath.Join(filepath.Dir(path), "work")
+	}
+	if !runnerapi.ValidHostMode(c.HostMode()) {
+		return nil, fmt.Errorf(`%s: allow_host_jobs must be "off", "trusted" or "all", not %q`, path, c.AllowHostJobs)
+	}
+	if !c.RunsDockerJobs() && c.HostMode() == runnerapi.HostOff {
+		return nil, fmt.Errorf("%s: docker_jobs = false needs allow_host_jobs, or the runner can't run anything", path)
 	}
 	return &c, nil
 }
@@ -93,6 +136,7 @@ type Runner struct {
 
 	mu      sync.Mutex
 	running map[int64]context.CancelFunc
+	host    map[int64]bool // running host jobs
 	slot    chan struct{} // signalled when a job finishes
 	wg      sync.WaitGroup
 	// loadFn reports host load (replaceable in tests).
@@ -106,7 +150,7 @@ func New(cfg Config, exec Executor, log *slog.Logger, version string) *Runner {
 	}
 	return &Runner{
 		cfg: cfg, client: NewClient(cfg.URL, cfg.Token), exec: exec, log: log, version: version,
-		running: map[int64]context.CancelFunc{}, slot: make(chan struct{}, 1), loadFn: HostLoad,
+		running: map[int64]context.CancelFunc{}, host: map[int64]bool{}, slot: make(chan struct{}, 1), loadFn: HostLoad,
 	}
 }
 
@@ -118,6 +162,14 @@ func (r *Runner) runningIDs() []int64 {
 		ids = append(ids, id)
 	}
 	return ids
+}
+
+// busy reports whether the runner can't take another job: every slot is
+// taken, or a host job is running (host jobs run alone).
+func (r *Runner) busy() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return len(r.running) >= r.cfg.Capacity || len(r.host) > 0
 }
 
 func (r *Runner) cancelJob(id int64) {
@@ -141,7 +193,8 @@ func (r *Runner) Run(ctx, jobCtx context.Context) error {
 	if err := r.exec.Cleanup(ctx); err != nil {
 		r.log.Warn("cleaning up leftovers failed", "err", err)
 	}
-	r.log.Info("runner started", "name", r.cfg.Name, "server", r.cfg.URL, "labels", strings.Join(r.cfg.Labels, ","), "capacity", r.cfg.Capacity)
+	r.log.Info("runner started", "name", r.cfg.Name, "server", r.cfg.URL, "labels", strings.Join(r.cfg.EffectiveLabels(), ","),
+		"capacity", r.cfg.Capacity, "host_jobs", r.cfg.HostMode(), "docker_jobs", r.cfg.RunsDockerJobs())
 	hbCtx, stopHB := context.WithCancel(context.Background())
 	hbDone := make(chan error, 1)
 	go func() { hbDone <- r.heartbeats(hbCtx) }()
@@ -153,7 +206,7 @@ func (r *Runner) Run(ctx, jobCtx context.Context) error {
 
 	backoff := time.Second
 	for ctx.Err() == nil {
-		if len(r.runningIDs()) >= r.cfg.Capacity {
+		if r.busy() {
 			select {
 			case <-ctx.Done():
 			case <-r.slot:
@@ -162,7 +215,8 @@ func (r *Runner) Run(ctx, jobCtx context.Context) error {
 			continue
 		}
 		spec, err := r.client.Fetch(ctx, runnerapi.FetchRequest{
-			Capacity: r.cfg.Capacity, Running: r.runningIDs(), Labels: r.cfg.Labels, Load: r.loadFn(), Version: r.version,
+			Capacity: r.cfg.Capacity, Running: r.runningIDs(), Labels: r.cfg.EffectiveLabels(), Load: r.loadFn(), Version: r.version,
+			HostMode: r.cfg.HostMode(),
 		})
 		var ae *APIError
 		switch {
@@ -194,6 +248,9 @@ func (r *Runner) start(parent context.Context, spec *runnerapi.JobSpec) {
 	ctx, cancel := context.WithCancel(parent)
 	r.mu.Lock()
 	r.running[spec.ID] = cancel
+	if spec.Host {
+		r.host[spec.ID] = true
+	}
 	r.mu.Unlock()
 	r.wg.Add(1)
 	go func() {
@@ -202,6 +259,7 @@ func (r *Runner) start(parent context.Context, spec *runnerapi.JobSpec) {
 			cancel()
 			r.mu.Lock()
 			delete(r.running, spec.ID)
+			delete(r.host, spec.ID)
 			r.mu.Unlock()
 			select {
 			case r.slot <- struct{}{}:
@@ -221,11 +279,13 @@ func (r *Runner) runJob(ctx context.Context, spec *runnerapi.JobSpec) {
 		m.add(v)
 	}
 	m.add(spec.Git.Token)
+	r.addJobEnv(spec)
 	j := &jobRun{r: r, spec: spec, mask: m, steps: map[int]runnerapi.StepUpdate{}, stepsCtx: map[string]any{}}
 	j.logs = newLogStream(r.client, spec.ID, m, func() {
 		j.cancelled.Store(true)
 		r.cancelJob(spec.ID)
 	})
+	j.logs.maxBytes = spec.MaxLogBytes
 	timeout := time.Duration(spec.TimeoutSeconds) * time.Second
 	if timeout <= 0 {
 		timeout = 6 * time.Hour
@@ -238,7 +298,11 @@ func (r *Runner) runJob(ctx context.Context, spec *runnerapi.JobSpec) {
 	}
 	cancel()
 	if j.env != nil {
-		j.printf(runnerapi.StepComplete, "Cleaning up the job's containers")
+		if spec.Host {
+			j.printf(runnerapi.StepComplete, "Cleaning up the job's files, processes and Docker objects")
+		} else {
+			j.printf(runnerapi.StepComplete, "Cleaning up the job's containers")
+		}
 		if err := j.env.Close(context.Background()); err != nil {
 			j.printf(runnerapi.StepComplete, "##[warning]%v", err)
 		}
@@ -259,6 +323,40 @@ func (r *Runner) runJob(ctx context.Context, spec *runnerapi.JobSpec) {
 		log.Error("reporting the job result failed", "err", err)
 	}
 	log.Info("job finished", "conclusion", conclusion)
+}
+
+// addJobEnv gives steps the job token and the repository's registry:
+// TGP_TOKEN, TGP_REGISTRY and TGP_IMAGE, also available as tgp.token,
+// tgp.registry and tgp.image (and the github.* aliases) in expressions.
+func (r *Runner) addJobEnv(spec *runnerapi.JobSpec) {
+	host := spec.Registry.Host
+	if host == "" {
+		if u, err := url.Parse(r.cfg.URL); err == nil {
+			host = strings.ToLower(u.Host)
+		}
+	}
+	image := host + "/" + spec.Registry.Path
+	env := map[string]string{}
+	for k, v := range spec.Env {
+		env[k] = v
+	}
+	env["TGP_TOKEN"], env["TGP_REGISTRY"], env["TGP_IMAGE"] = spec.Git.Token, host, image
+	spec.Env = env
+	ctxs := map[string]any{}
+	for k, v := range spec.Contexts {
+		ctxs[k] = v
+	}
+	for _, name := range []string{"github", "tgp"} {
+		m := map[string]any{}
+		if old, ok := ctxs[name].(map[string]any); ok {
+			for k, v := range old {
+				m[k] = v
+			}
+		}
+		m["token"], m["registry"], m["image"] = spec.Git.Token, host, image
+		ctxs[name] = m
+	}
+	spec.Contexts = ctxs
 }
 
 // heartbeats reports liveness and load, and stops jobs the server cancels.

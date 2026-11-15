@@ -44,6 +44,28 @@ const (
 	JobTokenUser = "tgp-job"
 )
 
+// Host job modes, set by allow_host_jobs in a runner's runner.toml and
+// reported on every fetch.
+const (
+	// HostOff: the runner never runs host jobs (the default).
+	HostOff = "off"
+	// HostTrusted: host jobs of trusted runs only (pushes to the default
+	// branch, manual dispatches and releases), never pull requests.
+	HostTrusted = "trusted"
+	// HostAll: any host job, pull requests included. Meant for throwaway
+	// runners: a host job can do anything the runner's user can.
+	HostAll = "all"
+)
+
+// ValidHostMode reports whether m is a known host mode.
+func ValidHostMode(m string) bool { return m == HostOff || m == HostTrusted || m == HostAll }
+
+// HostAccepts reports whether a runner in mode may run a host job of a
+// trusted (or untrusted) run.
+func HostAccepts(mode string, trusted bool) bool {
+	return mode == HostAll || (mode == HostTrusted && trusted)
+}
+
 // HeartbeatInterval is how often runners report in.
 const HeartbeatInterval = 10 * time.Second
 
@@ -78,6 +100,8 @@ type FetchRequest struct {
 	Labels   []string `json:"labels"`
 	Load     Load     `json:"load"`
 	Version  string   `json:"version"`
+	// HostMode is the runner's allow_host_jobs ("" means off).
+	HostMode string `json:"host_mode,omitempty"`
 }
 
 type FetchResponse struct {
@@ -104,6 +128,8 @@ type Service struct {
 	Name  string            `json:"name"`
 	Image string            `json:"image"`
 	Env   map[string]string `json:"env,omitempty"`
+	// Healthcheck, if set, must pass before the job's steps start.
+	Healthcheck *workflow.Healthcheck `json:"healthcheck,omitempty"`
 }
 
 // Step is a workflow step with its number (1-based).
@@ -141,7 +167,13 @@ type JobSpec struct {
 	JobKey    string `json:"job_key"`
 	Name      string `json:"name"`
 
-	Image        string            `json:"image"`
+	// Image is the job container's image ("" for host jobs).
+	Image string `json:"image"`
+	// Host jobs run directly on the runner (container: none).
+	Host bool `json:"host,omitempty"`
+	// Trusted runs are pushes to the default branch, manual dispatches and
+	// releases; only they may push to the registry with the job token.
+	Trusted      bool              `json:"trusted,omitempty"`
 	ContainerEnv map[string]string `json:"container_env,omitempty"`
 	Services     []Service         `json:"services,omitempty"`
 	Steps        []Step            `json:"steps"`
@@ -161,6 +193,19 @@ type JobSpec struct {
 
 	Git         GitSource `json:"git"`
 	MaxLogBytes int64     `json:"max_log_bytes"`
+	// Registry says where the repository's container images live. The
+	// runner exposes it to steps as TGP_REGISTRY and TGP_IMAGE, with the
+	// job token as TGP_TOKEN.
+	Registry Registry `json:"registry"`
+}
+
+// Registry is the container registry of the job's repository.
+type Registry struct {
+	// Host is the registry host[:port]; "" means the host of the URL the
+	// runner talks to.
+	Host string `json:"host,omitempty"`
+	// Path is <org>/<repo>, lowercased: images are Host/Path[/name]:tag.
+	Path string `json:"path"`
 }
 
 // Step numbers used in logs for lines outside workflow steps.

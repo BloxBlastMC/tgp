@@ -412,7 +412,7 @@ func (s *Server) createRun(ctx context.Context, repo *model.Repo, ev *ciEvent, f
 			return err
 		}
 		s.hooksRun(ctx, tx, run, "requested")
-		jobs, err := buildJobs(run, w, settings, ec)
+		jobs, err := buildJobs(run, w, settings, ec, trustedRun(repo, run))
 		if err != nil {
 			return s.failRun(ctx, tx, run, "Invalid workflow: "+err.Error())
 		}
@@ -450,7 +450,7 @@ type builtJob struct {
 
 // buildJobs expands a workflow's jobs (matrix included) into job rows,
 // applying the instance defaults and limits.
-func buildJobs(run *model.WorkflowRun, w *workflow.Workflow, cs ciSettings, ec *expr.Context) ([]builtJob, error) {
+func buildJobs(run *model.WorkflowRun, w *workflow.Workflow, cs ciSettings, ec *expr.Context, trusted bool) ([]builtJob, error) {
 	var out []builtJob
 	now := run.CreatedAt
 	total := 0
@@ -490,7 +490,9 @@ func buildJobs(run *model.WorkflowRun, w *workflow.Workflow, cs ciSettings, ec *
 			}
 			image := cs.DefaultImage
 			var containerEnv map[string]string
-			if wj.Container != nil {
+			if wj.Host {
+				image = ""
+			} else if wj.Container != nil {
 				v, err := expr.Interpolate(wj.Container.Image, mc)
 				if err != nil {
 					return nil, fmt.Errorf("jobs.%s.container.image: %w", key, err)
@@ -507,7 +509,7 @@ func buildJobs(run *model.WorkflowRun, w *workflow.Workflow, cs ciSettings, ec *
 				if err != nil {
 					return nil, fmt.Errorf("jobs.%s.services.%s.image: %w", key, name, err)
 				}
-				services = append(services, runnerapi.Service{Name: name, Image: strings.TrimSpace(img), Env: svc.Env})
+				services = append(services, runnerapi.Service{Name: name, Image: strings.TrimSpace(img), Env: svc.Env, Healthcheck: svc.Healthcheck})
 			}
 			cpus, mem, pids := wj.Resources.CPUs, wj.Resources.MemoryBytes, wj.Resources.Pids
 			if cpus == 0 {
@@ -549,6 +551,7 @@ func buildJobs(run *model.WorkflowRun, w *workflow.Workflow, cs ciSettings, ec *
 				Steps: steps, Services: services, ContainerEnv: containerEnv, WorkflowEnv: w.Env, JobEnv: wj.Env,
 				Defaults: defaults, Outputs: wj.Outputs, If: wj.If, ContinueOnError: wj.ContinueOnError,
 				FailFast: wj.Strategy != nil && wj.Strategy.FailFast, Strategy: strategy, Secrets: secrets,
+				Packages: wj.Packages,
 			}
 			maxParallel := 0
 			if wj.Strategy != nil {
@@ -561,7 +564,7 @@ func buildJobs(run *model.WorkflowRun, w *workflow.Workflow, cs ciSettings, ec *
 			j := &model.Job{
 				RunID: run.ID, RepoID: run.RepoID, Attempt: run.Attempt, Key: key, Name: inst.Name,
 				CheckName: run.WorkflowName + " / " + inst.Name,
-				Needs:     mustJSON(needs), Labels: mustJSON(labels), Image: image,
+				Needs:     mustJSON(needs), Labels: mustJSON(labels), Image: image, Host: wj.Host, Trusted: trusted,
 				CPUs: cpus, MemoryBytes: mem, Pids: pids, TimeoutMinutes: timeout, MaxParallel: maxParallel,
 				Definition: mustJSON(def), Status: model.JobPending, Outputs: "{}", CreatedAt: now,
 			}
@@ -572,6 +575,19 @@ func buildJobs(run *model.WorkflowRun, w *workflow.Workflow, cs ciSettings, ec *
 		}
 	}
 	return out, nil
+}
+
+// trustedRun reports whether a run's job token may publish packages:
+// pushes to the default branch, manual dispatches and releases (all need
+// write access to start). Pull request runs never are.
+func trustedRun(repo *model.Repo, run *model.WorkflowRun) bool {
+	switch run.Event {
+	case "push":
+		return run.Ref == branchRef(repo.DefaultBranch)
+	case "workflow_dispatch", "release":
+		return true
+	}
+	return false
 }
 
 // admitRun applies the queue rules to a new run: superseding older runs of

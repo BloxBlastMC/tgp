@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -21,7 +22,8 @@ func runnerOnline(r *model.Runner, now time.Time, cs ciSettings) bool {
 }
 
 func toSchedRunner(r *model.Runner, busy int, now time.Time, cs ciSettings) scheduler.Runner {
-	sr := scheduler.Runner{ID: r.ID, Labels: jsonStrings(r.Labels), Capacity: r.Capacity, Busy: busy, Disabled: r.Disabled, Online: runnerOnline(r, now, cs)}
+	sr := scheduler.Runner{ID: r.ID, Labels: jsonStrings(r.Labels), Capacity: r.Capacity, Busy: busy, Disabled: r.Disabled,
+		Online: runnerOnline(r, now, cs), HostMode: r.HostMode}
 	if r.CPUPercent != nil {
 		sr.CPUPercent = *r.CPUPercent
 	}
@@ -36,12 +38,13 @@ func (s *Server) schedState(ctx context.Context, db bun.IDB) (scheduler.State, m
 		Key      string     `bun:"key"`
 		RunnerID *int64     `bun:"runner_id"`
 		Started  *time.Time `bun:"started_at"`
+		Host     bool       `bun:"host"`
 	}
-	if err := db.NewSelect().Model((*model.Job)(nil)).Column("repo_id", "run_id", "key", "runner_id", "started_at").
+	if err := db.NewSelect().Model((*model.Job)(nil)).Column("repo_id", "run_id", "key", "runner_id", "started_at", "host").
 		Where("status = ?", model.JobInProgress).Scan(ctx, &running); err != nil {
 		return scheduler.State{}, nil, err
 	}
-	st := scheduler.State{RepoRunning: map[int64]int{}, RepoLastRun: map[int64]time.Time{}, GroupRunning: map[string]int{}}
+	st := scheduler.State{RepoRunning: map[int64]int{}, RepoLastRun: map[int64]time.Time{}, GroupRunning: map[string]int{}, HostBusy: map[int64]bool{}}
 	perRunner := map[int64]int{}
 	for _, r := range running {
 		st.Running++
@@ -49,6 +52,9 @@ func (s *Server) schedState(ctx context.Context, db bun.IDB) (scheduler.State, m
 		st.GroupRunning[groupKey(r.RunID, r.Key)]++
 		if r.RunnerID != nil {
 			perRunner[*r.RunnerID]++
+			if r.Host {
+				st.HostBusy[*r.RunnerID] = true
+			}
 		}
 	}
 	var last []struct {
@@ -65,21 +71,27 @@ func (s *Server) schedState(ctx context.Context, db bun.IDB) (scheduler.State, m
 	return st, perRunner, nil
 }
 
+func schedJob(j *model.Job) scheduler.Job {
+	sj := scheduler.Job{ID: j.ID, RepoID: j.RepoID, Labels: jsonStrings(j.Labels), Group: groupKey(j.RunID, j.Key), GroupMax: j.MaxParallel,
+		Host: j.Host, Trusted: j.Trusted}
+	if j.QueuedAt != nil {
+		sj.QueuedAt = *j.QueuedAt
+	}
+	return sj
+}
+
 func groupKey(runID int64, key string) string { return strconv.FormatInt(runID, 10) + "/" + key }
 
 // queuedJobs lists queued jobs for the scheduler, oldest first.
 func queuedJobs(ctx context.Context, db bun.IDB) ([]scheduler.Job, error) {
 	var rows []model.Job
-	if err := db.NewSelect().Model(&rows).Column("id", "repo_id", "run_id", "key", "labels", "queued_at", "max_parallel").
+	if err := db.NewSelect().Model(&rows).Column("id", "repo_id", "run_id", "key", "labels", "queued_at", "max_parallel", "host", "trusted").
 		Where("status = ?", model.JobQueued).Order("queued_at", "id").Limit(2000).Scan(ctx); err != nil {
 		return nil, err
 	}
 	out := make([]scheduler.Job, len(rows))
-	for i, r := range rows {
-		out[i] = scheduler.Job{ID: r.ID, RepoID: r.RepoID, Labels: jsonStrings(r.Labels), Group: groupKey(r.RunID, r.Key), GroupMax: r.MaxParallel}
-		if r.QueuedAt != nil {
-			out[i].QueuedAt = *r.QueuedAt
-		}
+	for i := range rows {
+		out[i] = schedJob(&rows[i])
 	}
 	return out, nil
 }
@@ -210,7 +222,8 @@ func (s *Server) jobSpec(ctx context.Context, tx bun.IDB, j *model.Job, token st
 	}
 	spec := &runnerapi.JobSpec{
 		ID: j.ID, RunID: run.ID, RunNumber: run.Number, Attempt: run.Attempt, Repo: repo.Name, Workflow: run.WorkflowName,
-		JobKey: j.Key, Name: j.Name, Image: j.Image, ContainerEnv: d.ContainerEnv, Services: d.Services, Steps: d.Steps,
+		JobKey: j.Key, Name: j.Name, Image: j.Image, Host: j.Host, Trusted: j.Trusted,
+		ContainerEnv: d.ContainerEnv, Services: d.Services, Steps: d.Steps,
 		WorkflowEnv: d.WorkflowEnv, JobEnv: d.JobEnv, Defaults: d.Defaults, Outputs: d.Outputs,
 		TimeoutSeconds: j.TimeoutMinutes * 60,
 		Resources:      runnerapi.Resources{CPUs: j.CPUs, MemoryBytes: j.MemoryBytes, Pids: j.Pids},
@@ -222,6 +235,7 @@ func (s *Server) jobSpec(ctx context.Context, tx bun.IDB, j *model.Job, token st
 		Env:         env,
 		Git:         runnerapi.GitSource{URL: "/" + repo.Name + ".git", Username: runnerapi.JobTokenUser, Token: token, Ref: run.Ref, SHA: run.HeadSHA},
 		MaxLogBytes: int64(cs.MaxLogMB) << 20,
+		Registry:    runnerapi.Registry{Host: registryHost(str("server_url")), Path: imagePath(str("repository_owner"), repo.Name)},
 	}
 	return spec, nil
 }
@@ -256,8 +270,7 @@ func (s *Server) waitReasons(ctx context.Context, jobs []*model.Job) (map[int64]
 		runners[i] = toSchedRunner(r, perRunner[r.ID], now, cs)
 	}
 	for _, j := range queued {
-		sj := scheduler.Job{ID: j.ID, RepoID: j.RepoID, Labels: jsonStrings(j.Labels), Group: groupKey(j.RunID, j.Key), GroupMax: j.MaxParallel}
-		out[j.ID] = scheduler.WaitReason(cs.limits(), runners, st, sj)
+		out[j.ID] = scheduler.WaitReason(cs.limits(), runners, st, schedJob(j))
 	}
 	return out, nil
 }
@@ -387,4 +400,21 @@ func (s *Server) jobByToken(ctx context.Context, token string) (*model.Job, erro
 	j := new(model.Job)
 	err := s.db.NewSelect().Model(j).Where("token_hash = ? AND status = ?", auth.HashToken(token), model.JobInProgress).Scan(ctx)
 	return j, err
+}
+
+// registryHost is the container registry's host[:port]: the host of the
+// public base URL, or "" when none is configured (the runner then uses
+// the host it talks to).
+func registryHost(baseURL string) string {
+	u, err := url.Parse(baseURL)
+	if err != nil || u.Host == "" {
+		return ""
+	}
+	return strings.ToLower(u.Host)
+}
+
+// imagePath is <org>/<repo>, lowercased, the registry path of a
+// repository's images.
+func imagePath(org, repo string) string {
+	return strings.ToLower(org + "/" + repo)
 }

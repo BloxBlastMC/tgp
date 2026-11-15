@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sort"
 	"strings"
 	"sync"
@@ -50,6 +51,10 @@ func (m *masker) mask(s string) string {
 	return s
 }
 
+// maxPendingBytes bounds the lines waiting for upload while the server
+// can't be reached.
+var maxPendingBytes int64 = 16 << 20
+
 // logStream buffers log lines and uploads them in order, at least once a
 // second. Uploads are retried; the server deduplicates by line number.
 type logStream struct {
@@ -59,8 +64,15 @@ type logStream struct {
 	// onCancel is called when the server says the job should stop.
 	onCancel func()
 
+	// maxBytes caps the job's log (0 = no cap); the server enforces the
+	// same limit, this stops the runner sending what would be dropped.
+	maxBytes int64
+
 	mu        sync.Mutex
 	pending   []runnerapi.LogLine
+	pendBytes int64 // size of pending
+	total     int64 // bytes accepted so far
+	dropped   int   // lines dropped while uploads were failing
 	first     int64 // number of pending[0]
 	truncated bool
 	kick      chan struct{}
@@ -89,6 +101,24 @@ func (ls *logStream) Line(step int, text string) {
 		ls.mu.Unlock()
 		return
 	}
+	size := int64(len(text)) + 1
+	if ls.maxBytes > 0 && ls.total+size > ls.maxBytes {
+		ls.truncated = true
+		ls.pending = append(ls.pending, runnerapi.LogLine{Step: step, T: time.Now().UTC(),
+			Text: fmt.Sprintf("##[warning]The log reached its %d MiB limit; further output is dropped", ls.maxBytes>>20)})
+		ls.mu.Unlock()
+		ls.poke()
+		return
+	}
+	if ls.pendBytes+size > maxPendingBytes {
+		// The server is unreachable and the backlog is full: drop the line
+		// rather than grow without bound.
+		ls.dropped++
+		ls.mu.Unlock()
+		return
+	}
+	ls.total += size
+	ls.pendBytes += size
 	ls.pending = append(ls.pending, runnerapi.LogLine{Step: step, T: time.Now().UTC(), Text: text})
 	n := len(ls.pending)
 	ls.mu.Unlock()
@@ -167,11 +197,20 @@ func (ls *logStream) flush(bool) {
 			return // keep the lines; the next tick (or Close) tries again
 		}
 		ls.mu.Lock()
+		for _, l := range batch {
+			ls.pendBytes -= int64(len(l.Text)) + 1
+		}
 		ls.pending = ls.pending[len(batch):]
 		ls.first += int64(len(batch))
+		if ls.dropped > 0 && len(ls.pending) == 0 && !ls.truncated {
+			ls.pending = append(ls.pending, runnerapi.LogLine{Step: batch[len(batch)-1].Step, T: time.Now().UTC(),
+				Text: fmt.Sprintf("##[warning]%d log lines were dropped while the server couldn't be reached", ls.dropped)})
+			ls.pendBytes += int64(len(ls.pending[0].Text)) + 1
+			ls.dropped = 0
+		}
 		if resp != nil && resp.Truncated {
 			ls.truncated = true
-			ls.pending = nil
+			ls.pending, ls.pendBytes = nil, 0
 		}
 		ls.mu.Unlock()
 		if resp != nil && resp.Cancel && ls.onCancel != nil {

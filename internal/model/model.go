@@ -369,6 +369,7 @@ type Runner struct {
 	CPUPercent    *float64   `bun:"cpu_percent"`
 	MemoryPercent *float64   `bun:"memory_percent"`
 	Disabled      bool       `bun:"disabled"`
+	HostMode      string     `bun:"host_mode"`
 	LastSeenAt    *time.Time `bun:"last_seen_at"`
 	CreatedByID   *int64     `bun:"created_by_id"`
 	CreatedAt     time.Time  `bun:"created_at"`
@@ -432,6 +433,8 @@ type Job struct {
 	Needs           string     `bun:"needs"`  // JSON array
 	Labels          string     `bun:"labels"` // JSON array
 	Image           string     `bun:"image"`
+	Host            bool       `bun:"host"`
+	Trusted         bool       `bun:"trusted"`
 	CPUs            float64    `bun:"cpus"`
 	MemoryBytes     int64      `bun:"memory_bytes"`
 	Pids            int        `bun:"pids"`
