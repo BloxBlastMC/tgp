@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { api, errorMessage, unwrap } from '../../api/client'
 import { labelsQuery, milestonesQuery, repoQuery, sessionQuery, usersQuery } from '../../api/queries'
 import { MetaSections, type MetaPatch } from '../../components/issues/meta'
-import { EmptyState, SubHeader } from '../../components/Page'
+import { EmptyState, SubHeader, Container } from '../../components/Page'
 import { MarkdownEditor } from '../../components/pulls/common'
 import { Alert, Button, Card, Field, Input, useToast } from '../../components/ui'
 import { canTriage } from '../../lib/permissions'
@@ -51,7 +51,7 @@ export function NewIssuePage() {
     setMeta((m) => ({ labels: p.labels ?? m.labels, assignees: p.assignees ?? m.assignees, milestone: p.milestone ?? m.milestone }))
   const ms = (milestones.data ?? []).find((m) => m.id === meta.milestone)
   return (
-    <div className="mx-auto flex max-w-6xl flex-col px-6 py-5">
+    <Container width="wide" className="flex flex-col">
       <SubHeader back={{ to: '/$repo/issues', params: { repo }, label: 'Issues' }} title="New issue" description={`Report a bug or suggest an idea for ${repo}.`} />
       <form
         className="grid gap-6 md:grid-cols-[minmax(0,1fr)_256px]"
@@ -95,6 +95,6 @@ export function NewIssuePage() {
           />
         </aside>
       </form>
-    </div>
+    </Container>
   )
 }

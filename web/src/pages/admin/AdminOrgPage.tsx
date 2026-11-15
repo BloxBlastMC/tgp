@@ -48,7 +48,7 @@ export function AdminOrgPage() {
   if (!org.data) return <PageSkeleton rows={3} />
   const dirty = f.name !== org.data.name || f.description !== org.data.description || f.base_url !== org.data.base_url
   return (
-    <Container width="narrow">
+    <Container width="default">
       <SubHeader title="Organization" as="h2" description="Your organization's name, address and branding." />
       <div className="flex flex-col gap-6">
         <form
@@ -99,7 +99,13 @@ export function AdminOrgPage() {
               onFiles={(files) => files[0] && upload.mutate(files[0])}
               disabled={upload.isPending}
             >
-              <span className="font-medium text-fg">{upload.isPending ? 'Uploading…' : 'Drop an image or browse'}</span>
+              <span className="font-medium text-fg">{upload.isPending ? 'Uploading…' : 'Drop an image here'}</span>
+              {!upload.isPending && (
+                <>
+                  {' '}
+                  or <span className="text-accent">browse</span>
+                </>
+              )}
             </FileDrop>
             {org.data.has_logo && (
               <Button

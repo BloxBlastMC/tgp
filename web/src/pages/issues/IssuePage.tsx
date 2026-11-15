@@ -8,7 +8,7 @@ import { EventLine } from '../../components/issues/EventLine'
 import { IssueStateBadge, MetaSections, type MetaPatch } from '../../components/issues/meta'
 import { EmptyState } from '../../components/Page'
 import { Avatar, CommentCard, MarkdownEditor, useInvalidatePull } from '../../components/pulls/common'
-import { Alert, Badge, Button, ErrorState, IconButton, Input, MenuItem, PageSkeleton, SkeletonRows, SplitButton, Time, useToast } from '../../components/ui'
+import { Alert, Button, ErrorState, IconButton, Input, MenuItem, PageSkeleton, SkeletonRows, SplitButton, Time, useToast } from '../../components/ui'
 import { canTriage as canTriagePerm, isRepoAdmin } from '../../lib/permissions'
 import { useRepoName } from '../repos/RepoLayout'
 
@@ -58,7 +58,7 @@ function IssueView({ repo, issue }: { repo: string; issue: Issue }) {
   return (
     <div className="flex flex-col">
       <IssueHeader repo={repo} issue={issue} canEdit={v.canEdit} />
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-5 md:grid-cols-[minmax(0,1fr)_256px]">
+      <div className="mx-auto grid w-full max-w-7xl gap-8 px-6 py-6 md:grid-cols-[minmax(0,1fr)_256px]">
         <div className="relative flex min-w-0 flex-col gap-4 before:absolute before:top-4 before:bottom-24 before:left-[19px] before:w-px before:bg-border [&>*]:relative">
           <BodyCard repo={repo} issue={issue} canEdit={v.canEdit} />
           {timeline.isPending ? (
@@ -68,7 +68,7 @@ function IssueView({ repo, issue }: { repo: string; issue: Issue }) {
           ) : (
             timeline.data.map((it, i) => {
               if (it.kind === 'event' && it.event) return <EventLine key={`e${it.event.id}`} repo={repo} event={it.event} isIssue />
-              if (it.comment) return <CommentCard key={`c${it.comment.id}`} repo={repo} number={issue.number} comment={it.comment} isRepoAdmin={v.isRepoAdmin} />
+              if (it.comment) return <CommentCard key={`c${it.comment.id}`} repo={repo} number={issue.number} comment={it.comment} isRepoAdmin={v.isRepoAdmin} opAuthorId={issue.author.id} />
               return <span key={i} />
             })
           )}
@@ -96,7 +96,8 @@ function IssueHeader({ repo, issue, canEdit }: { repo: string; issue: Issue; can
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(issue.title)
   return (
-    <div className="border-b border-border px-6 py-4">
+    <div className="border-b border-border">
+      <div className="mx-auto w-full max-w-7xl px-6 py-4">
       {editing ? (
         <form
           className="flex items-center gap-2"
@@ -142,6 +143,7 @@ function IssueHeader({ repo, issue, canEdit }: { repo: string; issue: Issue; can
         </span>
       </div>
     </div>
+    </div>
   )
 }
 
@@ -154,7 +156,6 @@ function BodyCard({ repo, issue, canEdit }: { repo: string; issue: Issue; canEdi
       <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-sm text-fg-muted">
         <Avatar user={issue.author} size={18} />
         <span className="font-medium text-fg">{issue.author.display_name}</span> opened this <Time iso={issue.created_at} />
-        <Badge>Author</Badge>
         <span className="flex-1" />
         {canEdit && !editing && (
           <IconButton

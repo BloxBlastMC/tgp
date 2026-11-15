@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Settings2 } from 'lucide-react'
+import { Pencil } from 'lucide-react'
 import { usersQuery } from '../../api/queries'
 import { Avatar, IconButton, Picker, type SelectItem } from '../ui'
 
@@ -44,7 +44,7 @@ export function ReviewerPicker({
       placeholder="Find people…"
       trigger={(t) => (
         <IconButton {...t} size="xs" disabled={disabled} label="Edit reviewers">
-          <Settings2 size={13} />
+          <Pencil size={13} />
         </IconButton>
       )}
     />

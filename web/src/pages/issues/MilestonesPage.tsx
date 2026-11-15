@@ -4,7 +4,7 @@ import { Calendar, CheckCircle2, Milestone as MilestoneIcon, MoreHorizontal, Pen
 import { useState } from 'react'
 import { api, errorMessage, unwrap, type Milestone } from '../../api/client'
 import { milestonesQuery, repoQuery } from '../../api/queries'
-import { EmptyState, SubHeader } from '../../components/Page'
+import { EmptyState, SubHeader, Container } from '../../components/Page'
 import { MarkdownEditor } from '../../components/pulls/common'
 import { Alert, Button, cx, Dialog, ErrorState, Field, IconButton, Input, List, Menu, MenuItem, MenuSeparator, Meter, SegmentedControl, SkeletonRows, Time, useConfirm, useToast } from '../../components/ui'
 import { dueLabel } from '../../lib/format'
@@ -124,9 +124,6 @@ function MilestoneRow({ repo, m, canWrite, onEdit }: { repo: string; m: Mileston
           ) : (
             <span className="text-fg-faint">No due date</span>
           )}
-          <span className="text-fg-faint">
-            Updated <Time iso={m.updated_at} />
-          </span>
         </div>
         {m.description_html && <div className="markdown mt-2 text-sm text-fg-muted" dangerouslySetInnerHTML={{ __html: m.description_html }} />}
       </div>
@@ -167,11 +164,15 @@ function MilestoneRow({ repo, m, canWrite, onEdit }: { repo: string; m: Mileston
             </Menu>
           )}
         </div>
-        <div className="flex gap-3 text-sm text-fg-muted tabular-nums">
-          <span className="font-semibold text-fg">{pct}% complete</span>
-          <span>{m.open_issues} open</span>
-          <span>{m.closed_issues} closed</span>
-        </div>
+        {m.open_issues + m.closed_issues === 0 ? (
+          <p className="text-sm text-fg-faint">No issues yet</p>
+        ) : (
+          <div className="flex gap-3 text-sm text-fg-muted tabular-nums">
+            <span className="font-semibold text-fg">{pct}% complete</span>
+            <span>{m.open_issues} open</span>
+            <span>{m.closed_issues} closed</span>
+          </div>
+        )}
         {(setState.isError || del.isError) && <Alert>{errorMessage(setState.error ?? del.error)}</Alert>}
       </div>
     </li>
@@ -188,7 +189,7 @@ export function MilestonesPage() {
   const canWrite = canWritePerm(r.permission)
   const [editing, setEditing] = useState<Milestone | 'new' | null>(null)
   return (
-    <div className="mx-auto flex max-w-5xl flex-col px-6 py-5">
+    <Container width="wide" className="flex flex-col">
       <SubHeader
         back={{ to: '/$repo/issues', params: { repo }, label: 'Issues' }}
         title="Milestones"
@@ -230,6 +231,6 @@ export function MilestonesPage() {
         </List>
       )}
       {editing && <MilestoneDialog key={editing === 'new' ? 'new' : editing.id} repo={repo} milestone={editing === 'new' ? undefined : editing} onDone={() => setEditing(null)} />}
-    </div>
+    </Container>
   )
 }

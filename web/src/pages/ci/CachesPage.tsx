@@ -3,11 +3,11 @@ import { useNavigate, useSearch } from '@tanstack/react-router'
 import { ArrowUpDown, Database, MoreHorizontal, SearchX, Trash2 } from 'lucide-react'
 import { api, errorMessage, unwrap, type CacheEntry } from '../../api/client'
 import { cachesQuery, repoQuery, type CacheFilters } from '../../api/queries'
-import { EmptyState, SubHeader } from '../../components/Page'
-import { Alert, Button, ErrorState, FilterMenu, IconButton, List, Menu, MenuItem, Meter, Pagination, SearchInput, SkeletonRows, StatCard, Time, useConfirm, useToast } from '../../components/ui'
+import { StorageCard } from '../../components/ci/common'
+import { Container, EmptyState, SubHeader } from '../../components/Page'
+import { Alert, Button, ErrorState, FilterMenu, IconButton, List, Menu, MenuItem, Pagination, SearchInput, SkeletonRows, StatCard, Time, useConfirm, useToast } from '../../components/ui'
 import { canWrite as canWritePerm } from '../../lib/permissions'
 import { formatBytes, refLabel } from '../../lib/ci'
-import { usagePercent } from '../../lib/releases'
 import { useRepoName } from '../repos/RepoLayout'
 
 const PER_PAGE = 50
@@ -49,12 +49,11 @@ export function CachesPage() {
     },
   })
   const err = delOne.error ?? delKey.error
-  const pct = q.data ? usagePercent(q.data.total_bytes, q.data.quota_bytes) : null
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col px-6 py-5">
+    <Container width="wide" className="flex flex-col">
       <SubHeader
-        back={{ to: '/$repo/ci', params: { repo }, label: 'CI' }}
+        back={{ to: '/$repo/ci', params: { repo }, label: 'Runs' }}
         title="Caches"
         description={
           <>
@@ -79,16 +78,9 @@ export function CachesPage() {
         }
       />
       {q.data && (
-        <div className="mb-4 grid gap-3 sm:grid-cols-3">
+        <div className="mb-4 grid gap-3 sm:grid-cols-2">
           <StatCard label="Caches" value={q.data.total.toLocaleString()} icon={<Database size={15} />} />
-          <StatCard label="Storage used" value={formatBytes(q.data.total_bytes)} hint={q.data.quota_bytes > 0 ? `of ${formatBytes(q.data.quota_bytes)} quota` : 'No quota'} />
-          <div className="flex flex-col justify-center rounded-lg border border-border bg-surface-1 px-4 py-3 shadow-card">
-            <div className="mb-2 flex items-center justify-between text-sm text-fg-muted">
-              <span>Quota</span>
-              <span className="tabular-nums">{pct == null ? '—' : `${Math.round(pct)}%`}</span>
-            </div>
-            <Meter value={pct ?? 0} label="Cache quota used" />
-          </div>
+          <StorageCard used={q.data.total_bytes} quota={q.data.quota_bytes} meterLabel="Cache quota used" />
         </div>
       )}
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -138,13 +130,13 @@ export function CachesPage() {
           <Pagination page={search.page ?? 1} total={q.data.total} perPage={PER_PAGE} onPage={(p) => set({ page: p > 1 ? p : undefined })} className="px-0" />
         </>
       )}
-    </div>
+    </Container>
   )
 }
 
 function CacheRow({ c, canWrite, busy, onDelete, onDeleteKey, onFilter }: { c: CacheEntry; canWrite: boolean; busy: boolean; onDelete: () => void; onDeleteKey: () => void; onFilter: () => void }) {
   return (
-    <li className="flex items-center gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover/60">
+    <li className="flex items-center gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover">
       <Database size={14} className="shrink-0 text-fg-faint" />
       <div className="min-w-0 flex-1">
         <button type="button" onClick={onFilter} className="block max-w-full truncate text-left font-mono text-base hover:text-accent hover:underline" title={`Show caches with key ${c.key}`}>

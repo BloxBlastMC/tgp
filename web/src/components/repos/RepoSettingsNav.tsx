@@ -17,11 +17,11 @@ export function RepoSettingsNav() {
         {
           items: [
             { to: '/$repo/settings', params, label: 'General', icon: Settings2 },
-            { to: '/$repo/settings', params, label: 'Branch protection', icon: Shield, hash: 'protection' },
-            { to: '/$repo/settings', params, label: 'Secrets', icon: KeyRound, hash: 'secrets' },
-            { to: '/$repo/settings', params, label: 'Access', icon: Users, hash: 'access' },
+            { to: '/$repo/settings/protection', params, label: 'Branch protection', icon: Shield },
+            { to: '/$repo/settings/secrets', params, label: 'Secrets', icon: KeyRound },
+            { to: '/$repo/settings/access', params, label: 'Access', icon: Users },
             { to: '/$repo/settings/webhooks', params, label: 'Webhooks', icon: Webhook, exact: false },
-            ...(r?.permission === 'admin' ? [{ to: '/$repo/settings', params, label: 'Danger zone', icon: AlertTriangle, hash: 'danger' }] : []),
+            ...(r?.permission === 'admin' ? [{ to: '/$repo/settings/danger', params, label: 'Danger zone', icon: AlertTriangle }] : []),
           ],
         },
       ]}

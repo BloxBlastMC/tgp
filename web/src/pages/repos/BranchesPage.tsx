@@ -7,13 +7,14 @@ import { branchesQuery, pullsQuery, repoQuery, tagsQuery } from '../../api/queri
 import { Alert, Badge, ButtonLink, EmptyState, ErrorState, IconButton, List, SearchInput, SegmentedControl, SkeletonRows, Time, useConfirm, useToast } from '../../components/ui'
 import { canWrite as canWritePerm } from '../../lib/permissions'
 import { compareSplat } from '../../lib/pulls'
+import { Container } from '../../components/Page'
 import { useRepoName } from './RepoLayout'
 
 type Ref = Schemas['Ref']
 
 function RefRow({ r, repo, kind, extra }: { r: Ref; repo: string; kind: 'branch' | 'tag'; extra?: React.ReactNode }) {
   return (
-    <li className="flex items-center gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover/60">
+    <li className="flex items-center gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover">
       {kind === 'tag' ? <Tag size={14} className="shrink-0 text-fg-faint" /> : <GitBranch size={14} className="shrink-0 text-fg-faint" />}
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
@@ -50,7 +51,7 @@ export function BranchesPage() {
   const qc = useQueryClient()
   const confirm = useConfirm()
   const toast = useToast()
-  const [tab, setTab] = useState<'branches' | 'tags'>('branches')
+  const [tab, setTab] = useState<'branches' | 'tags'>(() => (window.location.hash === '#tags' ? 'tags' : 'branches'))
   const [filter, setFilter] = useState('')
   const canWrite = canWritePerm(repo.permission) && !repo.archived
   const del = useMutation({
@@ -115,7 +116,7 @@ export function BranchesPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4 px-6 py-5">
+    <Container width="wide" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <SegmentedControl
           label="Show"
@@ -153,6 +154,6 @@ export function BranchesPage() {
           ))}
         </List>
       )}
-    </div>
+    </Container>
   )
 }

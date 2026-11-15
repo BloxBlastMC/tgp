@@ -5,6 +5,7 @@ import { blameQuery, repoQuery } from '../../api/queries'
 import { PathBreadcrumbs } from '../../components/code/Breadcrumbs'
 import { RefPicker } from '../../components/code/RefPicker'
 import { Avatar, ButtonLink, CardHeaderBar, ErrorState, SegmentedControl, Skeleton, Time } from '../../components/ui'
+import { Container } from '../../components/Page'
 import { useRepoName } from './RepoLayout'
 import type { RefPathSearch } from './search'
 
@@ -28,7 +29,7 @@ export function BlamePage() {
   const oldest = Math.min(...times, newest)
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-5">
+    <Container width="wide" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <RefPicker repo={name} current={ref} onSelect={(r) => void navigate({ to: '/$repo/blame', params: { repo: name }, search: { ref: r, path } })} />
         <PathBreadcrumbs repo={repo.name} gitRef={ref} path={path} />
@@ -100,6 +101,6 @@ export function BlamePage() {
           )}
         </div>
       )}
-    </div>
+    </Container>
   )
 }

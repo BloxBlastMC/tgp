@@ -9,7 +9,7 @@ export function IssueRows({ issues, showRepo, onLabel }: { issues: IssueSummary[
   return (
     <ul>
       {issues.map((i) => (
-        <li key={`${i.repo}#${i.number}`} className="relative flex items-start gap-3 border-b border-border px-5 py-3 transition-colors hover:bg-bg-hover/50" data-testid="issue-row">
+        <li key={`${i.repo}#${i.number}`} className="relative flex items-start gap-3 border-b border-border px-5 py-3 transition-colors hover:bg-bg-hover has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-accent" data-testid="issue-row">
           <span className="mt-0.5">
             <IssueStateIcon issue={i} />
           </span>

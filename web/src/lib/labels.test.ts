@@ -18,5 +18,6 @@ describe('labels', () => {
     expect(versionLabel('', '')).toBe('development build')
     expect(versionLabel('1.2.0', 'abcdef123')).toBe('v1.2.0 (abcdef1)')
     expect(versionLabel('v1.2.0')).toBe('v1.2.0')
+    expect(versionLabel('0dd1976-dirty', '0dd1976')).toBe('0dd1976-dirty')
   })
 })

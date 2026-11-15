@@ -237,6 +237,11 @@ test('tour', async ({ browser }) => {
     await snap(p, theme, '40-releases', '/game/releases')
     await snap(p, theme, '41-release-new', '/game/releases/new')
     await snap(p, theme, '42-repo-settings', '/game/settings')
+    await snap(p, theme, '45-repo-protection', '/game/settings/protection')
+    await p.getByRole('button', { name: 'Add rule' }).click()
+    await snap(p, theme, '46-protection-dialog')
+    await p.keyboard.press('Escape')
+    await snap(p, theme, '47-repo-access', '/game/settings/access')
     await snap(p, theme, '43-webhooks', '/game/settings/webhooks')
     await snap(p, theme, '44-webhook', '/game/settings/webhooks/1')
     await snap(p, theme, '50-admin-users', '/admin/users')
@@ -248,6 +253,18 @@ test('tour', async ({ browser }) => {
     await snap(p, theme, '55-admin-audit', '/admin/audit')
     await snap(p, theme, '56-admin-webhooks', '/admin/webhooks')
     await snap(p, theme, '60-settings', '/settings')
+    await p.getByRole('button', { name: 'New token' }).click()
+    await snap(p, theme, '65-new-token')
+    await p.keyboard.press('Escape')
+    await p.goto(server.url + '/admin/runners')
+    await p.getByRole('button', { name: 'Register runner' }).first().click()
+    await snap(p, theme, '66-register-runner')
+    await p.keyboard.press('Escape')
+    await p.goto(server.url + '/')
+    await p.getByRole('button', { name: 'Create…' }).click()
+    await p.getByRole('menuitem', { name: 'New repository' }).click()
+    await snap(p, theme, '67-new-repo')
+    await p.keyboard.press('Escape')
     await p.goto(server.url + '/')
     await p.keyboard.press('Control+k')
     await snap(p, theme, '61-palette')
@@ -274,5 +291,19 @@ test('tour', async ({ browser }) => {
     ['74-narrow-run', '/game/ci/runs/1'],
   ] as const)
     await snap(narrow, 'dark', name, path)
+  // Tablet width: the sidebar becomes an icon rail.
+  await narrow.setViewportSize({ width: 900, height: 768 })
+  await snap(narrow, 'dark', '75-tablet-home', '/')
+  await snap(narrow, 'dark', '76-tablet-admin-users', '/admin/users')
+  // Phone width: the sidebar is a drawer behind the menu button.
+  await narrow.setViewportSize({ width: 375, height: 812 })
+  for (const [name, path] of [
+    ['80-phone-home', '/'],
+    ['81-phone-issue', '/game/issues/1'],
+    ['82-phone-users', '/admin/users'],
+  ] as const)
+    await snap(narrow, 'dark', name, path)
+  await narrow.getByRole('button', { name: 'Open navigation' }).click()
+  await snap(narrow, 'dark', '83-phone-drawer')
   await narrow.context().close()
 })

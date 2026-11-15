@@ -87,6 +87,7 @@ export function versionLabel(version?: string | null, commit?: string | null): s
   const v = (version ?? '').trim()
   const c = (commit ?? '').trim()
   const devBuild = !v || v === 'dev' || v === 'unknown'
-  const base = devBuild ? 'development build' : v.startsWith('v') ? v : `v${v}`
-  return c && c !== 'unknown' ? `${base} (${c.slice(0, 7)})` : base
+  const base = devBuild ? 'development build' : /^\d/.test(v) && v.includes('.') ? `v${v}` : v
+  const short = c.slice(0, 7)
+  return short && c !== 'unknown' && !v.startsWith(short) ? `${base} (${short})` : base
 }

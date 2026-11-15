@@ -417,3 +417,25 @@ export const healthQuery = (refresh = false) =>
     queryFn: () => unwrap(api.GET('/admin/health', { params: { query: refresh ? { refresh: true } : {} } })),
     refetchInterval: 30_000,
   })
+
+/**
+ * Check names (`<workflow> / <job>`) the repository's recent runs have
+ * reported, newest workflow runs first. Used to suggest required checks.
+ */
+export const reportedChecksQuery = (repo: string) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'runs', 'reported-checks'],
+    queryFn: async () => {
+      const list = await unwrap(api.GET('/repos/{repo}/runs', { params: { path: { repo }, query: { per_page: 30 } } }))
+      // The latest run of each workflow is enough to know its job names.
+      const latest = new Map<string, number>()
+      for (const r of list.runs) if (!latest.has(r.workflow_path)) latest.set(r.workflow_path, r.number)
+      const runs = await Promise.all(
+        [...latest.values()].slice(0, 8).map((n) => unwrap(api.GET('/repos/{repo}/runs/{number}', { params: { path: { repo, number: n } } })).catch(() => null)),
+      )
+      const names = new Set<string>()
+      for (const r of runs) for (const j of r?.jobs ?? []) if (j.check_name) names.add(j.check_name)
+      return [...names].sort((a, b) => a.localeCompare(b))
+    },
+    staleTime: 60_000,
+  })

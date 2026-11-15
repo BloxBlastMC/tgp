@@ -1,9 +1,10 @@
 import { Link } from '@tanstack/react-router'
-import { Ban, CheckCircle2, CircleDashed, CircleDot, Clock, GitBranch, GitCommit, GitPullRequest, Hourglass, Loader2, MinusCircle, Package, Play, Tag, Timer, XCircle } from 'lucide-react'
+import { Ban, CheckCircle2, CircleDashed, CircleDot, Clock, GitBranch, GitCommit, GitPullRequest, HardDrive, Hourglass, Loader2, MinusCircle, Package, Play, Tag, Timer, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { WorkflowRun } from '../../api/client'
-import { durationText, refLabel, statusKind, statusLabel, type StatusKind } from '../../lib/ci'
-import { cx, Pagination, Time } from '../ui'
+import { durationText, formatBytes, refLabel, statusKind, statusLabel, type StatusKind } from '../../lib/ci'
+import { usagePercent } from '../../lib/releases'
+import { cx, Meter, Pagination, StatCard, Time } from '../ui'
 
 const icons: Record<StatusKind, { icon: typeof CheckCircle2; className: string }> = {
   waiting: { icon: Hourglass, className: 'text-warning' },
@@ -111,4 +112,28 @@ export function RunRows({ runs, showRepo }: { runs: WorkflowRun[]; showRepo?: bo
 /** Previous/next pagination from a total (newest first). */
 export function Pager({ page, total, perPage, onPage }: { page: number; total: number; perPage: number; onPage: (p: number) => void }) {
   return <Pagination page={page} total={total} perPage={perPage} onPage={onPage} prevLabel="Newer" nextLabel="Older" />
+}
+
+/** Storage used against a quota, with the meter in the same card. */
+export function StorageCard({ used, quota, label = 'Storage', meterLabel }: { used: number; quota: number; label?: string; meterLabel: string }) {
+  const pct = usagePercent(used, quota)
+  return (
+    <StatCard
+      label={label}
+      value={formatBytes(used)}
+      icon={<HardDrive size={15} />}
+      hint={
+        quota > 0 ? (
+          <span className="mt-1 flex items-center gap-2">
+            <Meter value={pct ?? 0} label={meterLabel} className="flex-1" />
+            <span className="shrink-0 tabular-nums">
+              {pct == null ? '—' : `${Math.round(pct)}%`} of {formatBytes(quota)}
+            </span>
+          </span>
+        ) : (
+          'No quota'
+        )
+      }
+    />
+  )
 }

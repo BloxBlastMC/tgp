@@ -30,7 +30,7 @@ import {
   useInvalidatePull,
 } from '../../components/pulls/common'
 import { ReviewerPicker } from '../../components/pulls/ReviewerPicker'
-import { Alert, Badge, Button, CopyButton, Counter, cx, Dialog, ErrorState, IconButton, Input, MetaSection, PageSkeleton, RadioCard, SkeletonRows, Time, useToast } from '../../components/ui'
+import { Alert, Badge, Button, CopyButton, Counter, cx, Dialog, ErrorState, IconButton, Input, MetaSection, PageSkeleton, RadioCard, SkeletonRows, Time, Tooltip, useToast } from '../../components/ui'
 import { DiffStat } from '../../components/code/DiffView'
 import { canTriage as canTriagePerm, canWrite as canWritePerm, isRepoAdmin } from '../../lib/permissions'
 import { anchorThreads, groupThreads, lineKey, type Thread } from '../../lib/pulls'
@@ -111,7 +111,8 @@ function PullHeader({ repo, pr, tab, pendingCount, onReview }: { repo: string; p
     { id: 'files', label: 'Files changed', icon: FileDiff, count: pr.changed_files },
   ]
   return (
-    <div className="border-b border-border px-6 pt-4">
+    <div className="border-b border-border">
+      <div className="mx-auto w-full max-w-7xl px-6 pt-4">
       {editing ? (
         <form
           className="flex items-center gap-2"
@@ -188,6 +189,7 @@ function PullHeader({ repo, pr, tab, pendingCount, onReview }: { repo: string; p
         )}
       </div>
     </div>
+    </div>
   )
 }
 
@@ -201,7 +203,7 @@ function Conversation({ repo, pr }: { repo: string; pr: PullRequest }) {
   const threadOf = (c: Comment): Thread => threads.get(c.id) ?? { root: c, replies: [] }
 
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-5 md:grid-cols-[minmax(0,1fr)_256px]">
+    <div className="mx-auto grid w-full max-w-7xl gap-8 px-6 py-6 md:grid-cols-[minmax(0,1fr)_256px]">
       <div className="relative flex min-w-0 flex-col gap-4 before:absolute before:top-4 before:bottom-24 before:left-[19px] before:w-px before:bg-border [&>*]:relative">
         <BodyCard repo={repo} pr={pr} canEdit={v.canEdit} />
         {timeline.isPending ? (
@@ -215,7 +217,7 @@ function Conversation({ repo, pr }: { repo: string; pr: PullRequest }) {
               return <ReviewCard key={`r${it.review.id}`} repo={repo} pr={pr} review={it.review} threadOf={threadOf} viewer={v} />
             if (it.kind === 'inline_comment' && it.comment)
               return <ThreadView key={`t${it.comment.id}`} repo={repo} number={pr.number} thread={threadOf(it.comment)} canTriage={v.canTriage} isRepoAdmin={v.isRepoAdmin} showContext />
-            if (it.comment) return <CommentCard key={`c${it.comment.id}`} repo={repo} number={pr.number} comment={it.comment} isRepoAdmin={v.isRepoAdmin} />
+            if (it.comment) return <CommentCard key={`c${it.comment.id}`} repo={repo} number={pr.number} comment={it.comment} isRepoAdmin={v.isRepoAdmin} opAuthorId={pr.author.id} />
             return <span key={i} />
           })
         )}
@@ -243,7 +245,6 @@ function BodyCard({ repo, pr, canEdit }: { repo: string; pr: PullRequest; canEdi
       <div className="flex items-center gap-2 border-b border-border bg-bg-subtle px-3 py-1.5 text-sm text-fg-muted">
         <Avatar user={pr.author} size={18} />
         <span className="font-medium text-fg">{pr.author.display_name}</span> opened this <Time iso={pr.created_at} />
-        <Badge>Author</Badge>
         <span className="flex-1" />
         {canEdit && !editing && (
           <IconButton
@@ -423,10 +424,10 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
   const rule = pr.protection
   const stateLabel: Record<string, string> = {
     approved: 'Approved',
-    changes_requested: 'Requested changes',
+    changes_requested: 'Changes requested',
     commented: 'Commented',
     dismissed: 'Review dismissed',
-    requested: 'Review requested',
+    requested: 'Review pending',
   }
   return (
     <aside className="flex flex-col gap-4 text-base md:sticky md:top-5 md:self-start">
@@ -439,11 +440,15 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
         ) : (
           <ul className="flex flex-col gap-2" aria-label="Reviewers">
             {pr.reviewers.map((r) => (
-              <li key={r.user.id} className="flex items-center gap-2" title={stateLabel[r.state]}>
+              <li key={r.user.id} className="flex items-center gap-2">
                 <Avatar user={r.user} size={20} />
                 <span className="min-w-0 flex-1 truncate">{r.user.display_name}</span>
                 {r.stale && r.state !== 'requested' && <span className="text-2xs text-fg-faint">older commit</span>}
-                <ReviewStateIcon state={r.state} />
+                <Tooltip content={stateLabel[r.state] ?? r.state} describe={false}>
+                  <span tabIndex={0} role="img" aria-label={stateLabel[r.state] ?? r.state} className="inline-flex rounded focus-visible:outline-2 focus-visible:outline-accent">
+                    <ReviewStateIcon state={r.state} />
+                  </span>
+                </Tooltip>
               </li>
             ))}
           </ul>
@@ -479,13 +484,19 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
       {pr.state === 'open' && viewer.canEdit && (
         <SidebarSection title="Status">
           {pr.draft ? (
-            <Button className="w-full" onClick={() => patch.mutate({ draft: false })} loading={patch.isPending} icon={<Check size={13} />}>
-              Ready for review
-            </Button>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-fg-muted">Draft — reviewers aren't asked yet.</p>
+              <Button className="w-full" onClick={() => patch.mutate({ draft: false })} loading={patch.isPending} icon={<Check size={13} />}>
+                Ready for review
+              </Button>
+            </div>
           ) : (
-            <Button variant="ghost" size="sm" className="-ml-2" onClick={() => patch.mutate({ draft: true })} loading={patch.isPending}>
-              Convert to draft
-            </Button>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm text-fg">Ready for review</span>
+              <Button size="sm" onClick={() => patch.mutate({ draft: true })} loading={patch.isPending}>
+                Convert to draft
+              </Button>
+            </div>
           )}
         </SidebarSection>
       )}
@@ -503,7 +514,7 @@ function PullSidebar({ repo, pr, viewer }: { repo: string; pr: PullRequest; view
 function CommitsTab({ repo, pr }: { repo: string; pr: PullRequest }) {
   const commits = useQuery(pullCommitsQuery(repo, pr.number))
   return (
-    <div className="mx-auto w-full max-w-5xl px-6 py-5">
+    <div className="mx-auto w-full max-w-7xl px-6 py-6">
       {commits.isPending ? <SkeletonRows rows={4} avatar /> : commits.isError ? <Alert>{errorMessage(commits.error)}</Alert> : <CommitList repo={repo} commits={commits.data} />}
     </div>
   )
@@ -593,7 +604,7 @@ function FilesTab({ repo, pr, pending, setPending }: { repo: string; pr: PullReq
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-6 py-5">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-6 py-6">
       {outdatedCount > 0 && (
         <Alert tone="info">
           {outdatedCount} comment thread{outdatedCount === 1 ? ' is' : 's are'} on code that changed since; see the Conversation tab.

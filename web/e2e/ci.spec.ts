@@ -73,7 +73,7 @@ test('admin registers a runner token and changes CI settings', async ({ browser 
   const owen = await loginAs(browser, 'owen', 'owens-password-1')
   await owen.goto(server.url + '/admin/runners')
   await expect(owen.getByText('No runners registered')).toBeVisible()
-  await owen.getByRole('button', { name: 'Add runner' }).click()
+  await owen.getByRole('button', { name: 'Register runner' }).first().click()
   const dlg = owen.getByRole('dialog', { name: 'Register a runner' })
   await expect(dlg.getByLabel('Registration token')).not.toBeEmpty()
   await expect(dlg.getByLabel('Register command')).toContainText('tgp-runner register')
@@ -91,7 +91,7 @@ test('admin registers a runner token and changes CI settings', async ({ browser 
   await expect(owen.getByLabel('Max jobs per repository')).toHaveValue('3')
   await expect(owen.getByLabel('Default image')).toHaveValue('debian:trixie')
 
-  // Organisation secret.
+  // Organization secret.
   await owen.getByRole('button', { name: 'Add secret' }).click()
   const sd = owen.getByRole('dialog', { name: 'Add secret' })
   await sd.getByLabel('Name').fill('registry_password')
@@ -103,7 +103,7 @@ test('admin registers a runner token and changes CI settings', async ({ browser 
 
 test('maintainer adds a repository secret', async ({ browser }) => {
   const mia = await loginAs(browser, 'mia', 'mias-password-1')
-  await mia.goto(server.url + '/game/settings')
+  await mia.goto(server.url + '/game/settings/secrets')
   await mia.getByRole('button', { name: 'Add secret' }).click()
   const sd = mia.getByRole('dialog', { name: 'Add secret' })
   await sd.getByLabel('Name').fill('deploy-token')

@@ -6,6 +6,7 @@ import { commitAuthor } from '../../components/code/CommitList'
 import { DiffView } from '../../components/code/DiffView'
 import { Avatar, ButtonLink, CopyButton, ErrorState, PageSkeleton, Time } from '../../components/ui'
 import { shortSha } from '../../lib/format'
+import { Container } from '../../components/Page'
 import { useRepoName } from './RepoLayout'
 
 export function CommitPage() {
@@ -16,7 +17,7 @@ export function CommitPage() {
   if (q.isError) return <ErrorState error={q.error} />
   const { commit: c, diff } = q.data
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-5 px-6 py-5">
+    <Container width="wide" className="flex flex-col gap-5">
       <div className="overflow-hidden rounded-lg border border-border bg-surface-1 shadow-card">
         <div className="flex items-start gap-3 px-5 py-4">
           <GitCommit size={18} className="mt-0.5 shrink-0 text-fg-faint" />
@@ -59,6 +60,6 @@ export function CommitPage() {
         </div>
       </div>
       <DiffView diff={diff} />
-    </div>
+    </Container>
   )
 }

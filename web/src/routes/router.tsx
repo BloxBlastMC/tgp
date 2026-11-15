@@ -24,7 +24,7 @@ import { CodePage } from '../pages/repos/CodePage'
 import { CommitPage } from '../pages/repos/CommitPage'
 import { CommitsPage } from '../pages/repos/CommitsPage'
 import { RepoLayout } from '../pages/repos/RepoLayout'
-import { RepoSettingsPage } from '../pages/repos/RepoSettingsPage'
+import { RepoAccessPage, RepoDangerPage, RepoProtectionPage, RepoSecretsPage, RepoSettingsPage } from '../pages/repos/RepoSettingsPage'
 import { ReposPage } from '../pages/repos/ReposPage'
 import { validateCommits, validateRefPath } from '../pages/repos/search'
 import { ComparePage } from '../pages/pulls/ComparePage'
@@ -245,6 +245,10 @@ const repoRoutes = [
   createRoute({ getParentRoute: () => repoRoute, path: '/releases/edit/$id', component: EditReleasePage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/releases/tag/$', component: ReleaseDetailPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/settings', component: RepoSettingsPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/settings/protection', component: RepoProtectionPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/settings/secrets', component: RepoSecretsPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/settings/access', component: RepoAccessPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/settings/danger', component: RepoDangerPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/settings/webhooks', component: RepoWebhooksPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/settings/webhooks/new', component: RepoNewWebhookPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/settings/webhooks/$id', component: RepoWebhookPage }),

@@ -23,6 +23,8 @@ import {
   type SortDir,
 } from '../../components/ui'
 import { formatBytes } from '../../lib/format'
+import { healthCheckLabel, versionLabel } from '../../lib/labels'
+import { SubHeader } from '../../components/Page'
 import { age, diskTone, formatUptime, sortChecks, sortRepos, usedPercent, type HealthStatus, type RepoSortKey } from '../../lib/health'
 
 type Health = Schemas['ServerHealth']
@@ -46,7 +48,9 @@ export function AdminHealthPage() {
   if (q.isError) return <ErrorState error={q.error} />
   const h = q.data
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-5 px-6 py-6">
+    <div className="mx-auto w-full max-w-7xl px-6 py-6">
+      <SubHeader title="Health" as="h2" description="Live status of the server, CI, webhooks and storage." />
+      <div className="flex flex-col gap-5">
       <StatusBanner h={h} refreshing={q.isFetching} onRefresh={() => void q.refetch()} />
       {remeasure.error && <Alert>{errorMessage(remeasure.error)}</Alert>}
       <Kpis h={h} />
@@ -57,6 +61,7 @@ export function AdminHealthPage() {
         <Storage s={h.storage} />
       </div>
       <Repos repos={h.repos} measuring={remeasure.isPending} onMeasure={() => remeasure.mutate()} />
+    </div>
     </div>
   )
 }
@@ -72,7 +77,7 @@ function StatusBanner({ h, refreshing, onRefresh }: { h: Health; refreshing: boo
       <div className="min-w-0 flex-1">
         <div className="text-lg font-semibold tracking-tight">{b.text}</div>
         <div className="text-sm text-fg-muted">
-          {b.sub} tgp {h.version} <span className="font-mono">{h.commit}</span> · up {formatUptime(h.uptime_seconds)} · checked <Time iso={h.generated_at} /> · refreshes every 30s
+          {b.sub} tgp {versionLabel(h.version, h.commit)} · up {formatUptime(h.uptime_seconds)} · checked <Time iso={h.generated_at} /> · refreshes every 30s
         </div>
       </div>
       <Button loading={refreshing} onClick={onRefresh} aria-label="Refresh" icon={<RefreshCw size={13} />}>
@@ -85,11 +90,11 @@ function StatusBanner({ h, refreshing, onRefresh }: { h: Health; refreshing: boo
 function Kpis({ h }: { h: Health }) {
   const { ci, webhooks: wh, database: db, counts: n } = h
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-6">
       <StatCard label="Queued jobs" value={ci.queued_jobs} icon={<Hourglass size={15} />} tone={ci.queued_jobs > 0 ? 'warning' : undefined} hint={ci.oldest_queued_at ? `oldest ${age(ci.oldest_queued_at)}` : 'nothing waiting'} />
       <StatCard label="Running jobs" value={ci.running_jobs} icon={<Play size={15} />} hint={`${ci.slots_busy} / ${ci.slots_total} slots busy`} />
       <StatCard label="Runners online" value={ci.runners_online} icon={<Cpu size={15} />} tone={ci.runners_online === 0 ? 'danger' : 'success'} hint={`${ci.runners_offline} offline`} />
-      <StatCard label="Failed hooks" value={wh.failed_deliveries_24h} icon={<Webhook size={15} />} tone={wh.failed_deliveries_24h > 0 ? 'danger' : undefined} hint="last 24 hours" />
+      <StatCard label="Failed hooks" value={wh.failed_deliveries_24h} icon={<Webhook size={15} />} tone={wh.failed_deliveries_24h > 0 ? 'danger' : undefined} hint="webhook deliveries, 24h" />
       <StatCard label="DB latency" value={`${db.latency_ms.toFixed(1)} ms`} icon={<Database size={15} />} tone={db.ok ? undefined : 'danger'} hint={db.driver} />
       <StatCard label="People" value={n.users} icon={<Users size={15} />} hint={`${n.sessions} sessions`} />
     </div>
@@ -105,8 +110,10 @@ function Checks({ checks }: { checks: Health['checks'] }) {
             <Dot tone={tone[c.status]} className="mt-1.5" label={c.status} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-sm font-medium">{c.name}</span>
-                {c.status !== 'ok' && <Badge tone={tone[c.status]}>{c.status}</Badge>}
+                <span className="font-medium" title={c.name}>
+                  {healthCheckLabel(c.name)}
+                </span>
+                {c.status !== 'ok' && <Badge tone={tone[c.status]}>{c.status === 'fail' ? 'failing' : 'warning'}</Badge>}
               </div>
               <p className="text-sm text-fg-muted">{c.message}</p>
             </div>
@@ -142,7 +149,6 @@ function Tiles({ h }: { h: Health }) {
               </span>
             ),
           },
-          { term: 'Latency', detail: `${db.latency_ms.toFixed(1)} ms` },
           { term: 'Size', detail: db.size_bytes == null ? '—' : formatBytes(db.size_bytes) },
           {
             term: 'Schema',
@@ -160,8 +166,6 @@ function Tiles({ h }: { h: Health }) {
         title="CI"
         icon={<Play size={14} />}
         children={[
-          { term: 'Queued', detail: ci.queued_jobs },
-          { term: 'Running', detail: ci.running_jobs },
           { term: 'Oldest queued', detail: age(ci.oldest_queued_at) },
           { term: 'Runners', detail: `${ci.runners_online} on · ${ci.runners_offline} off · ${ci.runners_disabled} disabled` },
           { term: 'Slots', detail: `${ci.slots_busy} / ${ci.slots_total} busy` },
@@ -174,7 +178,6 @@ function Tiles({ h }: { h: Health }) {
           { term: 'Hooks', detail: `${wh.active_hooks} active of ${wh.hooks}` },
           { term: 'Pending', detail: wh.pending_deliveries },
           { term: 'Retrying', detail: wh.retrying_deliveries },
-          { term: 'Failed (24h)', detail: wh.failed_deliveries_24h },
           { term: 'Oldest pending', detail: age(wh.oldest_pending_at) },
         ]}
       />
@@ -182,16 +185,7 @@ function Tiles({ h }: { h: Health }) {
         title="Usage"
         icon={<Users size={14} />}
         children={[
-          {
-            term: 'Users',
-            detail: (
-              <>
-                {n.users}
-                {n.disabled_users > 0 && <span className="text-fg-faint"> ({n.disabled_users} disabled)</span>}
-              </>
-            ),
-          },
-          { term: 'Sessions', detail: n.sessions },
+          { term: 'Disabled users', detail: n.disabled_users },
           { term: 'Repositories', detail: n.repos },
           { term: 'Open PRs', detail: n.open_pulls },
           { term: 'Open issues', detail: n.open_issues },

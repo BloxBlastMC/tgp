@@ -161,7 +161,22 @@ function CommentMenu({ items }: { items: { label: string; onClick: () => void; d
 }
 
 /** A single comment with edit/delete for its author (delete also for admins). */
-export function CommentCard({ repo, number, comment, isRepoAdmin, compact }: { repo: string; number: number; comment: Comment; isRepoAdmin: boolean; compact?: boolean }) {
+export function CommentCard({
+  repo,
+  number,
+  comment,
+  isRepoAdmin,
+  compact,
+  opAuthorId,
+}: {
+  repo: string
+  number: number
+  comment: Comment
+  isRepoAdmin: boolean
+  compact?: boolean
+  /** The issue/PR author; their later comments get an Author badge. */
+  opAuthorId?: number
+}) {
   const me = useQuery(sessionQuery).data?.user
   const invalidate = useInvalidatePull(repo, number)
   const confirm = useConfirm()
@@ -201,6 +216,7 @@ export function CommentCard({ repo, number, comment, isRepoAdmin, compact }: { r
         <div className={cx('flex items-center gap-2 text-sm text-fg-muted', !compact && 'border-b border-border bg-bg-subtle px-3 py-1.5')}>
           {!compact && <Avatar user={comment.author} size={18} />}
           <span className="font-medium text-fg">{comment.author.display_name}</span>
+          {opAuthorId != null && comment.author.id === opAuthorId && <Badge title="Opened this conversation">Author</Badge>}
           <span className="text-fg-faint">
             <Time iso={comment.created_at} />
             {comment.edited && ' · edited'}

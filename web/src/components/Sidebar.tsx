@@ -105,7 +105,6 @@ export function Sidebar({
   useEffect(() => {
     onCloseMobile?.()
     // Close the drawer after navigating.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
   const meta = useQuery(metaQuery)
   const session = useQuery(sessionQuery)

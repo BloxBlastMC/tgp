@@ -4,8 +4,8 @@ import { History, X } from 'lucide-react'
 import { commitsQuery, repoQuery } from '../../api/queries'
 import { CommitList } from '../../components/code/CommitList'
 import { RefPicker } from '../../components/code/RefPicker'
-import { EmptyState } from '../../components/Page'
-import { ErrorState, Pagination, Skeleton } from '../../components/ui'
+import { EmptyState, Container } from '../../components/Page'
+import { ErrorState, Pagination, Skeleton, Tooltip } from '../../components/ui'
 import { useRepoName } from './RepoLayout'
 import type { CommitsSearch } from './search'
 
@@ -27,15 +27,17 @@ export function CommitsPage() {
   const go = (p: number) => void navigate({ to: '/$repo/commits', params: { repo: name }, search: { ref, path: search.path, page: p > 1 ? p : undefined } })
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4 px-6 py-5">
+    <Container width="wide" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <RefPicker repo={name} current={ref} onSelect={(r) => void navigate({ to: '/$repo/commits', params: { repo: name }, search: { ref: r, path: search.path } })} />
         {search.path && (
           <span className="flex min-w-0 items-center gap-1.5 rounded-md border border-border bg-bg-subtle py-0.5 pr-1 pl-2 text-sm text-fg-muted">
             History for <code className="truncate font-mono text-fg">{search.path}</code>
-            <Link to="/$repo/commits" params={{ repo: name }} search={{ ref }} aria-label="Show all history" className="rounded p-0.5 hover:bg-bg-hover hover:text-fg">
-              <X size={12} />
-            </Link>
+            <Tooltip content="Show all history" describe={false}>
+              <Link to="/$repo/commits" params={{ repo: name }} search={{ ref }} aria-label="Show all history" className="rounded p-0.5 hover:bg-bg-hover hover:text-fg">
+                <X size={12} />
+              </Link>
+            </Tooltip>
           </span>
         )}
       </div>
@@ -64,6 +66,6 @@ export function CommitsPage() {
           <Pagination page={page} hasNext={commits.data.has_more} onPage={go} prevLabel="Newer" nextLabel="Older" className="px-0" />
         </>
       )}
-    </div>
+    </Container>
   )
 }

@@ -14,6 +14,7 @@ import {
   Download,
   GitCommit,
   HardDrive,
+  MoreHorizontal,
   Play,
   RotateCw,
   Search,
@@ -28,7 +29,7 @@ import { repoQuery, runArtifactsQuery, runQuery } from '../../api/queries'
 import { Duration, EventBadge, eventLabel, KindIcon, StatusIcon } from '../../components/ci/common'
 import { LogViewContext, StepLog, useJobLogs, type LogView } from '../../components/ci/logs'
 import { EmptyState } from '../../components/Page'
-import { Alert, Badge, Button, cx, Dot, Eyebrow, IconButton, Input, PageSkeleton, Time, useConfirm, useToast } from '../../components/ui'
+import { Alert, Badge, Button, cx, Dot, Eyebrow, IconButton, Input, Menu, MenuItem, MenuSeparator, PageSkeleton, Time, Tooltip, useConfirm, useToast } from '../../components/ui'
 import { canWrite as canWritePerm } from '../../lib/permissions'
 import { defaultJob, findMatches, formatBytes, groupJobs, groupKind, isFailed, linesByStep, logText, statusKind, statusLabel, statusTone, stepMatch, stepTitle } from '../../lib/ci'
 import { useRepoName } from '../repos/RepoLayout'
@@ -116,7 +117,6 @@ function RunHeader({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
   return (
     <div className="shrink-0 border-b border-border px-6 py-4">
       <div className="flex items-start gap-3">
-        <KindIcon kind={kind} size={22} className="mt-0.5" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="truncate text-xl font-semibold tracking-tight">{run.title || run.workflow_name}</h1>
@@ -124,9 +124,12 @@ function RunHeader({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
             <Badge tone={statusTone[kind]}>{statusLabel[kind]}</Badge>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-fg-muted">
-            <Link to="/$repo/ci" params={{ repo }} search={{ workflow: run.workflow_path.split('/').pop() }} className="hover:text-fg" title={run.workflow_path}>
-              {run.workflow_name}
-            </Link>
+            <span>
+              workflow{' '}
+              <Link to="/$repo/ci" params={{ repo }} search={{ workflow: run.workflow_path.split('/').pop() }} className="font-medium text-fg hover:underline" title={run.workflow_path}>
+                {run.workflow_name}
+              </Link>
+            </span>
             <span>{eventLabel[run.event] ?? run.event}</span>
             {run.pull_number ? (
               <Link to="/$repo/pulls/$number" params={{ repo, number: String(run.pull_number) }} search={{}} className="hover:text-fg">
@@ -351,7 +354,7 @@ function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; jo
             <span className="text-sm text-fg-faint">
               <Duration start={job.started_at} end={job.completed_at} />
             </span>
-            {logs.live && (
+            {logs.live && job.status === 'in_progress' && (
               <Badge tone="accent" icon={<Dot tone="accent" pulse />}>
                 live
               </Badge>
@@ -375,7 +378,7 @@ function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; jo
             <span className="inline-flex items-center gap-1" title="Memory limit">
               <HardDrive size={11} /> {formatBytes(job.resources.memory_bytes)}
             </span>
-            <span title="Process limit">{job.resources.pids} pids</span>
+            <span title="Process limit">{job.resources.pids} processes</span>
             <span className="inline-flex items-center gap-1" title="Timeout">
               <Timer size={11} /> {job.timeout_minutes}m timeout
             </span>
@@ -415,7 +418,8 @@ function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; jo
           <IconButton label="Next match" size="sm" disabled={!matches.length} onClick={() => setMatchIdx((i) => stepMatch(i, 1, matches.length))}>
             <ChevronDown size={13} />
           </IconButton>
-          <span className="mx-1 h-4 w-px bg-border" aria-hidden />
+          <span className="mx-1 hidden h-4 w-px bg-border xl:block" aria-hidden />
+          <div className="hidden items-center gap-1.5 xl:flex">
           <IconButton label="Wrap long lines" size="sm" pressed={wrap} onClick={() => setWrap(!wrap)}>
             <WrapText size={13} />
           </IconButton>
@@ -428,6 +432,7 @@ function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; jo
           <IconButton label="Collapse all steps" size="sm" onClick={() => setExpand((x) => ({ open: false, n: (x?.n ?? 0) + 1 }))}>
             <ChevronsDownUp size={13} />
           </IconButton>
+          </div>
           <span className="flex-1" />
           {job.status === 'in_progress' && (
             <Button
@@ -448,6 +453,7 @@ function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; jo
             variant="ghost"
             icon={<Download size={12} />}
             disabled={!logs.lines.length}
+            className="hidden xl:inline-flex"
             onClick={() => {
               download()
               toast.success('Log downloaded')
@@ -455,6 +461,42 @@ function JobPanel({ repo, run, job }: { repo: string; run: WorkflowRunDetail; jo
           >
             Download log
           </Button>
+          <div className="xl:hidden">
+            <Menu
+              placement="bottom-end"
+              label="Log options"
+              trigger={(t) => (
+                <IconButton {...t} label="Log options" size="sm">
+                  <MoreHorizontal size={13} />
+                </IconButton>
+              )}
+            >
+              <MenuItem icon={<WrapText size={13} />} onSelect={() => setWrap(!wrap)}>
+                {wrap ? "Don't wrap long lines" : 'Wrap long lines'}
+              </MenuItem>
+              <MenuItem icon={<Clock size={13} />} onSelect={() => setTimestamps(!timestamps)}>
+                {timestamps ? 'Hide timestamps' : 'Show timestamps'}
+              </MenuItem>
+              <MenuSeparator />
+              <MenuItem icon={<ChevronsUpDown size={13} />} onSelect={() => setExpand((x) => ({ open: true, n: (x?.n ?? 0) + 1 }))}>
+                Expand all steps
+              </MenuItem>
+              <MenuItem icon={<ChevronsDownUp size={13} />} onSelect={() => setExpand((x) => ({ open: false, n: (x?.n ?? 0) + 1 }))}>
+                Collapse all steps
+              </MenuItem>
+              <MenuSeparator />
+              <MenuItem
+                icon={<Download size={13} />}
+                disabled={!logs.lines.length}
+                onSelect={() => {
+                  download()
+                  toast.success('Log downloaded')
+                }}
+              >
+                Download log
+              </MenuItem>
+            </Menu>
+          </div>
         </div>
         {rerunJob.isError && (
           <div className="px-5 pb-2">
@@ -546,9 +588,11 @@ function ArtifactList({ repo, run }: { repo: string; run: WorkflowRunDetail }) {
               {formatBytes(a.size_bytes)} · {expiresText(a.expires_at)}
             </div>
           </div>
-          <a href={artifactZipUrl(repo, a.id)} download={`${a.name}.zip`} aria-label={`Download ${a.name}`} className="rounded-md p-1 text-fg-muted hover:bg-bg-active hover:text-fg">
-            <Download size={13} />
-          </a>
+          <Tooltip content={`Download ${a.name}`} describe={false}>
+            <a href={artifactZipUrl(repo, a.id)} download={`${a.name}.zip`} aria-label={`Download ${a.name}`} className="rounded-md p-1 text-fg-muted hover:bg-bg-active hover:text-fg">
+              <Download size={13} />
+            </a>
+          </Tooltip>
           {canWrite && (
             <IconButton
               label={`Delete ${a.name}`}

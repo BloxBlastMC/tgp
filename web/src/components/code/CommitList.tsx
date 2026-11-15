@@ -11,7 +11,7 @@ export function commitAuthor(c: Commit) {
 /** One commit: author avatar, subject, sha with copy, browse-at link. */
 export function CommitRow({ repo, c, browse = true }: { repo: string; c: Commit; browse?: boolean }) {
   return (
-    <li className="group relative flex items-center gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover/60">
+    <li className="group relative flex items-center gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover">
       <Avatar user={commitAuthor(c)} size={22} />
       <div className="min-w-0 flex-1">
         <Link to="/$repo/commit/$sha" params={{ repo, sha: c.sha }} className="block truncate font-medium hover:text-accent">

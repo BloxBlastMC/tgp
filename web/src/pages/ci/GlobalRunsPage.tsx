@@ -30,7 +30,7 @@ export function GlobalRunsPage() {
     placeholderData: (prev) => prev,
   })
   return (
-    <Page title="CI" icon={Play} description={runs.data ? `${runs.data.total} runs` : undefined}>
+    <Page title="Runs" icon={Play} description={runs.data ? `${runs.data.total} runs` : undefined}>
       <FilterBar className="px-5">
         <SegmentedControl
           label="Runs"
@@ -57,7 +57,7 @@ export function GlobalRunsPage() {
         <ErrorState error={runs.error} />
       ) : runs.data.runs.length === 0 ? (
         <EmptyState icon={<Play size={20} />} title={search.scope === 'active' ? 'Nothing running' : 'No workflow runs yet'}>
-          {search.scope === 'active' ? 'No runs are queued or in progress.' : 'Add a workflow under .tgp/workflows/ in a repository to start using CI.'}
+          {search.scope === 'active' ? 'No runs are queued or in progress.' : 'Add a workflow file under .tgp/workflows/ in a repository and push to start a run.'}
         </EmptyState>
       ) : (
         <>

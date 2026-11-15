@@ -1,14 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearch } from '@tanstack/react-router'
-import { Boxes, Layers, MoreHorizontal, Tag, Trash2, X } from 'lucide-react'
+import { Boxes, Layers, MoreHorizontal, Tag, Trash2 } from 'lucide-react'
 import { api, errorMessage, unwrap, type PackageVersion } from '../../api/client'
 import { packagesQuery, packageVersionsQuery, repoQuery } from '../../api/queries'
-import { EmptyState, SubHeader } from '../../components/Page'
-import { Alert, Badge, CopyButton, ErrorState, IconButton, List, Menu, MenuItem, SecretValue, SkeletonRows, Time, useConfirm, useToast } from '../../components/ui'
+import { Container, EmptyState, SubHeader } from '../../components/Page'
+import { Alert, Badge, CopyButton, ErrorState, IconButton, List, Menu, MenuItem, MenuSeparator, SkeletonRows, Time, useConfirm, useToast } from '../../components/ui'
 import { formatBytes } from '../../lib/ci'
 import { canWrite as canWritePerm } from '../../lib/permissions'
 import { useRepoName } from '../repos/RepoLayout'
-import { registryHost } from './PackagesPage'
+import { CommandSnippet, registryHost } from './PackagesPage'
 
 export function validatePackageImage(s: Record<string, unknown>): { name?: string } {
   return typeof s.name === 'string' && s.name ? { name: s.name } : {}
@@ -44,12 +44,12 @@ export function PackageImagePage() {
   const latest = q.data?.versions.find((v) => v.tags.length > 0)?.tags[0]
   const err = delTag.error ?? delVersion.error
   return (
-    <div className="mx-auto flex max-w-5xl flex-col px-6 py-5">
+    <Container width="wide" className="flex flex-col">
       <SubHeader back={{ to: '/$repo/packages', params: { repo }, label: 'Packages' }} title={<span className="font-mono">{name || repo.toLowerCase()}</span>} />
       {image && (
         <div className="mb-4 flex flex-col gap-1.5">
           <span className="text-sm text-fg-muted">Pull</span>
-          <SecretValue value={`docker pull ${image}${latest ? `:${latest}` : ''}`} label="docker pull command" />
+          <CommandSnippet command={`docker pull ${image}${latest ? `:${latest}` : ''}`} label="docker pull command" />
         </div>
       )}
       {err && <Alert className="mb-3">{errorMessage(err)}</Alert>}
@@ -95,14 +95,14 @@ export function PackageImagePage() {
           ))}
         </List>
       )}
-    </div>
+    </Container>
   )
 }
 
 function VersionRow({ v, image, canWrite, busy, onDeleteTag, onDelete }: { v: PackageVersion; image: string; canWrite: boolean; busy: boolean; onDeleteTag: (tag: string) => void; onDelete: () => void }) {
   const short = v.digest.replace('sha256:', '').slice(0, 12)
   return (
-    <li className="flex items-start gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover/60">
+    <li className="flex items-start gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover">
       <Layers size={14} className="mt-1 shrink-0 text-fg-faint" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
@@ -110,11 +110,6 @@ function VersionRow({ v, image, canWrite, busy, onDeleteTag, onDelete }: { v: Pa
           {v.tags.map((t) => (
             <Badge key={t} tone="accent" icon={<Tag size={10} />} className="font-mono">
               {t}
-              {canWrite && (
-                <button type="button" aria-label={`Delete tag ${t}`} title={`Delete tag ${t}`} disabled={busy} onClick={() => onDeleteTag(t)} className="-mr-0.5 ml-0.5 rounded hover:text-danger">
-                  <X size={10} />
-                </button>
-              )}
             </Badge>
           ))}
           <Badge>{v.kind === 'index' ? 'multi-platform' : v.kind === 'artifact' ? (v.artifact_type ?? 'artifact') : 'image'}</Badge>
@@ -132,7 +127,7 @@ function VersionRow({ v, image, canWrite, busy, onDeleteTag, onDelete }: { v: Pa
           <span>
             pushed <Time iso={v.created_at} />
             {v.pushed_by && <> by {v.pushed_by.username}</>}
-            {v.pushed_by_job != null && <> from CI</>}
+            {v.pushed_by_job != null && <> by CI job #{v.pushed_by_job}</>}
           </span>
         </div>
       </div>
@@ -147,8 +142,14 @@ function VersionRow({ v, image, canWrite, busy, onDeleteTag, onDelete }: { v: Pa
             </IconButton>
           )}
         >
+          {v.tags.map((t) => (
+            <MenuItem key={t} icon={<Tag size={13} />} tone="danger" onSelect={() => onDeleteTag(t)}>
+              Delete tag {t}
+            </MenuItem>
+          ))}
+          {v.tags.length > 0 && <MenuSeparator />}
           <MenuItem icon={<Trash2 size={13} />} tone="danger" onSelect={onDelete}>
-            Delete version and its tags
+            {v.tags.length > 0 ? 'Delete version and its tags' : 'Delete version'}
           </MenuItem>
         </Menu>
       )}

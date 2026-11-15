@@ -85,3 +85,16 @@ export function urlError(url: string): string | null {
 export function sortedHeaders(h: Record<string, string>): [string, string][] {
   return Object.entries(h).sort(([a], [b]) => a.localeCompare(b))
 }
+
+/**
+ * Plain-words status of a webhook's latest delivery: "Never delivered",
+ * "Delivered (200)", "Last delivery failed (500)", "Last delivery failed:
+ * connection refused", "Delivery pending".
+ */
+export function lastDeliveryText(d?: Pick<WebhookDelivery, 'status' | 'response_status' | 'error'> | null): string {
+  if (!d) return 'Never delivered'
+  if (d.status === 'success') return d.response_status != null ? `Delivered (${d.response_status})` : 'Delivered'
+  if (d.status === 'pending') return 'Delivery pending'
+  if (d.response_status != null) return `Last delivery failed (${d.response_status})`
+  return d.error ? `Last delivery failed: ${d.error}` : 'Last delivery failed'
+}

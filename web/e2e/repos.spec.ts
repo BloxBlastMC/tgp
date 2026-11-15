@@ -94,7 +94,8 @@ test('create, push, browse, history, blame, settings and access', async ({ page 
   await expect(page.getByRole('link', { name: 'Initial plugin' })).toHaveCount(2) // lines 1-2 and the closing braces
   await expect(page.getByRole('link', { name: 'Log on enable' }).first()).toBeVisible()
 
-  // History → commit diff.
+  // History → commit diff (Commits is linked from the Code page, not a tab).
+  await page.getByRole('link', { name: 'Code', exact: true }).click()
   await page.getByRole('link', { name: 'Commits' }).click()
   await page.getByRole('link', { name: 'Log on enable' }).first().click()
   await expect(page.getByText('1 file changed')).toBeVisible()
@@ -109,14 +110,16 @@ test('create, push, browse, history, blame, settings and access', async ({ page 
   await page.getByRole('dialog').getByText('skywars').click()
   await page.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByRole('dialog', { name: 'Edit mia' })).toBeHidden()
-  await page.goto(server.url + '/skywars/settings')
+  await page.goto(server.url + '/skywars/settings/access')
   await expect(page.getByRole('listitem').filter({ hasText: 'mia' }).getByText('Granted')).toBeVisible()
 
-  // Rename, then delete with confirmation.
-  await page.getByLabel('Rename').fill('skywars-legacy')
+  // Rename from General, then delete from the danger zone with confirmation.
+  await page.goto(server.url + '/skywars/settings')
+  await page.getByLabel('Name', { exact: true }).fill('skywars-legacy')
   await page.getByRole('button', { name: 'Rename' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Rename repository' }).click()
   await expect(page).toHaveURL(/\/skywars-legacy\/settings$/)
+  await page.goto(server.url + '/skywars-legacy/settings/danger')
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
   await page.getByLabel('Repository name').fill('skywars-legacy')
   await page.getByRole('button', { name: 'Delete forever' }).click()

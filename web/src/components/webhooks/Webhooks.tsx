@@ -21,6 +21,7 @@ import {
   eventsSummary,
   type EventMode,
   formatMs,
+  lastDeliveryText,
   prettyBody,
   shortGuid,
   sortedHeaders,
@@ -118,36 +119,43 @@ export function DeliveryStatusIcon({ d, size = 14 }: { d: Pick<WebhookDelivery, 
 }
 
 function LastDelivery({ d }: { d?: WebhookDelivery | null }) {
-  if (!d) return <span className="text-sm text-fg-faint">No deliveries yet</span>
+  if (!d) return <span className="text-sm text-fg-faint">{lastDeliveryText(d)}</span>
+  const tone = deliveryTone(d)
   return (
-    <span className="flex items-center gap-1.5 text-sm text-fg-muted">
+    <span className="flex min-w-0 items-center gap-1.5 text-sm text-fg-muted">
       <DeliveryStatusIcon d={d} size={12} />
-      <span className="font-mono">{d.response_status ?? '—'}</span>
+      <span className={cx('truncate', tone === 'danger' && 'text-danger')} title={lastDeliveryText(d)}>
+        {lastDeliveryText(d)}
+      </span>
       <span className="text-fg-faint">·</span>
-      <Time iso={d.delivered_at ?? d.created_at} />
+      <Time iso={d.delivered_at ?? d.created_at} className="shrink-0" />
     </span>
   )
 }
 
 // ---- list ----
 
-export function WebhookList({ scope }: { scope: HookScope }) {
+/** The "Add webhook" button, for page headers that host the list. */
+export function AddWebhookLink({ scope }: { scope: HookScope }) {
+  return (
+    <HookLink scope={scope} id="new" className={buttonClass({ variant: 'primary' })}>
+      <Plus size={13} /> Add webhook
+    </HookLink>
+  )
+}
+
+/**
+ * The webhooks of a repository or the organization. With `bare`, the page
+ * header already names the list, so the card has no title row of its own.
+ */
+export function WebhookList({ scope, bare }: { scope: HookScope; bare?: boolean }) {
   const hooks = useQuery(webhooksQuery(scope))
   const description =
     scope.kind === 'org'
-      ? 'Organisation webhooks get events from every repository.'
+      ? 'Organization webhooks get events from every repository.'
       : 'Webhooks POST a JSON payload to a URL when something happens in this repository.'
   return (
-    <Section
-      flush
-      title="Webhooks"
-      description={description}
-      actions={
-        <HookLink scope={scope} id="new" className={buttonClass({ variant: 'primary' })}>
-          <Plus size={13} /> Add webhook
-        </HookLink>
-      }
-    >
+    <Section flush title={bare ? undefined : 'Webhooks'} description={bare ? undefined : description} actions={bare ? undefined : <AddWebhookLink scope={scope} />}>
       {hooks.isPending ? (
         <SkeletonRows rows={2} />
       ) : hooks.isError ? (
@@ -155,13 +163,13 @@ export function WebhookList({ scope }: { scope: HookScope }) {
           <Alert>{errorMessage(hooks.error)}</Alert>
         </div>
       ) : hooks.data.length === 0 ? (
-        <EmptyState size="inline" icon={<WebhookIcon size={18} />} title="No webhooks yet.">
+        <EmptyState size="inline" icon={<WebhookIcon size={18} />} title="No webhooks yet">
           Send events to Discord, deploy hooks or your own services.
         </EmptyState>
       ) : (
         <ul aria-label="Webhooks">
           {hooks.data.map((h) => (
-            <li key={h.id} className="relative flex items-center gap-3 border-b border-border px-4 py-3 transition-colors last:border-0 hover:bg-bg-hover/60">
+            <li key={h.id} className="relative flex items-center gap-3 border-b border-border px-4 py-3 transition-colors last:border-0 hover:bg-bg-hover">
               <span className={cx('flex size-8 shrink-0 items-center justify-center rounded-md border border-border', h.active ? 'bg-bg-subtle text-fg-muted' : 'text-fg-faint')}>
                 <WebhookIcon size={14} />
               </span>

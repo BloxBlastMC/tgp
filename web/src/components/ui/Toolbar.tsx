@@ -215,7 +215,9 @@ export function FilterPicker({ title, icon, value, items, onChange }: { title: s
               <span className="text-fg-muted">{title}:</span> <span className="max-w-28 truncate">{current.label}</span>
             </>
           ) : (
-            title
+            <>
+              <span className="text-fg-muted">{title}:</span> Any
+            </>
           )}
         </Button>
       )}
