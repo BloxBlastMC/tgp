@@ -43,20 +43,3 @@ func TestRegistryConfigValidation(t *testing.T) {
 		}
 	}
 }
-
-func TestLoginHint(t *testing.T) {
-	for out, want := range map[string]string{
-		`Error response from daemon: Get "https://bloxgit.ts.net/v2/": dial tcp: lookup bloxgit.ts.net on 100.100.100.100:53: no such host`: "can't resolve",
-		`dial tcp 10.0.0.5:443: connect: connection refused`:                                                   "can't connect",
-		`tls: failed to verify certificate: x509: certificate signed by unknown authority`:                     "TLS certificate",
-		`exec: "docker": executable file not found in $PATH`:                                                   "no docker CLI",
-		`Error response from daemon: ... unauthorized: authentication required`:                                "rejected the job token",
-		`Cannot connect to the Docker daemon at unix:///var/run/docker.sock`:                                   "can't reach a Docker daemon",
-		`permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock`: "can't reach a Docker daemon",
-		`something else`: "see the output above",
-	} {
-		if got := loginHint("reg", out); !strings.Contains(got, want) {
-			t.Errorf("%q: %q", out, got)
-		}
-	}
-}

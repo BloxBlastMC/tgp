@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -632,54 +631,18 @@ func (j *jobRun) registryLogin(ctx context.Context, n int) error {
 	j.printf(n, "Logging in to %s as %s (%s %s)", reg, runnerapi.JobTokenUser, what, j.spec.Registry.Path)
 	out := j.writer(n)
 	defer out.Flush()
-	var tail tailBuffer
 	code, err := j.env.Exec(ctx, ExecOptions{
 		Cmd: []string{"docker", "login", reg, "--username", runnerapi.JobTokenUser, "--password-stdin"},
-		Env: env, Dir: j.env.Workspace(), Stdin: strings.NewReader(j.spec.Git.Token), Output: io.MultiWriter(out, &tail),
+		Env: env, Dir: j.env.Workspace(), Stdin: strings.NewReader(j.spec.Git.Token), Output: out,
 	})
 	if err != nil {
 		return err
 	}
 	if code != 0 {
-		return fmt.Errorf("docker login failed with exit code %d: %s", code, loginHint(reg, tail.String()))
+		return fmt.Errorf("docker login failed with exit code %d (does the job have the docker CLI?)", code)
 	}
 	return nil
 }
-
-// loginHint explains a failed docker login from its output.
-func loginHint(reg, out string) string {
-	o := strings.ToLower(out)
-	fix := "set registry = \"<host[:port]>\" in the runner's runner.toml to an address it can reach, or fix its DNS"
-	switch {
-	case strings.Contains(o, "executable file not found") || strings.Contains(o, "command not found") || strings.Contains(o, "docker: not found"):
-		return "the job has no docker CLI (use container: none on a host runner, or an image with docker)"
-	case strings.Contains(o, "docker daemon"):
-		return "the docker CLI can't reach a Docker daemon (is it running, is DOCKER_HOST right, and may the runner's user use its socket?)"
-	case strings.Contains(o, "no such host") || strings.Contains(o, "server misbehaving") || strings.Contains(o, "temporary failure in name resolution"):
-		return fmt.Sprintf("the Docker daemon can't resolve %s (the host of the server's public base URL); %s", reg, fix)
-	case strings.Contains(o, "connection refused") || strings.Contains(o, "i/o timeout") || strings.Contains(o, "no route to host") || strings.Contains(o, "network is unreachable"):
-		return fmt.Sprintf("the Docker daemon can't connect to %s; %s", reg, fix)
-	case strings.Contains(o, "x509") || strings.Contains(o, "certificate") || strings.Contains(o, "server gave http response to https client"):
-		return fmt.Sprintf("%s has no TLS certificate the Docker daemon trusts; serve it over HTTPS with a valid certificate or add it to the daemon's insecure-registries", reg)
-	case strings.Contains(o, "unauthorized") || strings.Contains(o, "denied"):
-		return fmt.Sprintf("%s rejected the job token; check that it is this tgp server", reg)
-	}
-	return "see the output above"
-}
-
-// tailBuffer keeps the last 8 KiB written to it.
-type tailBuffer struct{ b []byte }
-
-func (t *tailBuffer) Write(p []byte) (int, error) {
-	const max = 8 << 10
-	t.b = append(t.b, p...)
-	if len(t.b) > max {
-		t.b = t.b[len(t.b)-max:]
-	}
-	return len(p), nil
-}
-
-func (t *tailBuffer) String() string { return string(t.b) }
 
 func short(sha string) string {
 	if len(sha) > 10 {
