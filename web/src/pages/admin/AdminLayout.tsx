@@ -4,10 +4,11 @@ import { Page, SideNav } from '../../components/Page'
 
 export function AdminLayout() {
   return (
-    <Page title="Admin" description="Organization-wide settings and operations" bodyClassName="flex flex-col md:flex-row">
-      <div className="w-full shrink-0 border-b border-border px-3 py-3 md:w-56 md:border-r md:border-b-0 md:py-5">
+    <Page title="Admin" description="Organization-wide settings and operations" bodyClassName="flex flex-col xl:flex-row">
+      <div className="w-full shrink-0 border-b border-border px-3 py-2 xl:w-56 xl:border-r xl:border-b-0 xl:py-5">
         <SideNav
           label="Admin sections"
+          collapseBelow="xl"
           groups={[
             {
               title: 'People',
@@ -28,7 +29,7 @@ export function AdminLayout() {
               items: [
                 { to: '/admin/runners', label: 'Runners', icon: Cpu },
                 { to: '/admin/ci', label: 'CI settings', icon: Settings2 },
-                { to: '/admin/registry', label: 'Registry', icon: Boxes },
+                { to: '/admin/registry', label: 'Container registry', icon: Boxes },
               ],
             },
             {

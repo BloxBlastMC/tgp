@@ -30,7 +30,7 @@ export function ListRow({
   trailing?: ReactNode
 } & Record<`data-${string}`, string | undefined>) {
   return (
-    <li {...rest} className={cx('relative flex items-start gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover/60', className)}>
+    <li {...rest} className={cx('relative flex items-start gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover focus-within:bg-bg-hover has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-accent', className)}>
       {leading && <span className="mt-0.5 flex shrink-0">{leading}</span>}
       <div className="min-w-0 flex-1">
         {title}

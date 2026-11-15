@@ -179,7 +179,8 @@ export function SaveBar({
   return (
     <div
       className={cx(
-        'sticky bottom-4 z-10 flex items-center gap-3 rounded-lg border px-4 py-2.5 shadow-popover transition-colors',
+        'flex items-center gap-3 rounded-lg border px-4 py-2.5 transition-colors',
+        dirty || saving ? 'sticky bottom-4 z-10 shadow-popover' : 'shadow-card',
         dirty ? 'border-accent/50 bg-[color-mix(in_oklab,var(--accent)_8%,var(--surface-2))]' : 'border-border bg-surface-2',
       )}
     >

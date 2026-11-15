@@ -8,6 +8,14 @@ import { canTriage, canWrite } from './permissions'
 import { loadVisits, pickRecent } from './recent'
 import { setThemePref } from './theme'
 
+/** True on macOS/iOS, where the command key replaces Ctrl. */
+export const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+
+/** The modifier key's display name: ⌘ on macOS, Ctrl elsewhere. */
+export function modKey(): string {
+  return isMac ? '⌘' : 'Ctrl'
+}
+
 export type CommandGroup = 'Navigate' | 'Repository' | 'Repositories' | 'Account' | 'Appearance' | 'Admin'
 
 export type CommandIcon =
@@ -69,7 +77,7 @@ export function useCommands(session: Session | null | undefined, extra: { openSh
       { id: 'repos', label: 'Repositories', group: 'Navigate', shortcut: 'g r', icon: 'repo', run: go('/repos') },
       { id: 'pulls', label: 'Pull requests', group: 'Navigate', shortcut: 'g p', icon: 'pull', run: go('/pulls') },
       { id: 'issues', label: 'Issues', group: 'Navigate', shortcut: 'g i', icon: 'issue', run: go('/issues') },
-      { id: 'ci', label: 'CI runs', group: 'Navigate', shortcut: 'g c', icon: 'ci', run: go('/ci') },
+      { id: 'ci', label: 'Runs', group: 'Navigate', shortcut: 'g c', icon: 'ci', run: go('/ci') },
       { id: 'settings', label: 'Settings', group: 'Account', shortcut: 'g s', icon: 'settings', run: go('/settings') },
       { id: 'shortcuts', label: 'Keyboard shortcuts', group: 'Account', icon: 'keyboard', run: openShortcuts },
       { id: 'logout', label: 'Sign out', group: 'Account', icon: 'logout', run: () => void logout() },
@@ -83,6 +91,7 @@ export function useCommands(session: Session | null | undefined, extra: { openSh
         { id: 'admin-health', label: 'Admin: Health', group: 'Admin', icon: 'admin', run: go('/admin/health') },
         { id: 'admin-org', label: 'Admin: Organization', group: 'Admin', icon: 'admin', run: go('/admin/org') },
         { id: 'admin-runners', label: 'Admin: Runners', group: 'Admin', icon: 'admin', run: go('/admin/runners') },
+        { id: 'admin-registry', label: 'Admin: Container registry', group: 'Admin', icon: 'admin', run: go('/admin/registry') },
         { id: 'admin-ci', label: 'Admin: CI settings', group: 'Admin', icon: 'admin', run: go('/admin/ci') },
         { id: 'admin-webhooks', label: 'Admin: Webhooks', group: 'Admin', icon: 'admin', run: go('/admin/webhooks') },
         { id: 'admin-audit', label: 'Admin: Audit log', group: 'Admin', icon: 'admin', run: go('/admin/audit') },
@@ -105,11 +114,14 @@ export function useCommands(session: Session | null | undefined, extra: { openSh
         to('/$repo', 'repo', 'Code', 'repo-code'),
         to('/$repo/issues', 'issue', 'Issues', 'repo-issues'),
         to('/$repo/pulls', 'pull', 'Pull requests', 'repo-pulls'),
-        to('/$repo/ci', 'ci', 'CI runs', 'repo-ci'),
+        to('/$repo/ci', 'ci', 'Runs', 'repo-ci'),
         to('/$repo/releases', 'release', 'Releases', 'repo-releases'),
         to('/$repo/labels', 'label', 'Labels', 'repo-labels'),
         to('/$repo/milestones', 'milestone', 'Milestones', 'repo-milestones'),
-        to('/$repo/ci/caches', 'cache', 'CI caches', 'repo-caches'),
+        to('/$repo/ci/caches', 'cache', 'Caches', 'repo-caches'),
+        to('/$repo/packages', 'release', 'Packages', 'repo-packages'),
+        to('/$repo/commits', 'repo', 'Commits', 'repo-commits'),
+        to('/$repo/branches', 'repo', 'Branches', 'repo-branches'),
       )
       if (canWrite(current.permission)) {
         scoped.push(to('/$repo/settings', 'settings', 'Settings', 'repo-settings'), to('/$repo/settings/webhooks', 'webhook', 'Webhooks', 'repo-webhooks'))

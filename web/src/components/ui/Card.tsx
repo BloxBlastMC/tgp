@@ -47,7 +47,7 @@ export function Card({
             {icon && <span className="mt-0.5 shrink-0 text-fg-muted">{icon}</span>}
             <div className="min-w-0">
               {title && (
-                <h2 id={titleId} className={cx('text-base font-semibold', tone === 'danger' && 'text-danger')}>
+                <h2 id={titleId} className={cx('truncate text-base font-semibold', tone === 'danger' && 'text-danger')}>
                   {title}
                 </h2>
               )}

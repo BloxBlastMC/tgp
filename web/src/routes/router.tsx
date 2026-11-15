@@ -1,13 +1,13 @@
 import { type QueryClient, useQuery } from '@tanstack/react-query'
 import { createRootRouteWithContext, createRoute, createRouter, Outlet, redirect } from '@tanstack/react-router'
-import { FileQuestion } from 'lucide-react'
+import { FileQuestion, Menu as MenuIcon } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { metaQuery, sessionQuery } from '../api/queries'
 import { CommandPalette, shortcutGroups } from '../components/CommandPalette'
 import { EmptyState, Page } from '../components/Page'
-import { isMac, Sidebar } from '../components/Sidebar'
-import { ButtonLink, Dialog, Kbd } from '../components/ui'
-import { useCommands } from '../lib/commands'
+import { Sidebar } from '../components/Sidebar'
+import { ButtonLink, Dialog, IconButton, Kbd } from '../components/ui'
+import { modKey, useCommands } from '../lib/commands'
 import { HomePage } from '../pages/home/HomePage'
 import { AdminAuditPage } from '../pages/admin/AdminAuditPage'
 import { AdminLayout } from '../pages/admin/AdminLayout'
@@ -76,7 +76,7 @@ function ShortcutsDialog({ open, onClose }: { open: boolean; onClose: () => void
                   <span className="text-fg-muted">{it.label}</span>
                   <span className="flex shrink-0 gap-0.5">
                     {it.keys.map((k) => (
-                      <Kbd key={k}>{k === 'Ctrl' && isMac ? '⌘' : k}</Kbd>
+                      <Kbd key={k}>{k === 'Ctrl' ? modKey() : k}</Kbd>
                     ))}
                   </span>
                 </li>
@@ -89,27 +89,8 @@ function ShortcutsDialog({ open, onClose }: { open: boolean; onClose: () => void
   )
 }
 
-function AppLayout() {
-  const session = useQuery(sessionQuery)
-  const [paletteOpen, setPaletteOpen] = useState(false)
-  const [helpOpen, setHelpOpen] = useState(false)
-  const openShortcuts = useCallback(() => setHelpOpen(true), [])
-  const commands = useCommands(session.data, { openShortcuts })
+function NotFoundPage() {
   return (
-    <div className="flex h-full">
-      <Sidebar openPalette={() => setPaletteOpen(true)} openShortcuts={openShortcuts} />
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-bg">
-        <Outlet />
-      </main>
-      <CommandPalette commands={commands} open={paletteOpen} setOpen={setPaletteOpen} onHelp={openShortcuts} />
-      <ShortcutsDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
-    </div>
-  )
-}
-
-const rootRoute = createRootRouteWithContext<RouterContext>()({
-  component: Outlet,
-  notFoundComponent: () => (
     <Page title="Not found">
       <EmptyState
         icon={<FileQuestion size={20} />}
@@ -123,7 +104,47 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
         That page doesn't exist or has moved.
       </EmptyState>
     </Page>
-  ),
+  )
+}
+
+/** Below 768px the sidebar is a drawer; this bar opens it. */
+function MobileTopBar({ onOpen }: { onOpen: () => void }) {
+  const meta = useQuery(metaQuery)
+  return (
+    <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-bg-sidebar px-3 md:hidden">
+      <IconButton label="Open navigation" onClick={onOpen}>
+        <MenuIcon size={16} />
+      </IconButton>
+      <img src={meta.data?.has_logo ? '/api/v1/org/logo' : '/favicon.svg'} alt="" className="size-6 shrink-0 rounded-md object-cover" />
+      <span className="truncate font-semibold tracking-tight">{meta.data?.org_name || 'tgp'}</span>
+    </div>
+  )
+}
+
+function AppLayout() {
+  const session = useQuery(sessionQuery)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const closeDrawer = useCallback(() => setDrawerOpen(false), [])
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
+  const openShortcuts = useCallback(() => setHelpOpen(true), [])
+  const commands = useCommands(session.data, { openShortcuts })
+  return (
+    <div className="flex h-full">
+      <Sidebar openPalette={() => setPaletteOpen(true)} openShortcuts={openShortcuts} mobileOpen={drawerOpen} onCloseMobile={closeDrawer} />
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-bg">
+        <MobileTopBar onOpen={() => setDrawerOpen(true)} />
+        <Outlet />
+      </main>
+      <CommandPalette commands={commands} open={paletteOpen} setOpen={setPaletteOpen} onHelp={openShortcuts} />
+      <ShortcutsDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
+    </div>
+  )
+}
+
+const rootRoute = createRootRouteWithContext<RouterContext>()({
+  component: Outlet,
+  notFoundComponent: NotFoundPage,
 })
 
 const setupRoute = createRoute({
@@ -172,6 +193,8 @@ const appRoute = createRoute({
     return { session }
   },
   component: AppLayout,
+  // Signed-in users keep the sidebar on unknown pages.
+  notFoundComponent: NotFoundPage,
 })
 
 const adminRoute = createRoute({

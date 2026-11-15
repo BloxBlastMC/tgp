@@ -3,6 +3,7 @@ import { CheckCircle2, CircleDot, GitMerge, GitPullRequest, GitPullRequestClosed
 import { useState, type ReactNode } from 'react'
 import { api, errorMessage, unwrap, type Comment, type PullRequest, type PullSummary } from '../../api/client'
 import { pullKeyPrefix, sessionQuery } from '../../api/queries'
+import { modKey } from '../../lib/commands'
 import { decisionInfo, type Thread } from '../../lib/pulls'
 import { pullState } from '../../lib/states'
 import { Alert, Avatar, Badge, Button, cx, IconButton, Menu, MenuItem, Pill, Textarea, Time, useConfirm } from '../ui'
@@ -84,7 +85,7 @@ export function MarkdownEditor({
         ))}
         <span className="flex-1" />
         <span className="flex items-center gap-1 self-center px-1.5 pb-1 text-xs text-fg-faint">
-          <SquarePen size={11} /> Markdown supported{onSubmit && ' · Ctrl+Enter to submit'}
+          <SquarePen size={11} /> Markdown supported{onSubmit && ` · ${modKey()}+Enter to submit`}
         </span>
       </div>
       {tab === 'write' ? (
