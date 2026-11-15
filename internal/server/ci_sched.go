@@ -14,6 +14,7 @@ import (
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/ci/runnerapi"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/ci/scheduler"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/model"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/registry"
 )
 
 // runnerOnline reports whether a runner has been heard from recently.
@@ -367,6 +368,9 @@ func (s *Server) ciJanitor(ctx context.Context) error {
 	if err := s.expireDeliveries(ctx); err != nil {
 		return fmt.Errorf("webhook delivery retention: %w", err)
 	}
+	if err := s.registryGC(ctx); err != nil {
+		return fmt.Errorf("registry retention: %w", err)
+	}
 	return nil
 }
 
@@ -413,8 +417,6 @@ func registryHost(baseURL string) string {
 	return strings.ToLower(u.Host)
 }
 
-// imagePath is <org>/<repo>, lowercased, the registry path of a
-// repository's images.
-func imagePath(org, repo string) string {
-	return strings.ToLower(org + "/" + repo)
-}
+// imagePath is <namespace>/<repo>, the registry path of a repository's
+// images.
+func imagePath(org, repo string) string { return registry.ImagePath(org, repo, "") }

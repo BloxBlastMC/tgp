@@ -41,6 +41,8 @@ const (
 	RunnerUpdate       = "runner.update"
 	RunnerDelete       = "runner.delete"
 	ReleaseDelete      = "release.delete"
+	PackageDelete      = "package.delete"
+	RegistrySettings   = "registry.settings_update"
 	WebhookCreate      = "webhook.create"
 	WebhookUpdate      = "webhook.update"
 	WebhookDelete      = "webhook.delete"

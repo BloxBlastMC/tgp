@@ -137,7 +137,7 @@ type Runner struct {
 	mu      sync.Mutex
 	running map[int64]context.CancelFunc
 	host    map[int64]bool // running host jobs
-	slot    chan struct{} // signalled when a job finishes
+	slot    chan struct{}  // signalled when a job finishes
 	wg      sync.WaitGroup
 	// loadFn reports host load (replaceable in tests).
 	loadFn func() runnerapi.Load

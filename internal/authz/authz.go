@@ -52,6 +52,13 @@ func RepoPerm(ctx context.Context, db bun.IDB, u *model.User, repo *model.Repo) 
 	if u == nil || u.Disabled {
 		return None, nil
 	}
+	if u.JobRepoID != 0 {
+		// A CI job token reads its own repository only.
+		if repo.ID == u.JobRepoID {
+			return Read, nil
+		}
+		return None, nil
+	}
 	if u.Role == model.RoleAdmin {
 		return Admin, nil
 	}
@@ -70,6 +77,9 @@ func RepoPerm(ctx context.Context, db bun.IDB, u *model.User, repo *model.Repo) 
 
 // VisibleRepos restricts a repos query to those u can see.
 func VisibleRepos(q *bun.SelectQuery, u *model.User) *bun.SelectQuery {
+	if u.JobRepoID != 0 {
+		return q.Where("r.id = ?", u.JobRepoID)
+	}
 	if u.Role == model.RoleAdmin || u.AllRepos {
 		return q
 	}

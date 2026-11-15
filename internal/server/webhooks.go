@@ -41,6 +41,7 @@ var webhookEvents = []apigen.WebhookEventInfo{
 	{Name: "issue_comment", Description: "A comment on an issue or a pull request's conversation.", Actions: []string{"created", "edited", "deleted"}},
 	{Name: "release", Description: "Release activity.", Actions: []string{"created", "published", "released", "prereleased", "edited", "deleted"}},
 	{Name: "workflow_run", Description: "A CI run was requested or completed.", Actions: []string{"requested", "completed"}},
+	{Name: "package", Description: "A container image was pushed (published) or deleted.", Actions: []string{"published", "deleted"}},
 }
 
 func knownEvent(name string) bool {

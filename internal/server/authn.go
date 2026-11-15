@@ -13,6 +13,7 @@ import (
 
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/apierr"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/auth"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/ci/runnerapi"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/model"
 )
 
@@ -32,6 +33,8 @@ type AuthMethod string
 const (
 	MethodSession AuthMethod = "session"
 	MethodToken   AuthMethod = "token"
+	// MethodJob: a CI job token (TGP_TOKEN in a running job).
+	MethodJob AuthMethod = "job"
 )
 
 // Principal is the authenticated caller.
@@ -41,6 +44,10 @@ type Principal struct {
 	Session *model.Session     // when Method == MethodSession
 	Token   *model.AccessToken // when Method == MethodToken
 	Scopes  []string           // token scopes; nil for sessions (full access)
+	// Job and JobRepo are the running job and its repository when Method
+	// == MethodJob. User is then a stand-in that can only read JobRepo.
+	Job     *model.Job
+	JobRepo *model.Repo
 }
 
 // HasScope reports whether the principal may act with scope. Sessions have
@@ -145,6 +152,13 @@ func bearerToken(r *http.Request) string {
 
 func (s *Server) principalFromToken(ctx context.Context, raw string) (*Principal, error) {
 	invalid := apierr.Unauthenticated("invalid or expired access token")
+	if strings.HasPrefix(raw, runnerapi.JobTokenPrefix) {
+		p, err := s.jobPrincipal(ctx, raw)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierr.Unauthenticated("invalid job token, or its job has finished")
+		}
+		return p, err
+	}
 	if !strings.HasPrefix(raw, auth.PATPrefix) {
 		return nil, invalid
 	}
@@ -173,6 +187,21 @@ func (s *Server) principalFromToken(ctx context.Context, raw string) (*Principal
 		}
 	}
 	return &Principal{User: u, Method: MethodToken, Token: tok, Scopes: splitScopes(tok.Scopes)}, nil
+}
+
+// jobPrincipal resolves a CI job token: a read-only principal limited to
+// the job's repository, valid while the job runs.
+func (s *Server) jobPrincipal(ctx context.Context, raw string) (*Principal, error) {
+	j, err := s.jobByToken(ctx, raw)
+	if err != nil {
+		return nil, err
+	}
+	repo := new(model.Repo)
+	if err := s.db.NewSelect().Model(repo).Where("id = ?", j.RepoID).Scan(ctx); err != nil {
+		return nil, err
+	}
+	u := &model.User{Username: runnerapi.JobTokenUser, DisplayName: "CI job", Role: model.RoleTester, JobRepoID: repo.ID}
+	return &Principal{User: u, Method: MethodJob, Scopes: []string{"read"}, Job: j, JobRepo: repo}, nil
 }
 
 func (s *Server) principalFromSession(ctx context.Context, raw string, r *http.Request) (*Principal, error) {

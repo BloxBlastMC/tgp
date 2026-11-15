@@ -68,6 +68,10 @@ type User struct {
 	PasswordChangedAt     *time.Time `bun:"password_changed_at"`
 	CreatedAt             time.Time  `bun:"created_at"`
 	UpdatedAt             time.Time  `bun:"updated_at"`
+
+	// JobRepoID is set on the stand-in user of a CI job token: it can read
+	// that one repository and nothing else. Never stored.
+	JobRepoID int64 `bun:"-"`
 }
 
 // IsAdmin reports whether the user is an admin.
@@ -615,4 +619,91 @@ type WebhookDelivery struct {
 	Error           string     `bun:"error"`
 	CreatedAt       time.Time  `bun:"created_at"`
 	DeliveredAt     *time.Time `bun:"delivered_at"`
+}
+
+// RegistryBlob is a content-addressed blob of the container registry,
+// stored once however many images use it.
+type RegistryBlob struct {
+	bun.BaseModel `bun:"table:registry_blobs,alias:rb"`
+
+	Digest    string    `bun:"digest,pk"`
+	Size      int64     `bun:"size"`
+	CreatedAt time.Time `bun:"created_at"`
+}
+
+// RegistryImage is a repository's image: <namespace>/<repo>[/<name>].
+type RegistryImage struct {
+	bun.BaseModel `bun:"table:registry_images,alias:ri"`
+
+	ID        int64     `bun:"id,pk,autoincrement"`
+	RepoID    int64     `bun:"repo_id"`
+	Name      string    `bun:"name"`
+	CreatedAt time.Time `bun:"created_at"`
+	UpdatedAt time.Time `bun:"updated_at"`
+}
+
+// RegistryImageBlob says an image may serve a blob (it was uploaded or
+// mounted there).
+type RegistryImageBlob struct {
+	bun.BaseModel `bun:"table:registry_image_blobs,alias:rib"`
+
+	ImageID   int64     `bun:"image_id,pk"`
+	Digest    string    `bun:"digest,pk"`
+	CreatedAt time.Time `bun:"created_at"`
+}
+
+// RegistryManifest is an image manifest or index pushed to an image.
+type RegistryManifest struct {
+	bun.BaseModel `bun:"table:registry_manifests,alias:rm"`
+
+	ID           int64  `bun:"id,pk,autoincrement"`
+	ImageID      int64  `bun:"image_id"`
+	Digest       string `bun:"digest"`
+	MediaType    string `bun:"media_type"`
+	ArtifactType string `bun:"artifact_type"`
+	// Size is the manifest's own size; ImageSize the total of its config
+	// and layers (for an index, of its manifests' images).
+	Size      int64  `bun:"size"`
+	ImageSize int64  `bun:"image_size"`
+	Platforms string `bun:"platforms"` // JSON array of os/arch[/variant]
+	Content   []byte `bun:"content"`
+	// PushedByID is the user who pushed it (for a CI job, the run's actor);
+	// PushedByJob the job, when a job token pushed it.
+	PushedByID  *int64    `bun:"pushed_by_id"`
+	PushedByJob *int64    `bun:"pushed_by_job_id"`
+	CreatedAt   time.Time `bun:"created_at"`
+}
+
+// RegistryManifestRef is a blob or child manifest a manifest references.
+type RegistryManifestRef struct {
+	bun.BaseModel `bun:"table:registry_manifest_refs,alias:rmr"`
+
+	ManifestID int64  `bun:"manifest_id,pk"`
+	Digest     string `bun:"digest,pk"`
+	Kind       string `bun:"kind"`
+}
+
+type RegistryTag struct {
+	bun.BaseModel `bun:"table:registry_tags,alias:rt"`
+
+	ID         int64     `bun:"id,pk,autoincrement"`
+	ImageID    int64     `bun:"image_id"`
+	Name       string    `bun:"name"`
+	ManifestID int64     `bun:"manifest_id"`
+	CreatedAt  time.Time `bun:"created_at"`
+	UpdatedAt  time.Time `bun:"updated_at"`
+}
+
+// RegistryUpload is a blob upload in progress. Chunks are stored as parts
+// and the SHA-256 state is kept so any server node can continue it.
+type RegistryUpload struct {
+	bun.BaseModel `bun:"table:registry_uploads,alias:ru"`
+
+	ID        string    `bun:"id,pk"`
+	ImageID   int64     `bun:"image_id"`
+	Size      int64     `bun:"size"`
+	Parts     int       `bun:"parts"`
+	HashState []byte    `bun:"hash_state"`
+	CreatedAt time.Time `bun:"created_at"`
+	UpdatedAt time.Time `bun:"updated_at"`
 }

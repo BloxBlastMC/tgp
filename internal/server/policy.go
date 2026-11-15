@@ -78,8 +78,36 @@ func (s *Server) policyMiddleware(f apigen.StrictHandlerFunc, op string) apigen.
 		if err := s.checkAccess(ctx, op, r.Method); err != nil {
 			return nil, err
 		}
+		if err := checkJobAccess(ctx, op, r); err != nil {
+			return nil, err
+		}
 		return f(ctx, w, r, req)
 	}
+}
+
+// jobOperations are the operations outside /repos/{repo} a CI job token
+// may call.
+var jobOperations = map[string]bool{"GetMeta": true, "GetSession": true}
+
+// checkJobAccess limits CI job tokens to reading their own repository:
+// GET requests under /repos/{its repo}, plus the session and server info.
+func checkJobAccess(ctx context.Context, op string, r *http.Request) error {
+	p := principal(ctx)
+	if p == nil || p.Method != MethodJob {
+		return nil
+	}
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		return apierr.Forbidden("CI job tokens are read-only")
+	}
+	if jobOperations[op] {
+		return nil
+	}
+	prefix := "/api/v1/repos/" + strings.ToLower(p.JobRepo.Name)
+	path := strings.ToLower(r.URL.Path)
+	if path == prefix || strings.HasPrefix(path, prefix+"/") {
+		return nil
+	}
+	return apierr.Forbidden("CI job tokens can only read their own repository (%s)", p.JobRepo.Name)
 }
 
 func (s *Server) checkAccess(ctx context.Context, op, method string) error {
@@ -103,7 +131,7 @@ func (s *Server) checkAccess(ctx context.Context, op, method string) error {
 	if p.User.MustChangePassword && level != accessPending {
 		return apierr.New(http.StatusForbidden, apierr.CodePasswordChange, "you must change your temporary password before doing anything else")
 	}
-	if p.Method == MethodToken {
+	if p.Method == MethodToken || p.Method == MethodJob {
 		need := "write"
 		if method == http.MethodGet || method == http.MethodHead {
 			need = "read"

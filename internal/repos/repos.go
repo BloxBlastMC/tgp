@@ -27,7 +27,7 @@ var reserved = map[string]bool{
 	"api": true, "assets": true, "admin": true, "settings": true, "login": true, "logout": true,
 	"setup": true, "change-password": true, "pulls": true, "issues": true, "ci": true, "new": true,
 	"healthz": true, "readyz": true, "internal": true, "favicon.svg": true, "index.html": true,
-	"robots.txt": true, "users": true, "repos": true,
+	"robots.txt": true, "users": true, "repos": true, "v2": true,
 }
 
 // ValidateName checks a repository name.
