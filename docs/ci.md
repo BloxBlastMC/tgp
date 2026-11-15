@@ -513,7 +513,22 @@ jobs:
 `registry-login` is the same as
 `docker login "$TGP_REGISTRY" -u tgp-job --password-stdin <<< "$TGP_TOKEN"`.
 On host jobs the login lives in the job's own `DOCKER_CONFIG`, deleted with
-the job. See [registry.md](registry.md) for image names, quotas and cleanup.
+the job.
+
+`TGP_REGISTRY` is the host of the server's public base URL (Admin →
+Settings), so the Docker daemon on the runner must resolve and reach that
+name over HTTPS, even if the runner itself talks to tgp by another address.
+When it can't (say the runner uses `url = "http://tgp:3000"` on a private
+network and the public name only resolves elsewhere), set `registry` in its
+`runner.toml` to an address that daemon can reach:
+
+```toml
+registry = "tgp.internal:8443"   # host[:port]; TGP_REGISTRY and TGP_IMAGE use it
+```
+
+The address must serve tgp over HTTPS with a certificate Docker trusts, or
+be listed in the daemon's `insecure-registries`. Images pushed through it
+are the same images; people still pull them by the public name. See [registry.md](registry.md) for image names, quotas and cleanup.
 
 ## Runs, re-runs and cancelling
 

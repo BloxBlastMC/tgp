@@ -48,6 +48,26 @@ type Config struct {
 	// DockerJobs = false makes a runner that only runs host jobs (no
 	// Docker daemon needed). Default true.
 	DockerJobs *bool `toml:"docker_jobs,omitempty"`
+	// Registry overrides the container registry host[:port] that jobs log
+	// in and push to (TGP_REGISTRY, TGP_IMAGE, registry-login). By default
+	// it is the host of the server's public base URL; set it when the
+	// runner's Docker daemon can't reach that name, e.g. to the internal
+	// address in url. It must serve tgp over HTTPS with a certificate
+	// Docker trusts (or be listed in the daemon's insecure-registries).
+	Registry string `toml:"registry,omitempty"`
+}
+
+// validRegistryHost reports whether s is empty or a bare host[:port]
+// (no scheme, path or credentials).
+func validRegistryHost(s string) bool {
+	if s == "" {
+		return true
+	}
+	if strings.ContainsAny(s, "/@ \t") {
+		return false
+	}
+	u, err := url.Parse("https://" + s)
+	return err == nil && u.Host == s && u.Hostname() != ""
 }
 
 // HostMode is the effective allow_host_jobs value.
@@ -107,6 +127,10 @@ func LoadConfig(path string) (*Config, error) {
 	if !c.RunsDockerJobs() && c.HostMode() == runnerapi.HostOff {
 		return nil, fmt.Errorf("%s: docker_jobs = false needs allow_host_jobs, or the runner can't run anything", path)
 	}
+	if !validRegistryHost(c.Registry) {
+		return nil, fmt.Errorf("%s: registry must be a host[:port] like git.internal:8443, not %q", path, c.Registry)
+	}
+	c.Registry = strings.ToLower(c.Registry)
 	return &c, nil
 }
 
@@ -330,7 +354,9 @@ func (r *Runner) runJob(ctx context.Context, spec *runnerapi.JobSpec) {
 // tgp.registry and tgp.image (and the github.* aliases) in expressions.
 func (r *Runner) addJobEnv(spec *runnerapi.JobSpec) {
 	host := spec.Registry.Host
-	if host == "" {
+	if r.cfg.Registry != "" {
+		host = r.cfg.Registry
+	} else if host == "" {
 		if u, err := url.Parse(r.cfg.URL); err == nil {
 			host = strings.ToLower(u.Host)
 		}
