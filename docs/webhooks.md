@@ -39,6 +39,7 @@ receiver is reachable.
 | `issue_comment` | `created`, `edited`, `deleted` | Comments on issues and pull request conversations. |
 | `release` | `created`, `published`, `released`, `prereleased`, `edited`, `deleted` | Releases. Publishing sends `published` plus `released` or `prereleased`; drafts send `created`. |
 | `workflow_run` | `requested`, `completed` | CI runs (re-runs send `requested` again). |
+| `package` | `published`, `deleted` | Container images: a tag or new version was pushed, or a tag or version was deleted. |
 | `ping` | — | When the webhook is created, and from **Send ping** / `tgp webhook ping`. |
 
 ## Payloads
@@ -70,6 +71,11 @@ Then, by event:
   object) and `issue` or `pull_request` (`number`, `title`, `state`,
   `html_url`).
 - **`release`:** `release` (API object, with assets).
+- **`package`:** `package` with `name` (the image name below the
+  repository, `""` for its own image), `path` (`<namespace>/<repo>[/<name>]`),
+  `image` (full reference, with `:tag` when a tag changed), `tag` (when a
+  tag was pushed or deleted), `digest`, `media_type`, `size` and `html_url`.
+  Pushes made with a CI job token have the `tgp` bot as sender.
 - **`workflow_run`:** `workflow_run` with `id`, `run_number`, `run_attempt`,
   `name`, `path`, `event`, `status`, `conclusion`, `head_branch`, `head_sha`,
   `ref` and `html_url`.
