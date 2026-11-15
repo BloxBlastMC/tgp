@@ -1,5 +1,5 @@
 import { Outlet } from '@tanstack/react-router'
-import { Activity, Building2, Cpu, History, Settings2, Users, Webhook } from 'lucide-react'
+import { Activity, Boxes, Building2, Cpu, History, Settings2, Users, Webhook } from 'lucide-react'
 import { Page, SideNav } from '../../components/Page'
 
 export function AdminLayout() {
@@ -28,6 +28,7 @@ export function AdminLayout() {
               items: [
                 { to: '/admin/runners', label: 'Runners', icon: Cpu },
                 { to: '/admin/ci', label: 'CI settings', icon: Settings2 },
+                { to: '/admin/registry', label: 'Registry', icon: Boxes },
               ],
             },
             {

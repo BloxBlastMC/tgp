@@ -1,5 +1,6 @@
 import { request, test, type APIRequestContext, type Browser, type Page } from '@playwright/test'
 import { execFileSync } from 'node:child_process'
+import { createHash, randomBytes } from 'node:crypto'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -24,6 +25,46 @@ async function call(c: APIRequestContext, method: 'post' | 'put' | 'patch', path
   const r = await c[method]('/api/v1' + path, { data, headers: { 'X-CSRF-Token': csrf } })
   if (!r.ok()) throw new Error(`${path}: ${r.status()} ${await r.text()}`)
   return r.status() === 204 ? null : r.json()
+}
+
+/** Pushes a small OCI image (or a two-platform index) to the registry with Basic auth. */
+async function pushImage(path: string, tag: string, token: string, platforms?: string[]) {
+  const auth = 'Basic ' + Buffer.from('mia:' + token).toString('base64')
+  const sha = (b: Buffer) => 'sha256:' + createHash('sha256').update(b).digest('hex')
+  const blob = async (b: Buffer) => {
+    const d = sha(b)
+    const r = await fetch(`${server.url}/v2/${path}/blobs/uploads/?digest=${d}`, { method: 'POST', body: new Uint8Array(b), headers: { Authorization: auth } })
+    if (r.status !== 201) throw new Error(`blob: ${r.status} ${await r.text()}`)
+    return { digest: d, size: b.length }
+  }
+  // ref undefined pushes by digest (an index's children).
+  const manifest = async (ref: string | undefined, mediaType: string, body: unknown) => {
+    const b = Buffer.from(JSON.stringify(body))
+    const r = await fetch(`${server.url}/v2/${path}/manifests/${ref ?? sha(b)}`, { method: 'PUT', body: new Uint8Array(b), headers: { Authorization: auth, 'Content-Type': mediaType } })
+    if (r.status !== 201) throw new Error(`manifest: ${r.status} ${await r.text()}`)
+    return { digest: sha(b), size: b.length }
+  }
+  const image = async (ref: string | undefined, os: string, arch: string) => {
+    const config = await blob(Buffer.from(JSON.stringify({ architecture: arch, os, rootfs: { type: 'layers', diff_ids: [] } })))
+    const layers = [await blob(randomBytes(180_000)), await blob(randomBytes(40_000))]
+    return manifest(ref, 'application/vnd.oci.image.manifest.v1+json', {
+      schemaVersion: 2,
+      mediaType: 'application/vnd.oci.image.manifest.v1+json',
+      config: { mediaType: 'application/vnd.oci.image.config.v1+json', ...config },
+      layers: layers.map((l) => ({ mediaType: 'application/vnd.oci.image.layer.v1.tar+gzip', ...l })),
+    })
+  }
+  if (!platforms) return image(tag, 'linux', 'amd64')
+  const children = []
+  for (const p of platforms) {
+    const [os, arch] = p.split('/')
+    children.push({ ...(await image(undefined, os, arch)), platform: { os, architecture: arch } })
+  }
+  return manifest(tag, 'application/vnd.oci.image.index.v1+json', {
+    schemaVersion: 2,
+    mediaType: 'application/vnd.oci.image.index.v1+json',
+    manifests: children.map((c) => ({ mediaType: 'application/vnd.oci.image.manifest.v1+json', digest: c.digest, size: c.size, platform: c.platform })),
+  })
 }
 
 function git(cwd: string, ...args: string[]) {
@@ -130,6 +171,12 @@ test('tour', async ({ browser }) => {
   git(work, 'commit', '-q', '-m', 'Add a per-player scoreboard')
   git(work, 'push', '-q', 'origin', 'feature/scoreboard')
 
+  // Container images: commit tags, a moving tag and a multi-platform image.
+  await pushImage('bloxblast/game/server', 'g1a2b3c4d5e6f', token)
+  await pushImage('bloxblast/game/server', 'g7f8e9d0c1b2a', token)
+  await pushImage('bloxblast/game/server', 'master', token)
+  await pushImage('bloxblast/game/proxy', 'v2', token, ['linux/amd64', 'linux/arm64'])
+
   for (const l of [
     { name: 'bug', color: 'd73a4a', description: "Something isn't working" },
     { name: 'enhancement', color: 'a2eeef', description: 'New feature or request' },
@@ -183,6 +230,9 @@ test('tour', async ({ browser }) => {
     await snap(p, theme, '31-run', '/game/ci/runs/1')
     await snap(p, theme, '32-caches', '/game/ci/caches')
     await snap(p, theme, '33-global-runs', '/ci')
+    await snap(p, theme, '34-packages', '/game/packages')
+    await snap(p, theme, '35-package', '/game/packages/image?name=server')
+    await snap(p, theme, '36-package-index', '/game/packages/image?name=proxy')
     await snap(p, theme, '40-releases', '/game/releases')
     await snap(p, theme, '41-release-new', '/game/releases/new')
     await snap(p, theme, '42-repo-settings', '/game/settings')
@@ -193,6 +243,7 @@ test('tour', async ({ browser }) => {
     await snap(p, theme, '52-admin-org', '/admin/org')
     await snap(p, theme, '53-admin-runners', '/admin/runners')
     await snap(p, theme, '54-admin-ci', '/admin/ci')
+    await snap(p, theme, '57-admin-registry', '/admin/registry')
     await snap(p, theme, '55-admin-audit', '/admin/audit')
     await snap(p, theme, '56-admin-webhooks', '/admin/webhooks')
     await snap(p, theme, '60-settings', '/settings')

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useParams } from '@tanstack/react-router'
-import { Archive, CircleDot, Code2, FolderX, GitBranch, GitPullRequest, History, Package, Play, Settings } from 'lucide-react'
+import { Archive, Boxes, CircleDot, Code2, FolderX, GitBranch, GitPullRequest, History, Package, Play, Settings } from 'lucide-react'
 import { useEffect } from 'react'
 import { ApiRequestError } from '../../api/client'
 import { repoQuery } from '../../api/queries'
@@ -66,6 +66,7 @@ export function RepoLayout() {
     { to: '/$repo/pulls', label: 'Pull requests', icon: GitPullRequest },
     { to: '/$repo/ci', label: 'CI', icon: Play },
     { to: '/$repo/releases', label: 'Releases', icon: Package },
+    { to: '/$repo/packages', label: 'Packages', icon: Boxes },
     { to: '/$repo/commits', label: 'Commits', icon: History },
     { to: '/$repo/branches', label: 'Branches', icon: GitBranch },
   ]

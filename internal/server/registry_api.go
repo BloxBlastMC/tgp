@@ -41,7 +41,11 @@ func (a *api) ListPackages(ctx context.Context, req apigen.ListPackagesRequestOb
 			return nil, err
 		}
 		p.Tags = int(n)
-		v, err := s.db.NewSelect().Model((*model.RegistryManifest)(nil)).Where("image_id = ?", img.ID).Count(ctx)
+		// Versions as the versions list shows them: an index's untagged
+		// platform manifests are part of it, not versions of their own.
+		v, err := s.db.NewSelect().Model((*model.RegistryManifest)(nil)).Where("rm.image_id = ?", img.ID).
+			Where(`EXISTS (SELECT 1 FROM registry_tags t WHERE t.manifest_id = rm.id) OR NOT EXISTS (SELECT 1 FROM registry_manifest_refs r
+				JOIN registry_manifests p ON p.id = r.manifest_id WHERE p.image_id = rm.image_id AND r.digest = rm.digest AND r.kind = 'manifest')`).Count(ctx)
 		if err != nil {
 			return nil, err
 		}
