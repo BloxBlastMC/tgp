@@ -30,6 +30,33 @@ func withOutput(cmd *cobra.Command, schema string) *cobra.Command {
 // cliSchemas are output shapes that exist only in the CLI. They may refer to
 // API schemas with "#/components/schemas/X".
 const cliSchemas = `{
+  "LintResult": {
+    "type": "object",
+    "required": ["valid", "files"],
+    "properties": {
+      "valid": {"type": "boolean", "description": "No file has errors."},
+      "files": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["file", "kind", "valid", "errors"],
+          "properties": {
+            "file": {"type": "string"},
+            "kind": {"type": "string", "enum": ["workflow", "labeler"]},
+            "valid": {"type": "boolean"},
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {"line": {"type": "integer"}, "column": {"type": "integer"}, "message": {"type": "string"}}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "AuthStatus": {
     "type": "object",
     "required": ["host", "url", "logged_in", "token_source"],
