@@ -44,6 +44,9 @@ import { RepoRunsPage } from '../pages/ci/RepoRunsPage'
 import { RunPage } from '../pages/ci/RunPage'
 import { GlobalRunsPage, validateGlobalRuns } from '../pages/ci/GlobalRunsPage'
 import { AdminRunnersPage } from '../pages/admin/AdminRunnersPage'
+import { AdminRegistryPage } from '../pages/admin/AdminRegistryPage'
+import { PackageImagePage, validatePackageImage } from '../pages/packages/PackageImagePage'
+import { PackagesPage } from '../pages/packages/PackagesPage'
 import { AdminCIPage } from '../pages/admin/AdminCIPage'
 import { AdminHealthPage } from '../pages/admin/AdminHealthPage'
 import { CachesPage, validateCaches } from '../pages/ci/CachesPage'
@@ -212,6 +215,8 @@ const repoRoutes = [
   createRoute({ getParentRoute: () => repoRoute, path: '/ci', validateSearch: validateRunList, component: RepoRunsPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/ci/runs/$number', validateSearch: validateRunPage, component: RunPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/ci/caches', validateSearch: validateCaches, component: CachesPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/packages', component: PackagesPage }),
+  createRoute({ getParentRoute: () => repoRoute, path: '/packages/image', validateSearch: validatePackageImage, component: PackageImagePage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/releases', validateSearch: validateReleases, component: ReleasesPage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/releases/new', component: NewReleasePage }),
   createRoute({ getParentRoute: () => repoRoute, path: '/releases/edit/$id', component: EditReleasePage }),
@@ -241,6 +246,7 @@ const routeTree = rootRoute.addChildren([
       createRoute({ getParentRoute: () => adminRoute, path: '/org', component: AdminOrgPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/runners', component: AdminRunnersPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/ci', component: AdminCIPage }),
+      createRoute({ getParentRoute: () => adminRoute, path: '/registry', component: AdminRegistryPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/webhooks', component: AdminWebhooksPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/webhooks/new', component: AdminNewWebhookPage }),
       createRoute({ getParentRoute: () => adminRoute, path: '/webhooks/$id', component: AdminWebhookPage }),

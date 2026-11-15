@@ -73,9 +73,9 @@ process limits the server sets.
 
 func registerCmd(configPath *string) *cobra.Command {
 	var (
-		serverURL, token, name, labels, workDir, docker string
-		capacity                                        int
-		force                                           bool
+		serverURL, token, name, labels, workDir, docker, hostJobs string
+		capacity                                                  int
+		force                                                     bool
 	)
 	cmd := &cobra.Command{
 		Use:   "register",
@@ -91,6 +91,9 @@ func registerCmd(configPath *string) *cobra.Command {
 			}
 			if _, err := os.Stat(*configPath); err == nil && !force {
 				return fmt.Errorf("%s already exists; use --force to replace it (the old registration stays until an admin removes it)", *configPath)
+			}
+			if !runnerapi.ValidHostMode(hostJobs) {
+				return fmt.Errorf(`--allow-host-jobs must be "off", "trusted" or "all"`)
 			}
 			if name == "" {
 				name, _ = os.Hostname()
@@ -116,6 +119,9 @@ func registerCmd(configPath *string) *cobra.Command {
 			}
 			cfg := &runner.Config{URL: strings.TrimRight(serverURL, "/"), Token: resp.Token, ID: resp.ID, Name: resp.Name,
 				Labels: resp.Labels, Capacity: capacity, WorkDir: workDir, Docker: docker, Pull: "missing"}
+			if hostJobs != runnerapi.HostOff {
+				cfg.AllowHostJobs = hostJobs
+			}
 			if err := cfg.Save(*configPath); err != nil {
 				return err
 			}
@@ -132,6 +138,7 @@ func registerCmd(configPath *string) *cobra.Command {
 	f.IntVar(&capacity, "capacity", 1, "jobs to run at once")
 	f.StringVar(&workDir, "work-dir", "", "directory for temporary checkouts (default: next to the config)")
 	f.StringVar(&docker, "docker", "docker", "docker CLI binary")
+	f.StringVar(&hostJobs, "allow-host-jobs", "off", `run host jobs (container: none) on this machine: "off", "trusted" (no pull requests) or "all" (throwaway machines only)`)
 	f.BoolVar(&force, "force", false, "overwrite an existing config")
 	return cmd
 }
@@ -154,9 +161,20 @@ taking new jobs and waits for running ones; a second interrupt cancels them.`,
 			if err != nil {
 				return err
 			}
-			d := &runner.Docker{Binary: cfg.Docker, RunnerID: cfg.ID, Pull: cfg.Pull}
-			if err := d.Check(cmd.Context()); err != nil {
-				return fmt.Errorf("can't reach Docker (every job runs in a container): %w", err)
+			mux := &runner.Mux{}
+			if cfg.RunsDockerJobs() {
+				d := &runner.Docker{Binary: cfg.Docker, RunnerID: cfg.ID, Pull: cfg.Pull}
+				if err := d.Check(cmd.Context()); err != nil {
+					return fmt.Errorf("can't reach Docker (jobs run in containers; set docker_jobs = false for a runner that only runs host jobs): %w", err)
+				}
+				mux.Docker = d
+			}
+			if cfg.HostMode() != runnerapi.HostOff {
+				h := &runner.Host{WorkDir: cfg.WorkDir, Docker: cfg.Docker}
+				log.Info(h.DetectLimits(cmd.Context()))
+				log.Warn("this runner runs host jobs: their steps run directly on this machine as this user, with its Docker daemon",
+					"allow_host_jobs", cfg.HostMode())
+				mux.Host = h
 			}
 			ctx, stop := context.WithCancel(cmd.Context())
 			jobCtx, cancelJobs := context.WithCancel(context.Background())
@@ -171,7 +189,7 @@ taking new jobs and waits for running ones; a second interrupt cancels them.`,
 				log.Info("interrupt: cancelling running jobs")
 				cancelJobs()
 			}()
-			r := runner.New(*cfg, d, log, version.Version)
+			r := runner.New(*cfg, mux, log, version.Version)
 			return r.Run(ctx, jobCtx)
 		},
 	}

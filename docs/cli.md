@@ -98,6 +98,9 @@ written anywhere.
 | `tgp run watch [N] [--exit-status]` | Wait for a run to finish |
 | `tgp run rerun N [--failed\|-j job]` / `cancel N` | Re-run (testers can) or cancel |
 | `tgp workflow list [--ref r]` / `run FILE [-f key=value] [--ref r]` | Workflow files with errors and inputs; start a manual run |
+| `tgp workflow lint [FILE...]` | Check workflow files and the labeler config locally, without a server; exit 6 on errors |
+| `tgp package list` / `versions NAME` / `delete NAME:TAG\|NAME@DIGEST [--yes]` | Container images, their versions and tags; delete a tag or a version (see [registry.md](registry.md)) |
+| `tgp admin registry view\|set KEY=VALUE...` | Registry quota and retention (admins) |
 | `tgp secret list\|set NAME [-b value\|stdin]\|delete NAME [--org]` | CI secrets (values are never shown) |
 | `tgp artifact list [--run N] [-n name]` / `download [RUN] [-n name] [-D dir]` / `delete ID` | CI artifacts: download unpacks the zips |
 | `tgp cache list [-k prefix] [--ref r] [-S size]` / `delete ID\|--key k\|--all` | CI caches and the repository's usage |

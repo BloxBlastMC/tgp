@@ -2,8 +2,10 @@
 
 tgp runs workflows from `.tgp/workflows/*.yml` (or `.yaml`) in each
 repository. The format is close to GitHub Actions, so most of what you know
-carries over. **Every job runs in a Docker container** on a separate machine
-running `tgp-runner`, with CPU, memory and process limits the admins set.
+carries over. **Jobs run in a Docker container** on a separate machine
+running `tgp-runner`, with CPU, memory and process limits the admins set, or,
+on runners that opt in, directly on the runner host (`container: none`) to
+build and push images with its Docker daemon.
 
 ```yaml
 # .tgp/workflows/ci.yml
@@ -58,6 +60,59 @@ Disabling is for draining a runner and doesn't revoke it: its token keeps
 working so running jobs can report back. If a runner host may be
 compromised, **remove** the runner; that invalidates its token at once.
 
+### Runners for host jobs
+
+Some jobs need the runner machine itself, typically to build and push
+container images with the host's Docker daemon. A job with `container: none`
+(see [Host jobs](#host-jobs)) runs its steps directly on a runner that
+**opts in** in its `runner.toml`:
+
+```toml
+allow_host_jobs = "trusted"   # "off" (default), "trusted" or "all"
+docker_jobs = true            # false: a runner that only runs host jobs (no Docker needed)
+```
+
+Or at registration: `tgp-runner register … --allow-host-jobs trusted`.
+
+| `allow_host_jobs` | Runs host jobs of |
+| --- | --- |
+| `off` | nothing (the default) |
+| `trusted` | trusted runs only: pushes to the default branch, manual dispatches and releases |
+| `all` | every run, pull requests included. Use a throwaway machine (a VM recreated after each job): a host job can do anything the runner's user can, including through Docker. |
+
+How a host runner keeps jobs apart:
+
+- **The `host` label.** A runner that allows host jobs reports the `host`
+  label and its mode. The label alone isn't trusted: the server only gives
+  host jobs to runners whose `allow_host_jobs` accepts them, and the runner
+  checks again before running one.
+- **Host jobs run alone.** A host job only starts on an idle runner, and
+  the runner takes nothing else until it finishes.
+- **Each job gets its own directories.** Under
+  `work_dir/host/job-<id>/` it gets `workspace`, `tmp` (`$TMPDIR`), `home`
+  (`$HOME`) and `docker` (`$DOCKER_CONFIG`, where `docker login` stores
+  credentials). Steps start from a clean environment: only `PATH`, locale,
+  `USER`, `DOCKER_HOST`/`DOCKER_CONTEXT`, `XDG_RUNTIME_DIR` and similar are
+  passed on from the runner.
+- **Limits.** If `systemd-run` can create scopes (as root, or with the
+  user's systemd instance and cgroup delegation), each step runs in a
+  transient scope with `CPUQuota`, `MemoryMax`, `MemorySwapMax=0` and
+  `TasksMax` from the job's resources. The runner logs at startup whether
+  limits are enforced. Without systemd, CPU, memory and process limits
+  aren't enforced; the job timeout, step timeouts and the log size limit
+  always are. Cancelling or timing out kills the step's process group and
+  every process in the job's scopes.
+- **Cleanup.** After the job the runner deletes its directories and
+  removes what it created in Docker: buildx builders it made, then
+  containers, networks, volumes, tags and images that appeared while it ran,
+  dangling images and build cache no image uses.
+
+Pull request runs never get push access to the registry, and on a
+`trusted` runner their host jobs wait (the UI says why). To check that an
+image builds on pull requests, add a runner with `allow_host_jobs = "all"`
+on a disposable machine, or build in a container job without the host's
+daemon.
+
 ## Resource management
 
 The scheduler starts a queued job only when **every** limit allows it. All
@@ -84,6 +139,10 @@ no limit.
 | `cache_quota_mb` | 10240 | Cache space per repository. Above it, the least recently used caches are evicted. 0 = no limit. |
 | `cache_retention_days` | 7 | Caches nobody restored for this long are deleted. |
 | `release_asset_max_mb` | 2048 | Largest file that can be attached to a release. |
+
+Host jobs use the same CPU, memory, process and timeout settings, enforced
+with systemd scopes where available (see
+[Runners for host jobs](#runners-for-host-jobs)).
 
 A workflow that asks for more than a maximum fails straight away with a clear
 reason ("asks for 8 CPUs; this instance allows at most 4"). It isn't silently
@@ -142,6 +201,13 @@ jobs:
       db:
         image: postgres:17
         env: {POSTGRES_PASSWORD: test}
+        healthcheck:                # steps start once it passes
+          cmd: pg_isready -U postgres
+          interval: 2s              # default 2s
+          timeout: 5s
+          retries: 30               # default 30
+          start-period: 10s
+    permissions: {packages: read}   # only packages: has an effect (registry push)
     needs: [lint]
     if: github.ref == 'refs/heads/main'
     strategy:
@@ -165,6 +231,36 @@ jobs:
 Matrix expansion follows GitHub's rules, including how `include` merges and
 adds combinations. A workflow can have at most 256 jobs after expansion.
 
+**Service healthchecks.** A service's `healthcheck` runs inside the service
+container (`cmd` is a shell command, or a list joined with spaces). The job's
+steps start once every service with a healthcheck reports healthy; if one
+reports unhealthy or stops, the job fails with the service's last output in
+the log. The wait counts against the job's timeout. Services without a
+healthcheck start as before, without waiting.
+
+### Host jobs
+
+```yaml
+jobs:
+  image:
+    container: none                 # run on the runner host
+    steps:
+      - uses: checkout
+      - uses: registry-login        # docker login with the job token
+      - run: docker build -t "$TGP_IMAGE/issues:g${TGP_SHA::12}" services/issues
+      - run: docker push "$TGP_IMAGE/issues:g${TGP_SHA::12}"
+        if: github.event_name != 'pull_request'
+```
+
+`container: none` runs the job's steps directly on a runner that allows host
+jobs, with that machine's tools and Docker daemon, so `docker build`,
+`docker buildx` and `docker push` work as usual. The job gets the `host`
+runs-on label added; `runs-on: host` without a `container:` also makes a
+host job. Host jobs can't have `services:` (start them with `docker run` in
+a step). Runners only run host jobs they're configured for; see
+[Runners for host jobs](#runners-for-host-jobs) for what's isolated and
+cleaned up.
+
 ### Steps
 
 ```yaml
@@ -183,9 +279,11 @@ steps:
     continue-on-error: true
 ```
 
-- **Built-in steps.** `checkout`, `upload-artifact`, `download-artifact` and
-  `cache` (see below). `actions/…@vN` names are accepted. Third-party actions
-  aren't supported; use `run:`.
+- **Built-in steps.** `checkout`, `upload-artifact`, `download-artifact`,
+  `cache` (see below) and `registry-login` (`docker login` to tgp's
+  registry with the job token; see [Publishing images](#publishing-images)).
+  `actions/…@vN` names are accepted. Third-party actions aren't supported;
+  use `run:`.
 - **Shells.** `bash` runs with `-eo pipefail`, so the first failing command
   fails the step. `sh` runs with `-e`.
 - **Step files.** Steps can write to:
@@ -302,7 +400,17 @@ A cache saves dependency directories between runs:
 Steps also get `CI=true` and `TGP_*` / `GITHUB_*` variables (`SHA`, `REF`,
 `REF_NAME`, `REPOSITORY`, `RUN_ID`, `RUN_NUMBER`, `RUN_ATTEMPT`, `ACTOR`,
 `EVENT_NAME`, `HEAD_REF`, `BASE_REF`, `SERVER_URL`, `WORKFLOW`, `JOB`,
-`WORKSPACE`), plus `RUNNER_TEMP` and `RUNNER_OS`.
+`WORKSPACE`), plus `RUNNER_TEMP` and `RUNNER_OS`, and:
+
+- `TGP_TOKEN`: the [job token](#job-tokens) (also `${{ tgp.token }}`);
+- `TGP_REGISTRY`: the container registry's host, e.g. `git.example.com`
+  (`${{ tgp.registry }}`);
+- `TGP_IMAGE`: the repository's image path, e.g.
+  `git.example.com/bloxblast/game` (`${{ tgp.image }}`); images go at
+  `$TGP_IMAGE/<name>:<tag>` or `$TGP_IMAGE:<tag>`.
+
+A workflow's own `env:` can override these. `tgp.*` is an alias of
+`github.*` everywhere.
 
 ### Concurrency
 
@@ -324,6 +432,11 @@ oversized matrices are all errors, reported with line and column.
 
 - Invalid files are flagged in the CI tab and in `tgp workflow list`.
 - Pushing an invalid file creates a failed run that shows the first error.
+- `tgp workflow lint` runs the same checks locally, without a server, on
+  every workflow file and the [labeler config](labeler.md) of the
+  repository you're in (or the files you name). It prints
+  `file:line:column: message` and exits with status 6 if anything is wrong,
+  so it works in a pre-commit hook or another CI.
 
 ## Secrets
 
@@ -349,6 +462,58 @@ Workflows reference secrets as `${{ secrets.NAME }}`.
 
 Runs started by any push can use secrets. Testers can't push, so only
 maintainers and admins can change what a workflow does with them.
+
+## Job tokens
+
+Every job gets a token, `TGP_TOKEN`, valid only while the job runs and only
+for its own repository:
+
+- **Read** the repository: clone it over git (the `checkout` step does), call
+  the API with `GET` under `/api/v1/repos/<repo>` (so `tgp` commands that read
+  work inside jobs, e.g. `tgp run list -R <repo>`), and pull its images from
+  the registry.
+- **Push images** to the repository's registry path, **only on trusted
+  runs**: pushes to the repository's default branch, manual dispatches
+  (`workflow_dispatch`) and releases. Pull request runs, and pushes to other
+  branches, can pull but not push.
+- Nothing else: no API writes, no other repositories.
+
+`permissions: packages: read` (or `none`, or a `permissions:` block that
+doesn't list `packages`) in a workflow or job drops the push right even on
+trusted runs; `packages: write` is the default and needs no declaration.
+Other `permissions:` scopes are accepted for compatibility and ignored.
+
+### Publishing images
+
+```yaml
+name: Build issues image
+on:
+  push: {branches: [master]}
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      push: {type: boolean, default: false}
+jobs:
+  image:
+    container: none
+    steps:
+      - uses: checkout
+      - run: docker build -t "$TGP_IMAGE/issues:g${TGP_SHA::12}" services/issues
+      - if: github.event_name == 'push' || inputs.push == 'true'
+        uses: registry-login
+      - if: github.event_name == 'push'
+        run: |
+          docker tag "$TGP_IMAGE/issues:g${TGP_SHA::12}" "$TGP_IMAGE/issues:master"
+          docker push "$TGP_IMAGE/issues:g${TGP_SHA::12}"
+          docker push "$TGP_IMAGE/issues:master"
+      - if: github.event_name == 'workflow_dispatch' && inputs.push == 'true'
+        run: docker push "$TGP_IMAGE/issues:g${TGP_SHA::12}"
+```
+
+`registry-login` is the same as
+`docker login "$TGP_REGISTRY" -u tgp-job --password-stdin <<< "$TGP_TOKEN"`.
+On host jobs the login lives in the job's own `DOCKER_CONFIG`, deleted with
+the job. See [registry.md](registry.md) for image names, quotas and cleanup.
 
 ## Runs, re-runs and cancelling
 
@@ -404,6 +569,7 @@ tgp run watch 34 --exit-status           # wait; exit 1 unless it succeeded
 tgp run rerun 34 --failed                # testers can re-run
 tgp run cancel 34
 tgp workflow list                        # files, triggers, errors, inputs
+tgp workflow lint                        # check workflow files locally (exit 6 on errors)
 tgp workflow run deploy.yml -f env=staging --ref main
 tgp pr checks --watch                    # exit 0 passed, 1 failed, 8 pending
 tgp secret set DEPLOY_KEY < key.pem
@@ -427,8 +593,11 @@ in `internal/ci/runnerapi`.
   deduplicated. Steps and results are reported with `update` and `complete`.
 - **Lost jobs.** If a runner restarts and no longer reports a job it had,
   that job fails at once, without waiting for the offline timeout.
-- **Job tokens.** Each job gets a token that can clone its own repository
-  (read-only) only while the job is running.
+- **Job tokens.** Each job gets a token for its own repository, valid only
+  while the job is running; see [Job tokens](#job-tokens).
+- **Host jobs.** Runners report `host_mode` (their `allow_host_jobs`) on
+  every fetch, and the job spec says whether a job is a host job and whether
+  its run is trusted.
 - **Artifacts and caches** move as raw request bodies under
   `/jobs/{id}/artifacts` and `/jobs/{id}/caches`, only while the job runs.
   The runner builds zips and cache archives itself (with `docker cp`), so job

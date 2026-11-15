@@ -237,3 +237,81 @@ func TestParseMemory(t *testing.T) {
 		}
 	}
 }
+
+func TestHostJobsHealthchecksPermissions(t *testing.T) {
+	src := `on: push
+permissions:
+  contents: read
+  packages: write
+jobs:
+  image:
+    container: none
+    steps: [{uses: checkout}, {uses: registry-login}, {run: 'docker build -t "${{ tgp.image }}/issues" .'}]
+  labeled:
+    runs-on: [host, big]
+    permissions: {packages: read}
+    steps: [{run: x}]
+  test:
+    services:
+      db:
+        image: mysql:8.4
+        healthcheck:
+          cmd: [mysqladmin, ping, -h, 127.0.0.1]
+          interval: 2s
+          timeout: 1m
+          retries: 20
+          start-period: 30
+      cache:
+        image: redis:7
+        healthcheck: redis-cli ping
+    permissions: read-all
+    steps: [{run: x}]
+`
+	w, err := Parse("w.yml", []byte(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	img := w.Jobs["image"]
+	if !img.Host || img.Container != nil || strings.Join(img.RunsOn, ",") != "host" || img.Packages != PackagesWrite {
+		t.Fatalf("image job: %+v", img)
+	}
+	if l := w.Jobs["labeled"]; !l.Host || l.Packages != PackagesRead {
+		t.Fatalf("runs-on host job: %+v", l)
+	}
+	test := w.Jobs["test"]
+	if test.Host || test.Packages != PackagesRead {
+		t.Fatalf("test job: %+v", test)
+	}
+	h := test.Services["db"].Healthcheck
+	if h == nil || h.Cmd != "mysqladmin ping -h 127.0.0.1" || h.Interval != 2 || h.Timeout != 60 || h.Retries != 20 || h.StartPeriod != 30 {
+		t.Fatalf("healthcheck: %+v", h)
+	}
+	if c := test.Services["cache"].Healthcheck; c == nil || c.Cmd != "redis-cli ping" {
+		t.Fatalf("scalar healthcheck: %+v", c)
+	}
+	// A permissions mapping without packages means packages: none.
+	w, err = Parse("w.yml", []byte("on: push\npermissions: {contents: read}\njobs:\n  a:\n    steps: [{run: x}]\n"))
+	if err != nil || w.Jobs["a"].Packages != PackagesNone {
+		t.Fatalf("packages none: %v %+v", err, w)
+	}
+	// container: with an image is still a container job, even with runs-on: host.
+	w, err = Parse("w.yml", []byte("on: push\njobs:\n  a:\n    runs-on: host\n    container: alpine:3\n    steps: [{run: x}]\n"))
+	if err != nil || w.Jobs["a"].Host {
+		t.Fatalf("container job on host runner: %v %+v", err, w.Jobs["a"])
+	}
+
+	bad := map[string]string{
+		"on: push\njobs:\n  a:\n    container: none\n    services: {db: {image: mysql}}\n    steps: [{run: x}]\n":                     "can't have services",
+		"on: push\njobs:\n  a:\n    services: {db: {image: mysql, healthcheck: {interval: 2s}}}\n    steps: [{run: x}]\n":             "cmd is required",
+		"on: push\njobs:\n  a:\n    services: {db: {image: mysql, healthcheck: {cmd: x, interval: 2 days}}}\n    steps: [{run: x}]\n": "must be a duration",
+		"on: push\njobs:\n  a:\n    container: {image: x, healthcheck: y}\n    steps: [{run: x}]\n":                                   `unknown key "healthcheck"`,
+		"on: push\npermissions: {packages: admin}\njobs:\n  a:\n    steps: [{run: x}]\n":                                              "must be read, write or none",
+		"on: push\npermissions: everything\njobs:\n  a:\n    steps: [{run: x}]\n":                                                     "read-all, write-all",
+		"on: push\njobs:\n  a:\n    steps: [{uses: registry-login, with: {registry: x}}]\n":                                           `doesn't take "registry"`,
+	}
+	for src, want := range bad {
+		if _, err := Parse("w.yml", []byte(src)); err == nil || !strings.Contains(err.Error(), want) {
+			t.Errorf("%q:\n got %v\nwant %q", src, err, want)
+		}
+	}
+}

@@ -58,6 +58,7 @@ type Server struct {
 	// store holds blobs (CI logs).
 	store storage.Store
 	ci    ciState
+	reg   regState
 
 	hooks     hookState
 	hooksOnce sync.Once
@@ -138,6 +139,9 @@ func (s *Server) Handler() http.Handler {
 		_, _ = w.Write([]byte("ok\n"))
 	})
 	r.Get("/readyz", s.handleReady)
+	// The container registry (OCI Distribution API).
+	r.Handle("/v2", http.HandlerFunc(s.handleRegistry))
+	r.Handle("/v2/*", http.HandlerFunc(s.handleRegistry))
 	r.Post("/internal/hooks/{kind}", s.handleHook)
 
 	r.Route("/api", func(r chi.Router) {

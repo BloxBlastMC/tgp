@@ -333,6 +333,25 @@ export const cachesQuery = (repo: string, f: CacheFilters) =>
     queryFn: () => unwrap(api.GET('/repos/{repo}/caches', { params: { path: { repo }, query: { per_page: 50, ...f } } })),
   })
 
+// --- packages ---
+
+export const packagesQuery = (repo: string) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'packages', 'list'],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/packages', { params: { path: { repo } } })),
+  })
+
+export const packageVersionsQuery = (repo: string, name: string) =>
+  queryOptions({
+    queryKey: ['repo', repo, 'packages', 'versions', name],
+    queryFn: () => unwrap(api.GET('/repos/{repo}/packages/versions', { params: { path: { repo }, query: { name } } })),
+  })
+
+export const registrySettingsQuery = queryOptions({
+  queryKey: ['admin', 'registry', 'settings'],
+  queryFn: () => unwrap(api.GET('/admin/registry/settings')),
+})
+
 // --- releases ---
 
 export const releasesQuery = (repo: string, page = 1) =>

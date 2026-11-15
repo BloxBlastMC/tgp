@@ -144,6 +144,18 @@ func (j *jobRun) execute(ctx context.Context) (conclusion, reason string, output
 		j.printf(step, "##[error]%s", msg)
 		return runnerapi.ConclusionFailure, msg, nil
 	}
+	if spec.Host {
+		// The server only hands out host jobs this runner accepts; check
+		// again in case the configuration changed in between.
+		if mode := j.r.cfg.HostMode(); !runnerapi.HostAccepts(mode, spec.Trusted) {
+			j.report(ctx, runnerapi.StepUpdate{Number: 0, Status: runnerapi.StatusCompleted, Conclusion: runnerapi.ConclusionFailure, CompletedAt: now()})
+			if mode == runnerapi.HostTrusted {
+				return fail(0, `This runner only runs host jobs (container: none) of trusted runs (allow_host_jobs = "trusted"); pull request runs need a runner with allow_host_jobs = "all"`)
+			}
+			return fail(0, "This runner doesn't run host jobs (container: none); set allow_host_jobs in its runner.toml")
+		}
+		j.printf(runnerapi.StepSetup, "Host job: steps run directly on the runner machine (trusted run: %t)", spec.Trusted)
+	}
 	wfEnv, err := j.evalEnv(ctx, spec.WorkflowEnv, nil)
 	if err != nil {
 		j.report(ctx, runnerapi.StepUpdate{Number: 0, Status: runnerapi.StatusCompleted, Conclusion: runnerapi.ConclusionFailure, CompletedAt: now()})
@@ -165,7 +177,7 @@ func (j *jobRun) execute(ctx context.Context) (conclusion, reason string, output
 		if err != nil {
 			return fail(0, "service %s %v", svc.Name, err)
 		}
-		prep.Services[i] = runnerapi.Service{Name: svc.Name, Image: svc.Image, Env: e}
+		prep.Services[i] = runnerapi.Service{Name: svc.Name, Image: svc.Image, Env: e, Healthcheck: svc.Healthcheck}
 	}
 
 	setupLog := j.writer(runnerapi.StepSetup)
@@ -513,6 +525,8 @@ func (j *jobRun) builtin(ctx context.Context, st runnerapi.Step) (map[string]str
 		return nil, j.downloadArtifact(ctx, st.Number, with)
 	case "cache":
 		return j.cache(ctx, st.Number, with)
+	case "registry-login":
+		return nil, j.registryLogin(ctx, st.Number)
 	}
 	return nil, fmt.Errorf("unknown built-in step %q (this runner may be older than the server)", st.Uses)
 }
@@ -592,6 +606,41 @@ func (j *jobRun) checkout(ctx context.Context, n int, with map[string]string) er
 		return err
 	}
 	j.printf(n, "Checked out %s into %s", short(g.SHA), dest)
+	return nil
+}
+
+// registryLogin runs docker login for the repository's registry with the
+// job token (read access; push too on trusted runs). On host jobs the
+// login is stored in the job's own Docker config, deleted afterwards.
+func (j *jobRun) registryLogin(ctx context.Context, n int) error {
+	env := map[string]string{}
+	for k, v := range j.spec.Env {
+		env[k] = v
+	}
+	for k, v := range j.mergedEnv(nil) {
+		env[k] = v
+	}
+	if len(j.addPath) > 0 {
+		env["PATH"] = strings.Join(j.addPath, ":") + ":" + j.path
+	}
+	reg := env["TGP_REGISTRY"]
+	what := "pull"
+	if j.spec.Trusted {
+		what = "pull and push"
+	}
+	j.printf(n, "Logging in to %s as %s (%s %s)", reg, runnerapi.JobTokenUser, what, j.spec.Registry.Path)
+	out := j.writer(n)
+	defer out.Flush()
+	code, err := j.env.Exec(ctx, ExecOptions{
+		Cmd: []string{"docker", "login", reg, "--username", runnerapi.JobTokenUser, "--password-stdin"},
+		Env: env, Dir: j.env.Workspace(), Stdin: strings.NewReader(j.spec.Git.Token), Output: out,
+	})
+	if err != nil {
+		return err
+	}
+	if code != 0 {
+		return fmt.Errorf("docker login failed with exit code %d (does the job have the docker CLI?)", code)
+	}
 	return nil
 }
 

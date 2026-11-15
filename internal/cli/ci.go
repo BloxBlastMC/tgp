@@ -641,9 +641,9 @@ func newWorkflowCmd(a *app) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "workflow",
 		Aliases: []string{"workflows"},
-		Short:   "List workflows and run them manually",
+		Short:   "List, check and run workflows",
 	}
-	cmd.AddCommand(newWorkflowListCmd(a), newWorkflowRunCmd(a))
+	cmd.AddCommand(newWorkflowListCmd(a), newWorkflowRunCmd(a), newWorkflowLintCmd(a))
 	return group(cmd)
 }
 
@@ -1232,6 +1232,9 @@ func printRunner(a *app, w io.Writer, rn *apigen.Runner) error {
 		{"name", rn.Name}, {"status", string(rn.Status)}, {"labels", strings.Join(rn.Labels, ", ")},
 		{"busy", fmt.Sprintf("%d of %d", rn.Busy, rn.Capacity)}, {"version", rn.Version}, {"platform", rn.Os + "/" + rn.Arch},
 		{"last seen", ago(rn.LastSeenAt)},
+	}
+	if rn.HostMode != nil && *rn.HostMode != apigen.RunnerHostModeOff {
+		kv = append(kv, [2]string{"host jobs", string(*rn.HostMode)})
 	}
 	if rn.CpuPercent != nil {
 		kv = append(kv, [2]string{"cpu", fmt.Sprintf("%.0f%%", *rn.CpuPercent)})

@@ -13,6 +13,10 @@ Each milestone ships as its own pull request.
 9. **Webhooks**: repository and organisation webhooks, push/create/delete, pull request, review, issue, comment, release and CI run events, HMAC signatures, ordered delivery with retries, delivery log and redelivery, `tgp webhook`. ✅ See [webhooks.md](webhooks.md).
 10. **Admin & ops**: server health page and `tgp admin health` (checks, disks, queues, storage per repository), `tgp-server backup`/`restore` (online, database-neutral, SQLite ⇄ PostgreSQL), systemd units, Docker Compose, Caddy/nginx examples. ✅ See [deployment.md](deployment.md) and [backup.md](backup.md).
 
+Since then:
+
+- **Host jobs, registry, labeler**: `container: none` jobs on opted-in runners (per-step systemd limits, cleanup of files and Docker objects), a built-in OCI container registry with quotas and retention, job tokens (`TGP_TOKEN`) that read their repository and push images on trusted runs, the pull request labeler, service healthchecks and `tgp workflow lint`. See [ci.md](ci.md#host-jobs), [registry.md](registry.md) and [labeler.md](labeler.md).
+
 ## Roles
 
 | Role       | Access                                                                                                             |

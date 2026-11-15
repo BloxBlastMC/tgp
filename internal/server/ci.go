@@ -84,6 +84,8 @@ type jobDef struct {
 	Strategy        map[string]any      `json:"strategy,omitempty"`
 	// Secrets lists the secret names the job references ("*" = all).
 	Secrets []string `json:"secrets,omitempty"`
+	// Packages is the job's permissions.packages ("" = default).
+	Packages string `json:"packages,omitempty"`
 }
 
 func parseDef(j *model.Job) jobDef {

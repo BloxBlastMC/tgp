@@ -213,6 +213,26 @@ compose file has it under the `runner` profile.
 Capacity is set per runner (`--capacity`); CPU, memory and queue limits are
 under **Admin → CI settings**. See [ci.md](ci.md#resource-management).
 
+**Host jobs.** To build and push container images, set
+`allow_host_jobs = "trusted"` in a runner's `runner.toml` (or register with
+`--allow-host-jobs trusted`): jobs with `container: none` from pushes to the
+default branch, dispatches and releases then run directly on that machine,
+one at a time, with its Docker daemon. Use `"all"` only on a disposable
+machine, since it runs pull request code on the host. For CPU and memory
+limits on host jobs, run the runner where `systemd-run` can create scopes:
+as root, or as a user with lingering enabled (`loginctl enable-linger
+tgp-runner`) and cgroup delegation, and with `XDG_RUNTIME_DIR` set. The
+runner logs at startup whether limits are enforced. See
+[ci.md](ci.md#runners-for-host-jobs).
+
+## Container registry
+
+The registry is part of tgp-server at `/v2/` and needs no setup beyond a
+`base_url` (image names use its host). The reverse proxy must pass large
+request bodies unbuffered; the nginx and Caddy examples already do. Images
+are stored in the configured blob storage (local or S3) and count against
+**Admin → Registry** quotas. See [registry.md](registry.md).
+
 ## Monitoring
 
 | What | Where |

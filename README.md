@@ -18,7 +18,7 @@ issues, CI with strict resource limits, and an agent-friendly CLI.
 | ------------ | ------------------------------------------------------------------------------- |
 | `tgp-server` | API, web UI, git over HTTPS, CI scheduler. Stateless; scale out with Postgres.  |
 | `tgp`        | Command line client. `--json` on every command for scripts and agents.          |
-| `tgp-runner` | CI agent. Pulls jobs from the server and runs each one in a Docker container.   |
+| `tgp-runner` | CI agent. Pulls jobs from the server and runs each one in a Docker container (or on the host, if allowed). |
 
 ## Building
 
@@ -79,7 +79,17 @@ tgp-runner register --url https://git.example.com --token tgp_reg_…
 tgp-runner run
 ```
 
-See [docs/ci.md](docs/ci.md) for the workflow syntax and resource limits.
+See [docs/ci.md](docs/ci.md) for the workflow syntax and resource limits,
+including host jobs that build and push images. Check workflow files
+locally with `tgp workflow lint`.
+
+### Container registry and labeler
+
+Images live at `<host>/<org>/<repo>[/<name>]:<tag>` in the built-in
+registry (`docker login` with a personal access token; CI jobs use their job
+token): see [docs/registry.md](docs/registry.md). Pull requests are labeled
+from `.tgp/labeler.yml` (or `.github/labeler.yml`): see
+[docs/labeler.md](docs/labeler.md).
 
 The server also creates `master.key` in the data dir. It encrypts 2FA seeds
 and CI secrets: back it up with the database.

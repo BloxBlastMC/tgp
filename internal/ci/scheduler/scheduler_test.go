@@ -142,3 +142,48 @@ func TestWaitReasons(t *testing.T) {
 		t.Errorf("got %q", got)
 	}
 }
+
+func TestHostJobs(t *testing.T) {
+	trustedJob := Job{ID: 1, RepoID: 1, Labels: []string{"host"}, Host: true, Trusted: true, QueuedAt: t0}
+	prJob := Job{ID: 2, RepoID: 1, Labels: []string{"host"}, Host: true, QueuedAt: t0.Add(time.Second)}
+	plainJob := Job{ID: 3, RepoID: 2, QueuedAt: t0.Add(2 * time.Second)}
+	l := Limits{}
+	st := State{}
+
+	off := Runner{ID: 1, Labels: []string{"host"}, Capacity: 2, Online: true, HostMode: "off"}
+	if j, ok := Pick(l, off, st, []Job{trustedJob, prJob}); ok {
+		t.Fatalf("an off runner with a host label got %d", j.ID)
+	}
+	trusted := Runner{ID: 2, Labels: []string{"host"}, Capacity: 2, Online: true, HostMode: "trusted"}
+	if j, ok := Pick(l, trusted, st, []Job{prJob}); ok {
+		t.Fatalf("a trusted runner got the PR host job %d", j.ID)
+	}
+	if j, ok := Pick(l, trusted, st, []Job{prJob, trustedJob}); !ok || j.ID != 1 {
+		t.Fatalf("trusted runner: %v %v", j, ok)
+	}
+	all := Runner{ID: 3, Labels: []string{"host"}, Capacity: 2, Online: true, HostMode: "all"}
+	if j, ok := Pick(l, all, st, []Job{prJob}); !ok || j.ID != 2 {
+		t.Fatalf("all runner: %v %v", j, ok)
+	}
+	// Host jobs run alone: not on a busy runner...
+	busy := all
+	busy.Busy = 1
+	if j, ok := Pick(l, busy, st, []Job{trustedJob, plainJob}); !ok || j.ID != 3 {
+		t.Fatalf("busy runner should only get the plain job: %v %v", j, ok)
+	}
+	// ...and a runner running one gets nothing else.
+	st.HostBusy = map[int64]bool{3: true}
+	if j, ok := Pick(l, busy, st, []Job{plainJob}); ok {
+		t.Fatalf("runner running a host job got %d", j.ID)
+	}
+
+	if w := WaitReason(l, []Runner{trusted}, State{}, prJob); !strings.Contains(w, "pull requests") {
+		t.Fatalf("PR wait reason: %s", w)
+	}
+	if w := WaitReason(l, []Runner{off}, State{}, trustedJob); !strings.Contains(w, `allow_host_jobs = "trusted"`) {
+		t.Fatalf("host wait reason: %s", w)
+	}
+	if w := WaitReason(l, []Runner{{ID: 4, Labels: []string{"host"}, Capacity: 2, Busy: 1, Online: true, HostMode: "all"}}, State{}, trustedJob); !strings.Contains(w, "idle") {
+		t.Fatalf("busy wait reason: %s", w)
+	}
+}

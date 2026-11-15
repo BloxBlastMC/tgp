@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/ci/runnerapi"
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/ci/workflow"
 )
 
 // Executor prepares an isolated environment for a job.
@@ -199,12 +200,20 @@ func (d *Docker) Prepare(ctx context.Context, spec *runnerapi.JobSpec, container
 		fmt.Fprintf(log, "Starting service %s (%s)\n", svc.Name, svc.Image)
 		args := append([]string{"run", "-d", "--name", name, "--network", e.network, "--network-alias", svc.Name}, d.labels(spec.ID)...)
 		args = append(args, limits...)
+		args = append(args, healthFlags(svc.Healthcheck)...)
 		args = append(args, envFlags(svc.Env)...)
 		args = append(args, svc.Image)
 		if err := d.run(ctx, nil, svc.Env, args...); err != nil {
 			return e, fmt.Errorf("can't start service %s: %w", svc.Name, err)
 		}
 		e.containers = append(e.containers, name)
+	}
+	for _, svc := range spec.Services {
+		if svc.Healthcheck != nil {
+			if err := d.waitHealthy(ctx, base+"-"+svc.Name, svc.Name, log); err != nil {
+				return e, err
+			}
+		}
 	}
 	fmt.Fprintf(log, "Starting job container (%s; %g CPUs, %d MiB memory, %d processes)\n",
 		spec.Image, spec.Resources.CPUs, spec.Resources.MemoryBytes>>20, spec.Resources.Pids)
@@ -221,6 +230,81 @@ func (d *Docker) Prepare(ctx context.Context, spec *runnerapi.JobSpec, container
 		return e, err
 	}
 	return e, nil
+}
+
+// healthFlags turns a service healthcheck into docker run flags.
+func healthFlags(h *workflow.Healthcheck) []string {
+	if h == nil {
+		return nil
+	}
+	sec := func(n int) string { return strconv.Itoa(n) + "s" }
+	out := []string{"--health-cmd", h.Cmd}
+	interval := h.Interval
+	if interval == 0 {
+		interval = 2 // docker's default of 30s makes jobs wait needlessly
+	}
+	out = append(out, "--health-interval", sec(interval))
+	if h.Timeout > 0 {
+		out = append(out, "--health-timeout", sec(h.Timeout))
+	}
+	retries := h.Retries
+	if retries == 0 {
+		retries = 30
+	}
+	out = append(out, "--health-retries", strconv.Itoa(retries))
+	if h.StartPeriod > 0 {
+		out = append(out, "--health-start-period", sec(h.StartPeriod))
+	}
+	return out
+}
+
+// healthPoll is how often waitHealthy checks a service (tests shorten it).
+var healthPoll = time.Second
+
+// waitHealthy waits until a service container's healthcheck passes. It
+// fails if the check reports unhealthy or the container stops; the wait is
+// bounded by ctx (the job's timeout).
+func (d *Docker) waitHealthy(ctx context.Context, container, name string, log io.Writer) error {
+	fmt.Fprintf(log, "Waiting for service %s to be healthy\n", name)
+	start := time.Now()
+	for {
+		c := d.cmd(ctx, nil, "inspect", "--format", "{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}", container)
+		out, err := c.Output()
+		if err != nil {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			return fmt.Errorf("can't inspect service %s: %w", name, err)
+		}
+		f := strings.Fields(string(out))
+		state, health := "", ""
+		if len(f) > 0 {
+			state = f[0]
+		}
+		if len(f) > 1 {
+			health = f[1]
+		}
+		switch {
+		case health == "healthy":
+			fmt.Fprintf(log, "Service %s is healthy (after %s)\n", name, time.Since(start).Round(time.Second))
+			return nil
+		case health == "unhealthy" || (state != "running" && state != "created" && state != "restarting"):
+			why := "its healthcheck failed"
+			if health != "unhealthy" {
+				why = "it stopped (" + state + ")"
+			}
+			logs, _ := d.cmd(ctx, nil, "logs", "--tail", "20", container).CombinedOutput()
+			if s := strings.TrimSpace(string(logs)); s != "" {
+				fmt.Fprintf(log, "Last output of service %s:\n%s\n", name, s)
+			}
+			return fmt.Errorf("service %s isn't healthy: %s", name, why)
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("service %s didn't become healthy: %w", name, ctx.Err())
+		case <-time.After(healthPoll):
+		}
+	}
 }
 
 func (e *dockerEnv) Workspace() string { return dockerWorkspace }

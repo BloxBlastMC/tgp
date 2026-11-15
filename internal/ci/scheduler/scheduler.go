@@ -8,7 +8,9 @@
 //   - fewer than MaxConcurrent jobs run across the instance;
 //   - its repository runs fewer than MaxPerRepo jobs;
 //   - its matrix group runs fewer than the strategy's max-parallel;
-//   - the runner has every label the job asks for.
+//   - the runner has every label the job asks for;
+//   - host jobs (container: none) only go to idle runners whose host mode
+//     accepts them, and a runner running a host job gets nothing else.
 //
 // Among eligible jobs, repositories take turns: the repository with the
 // fewest running jobs goes first, ties go to the repository that started a
@@ -21,6 +23,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/ci/runnerapi"
 )
 
 // Limits are the instance-wide scheduling limits. Zero means unlimited.
@@ -40,6 +44,8 @@ type Runner struct {
 	CPUPercent float64
 	Disabled   bool
 	Online     bool
+	// HostMode is the runner's allow_host_jobs (runnerapi.Host*).
+	HostMode string
 }
 
 // Job is a queued job.
@@ -52,6 +58,10 @@ type Job struct {
 	// the strategy's max-parallel (0 = unlimited).
 	Group    string
 	GroupMax int
+	// Host jobs run on the runner host; Trusted says whether the run is
+	// trusted (see runnerapi.JobSpec).
+	Host    bool
+	Trusted bool
 }
 
 // State is the current load.
@@ -60,6 +70,8 @@ type State struct {
 	RepoRunning  map[int64]int
 	RepoLastRun  map[int64]time.Time
 	GroupRunning map[string]int
+	// HostBusy holds the runners running a host job.
+	HostBusy map[int64]bool
 }
 
 // RunnerBlock says why a runner gets no job at all, or "".
@@ -69,6 +81,8 @@ func RunnerBlock(l Limits, r Runner, st State) string {
 		return "runner is disabled"
 	case r.Capacity > 0 && r.Busy >= r.Capacity:
 		return fmt.Sprintf("runner is full (%d/%d)", r.Busy, r.Capacity)
+	case st.HostBusy[r.ID]:
+		return "runner is running a host job"
 	case l.MaxCPUPercent > 0 && r.CPUPercent > l.MaxCPUPercent:
 		return fmt.Sprintf("runner is overloaded (CPU %.0f%% > %.0f%%)", r.CPUPercent, l.MaxCPUPercent)
 	case l.MaxConcurrent > 0 && st.Running >= l.MaxConcurrent:
@@ -95,6 +109,13 @@ func HasLabels(have, want []string) bool {
 	return true
 }
 
+// hostOK: a host job needs a runner that accepts it and runs nothing else,
+// because host jobs share the machine (and its Docker daemon) with
+// whatever else runs there.
+func hostOK(r Runner, j Job) bool {
+	return !j.Host || (runnerapi.HostAccepts(r.HostMode, j.Trusted) && r.Busy == 0)
+}
+
 func eligible(l Limits, st State, j Job) bool {
 	if l.MaxPerRepo > 0 && st.RepoRunning[j.RepoID] >= l.MaxPerRepo {
 		return false
@@ -117,7 +138,7 @@ func Pick(l Limits, r Runner, st State, queue []Job) (Job, bool) {
 	}
 	best := map[int64]*repoBest{}
 	for _, j := range queue {
-		if !HasLabels(r.Labels, j.Labels) || !eligible(l, st, j) {
+		if !HasLabels(r.Labels, j.Labels) || !eligible(l, st, j) || !hostOK(r, j) {
 			continue
 		}
 		b := best[j.RepoID]
@@ -186,9 +207,13 @@ func WaitReason(l Limits, runners []Runner, st State, j Job) string {
 	if l.MaxConcurrent > 0 && st.Running >= l.MaxConcurrent {
 		return fmt.Sprintf("Waiting: %d jobs are running across the instance (limit %d)", st.Running, l.MaxConcurrent)
 	}
-	matching, online, free := 0, 0, 0
+	matching, online, free, hostRefused := 0, 0, 0, 0
 	for _, r := range runners {
 		if r.Disabled || !HasLabels(r.Labels, j.Labels) {
+			continue
+		}
+		if j.Host && !runnerapi.HostAccepts(r.HostMode, j.Trusted) {
+			hostRefused++
 			continue
 		}
 		matching++
@@ -205,6 +230,10 @@ func WaitReason(l Limits, runners []Runner, st State, j Job) string {
 		labels = "labels " + strings.Join(j.Labels, ", ")
 	}
 	switch {
+	case j.Host && matching == 0 && !j.Trusted:
+		return `Waiting: no runner runs host jobs (container: none) for pull requests; that needs a runner with allow_host_jobs = "all", ideally a throwaway one`
+	case j.Host && matching == 0:
+		return `Waiting: no runner runs host jobs (container: none); an admin can set allow_host_jobs = "trusted" in a runner's runner.toml`
 	case matching == 0 && len(j.Labels) > 0:
 		return "Waiting: no runner has " + labels
 	case matching == 0:
@@ -213,6 +242,8 @@ func WaitReason(l Limits, runners []Runner, st State, j Job) string {
 		return fmt.Sprintf("Waiting: no runner with %s is online (%d offline)", labels, matching)
 	case free == 0:
 		return fmt.Sprintf("Waiting for a free runner (%d matching, all busy or overloaded)", online)
+	case j.Host:
+		return "Waiting for a matching runner to be idle (host jobs run alone)"
 	}
 	return "Waiting for a runner to pick it up"
 }

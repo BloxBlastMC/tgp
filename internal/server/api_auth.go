@@ -164,7 +164,7 @@ func sessionResponse(p *Principal) apigen.Session {
 		AuthMethod:         apigen.SessionAuthMethod(p.Method),
 		MustChangePassword: p.User.MustChangePassword,
 	}
-	if p.Method == MethodToken {
+	if p.Method == MethodToken || p.Method == MethodJob {
 		sc := append([]string{}, p.Scopes...)
 		out.TokenScopes = &sc
 	}

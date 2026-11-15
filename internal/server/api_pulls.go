@@ -467,6 +467,15 @@ func (a *api) CreatePull(ctx context.Context, req apigen.CreatePullRequestObject
 		return nil, err
 	}
 	a.s.hooksOpened(ctx, repo, user, number, out, true)
+	// Auto-labels come after "opened", as with a labeler workflow.
+	mark := a.s.eventMark(ctx)
+	a.s.labelPull(context.WithoutCancel(ctx), repo, created, number)
+	a.s.hooksFromEvents(context.WithoutCancel(ctx), repo, user, mark)
+	if pc, err := a.s.loadPullIn(ctx, a.s.db, repo, perm, number); err == nil {
+		if o, err := a.s.toAPIPull(ctx, pc, a.s.users()); err == nil {
+			out = o
+		}
+	}
 	return apigen.CreatePull201JSONResponse(out), nil
 }
 

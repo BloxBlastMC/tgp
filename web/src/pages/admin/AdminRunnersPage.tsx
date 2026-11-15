@@ -87,6 +87,11 @@ export function AdminRunnersPage() {
             <span className="font-medium">{r.name}</span>
             <Badge tone={statusTone[r.status]}>{r.status}</Badge>
             {r.overloaded && <Badge tone="danger">overloaded</Badge>}
+            {r.host_mode && r.host_mode !== 'off' && (
+              <Badge tone="warning" title={r.host_mode === 'all' ? 'Runs host jobs (container: none) of every run, pull requests included' : 'Runs host jobs (container: none) of trusted runs: pushes to the default branch, dispatches and releases'}>
+                host jobs: {r.host_mode}
+              </Badge>
+            )}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-fg-faint">
             {r.labels.map((l) => (
