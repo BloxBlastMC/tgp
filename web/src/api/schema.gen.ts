@@ -1702,6 +1702,24 @@ export interface paths {
         patch: operations["updateCISettings"];
         trace?: never;
     };
+    "/admin/registry/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Container registry quota and retention (admin) */
+        get: operations["getRegistrySettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change container registry quota and retention (admin) */
+        patch: operations["updateRegistrySettings"];
+        trace?: never;
+    };
     "/admin/health": {
         parameters: {
             query?: never;
@@ -1851,6 +1869,84 @@ export interface paths {
         post?: never;
         /** Delete one cache (write access) */
         delete: operations["deleteCache"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/packages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /**
+         * List the repository's container images
+         * @description Images live in tgp's container registry at
+         *     `<registry>/<namespace>/<repo>[/<name>]`; push and pull them with
+         *     docker using a personal access token (or a CI job token).
+         */
+        get: operations["listPackages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/packages/versions": {
+        parameters: {
+            query?: {
+                /** @description Image name below the repository (`""` or absent for the repository's own image). */
+                name?: string;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        /** List an image's versions (manifests), newest first */
+        get: operations["listPackageVersions"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a version and its tags (write access)
+         * @description The version's blobs are freed by garbage collection once nothing else uses them.
+         */
+        delete: operations["deletePackageVersion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/repos/{repo}/packages/tags": {
+        parameters: {
+            query?: {
+                /** @description Image name below the repository. */
+                name?: string;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a tag (write access)
+         * @description The version stays; untagged versions are deleted after the retention period.
+         */
+        delete: operations["deletePackageTag"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2273,8 +2369,11 @@ export interface components {
         };
         Session: {
             user: components["schemas"]["User"];
-            /** @enum {string} */
-            auth_method: "session" | "token";
+            /**
+             * @description `job` is a CI job token: read-only, for its own repository.
+             * @enum {string}
+             */
+            auth_method: "session" | "token" | "job";
             must_change_password: boolean;
             /** @description Present when authenticated with a token. */
             token_scopes?: string[];
@@ -3341,6 +3440,11 @@ export interface components {
             memory_percent?: number | null;
             /** @description Load is above the limit */
             overloaded?: boolean;
+            /**
+             * @description Which host jobs (container: none) the runner accepts, from allow_host_jobs in its runner.toml: none, those of trusted runs (pushes to the default branch, dispatches, releases), or all including pull requests.
+             * @enum {string}
+             */
+            host_mode?: "off" | "trusted" | "all";
             jobs: components["schemas"]["RunnerJob"][];
             /** Format: date-time */
             last_seen_at?: string | null;
@@ -3635,6 +3739,87 @@ export interface components {
              * @description The repository's cache quota; least recently used caches are evicted above it. 0 = no limit.
              */
             quota_bytes: number;
+        };
+        PackageList: {
+            /** @description Registry host[:port] from the server's base URL; empty when no base URL is configured (use the host you browse). */
+            registry: string;
+            /** @description The organisation's namespace (first path component of image names). */
+            namespace: string;
+            images: components["schemas"]["Package"][];
+            /**
+             * Format: int64
+             * @description Size of the distinct blobs the repository's images hold.
+             */
+            usage_bytes: number;
+            /**
+             * Format: int64
+             * @description The per-repository quota (0 = unlimited).
+             */
+            quota_bytes: number;
+        };
+        Package: {
+            /** @description Image name below the repository; empty for the repository's own image. */
+            name: string;
+            /** @description <namespace>/<repo>[/<name>] */
+            path: string;
+            /** @description Number of tags. */
+            tags: number;
+            /** @description Number of manifests. */
+            versions: number;
+            /**
+             * Format: int64
+             * @description Size of the image's distinct blobs.
+             */
+            size_bytes: number;
+            /** @description The most recently pushed tag. */
+            latest_tag?: string | null;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        PackageVersionList: {
+            versions: components["schemas"]["PackageVersion"][];
+        };
+        PackageVersion: {
+            digest: string;
+            media_type: string;
+            /**
+             * @description An image, a multi-platform index or another OCI artifact.
+             * @enum {string}
+             */
+            kind: "image" | "index" | "artifact";
+            artifact_type?: string | null;
+            tags: string[];
+            /**
+             * Format: int64
+             * @description Total size of the image's config and layers (an index adds up its images).
+             */
+            size_bytes: number;
+            /** @description os/arch[/variant] of an index's images. */
+            platforms: string[];
+            pushed_by?: components["schemas"]["UserSummary"] | null;
+            /**
+             * Format: int64
+             * @description The CI job that pushed it with its job token.
+             */
+            pushed_by_job?: number | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        RegistrySettings: {
+            /** @description Per-repository storage quota (0 = unlimited). */
+            quota_mb: number;
+            /** @description Untagged versions older than this are deleted. */
+            untagged_retention_days: number;
+            /** @description Keep only the newest N tags matching keep_last_tags_patterns per image (0 = keep all). */
+            keep_last_tags: number;
+            /** @description Glob patterns (e.g. g*) of tags keep_last_tags applies to. */
+            keep_last_tags_patterns: string[];
+        };
+        RegistrySettingsPatch: {
+            quota_mb?: number;
+            untagged_retention_days?: number;
+            keep_last_tags?: number;
+            keep_last_tags_patterns?: string[];
         };
         DeletedCount: {
             deleted: number;
@@ -6662,6 +6847,52 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
+    getRegistrySettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrySettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateRegistrySettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrySettingsPatch"];
+            };
+        };
+        responses: {
+            /** @description Settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrySettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getServerHealth: {
         parameters: {
             query?: {
@@ -6880,6 +7111,109 @@ export interface operations {
                 /** @description Repository name (case-insensitive). */
                 repo: components["parameters"]["RepoName"];
                 id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listPackages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Images and the repository's registry usage */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackageList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listPackageVersions: {
+        parameters: {
+            query?: {
+                /** @description Image name below the repository (`""` or absent for the repository's own image). */
+                name?: string;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versions with their tags */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackageVersionList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deletePackageVersion: {
+        parameters: {
+            query: {
+                /** @description Image name below the repository (`""` or absent for the repository's own image). */
+                name?: string;
+                digest: string;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deletePackageTag: {
+        parameters: {
+            query: {
+                /** @description Image name below the repository. */
+                name?: string;
+                tag: string;
+            };
+            header?: never;
+            path: {
+                /** @description Repository name (case-insensitive). */
+                repo: components["parameters"]["RepoName"];
             };
             cookie?: never;
         };

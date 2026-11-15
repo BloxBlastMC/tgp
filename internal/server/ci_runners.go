@@ -455,6 +455,10 @@ func (s *Server) toAPIRunner(r *model.Runner, jobs []apigen.RunnerJob, now time.
 		Id: r.ID, Name: r.Name, Labels: jsonStrings(r.Labels), Status: status, Version: r.Version, Os: r.OS, Arch: r.Arch,
 		Capacity: r.Capacity, Busy: len(jobs), Jobs: jobs, LastSeenAt: r.LastSeenAt, CreatedAt: r.CreatedAt,
 	}
+	if r.HostMode != "" {
+		hm := apigen.RunnerHostMode(r.HostMode)
+		out.HostMode = &hm
+	}
 	if r.CPUPercent != nil {
 		v := float32(*r.CPUPercent)
 		out.CpuPercent = &v

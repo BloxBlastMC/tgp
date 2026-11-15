@@ -104,7 +104,14 @@ func (s *Server) ciOnPush(ctx context.Context, repo *model.Repo, actor *model.Us
 
 // ciOnPull starts pull_request workflows (action: opened, synchronize,
 // reopened, ready_for_review).
+//
+// It also runs the pull request labeler for synchronize and reopened; the
+// callers send the labeled webhooks with the rest of the change's events.
+// (CreatePull labels new pull requests itself, after the opened webhook.)
 func (s *Server) ciOnPull(ctx context.Context, repo *model.Repo, actor *model.User, pr *model.PullRequest, number int64, title, action string) {
+	if action == "synchronize" || action == "reopened" {
+		s.labelPull(ctx, repo, pr, number)
+	}
 	ev := &ciEvent{Name: "pull_request", Ref: pullRef(number), SHA: pr.HeadSHA, Actor: actor,
 		PullNumber: number, PullTitle: title, HeadBranch: pr.HeadBranch, BaseBranch: pr.BaseBranch, Action: action}
 	if sha, err := s.repos.Open(repo).ResolveCommit(ctx, pr.BaseBranch); err == nil {

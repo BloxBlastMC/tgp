@@ -40,6 +40,7 @@ tags:
   - name: ci
   - name: releases
   - name: webhooks
+  - name: packages
 paths:
   /meta:
     get:
@@ -1860,6 +1861,35 @@ paths:
               schema: { $ref: "#/components/schemas/CISettings" }
         default: { $ref: "#/components/responses/Error" }
 
+  /admin/registry/settings:
+    get:
+      operationId: getRegistrySettings
+      tags: [admin, packages]
+      summary: Container registry quota and retention (admin)
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RegistrySettings" }
+        default: { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: updateRegistrySettings
+      tags: [admin, packages]
+      summary: Change container registry quota and retention (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegistrySettingsPatch" }
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RegistrySettings" }
+        default: { $ref: "#/components/responses/Error" }
+
   /admin/health:
     get:
       operationId: getServerHealth
@@ -2004,6 +2034,66 @@ paths:
       operationId: deleteCache
       tags: [ci]
       summary: Delete one cache (write access)
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/packages:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+    get:
+      operationId: listPackages
+      tags: [packages]
+      summary: List the repository's container images
+      description: |
+        Images live in tgp's container registry at
+        `<registry>/<namespace>/<repo>[/<name>]`; push and pull them with
+        docker using a personal access token (or a CI job token).
+      responses:
+        "200":
+          description: Images and the repository's registry usage
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PackageList" }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/packages/versions:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: name, in: query, description: "Image name below the repository (`\"\"` or absent for the repository's own image).", schema: { type: string } }
+    get:
+      operationId: listPackageVersions
+      tags: [packages]
+      summary: List an image's versions (manifests), newest first
+      responses:
+        "200":
+          description: Versions with their tags
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PackageVersionList" }
+        default: { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deletePackageVersion
+      tags: [packages]
+      summary: Delete a version and its tags (write access)
+      description: The version's blobs are freed by garbage collection once nothing else uses them.
+      parameters:
+        - { name: digest, in: query, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Deleted }
+        default: { $ref: "#/components/responses/Error" }
+
+  /repos/{repo}/packages/tags:
+    parameters:
+      - $ref: "#/components/parameters/RepoName"
+      - { name: name, in: query, description: Image name below the repository., schema: { type: string } }
+    delete:
+      operationId: deletePackageTag
+      tags: [packages]
+      summary: Delete a tag (write access)
+      description: The version stays; untagged versions are deleted after the retention period.
+      parameters:
+        - { name: tag, in: query, required: true, schema: { type: string } }
       responses:
         "204": { description: Deleted }
         default: { $ref: "#/components/responses/Error" }
@@ -2591,7 +2681,8 @@ components:
         user: { $ref: "#/components/schemas/User" }
         auth_method:
           type: string
-          enum: [session, token]
+          enum: [session, token, job]
+          description: "`job` is a CI job token: read-only, for its own repository."
         must_change_password: { type: boolean }
         token_scopes:
           type: array
@@ -3737,6 +3828,12 @@ components:
         cpu_percent: { type: number, nullable: true, description: Host CPU load (load average ÷ cores) from the last heartbeat. }
         memory_percent: { type: number, nullable: true }
         overloaded: { type: boolean, description: Load is above the limit, so it gets no new jobs. }
+        host_mode:
+          type: string
+          enum: [off, trusted, all]
+          description: >-
+            Which host jobs (container: none) the runner accepts, from allow_host_jobs in its runner.toml:
+            none, those of trusted runs (pushes to the default branch, dispatches, releases), or all including pull requests.
         jobs: { type: array, items: { $ref: "#/components/schemas/RunnerJob" } }
         last_seen_at: { type: string, format: date-time, nullable: true }
         created_at: { type: string, format: date-time }
@@ -4002,6 +4099,66 @@ components:
         total: { type: integer }
         total_bytes: { type: integer, format: int64 }
         quota_bytes: { type: integer, format: int64, description: The repository's cache quota; least recently used caches are evicted above it. 0 = no limit. }
+
+    PackageList:
+      type: object
+      required: [registry, namespace, images, usage_bytes, quota_bytes]
+      properties:
+        registry: { type: string, description: "Registry host[:port] from the server's base URL; empty when no base URL is configured (use the host you browse)." }
+        namespace: { type: string, description: The organisation's namespace (first path component of image names). }
+        images: { type: array, items: { $ref: "#/components/schemas/Package" } }
+        usage_bytes: { type: integer, format: int64, description: Size of the distinct blobs the repository's images hold. }
+        quota_bytes: { type: integer, format: int64, description: The per-repository quota (0 = unlimited). }
+
+    Package:
+      type: object
+      required: [name, path, tags, versions, size_bytes, updated_at]
+      properties:
+        name: { type: string, description: Image name below the repository; empty for the repository's own image. }
+        path: { type: string, description: "<namespace>/<repo>[/<name>]" }
+        tags: { type: integer, description: Number of tags. }
+        versions: { type: integer, description: Number of manifests. }
+        size_bytes: { type: integer, format: int64, description: Size of the image's distinct blobs. }
+        latest_tag: { type: string, nullable: true, description: The most recently pushed tag. }
+        updated_at: { type: string, format: date-time }
+
+    PackageVersionList:
+      type: object
+      required: [versions]
+      properties:
+        versions: { type: array, items: { $ref: "#/components/schemas/PackageVersion" } }
+
+    PackageVersion:
+      type: object
+      required: [digest, media_type, kind, tags, size_bytes, platforms, created_at]
+      properties:
+        digest: { type: string }
+        media_type: { type: string }
+        kind: { type: string, enum: [image, index, artifact], description: "An image, a multi-platform index or another OCI artifact." }
+        artifact_type: { type: string, nullable: true }
+        tags: { type: array, items: { type: string } }
+        size_bytes: { type: integer, format: int64, description: Total size of the image's config and layers (an index adds up its images). }
+        platforms: { type: array, items: { type: string }, description: "os/arch[/variant] of an index's images." }
+        pushed_by: { allOf: [{ $ref: "#/components/schemas/UserSummary" }], nullable: true }
+        pushed_by_job: { type: integer, format: int64, nullable: true, description: The CI job that pushed it with its job token. }
+        created_at: { type: string, format: date-time }
+
+    RegistrySettings:
+      type: object
+      required: [quota_mb, untagged_retention_days, keep_last_tags, keep_last_tags_patterns]
+      properties:
+        quota_mb: { type: integer, description: Per-repository storage quota (0 = unlimited). }
+        untagged_retention_days: { type: integer, description: Untagged versions older than this are deleted. }
+        keep_last_tags: { type: integer, description: "Keep only the newest N tags matching keep_last_tags_patterns per image (0 = keep all)." }
+        keep_last_tags_patterns: { type: array, items: { type: string }, description: "Glob patterns (e.g. g*) of tags keep_last_tags applies to." }
+
+    RegistrySettingsPatch:
+      type: object
+      properties:
+        quota_mb: { type: integer, minimum: 0 }
+        untagged_retention_days: { type: integer, minimum: 1 }
+        keep_last_tags: { type: integer, minimum: 0 }
+        keep_last_tags_patterns: { type: array, items: { type: string } }
 
     DeletedCount:
       type: object

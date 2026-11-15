@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/api/apigen"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/ci/runnerapi"
 	"git.taile67276.ts.net/BloxBlast/tgp/internal/model"
 )
@@ -422,5 +423,65 @@ func TestRegistryJobTokens(t *testing.T) {
 	}
 	if err := remote.Write(e.ref(t, "bloxblast/game/issues:pr"), img, basic(pr.Git.Token)); regCode(err) != "DENIED" {
 		t.Fatalf("PR job push: %v", err)
+	}
+}
+
+func TestPackagesAPI(t *testing.T) {
+	e := newRegEnv(t)
+	tok := e.miaToken
+	img, _ := random.Image(1024, 2)
+	if err := remote.Write(e.ref(t, "bloxblast/game/issues:g1"), img, basic(tok)); err != nil {
+		t.Fatal(err)
+	}
+	if err := remote.Tag(e.ref(t, "bloxblast/game/issues:master").(name.Tag), img, basic(tok)); err != nil {
+		t.Fatal(err)
+	}
+	idx, _ := random.Index(256, 1, 2)
+	if err := remote.WriteIndex(e.ref(t, "bloxblast/game/issues:multi"), idx, basic(tok)); err != nil {
+		t.Fatal(err)
+	}
+
+	var list apigen.PackageList
+	e.tom.mustDo("GET", "/repos/game/packages", nil, 200).decode(t, &list)
+	if list.Registry != "git.example.com" || list.Namespace != "bloxblast" || len(list.Images) != 1 || list.QuotaBytes != 10240<<20 {
+		t.Fatalf("list: %+v", list)
+	}
+	p := list.Images[0]
+	if p.Name != "issues" || p.Path != "bloxblast/game/issues" || p.Tags != 3 || p.SizeBytes == 0 || list.UsageBytes < p.SizeBytes || p.LatestTag == nil || *p.LatestTag != "multi" {
+		t.Fatalf("package: %+v", p)
+	}
+	var vs apigen.PackageVersionList
+	e.tom.mustDo("GET", "/repos/game/packages/versions?name=issues", nil, 200).decode(t, &vs)
+	// The index's two child manifests are folded under it.
+	if len(vs.Versions) != 2 {
+		t.Fatalf("versions: %+v", vs)
+	}
+	index, image := vs.Versions[0], vs.Versions[1]
+	if index.Kind != apigen.PackageVersionKindIndex || strings.Join(index.Tags, ",") != "multi" || len(index.Platforms) != 0 && index.SizeBytes == 0 {
+		t.Fatalf("index version: %+v", index)
+	}
+	if image.Kind != apigen.PackageVersionKindImage || strings.Join(image.Tags, ",") != "g1,master" || image.PushedBy == nil || image.PushedBy.Username != "mia" {
+		t.Fatalf("image version: %+v", image)
+	}
+
+	// Testers can't delete; maintainers can.
+	e.tom.mustDo("DELETE", "/repos/game/packages/tags?name=issues&tag=master", nil, 403)
+	e.mia.mustDo("DELETE", "/repos/game/packages/tags?name=issues&tag=master", nil, 204)
+	e.mia.mustDo("DELETE", "/repos/game/packages/tags?name=issues&tag=nope", nil, 404)
+	e.mia.mustDo("DELETE", "/repos/game/packages/versions?name=issues&digest="+index.Digest, nil, 204)
+	e.mia.mustDo("GET", "/repos/game/packages/versions?name=nope", nil, 404)
+	if tags, _ := remote.List(e.ref(t, "bloxblast/game/issues:x").Context(), basic(tok)); strings.Join(tags, ",") != "g1" {
+		t.Fatalf("tags after API deletes: %v", tags)
+	}
+
+	// Admin settings.
+	e.mia.mustDo("GET", "/admin/registry/settings", nil, 403)
+	var rs apigen.RegistrySettings
+	e.admin.mustDo("PATCH", "/admin/registry/settings", map[string]any{"quota_mb": 500, "keep_last_tags": 10, "keep_last_tags_patterns": []string{"g*", "sha-*"}}, 200).decode(t, &rs)
+	if rs.QuotaMb != 500 || rs.KeepLastTags != 10 || rs.UntaggedRetentionDays != 7 || len(rs.KeepLastTagsPatterns) != 2 {
+		t.Fatalf("settings: %+v", rs)
+	}
+	if r := e.admin.do("PATCH", "/admin/registry/settings", map[string]any{"untagged_retention_days": 0}); r.status != 422 && r.status != 400 {
+		t.Fatalf("invalid settings: %d %s", r.status, r.body)
 	}
 }
