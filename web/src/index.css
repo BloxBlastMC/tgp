@@ -232,11 +232,19 @@ body {
   color: light-dark(var(--shiki-light), var(--shiki-dark));
 }
 
-/* Rendered markdown (READMEs, comments). */
+/*
+ * Rendered markdown (READMEs, comments, release notes).
+ *
+ * `.markdown` is compact, for comments and PR/issue bodies. Add
+ * `.markdown-doc` for full documents (README, .md files): larger text and
+ * a readable line length.
+ */
 .markdown {
   line-height: 1.65;
   font-size: 14px;
-  overflow-wrap: anywhere;
+  /* break-word, not anywhere: `anywhere` shrinks min-content widths to one
+     character, which crushes table columns. */
+  overflow-wrap: break-word;
 }
 .markdown > :first-child {
   margin-top: 0;
@@ -244,36 +252,63 @@ body {
 .markdown > :last-child {
   margin-bottom: 0;
 }
+
+/* Headings */
 .markdown h1,
 .markdown h2,
 .markdown h3,
-.markdown h4 {
+.markdown h4,
+.markdown h5,
+.markdown h6 {
   font-weight: 600;
-  margin: 1.5em 0 0.6em;
-  line-height: 1.25;
+  margin: 1.6em 0 0.6em;
+  line-height: 1.3;
   letter-spacing: -0.01em;
+  color: var(--fg);
+  scroll-margin-top: 1.5rem;
 }
 .markdown h1 {
-  font-size: 1.6em;
+  font-size: 1.7em;
   padding-bottom: 0.3em;
   border-bottom: 1px solid var(--border);
 }
 .markdown h2 {
-  font-size: 1.3em;
+  font-size: 1.35em;
+  margin-top: 2em;
   padding-bottom: 0.3em;
   border-bottom: 1px solid var(--border);
 }
 .markdown h3 {
-  font-size: 1.1em;
+  font-size: 1.15em;
 }
+.markdown h4 {
+  font-size: 1em;
+}
+.markdown h5 {
+  font-size: 0.92em;
+}
+.markdown h6 {
+  font-size: 0.85em;
+  color: var(--fg-muted);
+}
+
+/* Block spacing */
 .markdown p,
 .markdown ul,
 .markdown ol,
+.markdown dl,
 .markdown pre,
 .markdown blockquote,
-.markdown table {
-  margin: 0 0 0.9em;
+.markdown table,
+.markdown details {
+  margin: 0 0 1em;
 }
+.markdown strong {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* Lists */
 .markdown ul {
   list-style: disc;
   padding-left: 1.6em;
@@ -282,8 +317,27 @@ body {
   list-style: decimal;
   padding-left: 1.6em;
 }
+.markdown ul ul {
+  list-style: circle;
+}
+.markdown ul ul ul {
+  list-style: square;
+}
+.markdown ol ol {
+  list-style: lower-alpha;
+}
+.markdown li > ul,
+.markdown li > ol {
+  margin: 0.25em 0 0;
+}
 .markdown li + li {
-  margin-top: 0.2em;
+  margin-top: 0.25em;
+}
+.markdown li > p {
+  margin: 0.4em 0;
+}
+.markdown li::marker {
+  color: var(--fg-faint);
 }
 .markdown li:has(> input[type='checkbox']) {
   list-style: none;
@@ -291,60 +345,160 @@ body {
 }
 .markdown input[type='checkbox'] {
   accent-color: var(--accent-solid);
-  margin-right: 0.3em;
+  margin-right: 0.4em;
+  vertical-align: -0.1em;
 }
+.markdown dt {
+  font-weight: 600;
+}
+.markdown dd {
+  margin: 0 0 0.6em 1.4em;
+}
+
+/* Links */
 .markdown a {
   color: var(--accent);
+  text-underline-offset: 2px;
 }
 .markdown a:hover {
   text-decoration: underline;
 }
+
+/* Code */
 .markdown code {
   font-family: var(--font-mono);
-  font-size: 0.86em;
+  font-size: 0.88em;
   background: var(--bg-hover);
-  border: 1px solid var(--border);
-  padding: 0.1em 0.35em;
+  padding: 0.12em 0.4em;
   border-radius: 4px;
+}
+.markdown a code {
+  color: var(--accent);
 }
 .markdown pre {
   background: var(--bg-subtle);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   overflow-x: auto;
+  line-height: 1.5;
 }
 .markdown pre code {
   background: none;
-  border: 0;
   padding: 0;
-  font-size: 12.5px;
+  font-size: 13px;
+  white-space: pre;
+  overflow-wrap: normal;
 }
+.markdown kbd {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  padding: 0.1em 0.45em;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface-2);
+}
+
+/* Quotes */
 .markdown blockquote {
   border-left: 3px solid var(--border-strong);
-  padding-left: 1em;
+  background: var(--accent-subtle);
+  border-radius: 0 6px 6px 0;
+  padding: 0.6em 1em;
   color: var(--fg-muted);
 }
+.markdown blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Tables: size to content, scroll sideways when too wide. */
 .markdown table {
-  border-collapse: collapse;
   display: block;
+  width: max-content;
+  max-width: 100%;
   overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+  line-height: 1.55;
 }
 .markdown th,
 .markdown td {
   border: 1px solid var(--border);
-  padding: 5px 12px;
+  padding: 8px 14px;
+  text-align: left;
+  vertical-align: top;
+}
+.markdown th[align='center'],
+.markdown td[align='center'] {
+  text-align: center;
+}
+.markdown th[align='right'],
+.markdown td[align='right'] {
+  text-align: right;
 }
 .markdown th {
   background: var(--bg-subtle);
   font-weight: 600;
+  white-space: nowrap;
 }
+.markdown td {
+  min-width: 14ch;
+}
+.markdown th:first-child,
+.markdown td:first-child {
+  min-width: 8ch;
+}
+.markdown td code {
+  white-space: nowrap;
+}
+.markdown tbody tr:nth-child(2n) td {
+  background: color-mix(in oklab, var(--bg-hover) 45%, transparent);
+}
+.markdown td img {
+  vertical-align: middle;
+}
+
+/* Media and rules */
 .markdown img {
   max-width: 100%;
   border-radius: 6px;
 }
 .markdown hr {
   border: 0;
-  border-top: 1px solid var(--border);
-  margin: 1.5em 0;
+  border-top: 2px solid var(--border);
+  margin: 2em 0;
+}
+
+/* Collapsible sections */
+.markdown details {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5em 1em;
+}
+.markdown summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.markdown details[open] > summary {
+  margin-bottom: 0.6em;
+}
+
+/* Footnotes (goldmark GFM) */
+.markdown .footnotes {
+  font-size: 0.88em;
+  color: var(--fg-muted);
+  margin-top: 2em;
+}
+.markdown sup a {
+  text-decoration: none;
+}
+
+/* Full-document variant. */
+.markdown-doc {
+  font-size: 15px;
+  line-height: 1.7;
+}
+.markdown-doc > :where(p, ul, ol, dl, blockquote) {
+  max-width: 80ch;
 }

@@ -146,7 +146,7 @@ export function CodePage() {
           <CardHeaderBar className="px-4 font-medium">
             <BookOpen size={14} className="text-fg-muted" /> {readme.data.path.split('/').pop()}
           </CardHeaderBar>
-          <div className="markdown px-8 py-6" dangerouslySetInnerHTML={{ __html: readme.data.html }} />
+          <div className="markdown markdown-doc px-6 py-6 md:px-10 md:py-8" dangerouslySetInnerHTML={{ __html: readme.data.html }} />
         </div>
       )}
     </Container>
