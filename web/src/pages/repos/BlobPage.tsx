@@ -109,7 +109,7 @@ export function BlobPage() {
               .
             </p>
           ) : isMarkdown && rendered ? (
-            md.data ? <div className="markdown px-8 py-6" dangerouslySetInnerHTML={{ __html: md.data.html }} /> : <Spinner />
+            md.data ? <div className="markdown markdown-doc px-6 py-6 md:px-10 md:py-8" dangerouslySetInnerHTML={{ __html: md.data.html }} /> : <Spinner />
           ) : (
             <>
               {blob.data.truncated && (
