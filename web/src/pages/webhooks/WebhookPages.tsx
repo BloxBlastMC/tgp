@@ -7,7 +7,7 @@ import { Container, SubHeader } from '../../components/Page'
 import { RepoSettingsLayout } from '../../components/repos/RepoSettingsNav'
 import { EmptyState, Section } from '../../components/ui'
 import { canWrite } from '../../lib/permissions'
-import { WebhookDetail, WebhookForm, WebhookList } from '../../components/webhooks/Webhooks'
+import { AddWebhookLink, WebhookDetail, WebhookForm, WebhookList } from '../../components/webhooks/Webhooks'
 import { useRepoName } from '../repos/RepoLayout'
 
 function RepoSettingsShell({ children }: { children: ReactNode }) {
@@ -61,16 +61,16 @@ const org = { kind: 'org' } as const
 
 export function AdminWebhooksPage() {
   return (
-    <Container width="narrow">
-      <SubHeader title="Webhooks" as="h2" description="Organization webhooks get events from every repository." />
-      <WebhookList scope={org} />
+    <Container width="default">
+      <SubHeader title="Webhooks" as="h2" description="Organization webhooks get events from every repository." actions={<AddWebhookLink scope={org} />} />
+      <WebhookList scope={org} bare />
     </Container>
   )
 }
 
 export function AdminNewWebhookPage() {
   return (
-    <Container width="narrow">
+    <Container width="default">
       <SubHeader back={{ to: '/admin/webhooks', label: 'Webhooks' }} title="Add organization webhook" as="h2" description="Gets events from every repository." />
       <Section title="Webhook">
         <WebhookForm scope={org} />
@@ -82,7 +82,7 @@ export function AdminNewWebhookPage() {
 export function AdminWebhookPage() {
   const id = useHookId()
   return (
-    <Container width="narrow">
+    <Container width="default">
       <WebhookDetail key={id} scope={org} id={id} />
     </Container>
   )

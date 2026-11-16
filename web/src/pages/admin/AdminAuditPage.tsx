@@ -3,7 +3,8 @@ import { ChevronDown, ChevronRight, Filter, History } from 'lucide-react'
 import { Fragment, useState } from 'react'
 import { SubHeader } from '../../components/Page'
 import { api, unwrap } from '../../api/client'
-import { Badge, Button, cx, DescriptionList, EmptyState, ErrorState, FilterBar, FilterMenu, SearchInput, SkeletonRows, Table, TD, TH, THead, Time, TR } from '../../components/ui'
+import { auditActionLabel, auditActionTone } from '../../lib/labels'
+import { Badge, Button, cx, DescriptionList, Dot, EmptyState, ErrorState, FilterBar, FilterMenu, SearchInput, SkeletonRows, Table, TD, TH, THead, Time, Tooltip, TR } from '../../components/ui'
 
 const actionGroups = [
   ['', 'All actions'],
@@ -16,11 +17,6 @@ const actionGroups = [
   ['setup.', 'Setup'],
 ] as const
 
-function tone(action: string) {
-  if (action.endsWith('failed')) return 'danger' as const
-  if (action.startsWith('user.') || action.startsWith('org.') || action.startsWith('setup.')) return 'warning' as const
-  return 'neutral' as const
-}
 
 export function AdminAuditPage() {
   const [action, setAction] = useState('')
@@ -42,10 +38,27 @@ export function AdminAuditPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="px-5 pt-6">
-        <SubHeader title="Audit log" as="h2" description="Security-relevant events: sign-ins, user and token changes, organization settings." className="mb-4" />
+      <div className="px-6 pt-6">
+        <SubHeader
+          title="Audit log"
+          as="h2"
+          description={
+            <>
+              Security-relevant events: sign-ins, user and token changes, organization settings.{' '}
+              <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1 align-middle text-sm">
+                <span className="inline-flex items-center gap-1.5">
+                  <Dot tone="danger" /> deletions and failures
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Dot tone="warning" /> admin changes
+                </span>
+              </span>
+            </>
+          }
+          className="mb-4"
+        />
       </div>
-      <FilterBar className="border-t px-5" end={entries.length > 0 && <span className="text-sm text-fg-faint tabular-nums">{entries.length} shown</span>}>
+      <FilterBar className="border-t px-6" end={entries.length > 0 && <span className="text-sm text-fg-faint tabular-nums">{entries.length} shown</span>}>
         <FilterMenu label="Action" icon={<Filter size={12} />} value={action} onChange={setAction} options={actionGroups.map(([value, label]) => ({ value, label }))} />
         <SearchInput value={actor} onChange={(v) => setActor(v.trim())} debounce={300} placeholder="Actor username…" label="Filter by actor" className="max-w-56" />
       </FilterBar>
@@ -79,18 +92,25 @@ export function AdminAuditPage() {
                 <Fragment key={e.id}>
                   <TR className={cx(hasDetails && 'cursor-pointer', isOpen && 'bg-bg-hover/60')} onClick={() => hasDetails && setOpen(isOpen ? null : e.id)}>
                     <TD className="w-8 pr-0">
-                      {hasDetails && (
-                        <button type="button" aria-expanded={isOpen} aria-label={isOpen ? 'Hide details' : 'Show details'} className="rounded p-0.5 text-fg-faint hover:text-fg">
-                          {isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-                        </button>
+                      {hasDetails ? (
+                        <Tooltip content={isOpen ? 'Hide details' : 'Show details'} describe={false}>
+                          <button type="button" aria-expanded={isOpen} aria-label={isOpen ? 'Hide details' : 'Show details'} className="flex size-5 items-center justify-center rounded text-fg-faint hover:text-fg">
+                            {isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                          </button>
+                        </Tooltip>
+                      ) : (
+                        <span className="block size-5" aria-hidden />
                       )}
                     </TD>
                     <TD className="whitespace-nowrap text-fg-muted">
                       <Time iso={e.created_at} />
                     </TD>
-                    <TD className="font-mono text-sm">{e.actor || <span className="text-fg-faint">anonymous</span>}</TD>
+                    <TD>{e.actor || <span className="text-fg-faint">anonymous</span>}</TD>
                     <TD>
-                      <Badge tone={tone(e.action)}>{e.action}</Badge>
+                      <div className="flex flex-col items-start gap-0.5">
+                        <Badge tone={auditActionTone(e.action)}>{auditActionLabel(e.action)}</Badge>
+                        <span className="font-mono text-2xs text-fg-faint">{e.action}</span>
+                      </div>
                     </TD>
                     <TD>{e.target}</TD>
                     <TD className="font-mono text-sm text-fg-faint">{e.ip}</TD>

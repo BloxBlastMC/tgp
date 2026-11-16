@@ -93,7 +93,7 @@ test('maintainer adds a signed webhook, sees deliveries and redelivers; testers 
   const mia = await loginAs(browser, 'mia', 'mias-password-1')
   await mia.goto(server.url + '/game/settings')
   await mia.getByRole('navigation', { name: 'Settings sections' }).getByRole('link', { name: 'Webhooks' }).click()
-  await expect(mia.getByText('No webhooks yet.')).toBeVisible()
+  await expect(mia.getByText('No webhooks yet')).toBeVisible()
   await mia.getByRole('link', { name: 'Add webhook' }).click()
 
   await mia.getByLabel('Payload URL').fill(receiverUrl)

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { KeyRound, Lock, Monitor, Moon, Palette, Plus, Settings as SettingsIcon, ShieldCheck, ShieldOff, Sun, Trash2, User } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
+import { toneForRole } from '../../lib/permissions'
 import { api, errorMessage, unwrap, type Schemas } from '../../api/client'
 import { sessionQuery, tokensQuery } from '../../api/queries'
 import { Page, SideNav, TwoColumn } from '../../components/Page'
@@ -67,14 +68,14 @@ export function SettingsPage() {
                 className="flex-1"
                 termWidth="sm:grid-cols-[120px_minmax(0,1fr)]"
                 items={[
-                  { term: 'Username', detail: <span className="font-mono">{user.username}</span> },
+                  { term: 'Username', detail: user.username },
                   { term: 'Display name', detail: user.display_name },
                   { term: 'Email', detail: user.email || <span className="text-fg-faint">none</span> },
                   {
                     term: 'Role',
                     detail: (
                       <span className="flex items-center gap-2">
-                        <Badge tone="accent">{user.role}</Badge>
+                        <Badge tone={toneForRole(user.role)}>{user.role}</Badge>
                         <span className="text-fg-muted">{user.role === 'admin' || user.all_repos ? 'all repositories' : 'selected repositories'}</span>
                       </span>
                     ),
@@ -171,6 +172,7 @@ function TwoFactorSection({ enabled }: { enabled: boolean }) {
   const [mode, setMode] = useState<null | 'enroll' | 'disable' | 'regenerate'>(null)
   const [password, setPassword] = useState('')
   const [codes, setCodes] = useState<string[] | null>(null)
+  const formId = useId()
   const close = () => {
     setMode(null)
     setPassword('')
@@ -218,11 +220,28 @@ function TwoFactorSection({ enabled }: { enabled: boolean }) {
         <TotpEnroll onDone={close} onCancel={close} />
       </Dialog>
 
-      <Dialog open={mode === 'disable' || mode === 'regenerate'} onClose={close} title={mode === 'disable' ? 'Turn off 2FA' : 'New recovery codes'}>
+      <Dialog
+        open={mode === 'disable' || mode === 'regenerate'}
+        onClose={close}
+        title={mode === 'disable' ? 'Turn off two-factor authentication' : 'New recovery codes'}
+        footer={
+          codes ? undefined : (
+            <>
+              <Button variant="ghost" onClick={close}>
+                Cancel
+              </Button>
+              <Button type="submit" form={formId} variant={mode === 'disable' ? 'danger' : 'primary'} loading={disable.isPending || regen.isPending}>
+                {mode === 'disable' ? 'Turn off two-factor' : 'Generate'}
+              </Button>
+            </>
+          )
+        }
+      >
         {codes ? (
           <RecoveryCodes codes={codes} onDone={close} />
         ) : (
           <form
+            id={formId}
             className="flex flex-col gap-3"
             onSubmit={(e) => {
               e.preventDefault()
@@ -237,14 +256,6 @@ function TwoFactorSection({ enabled }: { enabled: boolean }) {
               {(id) => <Input id={id} type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" autoFocus required />}
             </Field>
             {(disable.isError || regen.isError) && <Alert>{errorMessage(disable.error ?? regen.error)}</Alert>}
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={close}>
-                Cancel
-              </Button>
-              <Button type="submit" variant={mode === 'disable' ? 'danger' : 'primary'} loading={disable.isPending || regen.isPending}>
-                {mode === 'disable' ? 'Turn off 2FA' : 'Generate'}
-              </Button>
-            </div>
           </form>
         )}
       </Dialog>
@@ -264,6 +275,7 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
   const [scopes, setScopes] = useState<Scope[]>(['read', 'write'])
   const [expiry, setExpiry] = useState('90')
   const [created, setCreated] = useState<string | null>(null)
+  const tokenFormId = useId()
 
   const create = useMutation({
     mutationFn: () =>
@@ -333,7 +345,14 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
                   ))}
                 </div>
                 <div className="text-sm text-fg-faint">
-                  Created <Time iso={t.created_at} /> · last used <Time iso={t.last_used_at} /> ·{' '}
+                  Created <Time iso={t.created_at} /> · {t.last_used_at ? (
+                    <>
+                      last used <Time iso={t.last_used_at} />
+                    </>
+                  ) : (
+                    'never used'
+                  )}{' '}
+                  ·{' '}
                   {t.expires_at ? (
                     <>
                       expires <Time iso={t.expires_at} />
@@ -360,19 +379,35 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
         </ul>
       )}
 
-      <Dialog open={open} onClose={close} title={created ? 'Token created' : 'New personal access token'}>
+      <Dialog
+        open={open}
+        onClose={close}
+        title={created ? 'Token created' : 'New personal access token'}
+        footer={
+          created ? (
+            <Button variant="primary" onClick={close}>
+              Done
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" onClick={close}>
+                Cancel
+              </Button>
+              <Button type="submit" form={tokenFormId} variant="primary" loading={create.isPending} disabled={!name.trim() || scopes.length === 0}>
+                Create token
+              </Button>
+            </>
+          )
+        }
+      >
         {created ? (
           <>
             <Alert tone="warning">Copy this token now. It won't be shown again.</Alert>
             <SecretValue value={created} label="New token" />
-            <div className="flex justify-end">
-              <Button variant="primary" onClick={close}>
-                Done
-              </Button>
-            </div>
           </>
         ) : (
           <form
+            id={tokenFormId}
             className="flex flex-col gap-3"
             onSubmit={(e) => {
               e.preventDefault()
@@ -382,9 +417,9 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
             <Field label="Name">{(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} placeholder="laptop CLI" autoFocus required />}</Field>
             <fieldset className="flex flex-col gap-2">
               <legend className="mb-1 text-sm font-medium text-fg-muted">Scopes</legend>
-              <Checkbox checked={scopes.includes('read')} onChange={(v) => toggle('read', v)} label="read" hint="Clone and view everything you have access to." />
-              <Checkbox checked={scopes.includes('write')} onChange={(v) => toggle('write', v)} label="write" hint="Push, open and merge PRs, comment, manage your account." />
-              {isAdmin && <Checkbox checked={scopes.includes('admin')} onChange={(v) => toggle('admin', v)} label="admin" hint="Use admin endpoints (users, org, server settings)." />}
+              <Checkbox checked={scopes.includes('read')} onChange={(v) => toggle('read', v)} label="Read" hint="Clone and view everything you have access to." />
+              <Checkbox checked={scopes.includes('write')} onChange={(v) => toggle('write', v)} label="Write (includes read)" hint="Push code, open and merge pull requests, comment." />
+              {isAdmin && <Checkbox checked={scopes.includes('admin')} onChange={(v) => toggle('admin', v)} label="Admin" hint="Use admin endpoints: users, organization and server settings." />}
             </fieldset>
             <Field label="Expiration">
               {(id) => (
@@ -397,15 +432,8 @@ function TokensSection({ isAdmin }: { isAdmin: boolean }) {
                 </Select>
               )}
             </Field>
+            {expiry === '' && <Alert tone="warning">A token that never expires keeps working until you revoke it. Prefer an expiry for tokens on shared machines or in CI.</Alert>}
             {create.isError && <Alert>{errorMessage(create.error)}</Alert>}
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={close}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary" loading={create.isPending} disabled={!name.trim() || scopes.length === 0}>
-                Create token
-              </Button>
-            </div>
           </form>
         )}
       </Dialog>

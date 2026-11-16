@@ -119,6 +119,14 @@ function OpenMergeBox({ repo, pr, canWrite }: { repo: string; pr: PullRequest; c
   const confirm = useConfirm()
   const ready = pr.can_merge
   const conflict = pr.mergeable === 'conflict'
+  // Mergeable while optional checks still run: say so instead of "all met".
+  const pendingChecks = pr.checks?.pending ?? 0
+  const readyNote =
+    pendingChecks > 0
+      ? `Required checks passed · ${pendingChecks} optional check${pendingChecks === 1 ? '' : 's'} still running`
+      : pr.checks && pr.checks.failed > 0
+        ? `Required checks passed · ${pr.checks.failed} optional check${pr.checks.failed === 1 ? '' : 's'} failed`
+        : 'All requirements are met.'
   return (
     <div className={cx('overflow-hidden rounded-lg border bg-surface-1 shadow-card', ready ? 'border-success/40' : conflict ? 'border-danger/35' : 'border-border')} aria-label="Merge status">
       <div className="flex items-center gap-3 border-b border-border px-4 py-3">
@@ -127,7 +135,7 @@ function OpenMergeBox({ repo, pr, canWrite }: { repo: string; pr: PullRequest; c
         </span>
         <div className="min-w-0">
           <p className="font-semibold">{ready ? 'Ready to merge' : conflict ? 'This branch has conflicts' : pr.draft ? 'This pull request is a draft' : 'Merging is blocked'}</p>
-          <p className="text-sm text-fg-muted">{ready ? 'All requirements are met.' : 'Resolve the items below before merging.'}</p>
+          <p className="text-sm text-fg-muted">{ready ? readyNote : 'Resolve the items below before merging.'}</p>
         </div>
       </div>
       <ul className="divide-y divide-border px-4 py-1">

@@ -3,17 +3,21 @@ import { Link } from '@tanstack/react-router'
 import { Archive, FolderGit2, GitBranch, Plus, SearchX } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { reposQuery, sessionQuery } from '../../api/queries'
-import { EmptyState, Page } from '../../components/Page'
+import { EmptyState, Page, Container } from '../../components/Page'
 import { CreateRepoDialog } from '../../components/repos/CreateRepoDialog'
-import { Badge, Button, ErrorState, FilterBar, FilterMenu, List, SearchInput, Sep, SkeletonRows, Switch, Time } from '../../components/ui'
+import { Badge, Button, ErrorState, FilterBar, FilterMenu, List, SearchInput, Sep, SkeletonRows, Switch, Time, Tooltip } from '../../components/ui'
+import { toneForRole } from '../../lib/permissions'
 
 type Sort = 'pushed' | 'name'
 
-const permTone = { admin: 'warning', write: 'accent', triage: 'neutral', read: 'neutral' } as const
+/** The access each org role gets by default; rows that match it need no badge. */
+const usualAccess: Record<string, string> = { admin: 'admin', maintainer: 'write', tester: 'triage' }
 
 export function ReposPage() {
   const repos = useQuery(reposQuery)
-  const isAdmin = useQuery(sessionQuery).data?.user.role === 'admin'
+  const role = useQuery(sessionQuery).data?.user.role
+  const isAdmin = role === 'admin'
+  const usual = role ? usualAccess[role] : undefined
   const [filter, setFilter] = useState('')
   const [sort, setSort] = useState<Sort>('pushed')
   const [showArchived, setShowArchived] = useState(true)
@@ -78,7 +82,7 @@ export function ReposPage() {
               ]}
             />
           </FilterBar>
-          <div className="mx-auto max-w-5xl px-6 py-5">
+          <Container width="wide">
             {repos.isPending ? (
               <List>
                 <SkeletonRows rows={6} />
@@ -90,7 +94,7 @@ export function ReposPage() {
             ) : (
               <List>
                 {shown.map((r) => (
-                  <li key={r.id} className="relative flex items-center gap-3 border-b border-border px-4 py-3 transition-colors last:border-0 hover:bg-bg-hover/60">
+                  <li key={r.id} className="relative flex items-center gap-3 border-b border-border px-4 py-3 transition-colors last:border-0 hover:bg-bg-hover focus-within:bg-bg-hover">
                     <span
                       className="flex size-8 shrink-0 items-center justify-center rounded-md text-sm font-semibold text-white uppercase"
                       style={{ backgroundColor: `var(--avatar-${(r.id % 8) + 1})` }}
@@ -121,14 +125,18 @@ export function ReposPage() {
                       <Sep />
                       <span>{r.pushed_at ? <>Pushed <Time iso={r.pushed_at} /></> : 'No pushes yet'}</span>
                     </div>
-                    <Badge tone={permTone[r.permission as keyof typeof permTone] ?? 'neutral'} className="shrink-0">
-                      {r.permission}
-                    </Badge>
+                    {r.permission !== usual && (
+                      <Tooltip content="Your access to this repository" describe={false}>
+                        <span className="relative z-[1] shrink-0">
+                          <Badge tone={toneForRole(r.permission)}>You: {r.permission}</Badge>
+                        </span>
+                      </Tooltip>
+                    )}
                   </li>
                 ))}
               </List>
             )}
-          </div>
+          </Container>
         </>
       )}
       {isAdmin && <CreateRepoDialog open={creating} onClose={() => setCreating(false)} />}

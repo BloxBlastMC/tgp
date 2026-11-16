@@ -137,37 +137,60 @@ export type SideNavItem = {
   hash?: string
 }
 
-/** Vertical section navigation for settings-style areas. */
-export function SideNav({ label, groups, className }: { label: string; groups: { title?: string; items: SideNavItem[] }[]; className?: string }) {
+/**
+ * Section navigation for settings-style areas: a vertical list on wide
+ * screens, a horizontally scrolling tab strip below `collapseBelow`.
+ */
+export function SideNav({
+  label,
+  groups,
+  className,
+  collapseBelow = 'lg',
+}: {
+  label: string
+  groups: { title?: string; items: SideNavItem[] }[]
+  className?: string
+  collapseBelow?: 'lg' | 'xl'
+}) {
+  const link = ({ to, label: text, params, icon: Icon, exact, hash }: SideNavItem, strip: boolean) => (
+    <Link
+      key={to + (hash ?? '')}
+      to={to}
+      params={params}
+      hash={hash}
+      activeOptions={{ exact: exact ?? true, includeHash: !!hash, includeSearch: false }}
+      className={cx(
+        'group flex h-7 shrink-0 items-center gap-2 rounded-md px-2 text-base whitespace-nowrap text-fg-muted transition-colors hover:bg-bg-hover hover:text-fg data-[status=active]:bg-bg-active data-[status=active]:font-medium data-[status=active]:text-fg',
+        strip && 'snap-start',
+      )}
+    >
+      {Icon && <Icon size={14} className="shrink-0 text-fg-faint group-data-[status=active]:text-fg-muted" />}
+      {text}
+    </Link>
+  )
+  const wide = collapseBelow === 'xl' ? 'xl' : 'lg'
   return (
-    <nav aria-label={label} className={cx('flex flex-col gap-4', className)}>
-      {groups.map((g, gi) => (
-        <div key={gi} className="flex flex-col gap-0.5">
-          {g.title && <div className="mb-1 px-2 text-xs font-semibold tracking-wide text-fg-faint uppercase">{g.title}</div>}
-          {g.items.map(({ to, label: text, params, icon: Icon, exact, hash }) => (
-            <Link
-              key={to + (hash ?? '')}
-              to={to}
-              params={params}
-              hash={hash}
-              activeOptions={{ exact: exact ?? true, includeHash: !!hash, includeSearch: false }}
-              className="group flex h-7 items-center gap-2 rounded-md px-2 text-base text-fg-muted transition-colors hover:bg-bg-hover hover:text-fg data-[status=active]:bg-bg-active data-[status=active]:font-medium data-[status=active]:text-fg"
-            >
-              {Icon && <Icon size={14} className="shrink-0 text-fg-faint group-data-[status=active]:text-fg-muted" />}
-              {text}
-            </Link>
-          ))}
-        </div>
-      ))}
-    </nav>
+    <>
+      <nav aria-label={label} className={cx('-mx-1 flex snap-x gap-1 overflow-x-auto px-1 pb-1', wide === 'xl' ? 'xl:hidden' : 'lg:hidden', className)}>
+        {groups.flatMap((g) => g.items).map((it) => link(it, true))}
+      </nav>
+      <nav aria-label={label} className={cx('hidden flex-col gap-4', wide === 'xl' ? 'xl:flex' : 'lg:flex', className)}>
+        {groups.map((g, gi) => (
+          <div key={gi} className="flex flex-col gap-0.5">
+            {g.title && <div className="mb-1 px-2 text-xs font-semibold tracking-wide text-fg-faint uppercase">{g.title}</div>}
+            {g.items.map((it) => link(it, false))}
+          </div>
+        ))}
+      </nav>
+    </>
   )
 }
 
 /** A settings-style layout: section nav on the left, content on the right. */
 export function TwoColumn({ nav, children, className }: { nav: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <div className={cx('mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-6 md:flex-row md:gap-10', className)}>
-      <div className="shrink-0 md:sticky md:top-6 md:w-48 md:self-start">{nav}</div>
+    <div className={cx('mx-auto flex w-full max-w-7xl flex-col gap-4 px-6 py-6 lg:flex-row lg:gap-10', className)}>
+      <div className="min-w-0 shrink-0 lg:sticky lg:top-6 lg:w-48 lg:self-start">{nav}</div>
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   )

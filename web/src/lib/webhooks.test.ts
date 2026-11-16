@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deliveryLabel, deliveryResult, deliveryTone, eventMode, eventsFor, eventsSummary, formatMs, prettyBody, shortGuid, urlError } from './webhooks'
+import { deliveryLabel, deliveryResult, deliveryTone, eventMode, eventsFor, eventsSummary, formatMs, lastDeliveryText, prettyBody, shortGuid, urlError } from './webhooks'
 
 describe('webhook helpers', () => {
   it('maps events to form modes and back', () => {
@@ -44,5 +44,15 @@ describe('webhook helpers', () => {
     expect(urlError('ftp://x')).toMatch(/http/)
     expect(urlError('nope')).toMatch(/valid/)
     expect(urlError('https://hooks.example.com/x')).toBeNull()
+  })
+})
+
+describe('lastDeliveryText', () => {
+  it('describes the latest delivery in words', () => {
+    expect(lastDeliveryText(null)).toBe('Never delivered')
+    expect(lastDeliveryText({ status: 'success', response_status: 200, error: null })).toBe('Delivered (200)')
+    expect(lastDeliveryText({ status: 'failed', response_status: 500, error: null })).toBe('Last delivery failed (500)')
+    expect(lastDeliveryText({ status: 'failed', response_status: null, error: 'connection refused' })).toBe('Last delivery failed: connection refused')
+    expect(lastDeliveryText({ status: 'pending', response_status: null, error: null })).toBe('Delivery pending')
   })
 })

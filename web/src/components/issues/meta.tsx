@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { CheckCircle2, ChevronDown, CircleDot, CircleSlash, Milestone as MilestoneIcon, Settings2 } from 'lucide-react'
+import { CheckCircle2, ChevronDown, CircleDot, CircleSlash, Milestone as MilestoneIcon, Pencil } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { IssueSummary, Label, MilestoneRef, UserSummary } from '../../api/client'
 import { labelsQuery, milestonesQuery, usersQuery } from '../../api/queries'
@@ -94,7 +94,7 @@ function Picker({
           </Button>
         ) : (
           <IconButton {...t} size="xs" disabled={disabled} label={`Edit ${title.toLowerCase()}`}>
-            <Settings2 size={13} />
+            <Pencil size={13} />
           </IconButton>
         )
       }
@@ -234,7 +234,7 @@ export function MetaSections({
             {canEdit && me && (
               <>
                 {' — '}
-                <button type="button" className="hover:text-accent" onClick={() => onPatch({ assignees: [me] })}>
+                <button type="button" className="font-medium text-accent hover:underline" onClick={() => onPatch({ assignees: [me] })}>
                   assign yourself
                 </button>
               </>

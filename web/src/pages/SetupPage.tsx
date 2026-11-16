@@ -116,6 +116,7 @@ export function SetupPage() {
                 type="button"
                 disabled={!done}
                 onClick={() => go(i)}
+                title={s}
                 className={cx('flex flex-col items-center gap-1.5 text-xs font-medium sm:flex-row sm:gap-2', current ? 'text-fg' : done ? 'cursor-pointer text-fg-muted hover:text-fg' : 'text-fg-faint')}
               >
                 <span
@@ -126,9 +127,9 @@ export function SetupPage() {
                 >
                   {done ? <Check size={12} /> : i + 1}
                 </span>
-                <span className="hidden whitespace-nowrap md:inline">{s}</span>
+                {current && <span className="hidden whitespace-nowrap md:inline">{s}</span>}
               </button>
-              {i < steps.length - 1 && <span className={cx('mx-2 h-px flex-1', done ? 'bg-success/60' : 'bg-border')} aria-hidden />}
+              {i < steps.length - 1 && <span className={cx('mx-2 h-px min-w-4 flex-1', done ? 'bg-success/60' : 'bg-border-strong')} aria-hidden />}
             </li>
           )
         })}
@@ -325,9 +326,13 @@ export function SetupPage() {
         {submit.isError && <Alert>{errorMessage(submit.error)}</Alert>}
 
         <div className="mt-2 flex justify-between border-t border-border pt-4">
-          <Button variant="ghost" onClick={() => go(step - 1)} disabled={step === 0}>
-            Back
-          </Button>
+          {step > 0 ? (
+            <Button variant="ghost" onClick={() => go(step - 1)}>
+              Back
+            </Button>
+          ) : (
+            <span />
+          )}
           <Button type="submit" variant="primary" size="lg" loading={submit.isPending}>
             {step === steps.length - 1 ? 'Complete setup' : step === 3 && users.length === 0 ? 'Skip' : 'Continue'}
           </Button>

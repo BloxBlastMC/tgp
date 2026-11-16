@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { Cpu, Hourglass, Layers, MoreHorizontal, Pencil, Play, Plus, Power, PowerOff, Trash2 } from 'lucide-react'
+import { Cpu, Hourglass, Info, Layers, MoreHorizontal, Pencil, Play, Plus, Power, PowerOff, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { api, errorMessage, unwrap, type Runner, type Schemas } from '../../api/client'
 import { runnersQuery } from '../../api/queries'
@@ -12,7 +12,6 @@ import {
   Card,
   DataTable,
   Dialog,
-  Dot,
   EmptyState,
   ErrorState,
   Field,
@@ -25,6 +24,7 @@ import {
   SecretValue,
   StatCard,
   Time,
+  Tooltip,
   useConfirm,
   useToast,
   type Column,
@@ -36,7 +36,7 @@ function Load({ label, value }: { label: string; value?: number | null }) {
   if (value == null) return <span className="text-xs text-fg-faint">{label} —</span>
   return (
     <span className="flex items-center gap-2 text-xs text-fg-muted" title={`${label} ${value.toFixed(0)}%`}>
-      <span className="w-7">{label}</span>
+      <span className="w-12">{label}</span>
       <Meter value={value} label={label} size="sm" className="w-20" />
       <span className="w-8 tabular-nums">{value.toFixed(0)}%</span>
     </span>
@@ -83,14 +83,22 @@ export function AdminRunnersPage() {
       cell: (r) => (
         <div className="py-1">
           <div className="flex items-center gap-2">
-            <Dot tone={statusTone[r.status]} pulse={r.status === 'online' && r.busy > 0} label={r.status} />
             <span className="font-medium">{r.name}</span>
             <Badge tone={statusTone[r.status]}>{r.status}</Badge>
             {r.overloaded && <Badge tone="danger">overloaded</Badge>}
             {r.host_mode && r.host_mode !== 'off' && (
-              <Badge tone="warning" title={r.host_mode === 'all' ? 'Runs host jobs (container: none) of every run, pull requests included' : 'Runs host jobs (container: none) of trusted runs: pushes to the default branch, dispatches and releases'}>
-                host jobs: {r.host_mode}
-              </Badge>
+              <Tooltip
+                content={
+                  r.host_mode === 'all'
+                    ? 'Runs jobs that set container: none directly on this machine, for every run including pull requests.'
+                    : 'Runs jobs that set container: none directly on this machine, only for trusted runs: pushes to the default branch, manual dispatches and releases.'
+                }
+              >
+                <span tabIndex={0} className="inline-flex items-center gap-1 rounded-md focus-visible:outline-2 focus-visible:outline-accent">
+                  <Badge tone="warning">host jobs: {r.host_mode}</Badge>
+                  <Info size={12} className="text-fg-faint" aria-hidden />
+                </span>
+              </Tooltip>
             )}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-fg-faint">
@@ -129,7 +137,7 @@ export function AdminRunnersPage() {
       cell: (r) => (
         <div className="flex flex-col gap-1 py-1">
           <Load label="CPU" value={r.cpu_percent} />
-          <Load label="Mem" value={r.memory_percent} />
+          <Load label="Memory" value={r.memory_percent} />
         </div>
       ),
     },
@@ -182,7 +190,7 @@ export function AdminRunnersPage() {
         description="Machines that run CI jobs in Docker. Each pulls jobs from this server."
         actions={
           <Button variant="primary" icon={<Plus size={13} />} loading={create.isPending} onClick={() => create.mutate()}>
-            Add runner
+            Register runner
           </Button>
         }
       />
@@ -204,7 +212,7 @@ export function AdminRunnersPage() {
             title="No runners registered"
             action={
               <Button icon={<Plus size={13} />} loading={create.isPending} onClick={() => create.mutate()}>
-                Register a runner
+                Register runner
               </Button>
             }
           >

@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useParams } from '@tanstack/react-router'
-import { Archive, Boxes, CircleDot, Code2, FolderX, GitBranch, GitPullRequest, History, Package, Play, Settings } from 'lucide-react'
+import { Archive, Boxes, CircleDot, Code2, FolderX, GitPullRequest, Play, Settings, Tag } from 'lucide-react'
 import { useEffect } from 'react'
 import { ApiRequestError } from '../../api/client'
 import { repoQuery } from '../../api/queries'
 import { CloneButton } from '../../components/code/CloneButton'
-import { Badge, ButtonLink, EmptyState, ErrorState, NavTabs, Skeleton, type NavTab } from '../../components/ui'
-import { canWrite } from '../../lib/permissions'
+import { Badge, ButtonLink, EmptyState, ErrorState, NavTabs, Skeleton, Tooltip, type NavTab } from '../../components/ui'
+import { canWrite, toneForRole } from '../../lib/permissions'
 import { recordVisit } from '../../lib/recent'
 
 export function useRepoName(): string {
@@ -18,8 +18,6 @@ export function useRepo() {
   const name = useRepoName()
   return useQuery(repoQuery(name))
 }
-
-const permTone = { admin: 'warning', write: 'accent', triage: 'neutral', read: 'neutral' } as const
 
 export function RepoLayout() {
   const name = useRepoName()
@@ -64,11 +62,9 @@ export function RepoLayout() {
     { to: '/$repo', label: 'Code', icon: Code2, exact: true },
     { to: '/$repo/issues', label: 'Issues', icon: CircleDot },
     { to: '/$repo/pulls', label: 'Pull requests', icon: GitPullRequest },
-    { to: '/$repo/ci', label: 'CI', icon: Play },
-    { to: '/$repo/releases', label: 'Releases', icon: Package },
+    { to: '/$repo/ci', label: 'Runs', icon: Play },
+    { to: '/$repo/releases', label: 'Releases', icon: Tag },
     { to: '/$repo/packages', label: 'Packages', icon: Boxes },
-    { to: '/$repo/commits', label: 'Commits', icon: History },
-    { to: '/$repo/branches', label: 'Branches', icon: GitBranch },
   ]
   if (canWrite(r.permission)) tabs.push({ to: '/$repo/settings', label: 'Settings', icon: Settings })
   return (
@@ -84,10 +80,10 @@ export function RepoLayout() {
               {r.name.slice(0, 1)}
             </span>
             <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-md">
-              <Link to="/repos" className="text-fg-muted hover:text-fg">
+              <Link to="/repos" className="hidden text-fg-muted hover:text-fg sm:inline">
                 Repositories
               </Link>
-              <span className="text-fg-faint" aria-hidden>
+              <span className="hidden text-fg-faint sm:inline" aria-hidden>
                 /
               </span>
               <Link to="/$repo" params={{ repo: r.name }} className="truncate font-semibold hover:text-accent">
@@ -99,9 +95,11 @@ export function RepoLayout() {
                 archived
               </Badge>
             )}
-            <Badge tone={permTone[r.permission as keyof typeof permTone] ?? 'neutral'} title={`Your access: ${r.permission}`}>
-              {r.permission}
-            </Badge>
+            <Tooltip content="Your access to this repository" describe={false}>
+              <span tabIndex={0} className="hidden rounded-md focus-visible:outline-2 focus-visible:outline-accent sm:inline-flex">
+                <Badge tone={toneForRole(r.permission)}>You: {r.permission}</Badge>
+              </span>
+            </Tooltip>
             {r.description && <span className="hidden min-w-0 truncate text-sm text-fg-muted lg:block">— {r.description}</span>}
           </div>
           <CloneButton url={r.clone_url} name={r.name} />

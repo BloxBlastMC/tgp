@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus, Shield, ShieldCheck, X } from 'lucide-react'
+import { AlertTriangle, Pencil, Plus, Shield, ShieldCheck, X } from 'lucide-react'
 import { useState } from 'react'
 import { api, errorMessage, unwrap, type BranchProtection } from '../../api/client'
-import { protectionsQuery } from '../../api/queries'
-import { Alert, Button, Checkbox, Dialog, EmptyState, Eyebrow, Field, IconButton, Input, Section, SkeletonRows, useConfirm, useToast } from '../../components/ui'
+import { protectionsQuery, reportedChecksQuery } from '../../api/queries'
+import { Alert, Badge, Button, Checkbox, Dialog, EmptyState, Eyebrow, Field, IconButton, Input, Section, SkeletonRows, Tooltip, useConfirm, useToast } from '../../components/ui'
 
 type RuleForm = Omit<BranchProtection, 'id' | 'created_at' | 'updated_at'>
 
@@ -19,16 +19,16 @@ const defaults: RuleForm = {
   required_checks: [],
 }
 
-function summary(r: BranchProtection): string[] {
+/** What a rule enforces, as short phrases ("Requires a pull request", "1 approval", …). Bypass is shown separately. */
+export function summary(r: Pick<BranchProtection, 'require_pull_request' | 'required_approvals' | 'dismiss_stale_approvals' | 'require_up_to_date' | 'block_force_push' | 'allow_deletion' | 'required_checks'>): string[] {
   const out: string[] = []
-  if (r.require_pull_request) out.push('pull requests only')
+  if (r.require_pull_request) out.push('Requires a pull request')
   if (r.required_approvals > 0) out.push(`${r.required_approvals} approval${r.required_approvals === 1 ? '' : 's'}`)
-  if (r.dismiss_stale_approvals && r.required_approvals > 0) out.push('stale approvals dismissed')
-  if (r.require_up_to_date) out.push('up to date')
-  if (r.block_force_push) out.push('no force pushes')
-  if (!r.allow_deletion) out.push('no deletion')
+  if (r.dismiss_stale_approvals && r.required_approvals > 0) out.push('New commits dismiss approvals')
+  if (r.require_up_to_date) out.push('Must be up to date with base')
   if (r.required_checks?.length) out.push(`${r.required_checks.length} required check${r.required_checks.length === 1 ? '' : 's'}`)
-  if (r.admins_bypass) out.push('admins may bypass')
+  if (r.block_force_push) out.push('No force pushes')
+  if (!r.allow_deletion) out.push("Can't be deleted")
   return out
 }
 
@@ -70,8 +70,15 @@ export function ProtectionSection({ repo, isAdmin }: { repo: string; isAdmin: bo
             <li key={r.id} className="flex items-start gap-3 border-b border-border px-4 py-3 last:border-0">
               <ShieldCheck size={16} className="mt-0.5 shrink-0 text-success" />
               <div className="min-w-0 flex-1">
-                <span className="font-mono font-semibold">{r.pattern}</span>
-                <p className="mt-0.5 text-sm text-fg-muted first-letter:uppercase">{summary(r).join(' · ')}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono font-semibold">{r.pattern}</span>
+                  {r.admins_bypass && (
+                    <Badge tone="warning" title="Admins can push directly and merge without meeting these rules">
+                      Admins may bypass
+                    </Badge>
+                  )}
+                </div>
+                <p className="mt-0.5 text-sm text-fg-muted">{summary(r).join(' · ')}</p>
               </div>
               {isAdmin && (
                 <IconButton label={`Edit rule ${r.pattern}`} size="sm" onClick={() => setEditing(r)}>
@@ -137,14 +144,14 @@ function RuleDialog({ repo, rule, onClose, onSaved }: { repo: string; rule: Bran
       </Field>
       <Eyebrow className="mt-2">Merging</Eyebrow>
       <Checkbox checked={f.require_pull_request} onChange={(v) => set('require_pull_request', v)} label="Require a pull request" hint="Block direct pushes; changes land by merging pull requests." />
-      <Field label="Required approvals" hint="Approvals needed from anyone except the author (testers count). 0 = none, maximum 10.">
+      <Field label="Required approvals" hint="Approvals needed from anyone other than the author, testers included. 0 = none, maximum 10.">
         {(id) => (
           <Input id={id} type="number" min={0} max={10} value={f.required_approvals} onChange={(e) => set('required_approvals', Math.max(0, Math.min(10, Number(e.target.value) || 0)))} className="w-24" />
         )}
       </Field>
       <Checkbox checked={f.dismiss_stale_approvals} onChange={(v) => set('dismiss_stale_approvals', v)} label="Dismiss stale approvals" hint="Approvals of an older head commit stop counting when new commits are pushed." />
       <Checkbox checked={f.require_up_to_date} onChange={(v) => set('require_up_to_date', v)} label="Require branches to be up to date" hint="The head must contain the latest base commit before merging." />
-      <RequiredChecksEditor value={f.required_checks} onChange={(v) => set('required_checks', v)} />
+      <RequiredChecksEditor repo={repo} value={f.required_checks} onChange={(v) => set('required_checks', v)} />
       <Eyebrow className="mt-2 border-t border-border pt-4">Branch</Eyebrow>
       <Checkbox checked={f.block_force_push} onChange={(v) => set('block_force_push', v)} label="Block force pushes" hint="Rewriting the branch's history is rejected." />
       <Checkbox checked={f.allow_deletion} onChange={(v) => set('allow_deletion', v)} label="Allow deletion" hint="Let people with write access delete matching branches." />
@@ -155,30 +162,53 @@ function RuleDialog({ repo, rule, onClose, onSaved }: { repo: string; rule: Bran
   )
 }
 
-/** Edits the list of required CI check names (`<workflow> / <job>`). */
-export function RequiredChecksEditor({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+/**
+ * Edits the list of required CI check names (`<workflow> / <job>`),
+ * suggesting names the repository's runs have reported. A typo would block
+ * merging forever, so unknown names get a warning.
+ */
+export function RequiredChecksEditor({ repo, value, onChange }: { repo: string; value: string[]; onChange: (v: string[]) => void }) {
   const [draft, setDraft] = useState('')
-  const add = () => {
-    const name = draft.trim()
+  const reported = useQuery(reportedChecksQuery(repo))
+  const known = reported.data ?? []
+  const isKnown = (c: string) => known.some((k) => k.toLowerCase() === c.toLowerCase())
+  const add = (raw = draft) => {
+    const name = raw.trim()
     if (!name) return
     if (!value.some((v) => v.toLowerCase() === name.toLowerCase())) onChange([...value, name])
     setDraft('')
   }
+  const suggestions = known.filter((k) => !value.some((v) => v.toLowerCase() === k.toLowerCase()))
+  const unknown = reported.isSuccess ? value.filter((c) => !isKnown(c)) : []
   return (
-    <Field label="Required checks" hint="CI jobs that must pass on the head commit, named “Workflow / job” as shown on pull requests, e.g. CI / test.">
+    <Field label="Required checks" hint="CI jobs that must pass on the head commit, named “Workflow / job” as shown on pull requests.">
       {(id) => (
         <div className="flex flex-col gap-1.5">
           {value.length > 0 && (
             <ul className="flex flex-wrap gap-1" aria-label="Required checks">
               {value.map((c) => (
-                <li key={c} className="flex h-6 items-center gap-1 rounded-md border border-border-strong bg-bg-subtle px-2 font-mono text-sm">
+                <li
+                  key={c}
+                  className={
+                    'flex h-6 items-center gap-1 rounded-md border px-2 font-mono text-sm ' +
+                    (reported.isSuccess && !isKnown(c) ? 'border-warning/50 bg-warning/10' : 'border-border-strong bg-bg-subtle')
+                  }
+                >
+                  {reported.isSuccess && !isKnown(c) && <AlertTriangle size={11} className="text-warning" aria-label="Not reported by any run" />}
                   {c}
-                  <button type="button" className="text-fg-faint hover:text-danger" aria-label={`Remove ${c}`} onClick={() => onChange(value.filter((v) => v !== c))}>
-                    <X size={12} />
-                  </button>
+                  <Tooltip content={`Remove ${c}`} describe={false}>
+                    <button type="button" className="text-fg-faint hover:text-danger" aria-label={`Remove ${c}`} onClick={() => onChange(value.filter((v) => v !== c))}>
+                      <X size={12} />
+                    </button>
+                  </Tooltip>
                 </li>
               ))}
             </ul>
+          )}
+          {unknown.length > 0 && (
+            <p className="text-sm text-warning">
+              No run has reported {unknown.length === 1 ? 'this check' : 'these checks'} yet: {unknown.join(', ')}. Check the spelling, or merging stays blocked until a job with that name passes.
+            </p>
           )}
           <div className="flex gap-2">
             <Input
@@ -191,13 +221,29 @@ export function RequiredChecksEditor({ value, onChange }: { value: string[]; onC
                   add()
                 }
               }}
-              placeholder="CI / test"
+              placeholder={known[0] ?? 'CI / test'}
               className="font-mono"
             />
-            <Button onClick={add} disabled={!draft.trim()}>
+            <Button onClick={() => add()} disabled={!draft.trim()}>
               Add
             </Button>
           </div>
+          {suggestions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 text-sm text-fg-muted">
+              <span>Reported by recent runs:</span>
+              {suggestions.map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => add(k)}
+                  aria-label={`Require ${k}`}
+                  className="inline-flex h-6 items-center gap-1 rounded-md border border-dashed border-border-strong px-2 font-mono text-sm text-fg-muted hover:border-accent hover:text-fg"
+                >
+                  <Plus size={11} /> {k}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </Field>

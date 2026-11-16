@@ -8,7 +8,7 @@ import { CommitList } from '../../components/code/CommitList'
 import { DiffView } from '../../components/code/DiffView'
 import { RefPicker } from '../../components/code/RefPicker'
 import { MetaSections, type MetaPatch } from '../../components/issues/meta'
-import { SubHeader } from '../../components/Page'
+import { SubHeader, Container } from '../../components/Page'
 import { MarkdownEditor, useInvalidatePull } from '../../components/pulls/common'
 import { ReviewerPicker } from '../../components/pulls/ReviewerPicker'
 import { Alert, Avatar, Button, Card, Checkbox, EmptyState, Field, Input, MetaSection, SkeletonRows, useToast } from '../../components/ui'
@@ -33,7 +33,7 @@ export function ComparePage() {
   const go = (b: string, h: string) => void navigate({ to: '/$repo/compare/$', params: { repo: name, _splat: compareSplat(b, h) }, replace: true })
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-5">
+    <Container width="wide" className="flex flex-col gap-4">
       <SubHeader
         className="mb-1"
         back={{ to: '/$repo/pulls', params: { repo: name }, label: 'Pull requests' }}
@@ -97,7 +97,7 @@ export function ComparePage() {
           <DiffView diff={cmp.data.diff} />
         </>
       )}
-    </div>
+    </Container>
   )
 }
 

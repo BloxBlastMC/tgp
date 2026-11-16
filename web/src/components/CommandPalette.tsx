@@ -224,7 +224,7 @@ export const shortcutGroups: { title: string; items: { keys: string[]; label: st
       { keys: ['G', 'R'], label: 'Repositories' },
       { keys: ['G', 'P'], label: 'Pull requests' },
       { keys: ['G', 'I'], label: 'Issues' },
-      { keys: ['G', 'C'], label: 'CI runs' },
+      { keys: ['G', 'C'], label: 'Runs' },
       { keys: ['G', 'S'], label: 'Settings' },
     ],
   },

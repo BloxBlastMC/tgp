@@ -33,15 +33,32 @@ export function CreateRepoDialog({ open, onClose }: { open: boolean; onClose: ()
     onClose()
   }
   return (
-    <Dialog open={open} onClose={close} title="New repository" description="A git repository with issues, pull requests, CI and releases." width="max-w-lg">
+    <Dialog
+      open={open}
+      onClose={close}
+      title="New repository"
+      description="A git repository with issues, pull requests, CI and releases."
+      width="max-w-lg"
+      footer={
+        <>
+          <Button variant="ghost" onClick={close}>
+            Cancel
+          </Button>
+          <Button type="submit" form="create-repo" variant="primary" loading={create.isPending} disabled={!f.name.trim() || !!nameError}>
+            Create repository
+          </Button>
+        </>
+      }
+    >
       <form
+        id="create-repo"
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault()
           create.mutate()
         }}
       >
-        <Field label="Name" hint="Letters, digits, '.', '-' and '_'." error={nameError} required>
+        <Field label="Name" hint={nameError ? undefined : "Letters, digits, '.', '-' and '_'."} error={nameError} required>
           {(id) => (
             <Input
               id={id}
@@ -58,7 +75,7 @@ export function CreateRepoDialog({ open, onClose }: { open: boolean; onClose: ()
           )}
         </Field>
         <Field label="Description">{(id) => <Input id={id} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} placeholder="What's in this repository?" />}</Field>
-        <Field label="Default branch">
+        <Field label="Default branch" hint="The first branch; usually main.">
           {(id) => <Input id={id} value={f.default_branch} onChange={(e) => setF({ ...f, default_branch: e.target.value })} className="font-mono" spellCheck={false} />}
         </Field>
         <div className="rounded-lg border border-border bg-bg-subtle px-3 py-2.5">
@@ -71,14 +88,6 @@ export function CreateRepoDialog({ open, onClose }: { open: boolean; onClose: ()
         </div>
         <p className="text-sm text-fg-faint">Maintainers and testers with access to all repositories see it immediately. Grant others access from Admin → Users.</p>
         {create.isError && <Alert>{errorMessage(create.error)}</Alert>}
-        <div className="flex justify-end gap-2 pt-1">
-          <Button variant="ghost" onClick={close}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={create.isPending} disabled={!f.name.trim() || !!nameError}>
-            Create repository
-          </Button>
-        </div>
       </form>
     </Dialog>
   )

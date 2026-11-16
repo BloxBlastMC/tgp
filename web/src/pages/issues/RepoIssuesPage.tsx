@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { ArrowUpDown, CheckCircle2, CircleDot, Milestone as MilestoneIcon, Plus, SearchX, Tag, User, UserPen, X } from 'lucide-react'
+import { ArrowUpDown, CheckCircle2, ChevronDown, CircleDot, Milestone as MilestoneIcon, Plus, SearchX, Tag, User, UserPen, X } from 'lucide-react'
 import { issuesQuery, milestonesQuery, repoQuery, usersQuery, type IssueFilters } from '../../api/queries'
 import { LabelPicker } from '../../components/issues/meta'
 import { EmptyState } from '../../components/Page'
-import { Avatar, Button, ButtonLink, ErrorState, FilterBar, FilterMenu, FilterPicker, IconLink, Pagination, SearchInput, SegmentedControl, SkeletonRows, type SelectItem } from '../../components/ui'
+import { Avatar, Button, ButtonLink, ErrorState, FilterBar, FilterMenu, FilterPicker, Menu, MenuItem, Pagination, SearchInput, SegmentedControl, SkeletonRows, type SelectItem } from '../../components/ui'
 import { hasFilters, splitLabels, toggleLabel, type IssueListSearch } from '../../lib/issues'
 import { canTriage } from '../../lib/permissions'
 import { useRepoName } from '../repos/RepoLayout'
@@ -49,15 +49,25 @@ export function RepoIssuesPage() {
   return (
     <div className="flex flex-col">
       <FilterBar
-        className="px-5"
+        className="gap-1.5 px-5"
         end={
           <>
-            <IconLink to="/$repo/labels" params={{ repo: name }} label="Labels" size="sm">
-              <Tag size={13} />
-            </IconLink>
-            <IconLink to="/$repo/milestones" params={{ repo: name }} label="Milestones" size="sm">
-              <MilestoneIcon size={13} />
-            </IconLink>
+            <Menu
+              placement="bottom-end"
+              label="Manage labels and milestones"
+              trigger={(t) => (
+                <Button {...t} size="sm" variant="ghost" iconRight={<ChevronDown size={12} className="text-fg-faint" />}>
+                  Manage
+                </Button>
+              )}
+            >
+              <MenuItem icon={<Tag size={14} />} onSelect={() => void navigate({ to: '/$repo/labels', params: { repo: name } })}>
+                Labels
+              </MenuItem>
+              <MenuItem icon={<MilestoneIcon size={14} />} onSelect={() => void navigate({ to: '/$repo/milestones', params: { repo: name } })}>
+                Milestones
+              </MenuItem>
+            </Menu>
             {canNew && (
               <ButtonLink to="/$repo/issues/new" params={{ repo: name }} variant="primary" icon={<Plus size={14} />}>
                 New issue
@@ -75,7 +85,7 @@ export function RepoIssuesPage() {
             { value: 'closed', label: 'Closed', icon: <CheckCircle2 size={12} />, count: closedCount.data?.total },
           ]}
         />
-        <SearchInput value={search.q ?? ''} onChange={(q) => set({ q: q || undefined }, true)} debounce={250} placeholder="Search titles…" label="Search issues" shortcut className="max-w-56" />
+        <SearchInput value={search.q ?? ''} onChange={(q) => set({ q: q || undefined }, true)} debounce={250} placeholder="Search…" label="Search issues" shortcut className="max-w-60! min-w-24 flex-1 basis-24" />
         <LabelPicker
           repo={name}
           value={labels}
@@ -105,7 +115,7 @@ export function RepoIssuesPage() {
           value={search.sort ?? 'updated'}
           onChange={(v) => set({ sort: v === 'updated' ? undefined : v })}
           options={[
-            { value: 'updated', label: 'Recently updated' },
+            { value: 'updated', label: 'Updated' },
             { value: 'created', label: 'Newest' },
             { value: 'comments', label: 'Most commented' },
           ]}

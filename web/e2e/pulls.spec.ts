@@ -110,7 +110,7 @@ test('open, review, protect and merge a pull request', async ({ browser }) => {
 
   // Tom sees the review request, comments on a line and requests changes.
   const tom = await loginAs(browser, 'tom', 'toms-password-1')
-  await expect(tom.getByLabel('1 waiting for your review')).toBeVisible()
+  await expect(tom.getByLabel('1 review requested')).toBeVisible()
   await tom.getByRole('link', { name: /Pull requests/ }).first().click()
   await tom.getByRole('link', { name: /Add a scoreboard/ }).click()
   await tom.getByRole('link', { name: /Files changed/ }).click()
@@ -126,7 +126,7 @@ test('open, review, protect and merge a pull request', async ({ browser }) => {
   await tom.getByRole('button', { name: 'Submit review' }).click()
   await expect(tom.getByTestId('review').filter({ hasText: 'requested changes' })).toBeVisible()
   await expect(tom.getByTestId('thread').getByText('Bob had 8 points.')).toBeVisible()
-  await expect(tom.getByRole('link', { name: /Pull requests/ }).first().getByLabel(/waiting for your review/)).toHaveCount(0)
+  await expect(tom.getByRole('link', { name: /Pull requests/ }).first().getByLabel(/review requested/)).toHaveCount(0)
 
   // Mia replies and resolves; Tom then approves.
   await mia.reload()
@@ -145,12 +145,12 @@ test('open, review, protect and merge a pull request', async ({ browser }) => {
 
   // Owen protects main from the repository settings.
   const owen = await loginAs(browser, 'owen', 'owens-password-1')
-  await owen.goto(server.url + '/game/settings')
+  await owen.goto(server.url + '/game/settings/protection')
   await owen.getByRole('button', { name: 'Add rule' }).click()
   await owen.getByLabel('Branch name or pattern').fill('main')
   await expect(owen.getByLabel('Required approvals')).toHaveValue('1')
   await owen.getByRole('dialog').getByRole('button', { name: 'Add rule' }).click()
-  await expect(owen.getByRole('list', { name: 'Protection rules' }).getByText('pull requests only')).toBeVisible()
+  await expect(owen.getByRole('list', { name: 'Protection rules' }).getByText('Requires a pull request')).toBeVisible()
   await owen.goto(server.url + '/game/branches')
   await expect(owen.getByRole('listitem').filter({ hasText: 'main' }).getByText('protected')).toBeVisible()
 

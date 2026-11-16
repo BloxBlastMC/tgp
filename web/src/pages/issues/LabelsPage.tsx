@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import { api, errorMessage, unwrap, type Label } from '../../api/client'
 import { labelsQuery, repoQuery } from '../../api/queries'
 import { LabelChip } from '../../components/issues/meta'
-import { SubHeader } from '../../components/Page'
+import { SubHeader, Container } from '../../components/Page'
 import { Alert, Button, cx, Dialog, EmptyState, ErrorState, Field, IconButton, Input, List, SearchInput, SkeletonRows, useConfirm, useToast } from '../../components/ui'
 import { isHexColor, randomLabelColor } from '../../lib/issues'
 import { canWrite as canWritePerm } from '../../lib/permissions'
@@ -57,10 +57,10 @@ function LabelDialog({ repo, label, onDone }: { repo: string; label?: Label; onD
         </div>
         <Field label="Name">{(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} autoFocus maxLength={50} placeholder="bug" />}</Field>
         <Field label="Description">{(id) => <Input id={id} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={200} placeholder="Something isn't working" />}</Field>
-        <Field label="Color" error={!isHexColor(color) ? 'Use a 6-digit hex colour, like #d73a4a.' : undefined}>
+        <Field label="Color" error={!isHexColor(color) ? 'Use a 6-digit hex color, like #d73a4a.' : undefined}>
           {(id) => (
             <div className="flex flex-col gap-2.5">
-              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Preset colours">
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Preset colors">
                 {presets.map((p) => (
                   <button
                     key={p}
@@ -74,14 +74,14 @@ function LabelDialog({ repo, label, onDone }: { repo: string; label?: Label; onD
                 ))}
               </div>
               <div className="flex items-center gap-1.5">
-                <IconButton label="Random colour" variant="secondary" onClick={() => setColor(randomLabelColor())}>
+                <IconButton label="Random color" variant="secondary" onClick={() => setColor(randomLabelColor())}>
                   <RefreshCw size={13} />
                 </IconButton>
                 <input
                   type="color"
                   value={isHexColor(color) ? `#${hex}` : '#cccccc'}
                   onChange={(e) => setColor(e.target.value.slice(1))}
-                  aria-label="Pick colour"
+                  aria-label="Pick color"
                   className="h-8 w-9 cursor-pointer rounded-md border border-border-strong bg-bg p-0.5"
                 />
                 <Input id={id} value={`#${hex}`} onChange={(e) => setColor(e.target.value.replace(/^#/, ''))} className="w-32 font-mono" aria-invalid={!isHexColor(color) || undefined} />
@@ -125,11 +125,11 @@ export function LabelsPage() {
     return (labels.data ?? []).filter((l) => !f || l.name.toLowerCase().includes(f) || l.description.toLowerCase().includes(f))
   }, [labels.data, filter])
   return (
-    <div className="mx-auto flex max-w-5xl flex-col px-6 py-5">
+    <Container width="wide" className="flex flex-col">
       <SubHeader
         back={{ to: '/$repo/issues', params: { repo }, label: 'Issues' }}
         title="Labels"
-        description={labels.data ? `${labels.data.length} labels to categorise issues and pull requests.` : 'Categorise issues and pull requests.'}
+        description={labels.data ? `${labels.data.length} labels to categorize issues and pull requests.` : 'Categorize issues and pull requests.'}
         actions={
           canWrite && (
             <Button variant="primary" icon={<Plus size={14} />} onClick={() => setEditing('new')}>
@@ -196,6 +196,6 @@ export function LabelsPage() {
         </List>
       )}
       {editing && <LabelDialog key={editing === 'new' ? 'new' : editing.id} repo={repo} label={editing === 'new' ? undefined : editing} onDone={() => setEditing(null)} />}
-    </div>
+    </Container>
   )
 }

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { metaQuery } from '../api/queries'
+import { versionLabel } from '../lib/labels'
 import { cx } from './ui'
 
 /** Centered card used by setup, login and password pages. */
@@ -24,7 +25,7 @@ export function AuthCard({ title, subtitle, children, wide, aside }: { title: st
           <div className="mt-6">{children}</div>
         </div>
         {aside && <div className="mt-4 text-center text-sm text-fg-muted">{aside}</div>}
-        <p className="mt-8 text-center text-xs text-fg-faint">Powered by tgp {meta.data?.version ?? ''}</p>
+        <p className="mt-8 text-center text-xs text-fg-faint">Powered by tgp · {versionLabel(meta.data?.version, meta.data?.commit)}</p>
       </div>
     </div>
   )

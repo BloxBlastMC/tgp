@@ -93,7 +93,7 @@ export function Pill({ tone, icon, children, size = 'md' }: { tone: Tone; icon?:
   const solid: Record<Tone, string> = {
     neutral: 'bg-bg-active text-fg-muted',
     accent: 'bg-accent-solid text-white',
-    success: 'bg-[color-mix(in_oklab,var(--success),black_18%)] text-white',
+    success: 'bg-success-solid text-white',
     warning: 'bg-warning text-black',
     danger: 'bg-[color-mix(in_oklab,var(--danger),black_12%)] text-white',
     info: 'bg-info text-white',

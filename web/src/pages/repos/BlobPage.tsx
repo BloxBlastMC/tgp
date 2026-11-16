@@ -10,6 +10,7 @@ import { RefPicker } from '../../components/code/RefPicker'
 import { Alert, ButtonA, ButtonLink, CardHeaderBar, CopyButton, ErrorState, IconButton, SegmentedControl, Sep, Skeleton, Spinner, useCopy } from '../../components/ui'
 import { formatBytes, plural } from '../../lib/format'
 import { rawUrl } from '../../lib/repoUrls'
+import { Container } from '../../components/Page'
 import { useRepoName } from './RepoLayout'
 import type { RefPathSearch } from './search'
 
@@ -36,7 +37,7 @@ export function BlobPage() {
   useEffect(() => setRendered(true), [path])
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-5">
+    <Container width="wide" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <RefPicker repo={name} current={ref} onSelect={(r) => void navigate({ to: '/$repo/blob', params: { repo: name }, search: { ref: r, path } })} />
         <PathBreadcrumbs repo={repo.name} gitRef={ref} path={path} />
@@ -121,6 +122,6 @@ export function BlobPage() {
           )}
         </div>
       )}
-    </div>
+    </Container>
   )
 }

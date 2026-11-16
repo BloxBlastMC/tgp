@@ -4,7 +4,7 @@ import { ArrowLeft, Download, FileArchive, FileCode2, GitCommit, Package, Pencil
 import { useState } from 'react'
 import { api, ApiRequestError, errorMessage, unwrap, type Release } from '../../api/client'
 import { releaseByTagQuery, releasesQuery, repoQuery } from '../../api/queries'
-import { EmptyState, SubHeader } from '../../components/Page'
+import { EmptyState, SubHeader, Container } from '../../components/Page'
 import { Alert, Avatar, Badge, Button, ButtonLink, Checkbox, Dialog, ErrorState, IconButton, Pagination, PageSkeleton, Time, useToast } from '../../components/ui'
 import { formatBytes, formatDate } from '../../lib/format'
 import { canWrite } from '../../lib/permissions'
@@ -31,7 +31,7 @@ export function ReleasesPage() {
   const q = useQuery({ ...releasesQuery(repo, page), placeholderData: (prev) => prev })
   const canWrite = canWriteRepo(r.permission)
   return (
-    <div className="mx-auto flex max-w-5xl flex-col px-6 py-5">
+    <Container width="wide" className="flex flex-col">
       <SubHeader
         title="Releases"
         description="Tagged versions with release notes and downloadable files."
@@ -74,7 +74,7 @@ export function ReleasesPage() {
           <Pagination page={page} total={q.data.total} perPage={10} onPage={(p) => void navigate({ to: '/$repo/releases', params: { repo }, search: p > 1 ? { page: p } : {} })} prevLabel="Newer" nextLabel="Older" className="px-0" />
         </>
       )}
-    </div>
+    </Container>
   )
 }
 
@@ -84,7 +84,7 @@ export function ReleaseDetailPage() {
   const { _splat: tag = '' } = useParams({ strict: false }) as { _splat?: string }
   const q = useQuery(releaseByTagQuery(repo, tag))
   return (
-    <div className="mx-auto flex max-w-5xl flex-col px-6 py-5">
+    <Container width="wide" className="flex flex-col">
       <Link to="/$repo/releases" params={{ repo }} search={{}} className="mb-4 inline-flex items-center gap-1 self-start text-sm text-fg-muted hover:text-fg">
         <ArrowLeft size={13} /> All releases
       </Link>
@@ -101,7 +101,7 @@ export function ReleaseDetailPage() {
       ) : (
         <ReleaseCard repo={repo} release={q.data} canWrite={canWriteRepo(r.permission)} />
       )}
-    </div>
+    </Container>
   )
 }
 

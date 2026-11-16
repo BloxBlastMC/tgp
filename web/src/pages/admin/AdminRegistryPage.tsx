@@ -55,7 +55,7 @@ export function AdminRegistryPage() {
     </Field>
   )
   return (
-    <Container width="narrow">
+    <Container width="default">
       <SubHeader title="Container registry" as="h2" description="Storage limits and cleanup for the images every repository pushes. Blobs shared between images count once." />
       <form
         className="flex flex-col gap-6"
@@ -74,7 +74,7 @@ export function AdminRegistryPage() {
             {num('keep_last_tags', 'Keep the newest tags per image', 'Older tags matching the patterns below are deleted. 0 = keep all')}
           </div>
           <div className="mt-4">
-            <Field label="Tag patterns" hint="Comma-separated globs, such as g* for commit tags. Other tags (master, latest) are never pruned.">
+            <Field label="Tag patterns" hint="Comma-separated globs, such as g* for commit tags. Other tags (such as main or latest) are never pruned.">
               {(id) => <Input id={id} value={patterns} onChange={(e) => setPatterns(e.target.value)} className="font-mono" />}
             </Field>
           </div>

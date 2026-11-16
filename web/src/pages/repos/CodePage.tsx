@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { BookOpen, CornerLeftUp, File, FileCode2, FileImage, FileText, Folder, FolderGit, History, Link2, Terminal } from 'lucide-react'
+import { BookOpen, CornerLeftUp, File, FileCode2, FileImage, FileText, Folder, FolderGit, GitBranch, History, Link2, Tag, Terminal } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { api, ApiRequestError, errorMessage, unwrap } from '../../api/client'
-import { readmeQuery, repoQuery, treeQuery } from '../../api/queries'
+import { branchesQuery, readmeQuery, repoQuery, tagsQuery, treeQuery } from '../../api/queries'
+import { Container } from '../../components/Page'
 import { PathBreadcrumbs } from '../../components/code/Breadcrumbs'
 import { commitAuthor } from '../../components/code/CommitList'
 import { RefPicker } from '../../components/code/RefPicker'
-import { Alert, Avatar, ButtonLink, Card, CardHeaderBar, CopyButton, Skeleton, Time } from '../../components/ui'
+import { Alert, Avatar, Card, CardHeaderBar, CopyButton, Skeleton, Time } from '../../components/ui'
 import { formatBytes, shortSha } from '../../lib/format'
 import { useRepoName } from './RepoLayout'
 import type { RefPathSearch } from './search'
@@ -33,20 +34,35 @@ export function CodePage() {
     queryFn: () => unwrap(api.GET('/repos/{repo}/commits', { params: { path: { repo: name }, query: { ref, path, per_page: 1 } } })),
     enabled: !repo.empty,
   })
+  const branches = useQuery({ ...branchesQuery(name), enabled: !repo.empty })
+  const tags = useQuery({ ...tagsQuery(name), enabled: !repo.empty })
 
   if (repo.empty) return <EmptyRepo cloneUrl={repo.clone_url} branch={repo.default_branch} name={repo.name} />
 
   const lastCommit = last.data?.commits[0]
   const parent = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : undefined
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-5">
+    <Container width="wide" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <RefPicker repo={name} current={ref} onSelect={(r) => void navigate({ to: '/$repo', params: { repo: name }, search: { ref: r, path: path || undefined } })} />
         <PathBreadcrumbs repo={repo.name} gitRef={ref} path={path} />
         <div className="flex-1" />
-        <ButtonLink to="/$repo/commits" params={{ repo: name }} search={{ ref, path: path || undefined }} variant="ghost" icon={<History size={14} />}>
-          History
-        </ButtonLink>
+        <nav aria-label="Repository history" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-fg-muted">
+          <Link to="/$repo/branches" params={{ repo: name }} className="inline-flex items-center gap-1.5 hover:text-accent">
+            <GitBranch size={13} className="text-fg-faint" />
+            {branches.data ? <span className="font-semibold text-fg tabular-nums">{branches.data.length}</span> : null}
+            {branches.data?.length === 1 ? 'branch' : 'branches'}
+          </Link>
+          <Link to="/$repo/branches" params={{ repo: name }} hash="tags" className="inline-flex items-center gap-1.5 hover:text-accent">
+            <Tag size={13} className="text-fg-faint" />
+            {tags.data ? <span className="font-semibold text-fg tabular-nums">{tags.data.length}</span> : null}
+            {tags.data?.length === 1 ? 'tag' : 'tags'}
+          </Link>
+          <Link to="/$repo/commits" params={{ repo: name }} search={{ ref, path: path || undefined }} className="inline-flex items-center gap-1.5 hover:text-accent">
+            <History size={13} className="text-fg-faint" />
+            {path ? 'History' : 'Commits'}
+          </Link>
+        </nav>
       </div>
 
       {tree.isError ? (
@@ -88,7 +104,7 @@ export function CodePage() {
             <table className="w-full">
               <tbody>
                 {path && (
-                  <tr className="border-b border-border hover:bg-bg-hover/60">
+                  <tr className="border-b border-border hover:bg-bg-hover">
                     <td className="px-4 py-2" colSpan={2}>
                       <Link to="/$repo" params={{ repo: name }} search={{ ref, path: parent }} className="flex items-center gap-2.5 text-fg-muted hover:text-accent" aria-label="Parent directory">
                         <CornerLeftUp size={14} className="shrink-0" /> ..
@@ -99,7 +115,7 @@ export function CodePage() {
                 {tree.data.entries.map((e) => {
                   const Icon = fileIcon(e.name)
                   return (
-                    <tr key={e.path} className="border-b border-border last:border-0 hover:bg-bg-hover/60">
+                    <tr key={e.path} className="border-b border-border last:border-0 hover:bg-bg-hover">
                       <td className="px-4 py-2">
                         {e.type === 'dir' ? (
                           <Link to="/$repo" params={{ repo: name }} search={{ ref, path: e.path }} className="flex items-center gap-2.5 hover:text-accent hover:underline">
@@ -133,7 +149,7 @@ export function CodePage() {
           <div className="markdown px-8 py-6" dangerouslySetInnerHTML={{ __html: readme.data.html }} />
         </div>
       )}
-    </div>
+    </Container>
   )
 }
 
@@ -151,7 +167,7 @@ function Snippet({ title, code }: { title: string; code: string }) {
 
 function EmptyRepo({ cloneUrl, branch, name }: { cloneUrl: string; branch: string; name: string }) {
   return (
-    <div className="mx-auto max-w-3xl px-6 py-8">
+    <Container width="default">
       <Card>
         <div className="flex flex-col gap-5">
           <div>
@@ -181,6 +197,6 @@ function EmptyRepo({ cloneUrl, branch, name }: { cloneUrl: string; branch: strin
           </p>
         </div>
       </Card>
-    </div>
+    </Container>
   )
 }

@@ -32,7 +32,7 @@
   /* A faint tint for header bars, table heads and inset areas. */
   --bg-subtle: light-dark(#f7f7f9, #111216);
   --bg-elevated: var(--surface-2);
-  --bg-hover: light-dark(#f0f0f3, #1a1b21);
+  --bg-hover: light-dark(#f0f0f3, #1e1f26);
   --bg-active: light-dark(#e8e8ed, #23242b);
   --border: light-dark(#e6e6ea, #1f2127);
   --border-strong: light-dark(#d4d5db, #2c2f37);
@@ -48,10 +48,13 @@
   --accent-solid: light-dark(#4f5be6, #5b63e6);
   --accent-hover: light-dark(#4350d2, #6b73ef);
   --accent-fg: #ffffff;
-  --accent-subtle: light-dark(rgb(79 91 230 / 0.09), rgb(124 136 255 / 0.13));
+  --accent-subtle: light-dark(rgb(79 91 230 / 0.12), rgb(124 136 255 / 0.13));
 
   /* Status. --done is "merged" / "closed as completed". */
   --success: light-dark(#1a7f4b, #3fb97a);
+  /* Fill for solid status pills (Open, Ready); lighter than --success in the
+     light theme so pills don't outweigh the rest of the page. */
+  --success-solid: light-dark(#23935a, #238a55);
   --warning: light-dark(#a86f0a, #e0a83a);
   --danger: light-dark(#cf3434, #ef5b5b);
   --info: light-dark(#1f72b0, #4ea8de);
@@ -96,6 +99,7 @@
   --color-accent-fg: var(--accent-fg);
   --color-accent-subtle: var(--accent-subtle);
   --color-success: var(--success);
+  --color-success-solid: var(--success-solid);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-info: var(--info);

@@ -32,7 +32,7 @@ export function PullRows({ pulls, showRepo }: { pulls: PullSummary[]; showRepo?:
   return (
     <ul>
       {pulls.map((p) => (
-        <li key={`${p.repo}#${p.number}`} className="relative flex items-start gap-3 border-b border-border px-5 py-3 transition-colors hover:bg-bg-hover/50">
+        <li key={`${p.repo}#${p.number}`} className="relative flex items-start gap-3 border-b border-border px-5 py-3 transition-colors hover:bg-bg-hover has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-accent">
           <span className="mt-0.5">
             <PullStateIcon pr={p} />
           </span>

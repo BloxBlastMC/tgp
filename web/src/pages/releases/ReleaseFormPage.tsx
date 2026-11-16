@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
-import { FileArchive, Lock, Rocket, Upload, X } from 'lucide-react'
-import { useEffect, useId, useState } from 'react'
+import { ChevronDown, FileArchive, Lock, Rocket, Upload, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { api, errorMessage, unwrap, type Release } from '../../api/client'
 import { branchesQuery, repoQuery, tagsQuery } from '../../api/queries'
-import { EmptyState, SubHeader } from '../../components/Page'
+import { EmptyState, SubHeader, Container } from '../../components/Page'
 import { MarkdownEditor } from '../../components/pulls/common'
-import { Alert, Button, Card, Checkbox, ErrorState, Field, FileDrop, IconButton, Input, Meter, PageSkeleton, Select, useConfirm, useToast } from '../../components/ui'
+import { Alert, Button, Card, Checkbox, cx, ErrorState, Field, FileDrop, IconButton, Input, Menu, MenuItem, MenuLabel, Meter, PageSkeleton, Select, useConfirm, useToast } from '../../components/ui'
 import { formatBytes } from '../../lib/format'
 import { assetUrl, releaseTitle, tagError, uploadAsset } from '../../lib/releases'
 import { useRepoName } from '../repos/RepoLayout'
@@ -42,7 +42,6 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
   const branches = useQuery(branchesQuery(repo))
   const navigate = useNavigate()
   const qc = useQueryClient()
-  const listId = useId()
   const confirm = useConfirm()
   const toast = useToast()
   const [tag, setTag] = useState(release?.tag ?? '')
@@ -127,7 +126,7 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
   const submit = (draft: boolean) => !invalid && save.mutate(draft)
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col px-6 py-5">
+    <Container width="default" className="flex flex-col">
       <SubHeader back={{ to: '/$repo/releases', params: { repo }, search: {}, label: 'Releases' }} title={release ? `Edit ${releaseTitle(release)}` : 'New release'} />
       <form
         aria-label={release ? 'Edit release' : 'New release'}
@@ -136,26 +135,7 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
           submit(release ? release.draft : false)
         }}
       >
-        <Card
-          footer={
-            <>
-              {(!release || release.draft) && (
-                <Button loading={pending && save.variables === true} disabled={!!invalid || pending} onClick={() => submit(true)}>
-                  {release ? 'Save draft' : 'Save as draft'}
-                </Button>
-              )}
-              {release && !release.draft ? (
-                <Button type="submit" variant="primary" loading={pending} disabled={!!invalid}>
-                  Save release
-                </Button>
-              ) : (
-                <Button variant="primary" icon={<Rocket size={13} />} loading={pending && save.variables === false} disabled={!!invalid || pending} onClick={() => submit(false)}>
-                  Publish release
-                </Button>
-              )}
-            </>
-          }
-        >
+        <Card>
           <div className="flex flex-col gap-5">
             <div className="grid gap-4 md:grid-cols-2">
               <Field
@@ -172,14 +152,28 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
                 }
               >
                 {(id) => (
-                  <>
-                    <Input id={id} value={tag} onChange={(e) => setTag(e.target.value)} placeholder="v1.0.0" list={listId} autoFocus={!release} className="font-mono" aria-invalid={!!(tag.trim() && invalid) || undefined} />
-                    <datalist id={listId}>
-                      {(tags.data ?? []).map((t) => (
-                        <option key={t.name} value={t.name} />
-                      ))}
-                    </datalist>
-                  </>
+                  <div className="flex gap-2">
+                    <Input id={id} value={tag} onChange={(e) => setTag(e.target.value)} placeholder="v1.0.0" autoFocus={!release} className="font-mono" aria-invalid={!!(tag.trim() && invalid) || undefined} />
+                    {(tags.data?.length ?? 0) > 0 && (
+                      <Menu
+                        placement="bottom-end"
+                        label="Existing versions"
+                        className="max-h-72 w-56 overflow-y-auto"
+                        trigger={(t) => (
+                          <Button {...t} aria-label="Pick an existing version" className="h-8" iconRight={<ChevronDown size={12} className="text-fg-faint" />}>
+                            Existing
+                          </Button>
+                        )}
+                      >
+                        <MenuLabel>Existing versions</MenuLabel>
+                        {(tags.data ?? []).map((t) => (
+                          <MenuItem key={t.name} onSelect={() => setTag(t.name)}>
+                            <span className={cx('font-mono', t.name === tag.trim() && 'font-semibold')}>{t.name}</span>
+                          </MenuItem>
+                        ))}
+                      </Menu>
+                    )}
+                  </div>
                 )}
               </Field>
               {!existingTag && (
@@ -251,7 +245,25 @@ function ReleaseForm({ release: initial }: { release?: Release }) {
             {uploadError && <Alert>{uploadError}</Alert>}
           </div>
         </Card>
+        {/* Stays in view while the notes and files scroll. */}
+        <div className="sticky bottom-4 z-10 mt-4 flex items-center justify-end gap-2 rounded-lg border border-border bg-surface-2 px-4 py-2.5 shadow-popover">
+          <span className="mr-auto text-sm text-fg-faint">{release && !release.draft ? 'Changes apply right away.' : 'Drafts are only visible to people with write access.'}</span>
+          {(!release || release.draft) && (
+            <Button loading={pending && save.variables === true} disabled={!!invalid || pending} onClick={() => submit(true)}>
+              {release ? 'Save draft' : 'Save as draft'}
+            </Button>
+          )}
+          {release && !release.draft ? (
+            <Button type="submit" variant="primary" loading={pending} disabled={!!invalid}>
+              Save release
+            </Button>
+          ) : (
+            <Button variant="primary" icon={<Rocket size={13} />} loading={pending && save.variables === false} disabled={!!invalid || pending} onClick={() => submit(false)}>
+              Publish release
+            </Button>
+          )}
+        </div>
       </form>
-    </div>
+    </Container>
   )
 }

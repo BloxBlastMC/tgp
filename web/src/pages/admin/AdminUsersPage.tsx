@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Pencil, Plus, SearchX } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
+import { toneForRole } from '../../lib/permissions'
 import { SubHeader } from '../../components/Page'
 import { api, errorMessage, unwrap, type Schemas, type User } from '../../api/client'
 import { adminUsersQuery, sessionQuery, userReposQuery } from '../../api/queries'
@@ -24,13 +25,12 @@ import {
   SegmentedControl,
   Select,
   Time,
+  Tooltip,
   useToast,
   type Column,
 } from '../../components/ui'
 
 type Role = Schemas['Role']
-
-const roleTone = { admin: 'warning', maintainer: 'accent', tester: 'neutral' } as const
 
 type AccessFilter = 'all' | Role
 
@@ -52,6 +52,16 @@ export function AdminUsersPage() {
     )
   }, [users.data, filter, access])
   const count = (r: Role) => users.data?.filter((u) => u.role === r).length
+  // Deep link from repository settings: /admin/users?edit=<username>.
+  const [deepLinked, setDeepLinked] = useState(false)
+  useEffect(() => {
+    if (deepLinked || !users.data) return
+    const want = new URLSearchParams(window.location.search).get('edit')
+    setDeepLinked(true)
+    if (!want) return
+    const u = users.data.find((x) => x.username.toLowerCase() === want.toLowerCase())
+    if (u) setEditing(u)
+  }, [users.data, deepLinked])
 
   const columns: Column<User>[] = [
     {
@@ -66,14 +76,27 @@ export function AdminUsersPage() {
               {u.display_name}
               {u.id === me?.id && <span className="ml-1.5 text-xs font-normal text-fg-faint">(you)</span>}
             </span>
-            <span className="block truncate font-mono text-sm text-fg-faint">{u.username}</span>
+            <span className="block truncate text-sm text-fg-faint">@{u.username}</span>
           </span>
         </button>
       ),
     },
     { id: 'email', header: 'Email', sortValue: (u) => u.email, cell: (u) => (u.email ? <span className="text-fg-muted">{u.email}</span> : <span className="text-fg-faint">—</span>), className: 'hidden lg:table-cell', headerClassName: 'hidden lg:table-cell' },
-    { id: 'role', header: 'Role', sortValue: (u) => u.role, cell: (u) => <Badge tone={roleTone[u.role]}>{u.role}</Badge> },
-    { id: 'repos', header: 'Repositories', cell: (u) => <span className="text-fg-muted">{u.role === 'admin' ? 'All (admin)' : u.all_repos ? 'All' : 'Selected'}</span> },
+    { id: 'role', header: 'Role', sortValue: (u) => u.role, cell: (u) => <Badge tone={toneForRole(u.role)}>{u.role}</Badge> },
+    {
+      id: 'repos',
+      header: 'Repositories',
+      cell: (u) =>
+        u.role === 'admin' ? (
+          <Tooltip content="Admins can see and change every repository.">
+            <span tabIndex={0} className="cursor-help text-fg-muted underline decoration-dotted underline-offset-4">
+              All
+            </span>
+          </Tooltip>
+        ) : (
+          <span className="text-fg-muted">{u.all_repos ? 'All' : 'Selected'}</span>
+        ),
+    },
     {
       id: 'status',
       header: 'Status',
@@ -85,7 +108,14 @@ export function AdminUsersPage() {
         </div>
       ),
     },
-    { id: 'login', header: 'Last sign-in', sortValue: (u) => u.last_login_at ?? '', cell: (u) => <span className="text-fg-muted"><Time iso={u.last_login_at} /></span> },
+    {
+      id: 'login',
+      header: 'Last sign-in',
+      sortValue: (u) => u.last_login_at ?? '',
+      cell: (u) => <span className="text-fg-muted">{u.last_login_at ? <Time iso={u.last_login_at} /> : 'never'}</span>,
+      className: 'hidden lg:table-cell',
+      headerClassName: 'hidden lg:table-cell',
+    },
     {
       id: 'actions',
       header: <span className="sr-only">Actions</span>,
@@ -100,21 +130,18 @@ export function AdminUsersPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="px-5 pt-6">
+      <div className="px-6 pt-6">
         <SubHeader title="Users" as="h2" description="Everyone who can sign in, their role and repository access." className="mb-4" />
       </div>
       <FilterBar
-        className="border-t px-5"
+        className="border-t px-6"
         end={
-          <>
-            {users.data && <span className="text-sm text-fg-faint tabular-nums">{users.data.length} people</span>}
-            <Button variant="primary" icon={<Plus size={14} />} onClick={() => setCreating(true)}>
-              New user
-            </Button>
-          </>
+          <Button variant="primary" icon={<Plus size={14} />} onClick={() => setCreating(true)}>
+            New user
+          </Button>
         }
       >
-        <SearchInput value={filter} onChange={setFilter} label="Filter users" placeholder="Filter by name, username or email…" shortcut />
+        <SearchInput value={filter} onChange={setFilter} label="Filter users" placeholder="Filter by name, username or email…" shortcut className="min-w-40 flex-1 basis-40" />
         <SegmentedControl
           label="Filter by access"
           value={access}
@@ -166,7 +193,16 @@ export function AdminUsersPage() {
           }}
         />
       )}
-      <Dialog open={temp !== null} onClose={() => setTemp(null)} title="Temporary password">
+      <Dialog
+        open={temp !== null}
+        onClose={() => setTemp(null)}
+        title="Temporary password"
+        footer={
+          <Button variant="primary" onClick={() => setTemp(null)}>
+            Done
+          </Button>
+        }
+      >
         {temp && (
           <>
             <p className="text-fg-muted">
@@ -176,11 +212,6 @@ export function AdminUsersPage() {
             <Alert tone="warning">
               It's shown only once and expires <Time iso={temp.expires} />.
             </Alert>
-            <div className="flex justify-end">
-              <Button variant="primary" onClick={() => setTemp(null)}>
-                Done
-              </Button>
-            </div>
           </>
         )}
       </Dialog>
@@ -247,6 +278,7 @@ function CreateUserDialog({
   const blank = { username: '', display_name: '', email: '', role: 'maintainer' as Role, all_repos: true }
   const [f, setF] = useState(blank)
   const [repos, setRepos] = useState<string[]>([])
+  const formId = useId()
   const create = useMutation({
     mutationFn: async () => {
       const r = await unwrap(api.POST('/admin/users', { body: f }))
@@ -270,8 +302,19 @@ function CreateUserDialog({
         onClose()
       }}
       title="New user"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" form={formId} variant="primary" loading={create.isPending} disabled={!f.username.trim()}>
+            Create user
+          </Button>
+        </>
+      }
     >
       <form
+        id={formId}
         className="flex flex-col gap-3"
         onSubmit={(e) => {
           e.preventDefault()
@@ -296,14 +339,6 @@ function CreateUserDialog({
           onRepos={setRepos}
         />
         {create.isError && <Alert>{errorMessage(create.error)}</Alert>}
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={create.isPending} disabled={!f.username.trim()}>
-            Create user
-          </Button>
-        </div>
       </form>
     </Dialog>
   )
@@ -334,6 +369,7 @@ function EditUserDialog({
   const granted = useQuery(userReposQuery(user.username))
   const [repos, setRepos] = useState<string[] | null>(null)
   const selectedRepos = repos ?? granted.data?.repos ?? []
+  const formId = useId()
 
   const save = useMutation({
     mutationFn: async () => {
@@ -375,7 +411,43 @@ function EditUserDialog({
   const error = save.error ?? setDisabled.error ?? reset.error ?? resetTotp.error
 
   return (
-    <Dialog open onClose={onClose} title={`Edit ${user.username}`} width="max-w-lg" icon={<Avatar user={user} size={32} />}>
+    <Dialog
+      open
+      onClose={onClose}
+      title={`Edit ${user.username}`}
+      description={
+        <span className="text-sm">
+          {user.email || 'No email'} · last signed in {user.last_login_at ? <Time iso={user.last_login_at} /> : 'never'}
+        </span>
+      }
+      width="max-w-lg"
+      icon={<Avatar user={user} size={32} />}
+      footer={
+        confirm ? (
+          <>
+            <Button variant="ghost" onClick={() => setConfirm(null)}>
+              Back
+            </Button>
+            <Button
+              variant="danger"
+              loading={reset.isPending || resetTotp.isPending || setDisabled.isPending}
+              onClick={() => (confirm === 'reset' ? reset.mutate() : confirm === 'totp' ? resetTotp.mutate() : setDisabled.mutate(true))}
+            >
+              {confirm === 'reset' ? 'Reset password' : confirm === 'totp' ? 'Turn off two-factor' : 'Disable user'}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" form={formId} variant="primary" loading={save.isPending}>
+              Save
+            </Button>
+          </>
+        )
+      }
+    >
       {confirm ? (
         <>
           <p>
@@ -396,21 +468,10 @@ function EditUserDialog({
             )}
           </p>
           {error && <Alert>{errorMessage(error)}</Alert>}
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setConfirm(null)}>
-              Back
-            </Button>
-            <Button
-              variant="danger"
-              loading={reset.isPending || resetTotp.isPending || setDisabled.isPending}
-              onClick={() => (confirm === 'reset' ? reset.mutate() : confirm === 'totp' ? resetTotp.mutate() : setDisabled.mutate(true))}
-            >
-              {confirm === 'reset' ? 'Reset password' : confirm === 'totp' ? 'Turn off 2FA' : 'Disable user'}
-            </Button>
-          </div>
         </>
       ) : (
         <form
+          id={formId}
           className="flex flex-col gap-3"
           onSubmit={(e) => {
             e.preventDefault()
@@ -434,7 +495,7 @@ function EditUserDialog({
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-bg-subtle p-3">
             <span className="mr-auto text-sm font-medium text-fg-muted">Account</span>
             {!isSelf && <Button size="sm" onClick={() => setConfirm('reset')}>Reset password</Button>}
-            {user.totp_enabled && <Button size="sm" onClick={() => setConfirm('totp')}>Reset 2FA</Button>}
+            {user.totp_enabled && <Button size="sm" onClick={() => setConfirm('totp')}>Reset two-factor</Button>}
             {!isSelf &&
               (user.disabled ? (
                 <Button size="sm" onClick={() => setDisabled.mutate(false)} loading={setDisabled.isPending}>
@@ -447,14 +508,6 @@ function EditUserDialog({
               ))}
           </div>
           {error && <Alert>{errorMessage(error)}</Alert>}
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" loading={save.isPending}>
-              Save
-            </Button>
-          </div>
         </form>
       )}
     </Dialog>

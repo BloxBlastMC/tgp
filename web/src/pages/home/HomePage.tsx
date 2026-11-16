@@ -9,7 +9,7 @@ import { IssueStateIcon, LabelChip } from '../../components/issues/meta'
 import { Page } from '../../components/Page'
 import { DecisionBadge, PullStateIcon } from '../../components/pulls/common'
 import { CreateRepoDialog } from '../../components/repos/CreateRepoDialog'
-import { RepoChooser } from '../../components/repos/RepoChooser'
+import { RepoChooser, type RepoIntent } from '../../components/repos/RepoChooser'
 import { Avatar, Badge, Button, Card, EmptyState, ErrorState, Sep, SkeletonRows, StatCard, Time } from '../../components/ui'
 import { durationText, isFailed } from '../../lib/ci'
 import { formatDate, greeting } from '../../lib/format'
@@ -31,8 +31,23 @@ function Rows<T>({ q, empty, render }: { q: { isPending: boolean; isError: boole
   return <ul>{q.data.slice(0, LIMIT).map(render)}</ul>
 }
 
-const rowClass = 'relative flex items-start gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover/60'
-const stretched = 'font-medium after:absolute after:inset-0 hover:text-accent'
+const rowClass =
+  'relative flex items-start gap-3 border-b border-border px-4 py-2.5 transition-colors last:border-0 hover:bg-bg-hover has-[a:focus-visible]:outline-2 has-[a:focus-visible]:-outline-offset-2 has-[a:focus-visible]:outline-accent'
+const stretched = 'font-medium after:absolute after:inset-0 hover:text-accent focus-visible:outline-none'
+
+/** One-line next step under an empty card's message. */
+function EmptyAction({ children, to, search, onClick }: { children: ReactNode; to?: string; search?: Record<string, unknown>; onClick?: () => void }) {
+  const cls = 'mt-1 inline-flex items-center gap-1 text-accent hover:underline'
+  return to ? (
+    <Link to={to} search={search} className={cls}>
+      {children} <ArrowRight size={12} />
+    </Link>
+  ) : (
+    <button type="button" onClick={onClick} className={cls}>
+      {children} <ArrowRight size={12} />
+    </button>
+  )
+}
 
 function PullItem({ p }: { p: PullSummary }) {
   return (
@@ -120,7 +135,7 @@ export function HomePage() {
   const assigned = useQuery(myIssuesQuery('assigned'))
   const runs = useQuery({ ...allRunsQuery({ actor: '@me' }), refetchInterval: (q) => (q.state.data?.runs.some((r) => r.status !== 'completed') ? 5000 : 60_000) })
   const [creating, setCreating] = useState(false)
-  const [choosing, setChoosing] = useState(false)
+  const [choosing, setChoosing] = useState<RepoIntent | null>(null)
   const now = new Date()
   const firstName = me?.display_name.split(' ')[0] ?? ''
   const noRepos = repos.data?.length === 0
@@ -136,7 +151,7 @@ export function HomePage() {
       actions={
         !noRepos && (
           <>
-            <Button icon={<CircleDot size={14} />} onClick={() => setChoosing(true)}>
+            <Button icon={<CircleDot size={14} />} onClick={() => setChoosing('issue')}>
               New issue
             </Button>
             {isAdmin && (
@@ -187,10 +202,23 @@ export function HomePage() {
               hint={reviews.data?.total ? 'Waiting on you' : 'All caught up'}
               to="/pulls"
             />
-            <StatCard label="Your open PRs" value={authored.data?.total ?? '–'} icon={<GitPullRequest size={15} />} to="/pulls" search={{ filter: 'authored' }} />
-            <StatCard label="Assigned issues" value={assigned.data?.total ?? '–'} icon={<CircleDot size={15} />} to="/issues" />
             <StatCard
-              label="Your CI runs"
+              label="Your open PRs"
+              value={authored.data?.total ?? '–'}
+              icon={<GitPullRequest size={15} />}
+              hint={authored.data?.total ? 'Waiting to merge' : 'None open'}
+              to="/pulls"
+              search={{ filter: 'authored' }}
+            />
+            <StatCard
+              label="Assigned issues"
+              value={assigned.data?.total ?? '–'}
+              icon={<CircleDot size={15} />}
+              hint={assigned.data?.total ? 'Open and assigned to you' : 'Nothing assigned'}
+              to="/issues"
+            />
+            <StatCard
+              label="Your runs"
               value={runs.data?.total ?? '–'}
               icon={<Play size={15} />}
               tone={failed ? 'danger' : running ? 'accent' : undefined}
@@ -214,10 +242,26 @@ export function HomePage() {
                 />
               </Card>
               <Card title="Your pull requests" flush actions={<ViewAll to="/pulls" search={{ filter: 'authored' }} />}>
-                <Rows q={{ ...authored, data: authored.data?.pulls }} empty="You have no open pull requests." render={(p) => <PullItem key={`${p.repo}#${p.number}`} p={p} />} />
+                <Rows q={{ ...authored, data: authored.data?.pulls }} empty={
+                    <>
+                      You have no open pull requests.
+                      <br />
+                      <EmptyAction onClick={() => setChoosing('pull')}>Open a pull request</EmptyAction>
+                    </>
+                  }
+                  render={(p) => <PullItem key={`${p.repo}#${p.number}`} p={p} />} />
               </Card>
               <Card title="Assigned to you" flush actions={<ViewAll to="/issues" />}>
-                <Rows q={{ ...assigned, data: assigned.data?.issues }} empty="Nothing is assigned to you." render={(i) => <IssueItem key={`${i.repo}#${i.number}`} i={i} />} />
+                <Rows q={{ ...assigned, data: assigned.data?.issues }} empty={
+                    <>
+                      Nothing is assigned to you.
+                      <br />
+                      <EmptyAction to="/issues" search={{ filter: 'all' }}>
+                        Browse open issues
+                      </EmptyAction>
+                    </>
+                  }
+                  render={(i) => <IssueItem key={`${i.repo}#${i.number}`} i={i} />} />
               </Card>
             </div>
             <div className="flex min-w-0 flex-col gap-6">
@@ -246,15 +290,24 @@ export function HomePage() {
                   </ul>
                 )}
               </Card>
-              <Card title="Your recent runs" flush actions={<ViewAll to="/ci" search={{ mine: true }} />}>
-                <Rows q={{ ...runs, data: runs.data?.runs }} empty="You haven't triggered any runs." render={(r) => <RunItem key={r.id} r={r} />} />
+              <Card title="Your runs" flush actions={<ViewAll to="/ci" search={{ mine: true }} />}>
+                <Rows
+                  q={{ ...runs, data: runs.data?.runs }}
+                  empty={
+                    <>
+                      You haven't triggered any runs.
+                      <br />
+                      <EmptyAction to="/ci">See everyone's runs</EmptyAction>
+                    </>
+                  }
+                  render={(r) => <RunItem key={r.id} r={r} />} />
               </Card>
             </div>
           </div>
         </>
       )}
       {isAdmin && <CreateRepoDialog open={creating} onClose={() => setCreating(false)} />}
-      <RepoChooser intent={choosing ? 'issue' : null} onClose={() => setChoosing(false)} />
+      <RepoChooser intent={choosing} onClose={() => setChoosing(null)} />
     </Page>
   )
 }

@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react'
 import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 import { cx } from './cx'
 
@@ -33,20 +34,24 @@ export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLText
   return <textarea {...rest} className={cx(control, 'min-h-20 px-2.5 py-1.5 text-base leading-relaxed', className)} />
 }
 
-// A neutral grey chevron reads fine on both themes.
-const chevron =
-  "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")] bg-[position:right_8px_center] bg-no-repeat"
-
 export function Select({
   className,
   children,
   size = 'md',
   ...rest
 }: Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size'> & { size?: keyof typeof inputSizes }) {
+  // The arrow is a real icon in the text colour so it shows on both themes.
+  // Width classes size the wrapper; everything else styles the control.
+  const parts = (className ?? '').split(/\s+/).filter(Boolean)
+  const width = parts.filter((c) => /^(w|min-w|max-w|flex|basis)-/.test(c) || c === 'flex-1')
+  const rest2 = parts.filter((c) => !width.includes(c)).join(' ')
   return (
-    <select {...rest} className={cx(control, inputSizes[size], chevron, 'cursor-pointer appearance-none pr-7', className)}>
-      {children}
-    </select>
+    <span className={cx('relative inline-flex', width.length ? width.join(' ') : 'w-full')}>
+      <select {...rest} className={cx(control, inputSizes[size], 'cursor-pointer appearance-none pr-7', rest2)}>
+        {children}
+      </select>
+      <ChevronDown size={13} aria-hidden className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-fg-muted" />
+    </span>
   )
 }
 
