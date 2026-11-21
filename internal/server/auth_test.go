@@ -365,7 +365,7 @@ func TestLogout(t *testing.T) {
 
 // Every operation under /admin must be marked admin-only in the policy map.
 func TestEveryAdminOperationIsGuarded(t *testing.T) {
-	spec, err := apigen.GetSwagger()
+	spec, err := apigen.GetSpec()
 	if err != nil {
 		t.Fatal(err)
 	}

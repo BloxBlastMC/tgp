@@ -3,6 +3,9 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { startServer, type TestServer } from './server'
+import { guardCSP, watchCSP } from './csp'
+
+guardCSP(test)
 
 let server: TestServer
 const shots = process.env.TGP_SHOTS
@@ -22,6 +25,7 @@ async function call(c: APIRequestContext, method: 'post' | 'put' | 'patch', path
 
 async function loginAs(browser: Browser, username: string, password: string): Promise<Page> {
   const ctx = await browser.newContext({ colorScheme: 'dark', viewport: { width: 1400, height: 900 }, acceptDownloads: true })
+  watchCSP(ctx)
   const page = await ctx.newPage()
   await page.goto(server.url + '/login')
   await page.getByLabel('Username or email').fill(username)

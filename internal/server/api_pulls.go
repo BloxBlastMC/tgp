@@ -175,7 +175,7 @@ func (s *Server) listPullRows(ctx context.Context, q *bun.SelectQuery, limit, of
 		ids[i] = issues[i].ID
 	}
 	var prs []model.PullRequest
-	if err := s.db.NewSelect().Model(&prs).Where("issue_id IN (?)", bun.In(ids)).Scan(ctx); err != nil {
+	if err := s.db.NewSelect().Model(&prs).Where("issue_id IN (?)", bun.List(ids)).Scan(ctx); err != nil {
 		return nil, 0, err
 	}
 	byID := map[int64]model.PullRequest{}
@@ -218,7 +218,7 @@ func (s *Server) toPullSummaries(ctx context.Context, rows []pullRow) ([]apigen.
 		return nil, err
 	}
 	var repos []model.Repo
-	if err := s.db.NewSelect().Model(&repos).Where("r.id IN (?)", bun.In(sortedKeysInt(repoIDs))).Scan(ctx); err != nil {
+	if err := s.db.NewSelect().Model(&repos).Where("r.id IN (?)", bun.List(sortedKeysInt(repoIDs))).Scan(ctx); err != nil {
 		return nil, err
 	}
 	repoByID := map[int64]*model.Repo{}
@@ -282,7 +282,7 @@ func (a *api) ListPulls(ctx context.Context, req apigen.ListPullsRequestObject) 
 		q = q.Where("pr.head_branch = ?", v)
 	}
 	if v := deref(p.Q); v != "" {
-		q = q.Where("LOWER(i.title) LIKE ?", "%"+escapeLike(strings.ToLower(v))+"%")
+		q = q.Where("LOWER(i.title) LIKE ? ESCAPE '!'", "%"+escapeLike(strings.ToLower(v))+"%")
 	}
 	if v := deref(p.Labels); v != "" {
 		q = labelFilter(q, repo.ID, v)

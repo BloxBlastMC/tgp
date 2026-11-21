@@ -33,6 +33,10 @@ type RPCOptions struct {
 	Env []string
 	// HooksPath, when set, is used as core.hooksPath for receive-pack.
 	HooksPath string
+	// MaxBodyBytes, when positive, caps the request body after gzip
+	// decoding (the caller limits the raw body; this stops a small
+	// compressed body from inflating past the same limit).
+	MaxBodyBytes int64
 }
 
 func (g *Git) serviceCmd(ctx context.Context, repoPath string, svc Service, r *http.Request, o RPCOptions, extra ...string) *exec.Cmd {
@@ -97,16 +101,12 @@ func (g *Git) ServeRPC(w http.ResponseWriter, r *http.Request, repoPath string, 
 		http.Error(w, "unexpected content type", http.StatusUnsupportedMediaType)
 		return nil
 	}
-	var body io.Reader = r.Body
-	if r.Header.Get("Content-Encoding") == "gzip" {
-		gz, err := gzip.NewReader(r.Body)
-		if err != nil {
-			http.Error(w, "bad gzip body", http.StatusBadRequest)
-			return nil
-		}
-		defer gz.Close()
-		body = gz
+	body, err := requestBody(w, r, o.MaxBodyBytes)
+	if err != nil {
+		http.Error(w, "bad gzip body", http.StatusBadRequest)
+		return nil
 	}
+	defer body.Close()
 	cmd := g.serviceCmd(r.Context(), repoPath, svc, r, o)
 	cmd.Stdin = body
 	var stderr strings.Builder
@@ -141,6 +141,22 @@ func (g *Git) ServeRPC(w http.ResponseWriter, r *http.Request, repoPath string, 
 		return fmt.Errorf("%s: %w: %s", svc, err, strings.TrimSpace(stderr.String()))
 	}
 	return nil
+}
+
+// requestBody returns the request body, gzip-decoded if needed. A gzip
+// body is capped at max decoded bytes when max is positive.
+func requestBody(w http.ResponseWriter, r *http.Request, max int64) (io.ReadCloser, error) {
+	if r.Header.Get("Content-Encoding") != "gzip" {
+		return r.Body, nil
+	}
+	gz, err := gzip.NewReader(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	if max > 0 {
+		return http.MaxBytesReader(w, gz, max), nil
+	}
+	return gz, nil
 }
 
 type limitedWriter struct {

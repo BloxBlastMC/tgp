@@ -129,6 +129,8 @@ func TestIssuesLabelsMilestones(t *testing.T) {
 		"?assignee=none":           "2",
 		"?author=tom":              "1",
 		"?q=SHOP":                  "2",
+		"?q=crash_on":              "", // _ and % match literally
+		"?q=%25":                   "",
 		"?state=closed":            "",
 		"?sort=created&per_page=1": "2",
 	} {

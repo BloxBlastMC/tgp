@@ -144,7 +144,7 @@ func (s *Server) jobSecrets(ctx context.Context, db bun.IDB, repoID int64, names
 	}
 	q := db.NewSelect().Model((*model.Secret)(nil)).Where("(sec.repo_id IS NULL OR sec.repo_id = ?)", repoID)
 	if !(len(names) == 1 && names[0] == "*") {
-		q = q.Where("sec.name IN (?)", bun.In(names))
+		q = q.Where("sec.name IN (?)", bun.List(names))
 	}
 	var rows []*model.Secret
 	if err := q.Order("sec.repo_id").Scan(ctx, &rows); err != nil {

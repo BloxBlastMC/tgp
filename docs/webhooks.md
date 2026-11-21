@@ -122,8 +122,10 @@ def valid(secret: bytes, body: bytes, header: str) -> bool:
 ## Network safety
 
 Deliveries never go to link-local addresses (such as the cloud metadata
-service at 169.254.169.254). The address is checked when connecting, after
-DNS. Proxies aren't used, so the check sees the real destination.
+service at 169.254.169.254) or 0.0.0.0/8. The address is checked when
+connecting, after DNS. Proxies aren't used, so the check sees the real
+destination. IPv6 addresses that carry an IPv4 address (NAT64 `64:ff9b::/96`
+and `64:ff9b:1::/48`, 6to4 `2002::/16`) are judged by that IPv4 address too.
 
 Receivers on localhost and private networks (10/8, 172.16/12, 192.168/16,
 100.64/10, which includes Tailscale addresses, and fc00::/7) are refused by

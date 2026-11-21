@@ -142,6 +142,17 @@ func (d *Docker) pull(ctx context.Context, image string, log io.Writer) error {
 	return d.run(ctx, log, nil, "pull", "--quiet", image)
 }
 
+// validImage rejects image references docker would read as something
+// else: a leading "-" is parsed as a flag (e.g. "--privileged"), and
+// whitespace or control characters can't be part of a reference. Images
+// can come from expressions, so this is checked where they're used.
+func validImage(image string) error {
+	if image == "" || strings.HasPrefix(image, "-") || strings.IndexFunc(image, func(r rune) bool { return r <= ' ' || r == 0x7f }) >= 0 {
+		return fmt.Errorf("invalid image reference %q", image)
+	}
+	return nil
+}
+
 // lastSegment is the image name after the registry/path, where a tag lives.
 func lastSegment(image string) string {
 	if i := strings.IndexByte(image, '@'); i >= 0 {
@@ -174,6 +185,9 @@ func (d *Docker) Prepare(ctx context.Context, spec *runnerapi.JobSpec, container
 		images = append(images, s.Image)
 	}
 	for _, img := range images {
+		if err := validImage(img); err != nil {
+			return e, err
+		}
 		if err := d.pull(ctx, img, log); err != nil {
 			return e, fmt.Errorf("can't pull %s: %w", img, err)
 		}

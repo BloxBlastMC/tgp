@@ -6,13 +6,14 @@ import { join, resolve } from 'node:path'
 
 export type TestServer = { url: string; setupToken: string; stop: () => Promise<void> }
 
-/** Starts bin/tgp-server on a random port with a fresh data dir. */
-export async function startServer(): Promise<TestServer> {
+/** Starts bin/tgp-server on a random port with a fresh data dir. env adds
+ * to the server's environment. */
+export async function startServer(env: Record<string, string> = {}): Promise<TestServer> {
   const bin = process.env.TGP_SERVER_BIN ?? resolve(import.meta.dirname, '../../bin/tgp-server')
   const port = 40000 + Math.floor(Math.random() * 20000)
   const dataDir = mkdtempSync(join(tmpdir(), 'tgp-e2e-'))
   const proc: ChildProcess = spawn(bin, [], {
-    env: { ...process.env, TGP_DATA_DIR: dataDir, TGP_LISTEN: `127.0.0.1:${port}`, TGP_LOG_LEVEL: 'info' },
+    env: { ...process.env, TGP_DATA_DIR: dataDir, TGP_LISTEN: `127.0.0.1:${port}`, TGP_LOG_LEVEL: 'info', ...env },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   let output = ''

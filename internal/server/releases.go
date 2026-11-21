@@ -89,7 +89,7 @@ func (s *Server) toAPIReleases(ctx context.Context, repo *model.Repo, rels []*mo
 		ids[i] = r.ID
 	}
 	var assets []*model.ReleaseAsset
-	if err := s.db.NewSelect().Model(&assets).Where("release_id IN (?)", bun.In(ids)).Order("release_id", "name").Scan(ctx); err != nil {
+	if err := s.db.NewSelect().Model(&assets).Where("release_id IN (?)", bun.List(ids)).Order("release_id", "name").Scan(ctx); err != nil {
 		return nil, err
 	}
 	byRel := map[int64][]apigen.ReleaseAsset{}

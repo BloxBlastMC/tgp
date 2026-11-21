@@ -85,3 +85,23 @@ func TestSPAFallback(t *testing.T) {
 		t.Fatalf("missing asset = %d", res.StatusCode)
 	}
 }
+
+func TestSPAContentSecurityPolicy(t *testing.T) {
+	// sha256 of "a()", the inline script below.
+	csp := contentSecurityPolicy([]byte(`<head><script>a()</script><script type="module" src="/assets/x.js"></script></head>`))
+	for _, want := range []string{
+		"script-src 'self' 'wasm-unsafe-eval' 'sha256-qVpDBgj7bpq5hMAcGp3AOc79J3Y1Z4HvySTwKrWDoy4='; ",
+		"object-src 'none'", "frame-ancestors 'none'", "base-uri 'self'",
+	} {
+		if !strings.Contains(csp, want) {
+			t.Errorf("CSP %q lacks %q", csp, want)
+		}
+	}
+	if strings.Count(csp, "sha256-") != 1 {
+		t.Errorf("external scripts hashed: %s", csp)
+	}
+	ts := newTestServer(t)
+	if res, _ := get(t, ts.URL+"/repos"); !strings.Contains(res.Header.Get("Content-Security-Policy"), "script-src 'self'") {
+		t.Fatalf("UI served without a CSP: %q", res.Header.Get("Content-Security-Policy"))
+	}
+}

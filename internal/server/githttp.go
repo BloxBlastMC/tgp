@@ -136,6 +136,7 @@ func (s *Server) serveGit(w http.ResponseWriter, r *http.Request, repoName, acti
 		}
 		if r.Method == http.MethodPost && s.cfg.Repos.MaxPushBytes > 0 {
 			r.Body = http.MaxBytesReader(w, r.Body, s.cfg.Repos.MaxPushBytes)
+			opts.MaxBodyBytes = s.cfg.Repos.MaxPushBytes
 		}
 	}
 

@@ -618,7 +618,7 @@ func (s *Server) admitRun(ctx context.Context, tx bun.IDB, repo *model.Repo, run
 	// request supersedes older runs of the same workflow.
 	if cs.CancelSuperseded {
 		q := tx.NewSelect().Model((*model.WorkflowRun)(nil)).
-			Where("repo_id = ? AND workflow_path = ? AND id <> ? AND status IN (?)", run.RepoID, run.WorkflowPath, run.ID, bun.In(active))
+			Where("repo_id = ? AND workflow_path = ? AND id <> ? AND status IN (?)", run.RepoID, run.WorkflowPath, run.ID, bun.List(active))
 		apply := false
 		switch {
 		case ev.Name == "pull_request":
@@ -637,7 +637,7 @@ func (s *Server) admitRun(ctx context.Context, tx bun.IDB, repo *model.Repo, run
 		q := tx.NewSelect().Model((*model.WorkflowRun)(nil)).
 			Where("repo_id = ? AND concurrency_group = ? AND id <> ?", run.RepoID, run.ConcurrencyGroup, run.ID)
 		if run.CancelInProgress {
-			q = q.Where("status IN (?)", bun.In(active))
+			q = q.Where("status IN (?)", bun.List(active))
 			if err := cancelAll(q, fmt.Sprintf("Cancelled by run #%d (concurrency group %s)", run.Number, run.ConcurrencyGroup)); err != nil {
 				return err
 			}
@@ -648,7 +648,7 @@ func (s *Server) admitRun(ctx context.Context, tx bun.IDB, repo *model.Repo, run
 			}
 			busy, err := tx.NewSelect().Model((*model.WorkflowRun)(nil)).
 				Where("repo_id = ? AND concurrency_group = ? AND id <> ? AND status IN (?)", run.RepoID, run.ConcurrencyGroup, run.ID,
-					bun.In([]string{model.RunQueued, model.RunInProgress})).Exists(ctx)
+					bun.List([]string{model.RunQueued, model.RunInProgress})).Exists(ctx)
 			if err != nil {
 				return err
 			}
@@ -665,7 +665,7 @@ func (s *Server) admitRun(ctx context.Context, tx bun.IDB, repo *model.Repo, run
 		count := func() (int, error) {
 			n, err := tx.NewSelect().Model((*model.WorkflowRun)(nil)).
 				Where("repo_id = ? AND id <> ? AND started_at IS NULL AND status IN (?)", run.RepoID, run.ID,
-					bun.In([]string{model.RunWaiting, model.RunQueued})).Count(ctx)
+					bun.List([]string{model.RunWaiting, model.RunQueued})).Count(ctx)
 			return int(n), err
 		}
 		n, err := count()
@@ -678,7 +678,7 @@ func (s *Server) admitRun(ctx context.Context, tx bun.IDB, repo *model.Repo, run
 			var olds []*model.WorkflowRun
 			if err := tx.NewSelect().Model(&olds).
 				Where("repo_id = ? AND id <> ? AND workflow_path = ? AND ref = ? AND started_at IS NULL AND status IN (?)",
-					run.RepoID, run.ID, run.WorkflowPath, run.Ref, bun.In([]string{model.RunWaiting, model.RunQueued})).
+					run.RepoID, run.ID, run.WorkflowPath, run.Ref, bun.List([]string{model.RunWaiting, model.RunQueued})).
 				Order("id").Limit(int64(n - cs.MaxQueuedRunsPerRepo + 1)).Scan(ctx); err != nil {
 				return err
 			}

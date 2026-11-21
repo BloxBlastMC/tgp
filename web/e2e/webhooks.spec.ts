@@ -5,6 +5,9 @@ import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { join } from 'node:path'
 import { startServer, type TestServer } from './server'
+import { guardCSP, watchCSP } from './csp'
+
+guardCSP(test)
 
 let server: TestServer
 const shots = process.env.TGP_SHOTS
@@ -29,6 +32,7 @@ async function call(c: APIRequestContext, method: 'post' | 'put' | 'patch', path
 
 async function loginAs(browser: Browser, username: string, password: string): Promise<Page> {
   const ctx = await browser.newContext({ colorScheme: 'dark', viewport: { width: 1400, height: 900 } })
+  watchCSP(ctx)
   const page = await ctx.newPage()
   await page.goto(server.url + '/login')
   await page.getByLabel('Username or email').fill(username)
@@ -63,7 +67,8 @@ test.beforeAll(async () => {
   await new Promise<void>((res) => receiver.listen(0, '127.0.0.1', res))
   receiverUrl = `http://127.0.0.1:${(receiver.address() as AddressInfo).port}/hook`
 
-  server = await startServer()
+  // Deliveries go to a receiver on 127.0.0.1, which is blocked by default.
+  server = await startServer({ TGP_WEBHOOKS_BLOCK_PRIVATE: 'false' })
   const admin = await client()
   const setup = await call(admin, 'post', '/setup', {
     setup_token: server.setupToken,

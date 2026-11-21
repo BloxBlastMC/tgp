@@ -33,8 +33,10 @@ export function LoginPage() {
       if (session.must_change_password) {
         void navigate({ to: '/change-password' })
       } else {
-        // Only follow same-origin relative paths.
-        const dest = next && next.startsWith('/') && !next.startsWith('//') ? next : '/'
+        // Only follow same-origin relative paths. URL parsers read "/\host"
+        // as "//host" and drop tabs and newlines ("/\t/host"), so refuse
+        // both.
+        const dest = next && /^\/(?![/\\])[^\x00-\x1f\x7f]*$/.test(next) ? next : '/'
         void navigate({ to: dest })
       }
     },

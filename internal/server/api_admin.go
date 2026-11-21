@@ -236,7 +236,7 @@ func (a *api) ListAuditLog(ctx context.Context, req apigen.ListAuditLogRequestOb
 		q = q.Where("actor_name = ?", users.NormalizeUsername(*p.Actor))
 	}
 	if p.Action != nil && *p.Action != "" {
-		q = q.Where("action LIKE ?", escapeLike(*p.Action)+"%")
+		q = q.Where("action LIKE ? ESCAPE '!'", escapeLike(*p.Action)+"%")
 	}
 	if err := q.Scan(ctx); err != nil {
 		return nil, err
@@ -258,10 +258,13 @@ func (a *api) ListAuditLog(ctx context.Context, req apigen.ListAuditLogRequestOb
 	return apigen.ListAuditLog200JSONResponse(out), nil
 }
 
-// escapeLike strips the % wildcard from a user-supplied prefix filter. A
-// literal "_" (which LIKE treats as any one character) only over-matches
-// slightly, which is acceptable for an audit filter.
-func escapeLike(s string) string { return strings.ReplaceAll(s, "%", "") }
+// likeEscaper escapes LIKE's wildcards (% and _) and the escape character
+// itself, so user input matches literally. Queries using it must add
+// ESCAPE '!' (SQLite has no default escape character).
+var likeEscaper = strings.NewReplacer("!", "!!", "%", "!%", "_", "!_")
+
+// escapeLike makes s match literally inside a LIKE pattern.
+func escapeLike(s string) string { return likeEscaper.Replace(s) }
 
 // --- Org ---
 

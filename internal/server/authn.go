@@ -131,7 +131,7 @@ func (s *Server) authenticate(next http.Handler) http.Handler {
 			if p != nil {
 				ctx = context.WithValue(ctx, principalKey, p)
 			} else {
-				s.clearSessionCookie(w)
+				s.clearSessionCookie(w, r)
 			}
 		}
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -268,7 +268,7 @@ func (s *Server) csrf(next http.Handler) http.Handler {
 				Value:    auth.RandomToken(24),
 				Path:     "/",
 				SameSite: http.SameSiteLaxMode,
-				Secure:   s.cfg.UseSecureCookies(),
+				Secure:   s.secureCookies(r),
 				MaxAge:   int(sessionTTL.Seconds()),
 			}
 			http.SetCookie(w, c)
@@ -295,25 +295,35 @@ func (s *Server) csrf(next http.Handler) http.Handler {
 	})
 }
 
-func (s *Server) setSessionCookie(w http.ResponseWriter, raw string) {
+// secureCookies reports whether cookies get the Secure flag: as
+// configured, else when the base URL is HTTPS or this request came over
+// HTTPS (the base URL may only be set in the web UI's setup).
+func (s *Server) secureCookies(r *http.Request) bool {
+	if s.cfg.Security.SecureCookies != nil {
+		return *s.cfg.Security.SecureCookies
+	}
+	return s.cfg.UseSecureCookies() || s.isHTTPS(r)
+}
+
+func (s *Server) setSessionCookie(w http.ResponseWriter, r *http.Request, raw string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookie,
 		Value:    raw,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   s.cfg.UseSecureCookies(),
+		Secure:   s.secureCookies(r),
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   int(sessionTTL.Seconds()),
 	})
 }
 
-func (s *Server) clearSessionCookie(w http.ResponseWriter) {
+func (s *Server) clearSessionCookie(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookie,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   s.cfg.UseSecureCookies(),
+		Secure:   s.secureCookies(r),
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   -1,
 	})
@@ -339,6 +349,6 @@ func (s *Server) createSession(ctx context.Context, w http.ResponseWriter, r *ht
 	if _, err := s.db.NewInsert().Model(sess).Exec(ctx); err != nil {
 		return nil, err
 	}
-	s.setSessionCookie(w, raw)
+	s.setSessionCookie(w, r, raw)
 	return sess, nil
 }

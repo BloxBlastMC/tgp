@@ -116,7 +116,9 @@ Caddy can get the certificate.
 
 tgp speaks plain HTTP; put it behind a proxy that terminates TLS.
 - Set `base_url` to the public `https://` URL. Clone URLs, webhooks and
-  secure cookies use it.
+  secure cookies use it. Cookies are also marked `Secure` on requests that
+  arrive over HTTPS (directly, or with `X-Forwarded-Proto: https` from a
+  trusted proxy); `[security] secure_cookies` overrides both.
 - Set `trust_proxy = true` so the audit log and login rate limits see real
   client addresses. Only enable it when the proxy is the only way in (bind
   `listen` to `127.0.0.1` or firewall it); otherwise clients can fake their

@@ -226,7 +226,7 @@ func (s *Server) releaseConcurrency(ctx context.Context, tx bun.IDB, run *model.
 		return nil
 	}
 	active, err := tx.NewSelect().Model((*model.WorkflowRun)(nil)).
-		Where("repo_id = ? AND concurrency_group = ? AND status IN (?)", run.RepoID, run.ConcurrencyGroup, bun.In([]string{model.RunQueued, model.RunInProgress})).Exists(ctx)
+		Where("repo_id = ? AND concurrency_group = ? AND status IN (?)", run.RepoID, run.ConcurrencyGroup, bun.List([]string{model.RunQueued, model.RunInProgress})).Exists(ctx)
 	if err != nil || active {
 		return err
 	}
@@ -445,7 +445,7 @@ func (s *Server) rerunRun(ctx context.Context, tx bun.IDB, run *model.WorkflowRu
 	if run.ConcurrencyGroup != "" {
 		busy, err := tx.NewSelect().Model((*model.WorkflowRun)(nil)).
 			Where("repo_id = ? AND concurrency_group = ? AND id <> ? AND status IN (?)", run.RepoID, run.ConcurrencyGroup, run.ID,
-				bun.In([]string{model.RunQueued, model.RunInProgress})).Exists(ctx)
+				bun.List([]string{model.RunQueued, model.RunInProgress})).Exists(ctx)
 		if err != nil {
 			return err
 		}
