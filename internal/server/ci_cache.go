@@ -135,7 +135,7 @@ func (s *Server) handleRunnerCacheDownload(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	e := new(model.CacheEntry)
-	if err := s.db.NewSelect().Model(e).Where("id = ? AND repo_id = ? AND ref IN (?)", id, j.RepoID, bun.In(scopes)).Scan(ctx); err != nil {
+	if err := s.db.NewSelect().Model(e).Where("id = ? AND repo_id = ? AND ref IN (?)", id, j.RepoID, bun.List(scopes)).Scan(ctx); err != nil {
 		apierr.Write(w, apierr.NotFound("cache %d not found (it may have been evicted)", id))
 		return
 	}
@@ -243,7 +243,7 @@ func (s *Server) deleteCacheEntries(ctx context.Context, entries []*model.CacheE
 		ids = append(ids, e.ID)
 	}
 	if len(ids) > 0 {
-		if _, err := s.db.NewDelete().Model((*model.CacheEntry)(nil)).Where("id IN (?)", bun.In(ids)).Exec(ctx); err != nil {
+		if _, err := s.db.NewDelete().Model((*model.CacheEntry)(nil)).Where("id IN (?)", bun.List(ids)).Exec(ctx); err != nil {
 			return err
 		}
 	}

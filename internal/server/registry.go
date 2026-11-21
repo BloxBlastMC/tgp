@@ -432,7 +432,7 @@ func (s *Server) regCheckManifestQuota(ctx context.Context, repo *model.Repo, bl
 		Where(`rb.digest IN (SELECT r.digest FROM registry_manifest_refs r JOIN registry_manifests m ON m.id = r.manifest_id
 			JOIN registry_images i ON i.id = m.image_id WHERE i.repo_id = ?)`, repo.ID)
 	if len(blobs) > 0 {
-		q = q.WhereOr("rb.digest IN (?)", bun.In(blobs))
+		q = q.WhereOr("rb.digest IN (?)", bun.List(blobs))
 	}
 	var used sql.NullInt64
 	if err := q.Scan(ctx, &used); err != nil {

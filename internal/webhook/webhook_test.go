@@ -49,6 +49,13 @@ func TestBlocked(t *testing.T) {
 		{"100.100.1.1", false, true},
 		{"fd00::1", false, true},
 		{"::ffff:169.254.169.254", true, true},
+		{"0.1.2.3", true, true},
+		{"64:ff9b::a9fe:a9fe", true, true},   // NAT64 of 169.254.169.254
+		{"64:ff9b::7f00:1", false, true},     // NAT64 of 127.0.0.1
+		{"64:ff9b:1::a00:1", false, true},    // local-use NAT64 of 10.0.0.1
+		{"2002:a9fe:a9fe::1", true, true},    // 6to4 of 169.254.169.254
+		{"2002:c0a8:101::1", false, true},    // 6to4 of 192.168.1.1
+		{"64:ff9b::5db8:d822", false, false}, // NAT64 of a public address
 		{"93.184.216.34", false, false},
 	}
 	for _, c := range cases {

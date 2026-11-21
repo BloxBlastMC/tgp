@@ -59,17 +59,47 @@ var ErrBlockedAddress = errors.New("destination address not allowed")
 // private ranges when blockPrivate.
 func Blocked(ip netip.Addr, blockPrivate bool) bool {
 	ip = ip.Unmap()
-	if ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() || ip.IsMulticast() {
+	// IPv6 addresses that carry an IPv4 destination (NAT64, 6to4) are
+	// judged by that destination too, so they can't reach blocked hosts
+	// through a translator.
+	if v4, ok := embeddedIPv4(ip); ok && Blocked(v4, blockPrivate) {
+		return true
+	}
+	if ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() || ip.IsMulticast() || thisNetwork.Contains(ip) {
 		return true
 	}
 	if blockPrivate && (ip.IsLoopback() || ip.IsPrivate()) {
 		return true
 	}
 	// Carrier-grade NAT and other shared space count as private too.
-	if blockPrivate && netip.MustParsePrefix("100.64.0.0/10").Contains(ip) {
+	if blockPrivate && sharedSpace.Contains(ip) {
 		return true
 	}
 	return false
+}
+
+var (
+	thisNetwork = netip.MustParsePrefix("0.0.0.0/8")
+	sharedSpace = netip.MustParsePrefix("100.64.0.0/10")
+	nat64       = netip.MustParsePrefix("64:ff9b::/96")
+	nat64Local  = netip.MustParsePrefix("64:ff9b:1::/48")
+	sixToFour   = netip.MustParsePrefix("2002::/16")
+)
+
+// embeddedIPv4 returns the IPv4 address inside a NAT64 (RFC 6052 /96
+// well-known and RFC 8215 local-use prefixes) or 6to4 (RFC 3056) address.
+func embeddedIPv4(ip netip.Addr) (netip.Addr, bool) {
+	if !ip.Is6() {
+		return netip.Addr{}, false
+	}
+	b := ip.As16()
+	switch {
+	case nat64.Contains(ip), nat64Local.Contains(ip):
+		return netip.AddrFrom4([4]byte{b[12], b[13], b[14], b[15]}), true
+	case sixToFour.Contains(ip):
+		return netip.AddrFrom4([4]byte{b[2], b[3], b[4], b[5]}), true
+	}
+	return netip.Addr{}, false
 }
 
 // Sender delivers requests with address checks applied to every

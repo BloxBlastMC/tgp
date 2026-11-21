@@ -65,7 +65,7 @@ func (c *userCache) load(ctx context.Context, ids ...int64) error {
 		return nil
 	}
 	var us []model.User
-	if err := c.s.db.NewSelect().Model(&us).Where("id IN (?)", bun.In(missing)).Scan(ctx); err != nil {
+	if err := c.s.db.NewSelect().Model(&us).Where("id IN (?)", bun.List(missing)).Scan(ctx); err != nil {
 		return err
 	}
 	for i := range us {
@@ -344,7 +344,7 @@ func (s *Server) pullReviews(ctx context.Context, db bun.IDB, issueIDs ...int64)
 		return out, nil
 	}
 	var rs []model.Review
-	if err := db.NewSelect().Model(&rs).Where("issue_id IN (?)", bun.In(issueIDs)).Order("created_at", "id").Scan(ctx); err != nil {
+	if err := db.NewSelect().Model(&rs).Where("issue_id IN (?)", bun.List(issueIDs)).Order("created_at", "id").Scan(ctx); err != nil {
 		return nil, err
 	}
 	for _, r := range rs {
@@ -359,7 +359,7 @@ func (s *Server) reviewRequests(ctx context.Context, db bun.IDB, issueIDs ...int
 		return out, nil
 	}
 	var rs []model.ReviewRequest
-	if err := db.NewSelect().Model(&rs).Where("issue_id IN (?)", bun.In(issueIDs)).Order("id").Scan(ctx); err != nil {
+	if err := db.NewSelect().Model(&rs).Where("issue_id IN (?)", bun.List(issueIDs)).Order("id").Scan(ctx); err != nil {
 		return nil, err
 	}
 	for _, r := range rs {

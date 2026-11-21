@@ -178,7 +178,7 @@ func (s *Server) registryGC(ctx context.Context) error {
 		}
 		for len(drop) > 0 {
 			n := min(len(drop), 500)
-			if _, err := s.db.NewDelete().Model((*model.RegistryTag)(nil)).Where("id IN (?)", bun.In(drop[:n])).Exec(ctx); err != nil {
+			if _, err := s.db.NewDelete().Model((*model.RegistryTag)(nil)).Where("id IN (?)", bun.List(drop[:n])).Exec(ctx); err != nil {
 				return err
 			}
 			drop = drop[n:]

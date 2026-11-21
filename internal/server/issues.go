@@ -100,7 +100,7 @@ func (s *Server) loadIssueMeta(ctx context.Context, issues []*model.Issue) (*iss
 		model.Label
 	}
 	err := s.db.NewSelect().TableExpr("issue_labels AS il").ColumnExpr("il.issue_id, l.*").
-		Join("JOIN labels AS l ON l.id = il.label_id").Where("il.issue_id IN (?)", bun.In(ids)).
+		Join("JOIN labels AS l ON l.id = il.label_id").Where("il.issue_id IN (?)", bun.List(ids)).
 		OrderExpr("l.lower_name").Scan(ctx, &rows)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (s *Server) loadIssueMeta(ctx context.Context, issues []*model.Issue) (*iss
 		m.labels[rows[i].IssueID] = append(m.labels[rows[i].IssueID], toAPILabel(&rows[i].Label))
 	}
 	var as []model.IssueAssignee
-	if err := s.db.NewSelect().Model(&as).Where("issue_id IN (?)", bun.In(ids)).Order("user_id").Scan(ctx); err != nil {
+	if err := s.db.NewSelect().Model(&as).Where("issue_id IN (?)", bun.List(ids)).Order("user_id").Scan(ctx); err != nil {
 		return nil, err
 	}
 	for _, a := range as {
@@ -117,7 +117,7 @@ func (s *Server) loadIssueMeta(ctx context.Context, issues []*model.Issue) (*iss
 	}
 	if len(msIDs) > 0 {
 		var ms []model.Milestone
-		if err := s.db.NewSelect().Model(&ms).Where("m.id IN (?)", bun.In(msIDs)).Scan(ctx); err != nil {
+		if err := s.db.NewSelect().Model(&ms).Where("m.id IN (?)", bun.List(msIDs)).Scan(ctx); err != nil {
 			return nil, err
 		}
 		for i := range ms {
@@ -427,7 +427,7 @@ func (s *Server) toIssueSummaries(ctx context.Context, issues []*model.Issue) ([
 		return nil, err
 	}
 	var repos []model.Repo
-	if err := s.db.NewSelect().Model(&repos).Where("r.id IN (?)", bun.In(keysInt(repoNames))).Scan(ctx); err != nil {
+	if err := s.db.NewSelect().Model(&repos).Where("r.id IN (?)", bun.List(keysInt(repoNames))).Scan(ctx); err != nil {
 		return nil, err
 	}
 	for _, r := range repos {
@@ -547,7 +547,7 @@ func (a *api) ListIssues(ctx context.Context, req apigen.ListIssuesRequestObject
 		q = q.Where("i.author_id = (SELECT id FROM users WHERE username = ?)", strings.ToLower(v))
 	}
 	if v := deref(p.Q); v != "" {
-		q = q.Where("LOWER(i.title) LIKE ?", "%"+escapeLike(strings.ToLower(v))+"%")
+		q = q.Where("LOWER(i.title) LIKE ? ESCAPE '!'", "%"+escapeLike(strings.ToLower(v))+"%")
 	}
 	order := "i.updated_at DESC"
 	switch deref(p.Sort) {
@@ -851,7 +851,7 @@ func (s *Server) closeReferencedIssues(ctx context.Context, repo *model.Repo, ac
 		return nil
 	}
 	var issues []*model.Issue
-	if err := s.db.NewSelect().Model(&issues).Where("repo_id = ? AND number IN (?) AND NOT is_pull AND state = ?", repo.ID, bun.In(nums), model.StateOpen).Scan(ctx); err != nil {
+	if err := s.db.NewSelect().Model(&issues).Where("repo_id = ? AND number IN (?) AND NOT is_pull AND state = ?", repo.ID, bun.List(nums), model.StateOpen).Scan(ctx); err != nil {
 		return err
 	}
 	for _, is := range issues {
@@ -1052,7 +1052,7 @@ func (s *Server) milestoneCounts(ctx context.Context, ids []int64) (map[int64]ms
 		N           int    `bun:"n"`
 	}
 	err := s.db.NewSelect().TableExpr("issues AS i").ColumnExpr("i.milestone_id, i.state, COUNT(*) AS n").
-		Where("i.milestone_id IN (?)", bun.In(ids)).GroupExpr("i.milestone_id, i.state").Scan(ctx, &rows)
+		Where("i.milestone_id IN (?)", bun.List(ids)).GroupExpr("i.milestone_id, i.state").Scan(ctx, &rows)
 	if err != nil {
 		return nil, err
 	}

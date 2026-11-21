@@ -1,9 +1,12 @@
 package server
 
 import (
+	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"git.taile67276.ts.net/BloxBlast/tgp/internal/config"
 )
 
 func TestRealIP(t *testing.T) {
@@ -77,6 +80,38 @@ func TestHSTS(t *testing.T) {
 			if want := proto == "https"; want != (got != "") {
 				t.Errorf("%s proto=%q: HSTS = %q", path, proto, got)
 			}
+		}
+	}
+}
+
+func TestSecureCookies(t *testing.T) {
+	no, yes := false, true
+	plain := httptest.NewRequest("GET", "/", nil)
+	direct := httptest.NewRequest("GET", "/", nil)
+	direct.TLS = &tls.ConnectionState{}
+	proxied := httptest.NewRequest("GET", "/", nil)
+	proxied.Header.Set("X-Forwarded-Proto", "https")
+	cases := []struct {
+		name       string
+		baseURL    string
+		trustProxy bool
+		explicit   *bool
+		r          *http.Request
+		want       bool
+	}{
+		{"plain http", "", false, nil, plain, false},
+		{"https base url", "https://git.example", false, nil, plain, true},
+		{"direct tls", "", false, nil, direct, true},
+		{"trusted proxy https", "", true, nil, proxied, true},
+		{"untrusted forwarded proto", "", false, nil, proxied, false},
+		{"explicitly off", "https://git.example", false, &no, direct, false},
+		{"explicitly on", "", false, &yes, plain, true},
+	}
+	for _, c := range cases {
+		cfg := &config.Config{}
+		cfg.Server.BaseURL, cfg.Server.TrustProxy, cfg.Security.SecureCookies = c.baseURL, c.trustProxy, c.explicit
+		if got := (&Server{cfg: cfg}).secureCookies(c.r); got != c.want {
+			t.Errorf("%s: secure = %v, want %v", c.name, got, c.want)
 		}
 	}
 }

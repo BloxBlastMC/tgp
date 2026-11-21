@@ -153,7 +153,7 @@ func (a *api) Logout(ctx context.Context, _ apigen.LogoutRequestObject) (apigen.
 			return nil, err
 		}
 	}
-	s.clearSessionCookie(w)
+	s.clearSessionCookie(w, r)
 	_ = audit.Record(ctx, s.db, audit.Entry{Actor: p.User, Action: audit.Logout, TargetType: "user", Target: p.User.Username, IP: clientIP(r)})
 	return apigen.Logout204Response{}, nil
 }

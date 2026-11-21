@@ -65,3 +65,16 @@ func TestImageTags(t *testing.T) {
 		}
 	}
 }
+
+func TestValidImage(t *testing.T) {
+	for _, ok := range []string{"alpine", "alpine:3.20", "ghcr.io/org/img@sha256:abc", "localhost:5000/a/b:c"} {
+		if err := validImage(ok); err != nil {
+			t.Errorf("%q: %v", ok, err)
+		}
+	}
+	for _, bad := range []string{"", "--privileged", "-v=/:/host", "alpine latest", "alpine\n", "a\x00b"} {
+		if validImage(bad) == nil {
+			t.Errorf("%q accepted", bad)
+		}
+	}
+}

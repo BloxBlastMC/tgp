@@ -2,6 +2,9 @@ import { expect, request, test, type APIRequestContext } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { startServer, type TestServer } from './server'
+import { guardCSP, watchCSP } from './csp'
+
+guardCSP(test)
 
 let server: TestServer
 const shots = process.env.TGP_SHOTS
@@ -38,6 +41,7 @@ test.afterAll(async () => {
 
 test('admin sees server health: status, checks, database, disks and repository usage', async ({ browser }) => {
   const ctx = await browser.newContext({ colorScheme: 'dark', viewport: { width: 1400, height: 900 } })
+  watchCSP(ctx)
   const page = await ctx.newPage()
   await page.goto(server.url + '/login')
   await page.getByLabel('Username or email').fill('owen')

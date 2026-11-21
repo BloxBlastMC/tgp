@@ -276,7 +276,7 @@ func loopbackURL(addr string) string {
 // serveSpec serves the OpenAPI document (public, so clients and agents can
 // discover the API before logging in).
 var specJSON = sync.OnceValues(func() ([]byte, error) {
-	doc, err := apigen.GetSwagger()
+	doc, err := apigen.GetSpec()
 	if err != nil {
 		return nil, err
 	}

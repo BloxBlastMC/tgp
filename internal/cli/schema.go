@@ -196,7 +196,7 @@ var (
 // spec returns the API spec with cliSchemas merged in and refs resolved.
 func spec() (*openapi3.T, error) {
 	specOnce.Do(func() {
-		doc, err := apigen.GetSwagger()
+		doc, err := apigen.GetSpec()
 		if err != nil {
 			specErr = err
 			return

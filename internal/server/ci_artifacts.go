@@ -201,7 +201,7 @@ func (s *Server) runNumbers(ctx context.Context, ids []int64) (map[int64]int64, 
 		return out, nil
 	}
 	var runs []model.WorkflowRun
-	if err := s.db.NewSelect().Model(&runs).Column("id", "number").Where("id IN (?)", bun.In(ids)).Scan(ctx); err != nil {
+	if err := s.db.NewSelect().Model(&runs).Column("id", "number").Where("id IN (?)", bun.List(ids)).Scan(ctx); err != nil {
 		return nil, err
 	}
 	for _, r := range runs {
@@ -323,7 +323,7 @@ func (s *Server) deleteArtifacts(ctx context.Context, arts []*model.Artifact) er
 		ids = append(ids, a.ID)
 	}
 	if len(ids) > 0 {
-		if _, err := s.db.NewDelete().Model((*model.Artifact)(nil)).Where("id IN (?)", bun.In(ids)).Exec(ctx); err != nil {
+		if _, err := s.db.NewDelete().Model((*model.Artifact)(nil)).Where("id IN (?)", bun.List(ids)).Exec(ctx); err != nil {
 			return err
 		}
 	}

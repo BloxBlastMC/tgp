@@ -1,5 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
 import { startServer, totp, type TestServer } from './server'
+import { guardCSP } from './csp'
+
+guardCSP(test)
 
 let server: TestServer
 test.beforeAll(async () => {

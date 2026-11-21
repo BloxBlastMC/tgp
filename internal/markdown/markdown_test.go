@@ -65,3 +65,21 @@ func TestIssueRefs(t *testing.T) {
 		t.Error("linked without a repo")
 	}
 }
+
+func TestImagesInsideLinksResolve(t *testing.T) {
+	rc := RepoContext{Repo: "game", Ref: "main", Dir: "docs"}
+	out, err := Render([]byte("[![logo](img/logo.png)](https://x.test/) and [![b](../b.svg)](guide.md) and ![alt](c.png) #5"), rc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		`<a href="https://x.test/" rel="nofollow noopener" target="_blank"><img src="/api/v1/repos/game/raw?path=docs%2Fimg%2Flogo.png&amp;ref=main" alt="logo"></a>`,
+		`<a href="/game/blob?path=docs%2Fguide.md&amp;ref=main" rel="nofollow"><img src="/api/v1/repos/game/raw?path=b.svg&amp;ref=main" alt="b"></a>`,
+		`<img src="/api/v1/repos/game/raw?path=docs%2Fc.png&amp;ref=main" alt="alt">`,
+		`<a href="/game/issues/5" rel="nofollow">#5</a>`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %s in\n%s", want, out)
+		}
+	}
+}

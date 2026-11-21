@@ -4,6 +4,9 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { startServer, type TestServer } from './server'
+import { guardCSP } from './csp'
+
+guardCSP(test)
 
 let server: TestServer
 let api: APIRequestContext

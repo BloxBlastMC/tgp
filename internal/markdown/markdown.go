@@ -58,19 +58,32 @@ func (l *linkRewriter) Transform(doc *ast.Document, reader text.Reader, _ parser
 		return
 	}
 	var texts []*ast.Text
+	// inLink counts enclosing links and images: their text isn't turned
+	// into issue links, but images inside links (badges, logos) still need
+	// their paths resolved, so their children are walked.
+	inLink := 0
 	_ = ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		switch n.(type) {
+		case *ast.Link, *ast.Image:
+			if !entering {
+				inLink--
+			}
+		}
 		if !entering {
 			return ast.WalkContinue, nil
 		}
 		switch v := n.(type) {
 		case *ast.Text:
-			texts = append(texts, v)
+			if inLink == 0 {
+				texts = append(texts, v)
+			}
 		}
 		switch v := n.(type) {
 		case *ast.Image:
 			if p, ok := l.resolve(string(v.Destination)); ok {
 				v.Destination = []byte("/api/v1/repos/" + url.PathEscape(l.rc.Repo) + "/raw?" + url.Values{"ref": {l.rc.Ref}, "path": {p}}.Encode())
 			}
+			inLink++
 		case *ast.Link:
 			dest := string(v.Destination)
 			frag := ""
@@ -80,9 +93,10 @@ func (l *linkRewriter) Transform(doc *ast.Document, reader text.Reader, _ parser
 			if p, ok := l.resolve(dest); ok {
 				v.Destination = []byte("/" + url.PathEscape(l.rc.Repo) + "/blob?" + url.Values{"ref": {l.rc.Ref}, "path": {p}}.Encode() + frag)
 			}
+			inLink++
 		}
 		switch n.(type) {
-		case *ast.Link, *ast.AutoLink, *ast.CodeSpan:
+		case *ast.AutoLink, *ast.CodeSpan:
 			return ast.WalkSkipChildren, nil
 		}
 		return ast.WalkContinue, nil

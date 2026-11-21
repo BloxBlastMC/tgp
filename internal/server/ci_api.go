@@ -73,7 +73,7 @@ func (s *Server) jobSteps(ctx context.Context, jobIDs ...int64) (map[int64][]api
 		return out, nil
 	}
 	var steps []model.JobStep
-	if err := s.db.NewSelect().Model(&steps).Where("job_id IN (?)", bun.In(jobIDs)).Order("job_id", "number").Scan(ctx); err != nil {
+	if err := s.db.NewSelect().Model(&steps).Where("job_id IN (?)", bun.List(jobIDs)).Order("job_id", "number").Scan(ctx); err != nil {
 		return nil, err
 	}
 	for _, st := range steps {
@@ -108,7 +108,7 @@ func (s *Server) toAPIJobs(ctx context.Context, run *model.WorkflowRun, jobs []*
 		for id := range runnerIDs {
 			keys = append(keys, id)
 		}
-		if err := s.db.NewSelect().Model(&rs).Column("id", "name").Where("id IN (?)", bun.In(keys)).Scan(ctx); err != nil {
+		if err := s.db.NewSelect().Model(&rs).Column("id", "name").Where("id IN (?)", bun.List(keys)).Scan(ctx); err != nil {
 			return nil, err
 		}
 		for _, r := range rs {
@@ -227,7 +227,7 @@ func (a *api) ListRuns(ctx context.Context, req apigen.ListRunsRequestObject) (a
 		q = q.Where("wr.pull_number = ?", *p.Pull)
 	}
 	if v := strings.ToLower(deref(p.Sha)); v != "" {
-		q = q.Where("wr.head_sha LIKE ?", escapeLike(v)+"%")
+		q = q.Where("wr.head_sha LIKE ? ESCAPE '!'", escapeLike(v)+"%")
 	}
 	limit, offset := pageParams(p.Page, p.PerPage)
 	var runs []*model.WorkflowRun
@@ -269,7 +269,7 @@ func (a *api) ListAllRuns(ctx context.Context, req apigen.ListAllRunsRequestObje
 			ids = append(ids, id)
 		}
 		var rs []*model.Repo
-		if err := s.db.NewSelect().Model(&rs).Where("r.id IN (?)", bun.In(ids)).Scan(ctx); err != nil {
+		if err := s.db.NewSelect().Model(&rs).Where("r.id IN (?)", bun.List(ids)).Scan(ctx); err != nil {
 			return nil, err
 		}
 		for _, r := range rs {

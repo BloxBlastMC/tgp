@@ -5,6 +5,9 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { startServer, type TestServer } from './server'
+import { guardCSP, watchCSP } from './csp'
+
+guardCSP(test)
 
 // A visual tour: seeds a realistic server and screenshots every page in
 // both themes. Runs only with TGP_SHOTS=<dir>; it asserts nothing.
@@ -77,6 +80,7 @@ function git(cwd: string, ...args: string[]) {
 
 async function login(browser: Browser, theme: 'dark' | 'light', username: string, password: string): Promise<Page> {
   const ctx = await browser.newContext({ colorScheme: theme, viewport: { width: 1440, height: 900 } })
+  watchCSP(ctx)
   const page = await ctx.newPage()
   await page.goto(server.url + '/login')
   await page.getByLabel('Username or email').fill(username)
@@ -109,6 +113,7 @@ test('tour', async ({ browser }) => {
   // Setup wizard before anything exists.
   for (const theme of ['dark', 'light'] as const) {
     const ctx = await browser.newContext({ colorScheme: theme, viewport: { width: 1440, height: 900 } })
+    watchCSP(ctx)
     const p = await ctx.newPage()
     await p.goto(server.url + '/setup')
     await snap(p, theme, '00-setup')
@@ -275,6 +280,7 @@ test('tour', async ({ browser }) => {
     await snap(p, theme, '63-not-found', '/game/nope/nope')
     await p.context().close()
     const ctx = await browser.newContext({ colorScheme: theme, viewport: { width: 1440, height: 900 } })
+    watchCSP(ctx)
     const lp = await ctx.newPage()
     await snap(lp, theme, '64-login', '/login')
     await ctx.close()

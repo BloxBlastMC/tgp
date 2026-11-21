@@ -93,7 +93,7 @@ func (a *api) ListRepos(ctx context.Context, req apigen.ListReposRequestObject) 
 	q := s.db.NewSelect().Model(&rs)
 	q = authz.VisibleRepos(q, u)
 	if f := strings.TrimSpace(deref(req.Params.Q)); f != "" {
-		q = q.Where("r.lower_name LIKE ?", "%"+escapeLike(strings.ToLower(f))+"%")
+		q = q.Where("r.lower_name LIKE ? ESCAPE '!'", "%"+escapeLike(strings.ToLower(f))+"%")
 	}
 	// Recently pushed first; never-pushed repos last, by name.
 	if err := q.OrderExpr("CASE WHEN r.pushed_at IS NULL THEN 1 ELSE 0 END, r.pushed_at DESC, r.lower_name ASC").Scan(ctx); err != nil {
@@ -423,7 +423,7 @@ func (r rawResponse) VisitGetRawResponse(w http.ResponseWriter) error {
 	h.Set("X-Content-Type-Options", "nosniff")
 	h.Set("Cache-Control", "private, max-age=60")
 	if r.contentType == "application/octet-stream" {
-		h.Set("Content-Disposition", `attachment; filename="`+strings.ReplaceAll(r.name, `"`, "")+`"`)
+		h.Set("Content-Disposition", contentDisposition(r.name))
 	}
 	w.WriteHeader(http.StatusOK)
 	_, err := io.Copy(w, r.rc)
