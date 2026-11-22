@@ -1,4 +1,8 @@
-<img src="assets/icon.svg" width="64" height="64" alt="">
+> This project started as an internal tool for our development workflows. We've made the repository public under a permissive license, so you're free to use it however you like: extend it, build on it, or use it as the base for your own projects. Development happens in a private internal repository, and we'll push updates here from time to time as we improve it.
+>
+> It's still in early development, so we aren't using it internally yet. Early testing has gone very well, but it isn't reliable enough for real use until we've worked out the remaining issues.
+>
+> If there's enough interest in the project, we'll consider doing more with it in the open, such as moving development to this public repository.
 
 # tgp
 
